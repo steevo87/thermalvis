@@ -4,6 +4,9 @@ optrisManager::optrisManager(HWND hostHandle) {
 	ipc = nullptr;
 	ipcInitialized = false;
 	hr = -1;
+
+	cMapping = new cScheme;
+	cMapping->load_standard(IRON);
 }
 
 HRESULT optrisManager::OnFrameInit(int frameWidth, int frameHeight, int frameDepth) {
@@ -17,6 +20,10 @@ void optrisManager::Init(int frameWidth, int frameHeight, int frameDepth) {
 	FrameSize = FrameWidth * FrameHeight;
 	FrameRatio = (double)FrameWidth /  (double)FrameHeight;
 	FrameDepth = frameDepth;
+
+	rawImage = new cv::Mat(FrameHeight, FrameWidth, CV_16UC1);
+	scaledImage = new cv::Mat(FrameHeight, FrameWidth, CV_16UC1);
+	colorImage = new cv::Mat(FrameHeight, FrameWidth, CV_8UC3);
 }
 
 HRESULT optrisManager::OnNewFrameEx(void * pBuffer, FrameMetadata *pMetadata) {
@@ -49,15 +56,21 @@ HRESULT optrisManager::NewFrame(short *ImgBuf, int frameCounter) {
 	FrameCounter0 = frameCounter;
 	FrameCounter1++;
 	
-	cv::Mat frameMat(FrameHeight, FrameWidth, CV_16UC1);
+	
 
 	for (int iii = 0; iii < FrameHeight; iii++) {
 		for (int jjj = 0; jjj < FrameWidth; jjj++) {
-			frameMat.at<unsigned short>(iii,jjj) = ImgBuf[iii*FrameWidth+jjj];
+			rawImage->at<unsigned short>(iii,jjj) = ImgBuf[iii*FrameWidth+jjj];
 		}
 	}
+
+	normalize_16(*scaledImage, *rawImage);
+
+	cMapping->falsify_image(*scaledImage, *colorImage, 0);
+
+	//
 	
-	cv::imshow("optrisVideo", frameMat);
+	cv::imshow("optrisVideo", *colorImage);
 	cv::waitKey(1);
 
 	return 0;

@@ -11,6 +11,8 @@
 
 #include "IPC2.h"
 
+#include "improc.hpp"
+
 ref class optrisManager : public System::Windows::Forms::Form {
 
 protected:
@@ -27,6 +29,9 @@ protected:
 	short FrameWidth, FrameHeight, FrameDepth;
 	double FrameRatio;
 	int FrameSize;
+
+	cv::Mat *rawImage, *scaledImage, *colorImage;
+	cScheme *cMapping;
 	
 	void Init(int frameWidth, int frameHeight, int frameDepth);
 
