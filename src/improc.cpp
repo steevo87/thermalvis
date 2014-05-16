@@ -3155,150 +3155,24 @@ void cScheme::falsify_image(const cv::Mat& thermIm, cv::Mat& outputIm, int param
 		outputIm = cv::Mat::zeros(thermIm.size(), CV_8UC3);
 	}
 
-	//int level;
-	// inputs can be 8 or 16 bits/pixel
-	// output is 8 bits/pixel
-	//int maxVal = 255;
-
-	// some kind of check to figure out if input image is actual 16-bits/pixel
-	if (thermIm.depth() == 2) {
-        //maxVal = 65535;
-	}
-
-	// store the current standard, and then modify it according to params
-	//int newCode, oldCode;
-
-	if (param == 1) {
-		//oldCode = code;
-		//newCode = code + 1;
-	}
-
-	//printf("%s << code = %d; newCode = %d\n", __FUNCTION__, code, newCode);
-
-	/*
-	if (params[0] == 0) {   // if a variation hasn't been selected
-
-	    // start to deconstruct code...
-        newCode = code;
-
-        if (((newCode % 2) == 0) && (params[1] == 1)) {   // if it's unsafe but safety has been selected
-            newCode += 1;
-        }
-
-
-	} else {    // otherwise, ignore last digit
-        newCode = code - (code % 10);
-
-        newCode += (params[0]-1)*2;    // add variation code
-
-        if (params[1] == 1) {
-            newCode += 1;              // add safety index
-        }
-
-	}
-	*/
-
-	if (param == 1) {
-		//load_standard(newCode);
-	}
-
-	//setupLookupTable();
-
-	//double sr, sg, sb;
-
-    /*
-	printf("%s << thermIm = %dx%d, %d, %d\n", __FUNCTION__, thermIm.size().width, thermIm.size().height, thermIm.depth(), thermIm.channels());
-	printf("%s << outputIm = %dx%d, %d, %d\n", __FUNCTION__, outputIm.size().width, outputIm.size().height, outputIm.depth(), outputIm.channels());
-    */
-
-	// Create RGB output image
-	//if (outputIm.empty()) {
-        //outputIm = cv::Mat(thermIm.size(), CV_8UC3);
-	//}
-
-	//struct timeval timer;
-	//double elapsedTime;
-	//elapsedTime = timeElapsedMS(timer);
-
-
-	//level = 0;
-
 	int lookupIndex = 0;
 
+	#pragma omp parallel for
 	for (int i = 0; i < thermIm.size().height; i++)	{
 		for (int j = 0; j < thermIm.size().width; j++) {
-
-			// find closest element...
-
-			//if ((*thermIm)(i, j) > 255
-
-			//level = (thermIm.at<unsigned short>(i,j)*(MAP_LENGTH-1))/65536;
-            //level = (int) floor((thermIm.at<unsigned short>(i,j)*(MAP_LENGTH-1))/65535); // or 65536?
-			//printf("level = %d\n", level);
-
-			// removing this halves from 15 - 7
-			/*
-			if (thermIm.depth() == 2) {
-                level = (int) floor(double((thermIm.at<unsigned short>(i,j)*(MAP_LENGTH-1))/maxVal)); // for 16 bits/pixel
-			} else {
-                level = (int) floor(double((thermIm.at<unsigned char>(i,j)*(MAP_LENGTH-1))/maxVal)); // for standard 8bits/pixel
-			}
-			*/
-			// removing this takes it down effectively to zero...
-			/*
-            outputIm.at<cv::Vec3b>(i,j)[2] = (unsigned char) (255.0 * red[level]);
-            outputIm.at<cv::Vec3b>(i,j)[1] = (unsigned char) (255.0 * green[level]);
-            outputIm.at<cv::Vec3b>(i,j)[0] = (unsigned char) (255.0 * blue[level]);
-			*/
-
-			//printf("%s << depth (%d) (%d, %d)\n", __FUNCTION__, thermIm.depth(), thermIm.cols, thermIm.rows);
-
-			//imshow("asda", thermIm);
-			//waitKey();
-
 			if (thermIm.depth() == 2) {
 				lookupIndex = thermIm.at<unsigned short>(i,j);
 				outputIm.at<cv::Vec3b>(i,j)[2] = uchar(lookupTable_2[lookupIndex][2]);
 				outputIm.at<cv::Vec3b>(i,j)[1] = uchar(lookupTable_2[lookupIndex][1]);
 				outputIm.at<cv::Vec3b>(i,j)[0] = uchar(lookupTable_2[lookupIndex][0]);
 			} else if (thermIm.depth() == 0) {
-
 				lookupIndex = thermIm.at<unsigned char>(i,j);
-				//printf("%s << here (%d, %d, %d)\n", __FUNCTION__, lookupTable_1[lookupIndex][2], lookupTable_1[lookupIndex][1], lookupTable_1[lookupIndex][0]);
 				outputIm.at<cv::Vec3b>(i,j)[2] = lookupTable_1[lookupIndex][2];
 				outputIm.at<cv::Vec3b>(i,j)[1] = lookupTable_1[lookupIndex][1];
 				outputIm.at<cv::Vec3b>(i,j)[0] = lookupTable_1[lookupIndex][0];
 			}
-
-
-			/*
-			sr = 255.0 * red[level];
-			sg = 255.0 * green[level];
-			sb = 255.0 * blue[level];
-
-            outputIm.at<cv::Vec3b>(i,j)[2] = (unsigned char) sr;
-            outputIm.at<cv::Vec3b>(i,j)[1] = (unsigned char) sg;
-            outputIm.at<cv::Vec3b>(i,j)[0] = (unsigned char) sb;
-			*/
-
-			//printf("raw = %f\n", thermIm(i, j));
-			//printf("lvl = %d\n", level);
-			//printf("red = %f\n", red[level]);
-			//printf("grn = %f\n", green[level]);
-			//printf("blu = %f\n", blue[level]);
-			//printf("/n");
-
 		}
-		//std::cin.get();
 	}
-
-	//elapsedTime = timeElapsedMS(timer);
-	//printf("%s << Time elapsed [%d] = %f\n", __FUNCTION__, 0, elapsedTime);
-
-	if (param == 1) {
-		//load_standard(oldCode);
-	}
-
 }
 
 void cScheme::image_resize(cv::Mat& inputIm, int dim_i, int dim_j) {

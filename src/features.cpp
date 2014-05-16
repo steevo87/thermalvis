@@ -114,7 +114,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 		colour = CV_RGB(255, 0, 0);
 	}
 	
-	for (int iii = kpts_sorted.size()-1; iii >= 0; iii--) {
+	for (int iii = int(kpts_sorted.size())-1; iii >= 0; iii--) {
 
 		if (minResponse != maxResponse) {
 			normalizedScore = pow((kpts_sorted.at(iii).response - minResponse) / (maxResponse - minResponse), 0.25);
@@ -138,7 +138,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 	fadeImage(src, dst);
 	//cvtColor(grayFrame, dst, CV_GRAY2RGB);
 	
-	for (int iii = kpts_sorted.size()-1; iii >= 0; iii--) {
+	for (int iii = int(kpts_sorted.size())-1; iii >= 0; iii--) {
 
 		if (minResponse != maxResponse) {
 			normalizedScore = pow((kpts_sorted.at(iii).response - minResponse) / (maxResponse - minResponse), 0.25);
@@ -355,7 +355,7 @@ void reduceEdgyFeatures(vector<cv::KeyPoint>& KeyPoints, cameraParameters& camDa
 
 	redistortPoints(candidates, redistortedPoints, camData.Kx, camData.distCoeffs, camData.expandedCamMat);
 
-	for (int iii = candidates.size()-1; iii >= 0; iii--) {
+	for (int iii = int(candidates.size())-1; iii >= 0; iii--) {
 
 		float xDist = min(abs(((float) camData.expandedSize.width) - redistortedPoints.at(iii).x), abs(redistortedPoints.at(iii).x));
 		float yDist = min(abs(((float) camData.expandedSize.height) - redistortedPoints.at(iii).y), abs(redistortedPoints.at(iii).y));
@@ -376,7 +376,7 @@ void reduceEdgyCandidates(vector<cv::Point2f>& candidates, cameraParameters& cam
 
 	redistortPoints(candidates, redistortedPoints, camData.Kx, camData.distCoeffs, camData.expandedCamMat);
 
-	for (int iii = candidates.size()-1; iii >= 0; iii--) {
+	for (int iii = int(candidates.size())-1; iii >= 0; iii--) {
 
 		float xDist = min(abs(((float) camData.expandedSize.width) - redistortedPoints.at(iii).x), abs(redistortedPoints.at(iii).x));
 		float yDist = min(abs(((float) camData.expandedSize.height) - redistortedPoints.at(iii).y), abs(redistortedPoints.at(iii).y));
@@ -413,7 +413,7 @@ void reduceUnrefinedCandidates(vector<cv::Point2f>& candidates) {
 		return;
 	}
 
-	for (int iii = candidates.size()-1; iii >= 0; iii--) {
+	for (int iii = int(candidates.size())-1; iii >= 0; iii--) {
 
 		if (((candidates.at(iii).x - floor(candidates.at(iii).x)) == 0.0) && ((candidates.at(iii).y - floor(candidates.at(iii).y)) == 0.0)) {
 			printf("%s << erasing: (%f, %f)\n", __FUNCTION__, candidates.at(iii).x, candidates.at(iii).y);
@@ -546,7 +546,7 @@ void reduceWeakFeatures(cv::Mat& im, vector<cv::KeyPoint>& feats, double minResp
 
 	//cin.get();
 
-	for (int iii = feats.size()-1; iii >= 0; iii--) {
+	for (int iii = int(feats.size())-1; iii >= 0; iii--) {
 
 		// responseLevels.at(responseLevels.size()-5)
 		if (feats.at(iii).response < minResponse) { // 80.0
@@ -1207,7 +1207,7 @@ void filterBlandKeyPoints(cv::Mat& img, vector<cv::KeyPoint>& pts, double thresh
 		return;
 	}
 
-	for (int iii = pts.size()-1; iii >= 0; iii--) {
+	for (int iii = int(pts.size())-1; iii >= 0; iii--) {
 
 		//printf("%s << pts.at(%d).response = %f (%f)\n", __FUNCTION__, iii, pts.at(iii).response, thresh);
 
@@ -1446,7 +1446,7 @@ void filterMatches(vector<vector<cv::DMatch> >& matches1to2, double threshold) {
 		return;
 	}
 
-	int currIndex = matches1to2.size() - 1;
+	int currIndex = int(matches1to2.size()) - 1;
 
 	while (matches1to2.at(currIndex).at(0).distance > threshold) {
 		currIndex--;
@@ -1729,9 +1729,9 @@ void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const c
     cv::waitKey();
     */
 
-    matchingMatrix = cv::Mat::zeros(matches1to2.size(), matches2to1.size(), CV_64FC1);
+    matchingMatrix = cv::Mat::zeros(int(matches1to2.size()), int(matches2to1.size()), CV_64FC1);
 
-    cv::Mat countMat = cv::Mat::zeros(matches1to2.size(), matches2to1.size(), CV_64FC1);
+    cv::Mat countMat = cv::Mat::zeros(int(matches1to2.size()), int(matches2to1.size()), CV_64FC1);
 
     // IM 1 to IM 2
     for (unsigned int iii = 0; iii < matches1to2.size(); iii++) {
@@ -1815,7 +1815,7 @@ void filterVectors(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector<
 
 	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 1); }
 
-	for (int iii = statusVec.size()-1; iii >= 0; iii--) {
+	for (int iii = int(statusVec.size())-1; iii >= 0; iii--) {
 		if (statusVec.at(iii) == 0) {
 			pts1.erase(pts1.begin() + iii);
 			pts2.erase(pts2.begin() + iii);
@@ -1963,7 +1963,7 @@ void markEdgyTracks(vector<cv::Point2f>& pts, vector<uchar>& statusVec, cameraPa
 
 	float xDist, yDist, dist;
 
-	for (int iii = pts.size()-1; iii >= 0; iii--) {
+	for (int iii = int(pts.size())-1; iii >= 0; iii--) {
 
 		xDist = min(((float) camData.expandedSize.width) - rpts.at(iii).x, rpts.at(iii).x);
 		yDist = min(((float) camData.expandedSize.height) - rpts.at(iii).y, rpts.at(iii).y);

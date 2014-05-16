@@ -71,7 +71,7 @@ void drawContours(const cv::Mat& src, cv::Mat& dst) {
 		//Draw the contours
 		
 		for (size_t idx = 0; idx < contours.size(); idx++) {
-			cv::drawContours(contourImage, contours, idx, colors[idx % 3]);
+			cv::drawContours(contourImage, contours, int(idx), colors[idx % 3]);
 		}
 		
 		

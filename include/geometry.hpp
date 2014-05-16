@@ -2,7 +2,7 @@
  *  \brief	Declarations for geometry-related calculations.
 */
 
-#ifdef _USE_EIGEN3_
+#ifdef _USE_EIGEN_
 
 #ifndef _THERMALVIS_GEOMETRY_H_
 #define _THERMALVIS_GEOMETRY_H_

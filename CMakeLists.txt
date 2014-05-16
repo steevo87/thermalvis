@@ -7,13 +7,14 @@ option(USE_PCL "Build PCL-related functions." FALSE)
 set (ADDITIONAL_LIBS "")
 set (ADDITIONAL_INCLUDES "")
 
-find_package(Eigen3)
+find_package(Eigen)
 
 IF(Eigen_FOUND)
-	add_definitions( -D_USE_EIGEN3_ )
+	add_definitions( -D_USE_EIGEN_ )
 	set (ADDITIONAL_INCLUDES ${ADDITIONAL_INCLUDES} ${EIGEN3_INCLUDE_DIR})
 endif()
 
+add_definitions( -D_CRT_SECURE_NO_WARNINGS )
 
 
 IF(USE_PCL)

@@ -686,7 +686,7 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
 
 void findEdgePatches(Size patternSize, int mode, int *XVec, int *YVec, vector<Point2f>& patchCentres, vector<Point2f>& remainingPatches)
 {
-    int minDist, minIndex, sortedIndex = patchCentres.size();
+    int minDist, minIndex, sortedIndex = int(patchCentres.size());
     double dist;
     vector<Point2f> patchString;  // to store some patches before you splice stuff inside
     Point2f interPoint;
@@ -902,7 +902,7 @@ void findInteriorPatches(Size patternSize, int mode, int *XVec, int *YVec, vecto
 {
     // Temporary:
 
-    int minDist, minIndex = 0, sortedIndex = patchCentres.size();;
+    int minDist, minIndex = 0, sortedIndex = int(patchCentres.size());
     double dist;
 
     vector<Point2f> patchString;  // to store some patches before you splice stuff inside
@@ -2680,7 +2680,7 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
     double maxDist = 0.0;
 
     vector<Point2f> foundCorners;
-    int maxCorners = 4*src.size();
+    int maxCorners = 4*int(src.size());
 
     unsigned int *srcBestMatches;
     unsigned int foundBestMatch;
@@ -4386,7 +4386,7 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
             printf("%s << Looping through filters again...\n", __FUNCTION__);
         }
 
-        previousPatches = msers.size();
+        previousPatches = int(msers.size());
 
         // ==============================CLUSTER FILTER
         t = getTickCount();

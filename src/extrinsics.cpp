@@ -13,8 +13,8 @@ double calculateExtrinsicERE(int nCams,
                              Mat *T)
 {
 
-    int ptsPerSet = physicalPoints.size();
-    int numFrames = corners[0].size();
+    int ptsPerSet = int(physicalPoints.size());
+    int numFrames = int(corners[0].size());
 
     Mat *fsRvec, *fsTvec, *esRvec, *esTvec;
     fsRvec = new Mat[nCams];

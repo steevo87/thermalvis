@@ -2,7 +2,7 @@
  *  \brief	Definitions for geometry-related calculations.
 */
 
-#ifdef _USE_EIGEN3_
+#ifdef _USE_EIGEN_
 
 #include "geometry.hpp"
 

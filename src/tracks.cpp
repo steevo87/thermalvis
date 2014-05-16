@@ -619,7 +619,7 @@ int addMatchToVector(vector<featureTrack>& featureTrackVector, unsigned int inde
 		newFeatureTrack.velocity_y = velocity.y;
 		newFeatureTrack.firstOccurence = index1;
 		featureTrackVector.push_back(newFeatureTrack);
-		trackIndex = featureTrackVector.size()-1;
+		trackIndex = int(featureTrackVector.size())-1;
 		
 	}
 	
@@ -700,11 +700,11 @@ void redistortTracks(const vector<featureTrack>& src, vector<featureTrack>& dst,
 		tempPoints.clear();
 		
 		#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			for (int jjj = src.at(iii).locations.size()-1; jjj >= ((int) max(((int) src.at(iii).locations.size()) - ((int) history), ((int) 0))); jjj--) {
+			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
 				tempPoints.push_back(src.at(iii).locations.at(jjj).featureCoord);
 			}
 		#else
-			for (int jjj = src.at(iii).locations.size()-1; jjj >= ((int) std::max(((int) src.at(iii).locations.size()) - ((int) history), ((int) 0))); jjj--) {
+			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) std::max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
 				tempPoints.push_back(src.at(iii).locations.at(jjj).featureCoord);
 			}
 		#endif
@@ -714,12 +714,12 @@ void redistortTracks(const vector<featureTrack>& src, vector<featureTrack>& dst,
 		unsigned int currIndex = 0;
 
 		#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			for (int jjj = src.at(iii).locations.size()-1; jjj >= ((int) max(((int) src.at(iii).locations.size()) - ((int) history), ((int) 0))); jjj--) {
+			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
 				dst.at(iii).locations.at(jjj).featureCoord = newPoints.at(currIndex);
 				currIndex++;
 			}
 		#else
-			for (int jjj = src.at(iii).locations.size()-1; jjj >= ((int) std::max(((int) src.at(iii).locations.size()) - ((int) history), ((int) 0))); jjj--) {
+			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) std::max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
 				dst.at(iii).locations.at(jjj).featureCoord = newPoints.at(currIndex);
 				currIndex++;
 			}

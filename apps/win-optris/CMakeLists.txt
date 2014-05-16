@@ -10,6 +10,7 @@ IF(WIN32 OR win64)
    SET(CMAKE_FIND_LIBRARY_SUFFIXES .lib .dll)
 ELSE()
    SET(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+   MESSAGE(SEND_ERROR "There is no way the script should have entered here..")
 ENDIF()
 
 find_package( OpenCV REQUIRED )

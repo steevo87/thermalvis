@@ -20,7 +20,7 @@ double calculateERE( Size imSize,
 	if (debug) { printf("%s << physicalPoints.size() = (%d)\n", __FUNCTION__, physicalPoints.size()); }
 	if (debug) { printf("%s << corners.size() = (%d)\n", __FUNCTION__, corners.size()); }
 	
-    int total_points = corners.size() * corners.at(0).size();
+    int total_points = int(corners.size() * corners.at(0).size());
     
     Mat newCamMat;
     Mat identity = Mat::eye(3,3,CV_64FC1);
@@ -1024,7 +1024,7 @@ void optimizeCalibrationSet(Size imSize,
 
             possibleCombos = 1;
 
-            possibleCombos = (unsigned long)(factorial(candidatePatternsCpy.size()) / (factorial(N+1) * factorial(candidatePatternsCpy.size() - N - 1)));
+            possibleCombos = (unsigned long)(factorial(int(candidatePatternsCpy.size())) / (factorial(N+1) * factorial(int(candidatePatternsCpy.size()) - N - 1)));
 
             printf("%s << possibleCombos = %d\n", __FUNCTION__, possibleCombos);
 
@@ -1035,7 +1035,7 @@ void optimizeCalibrationSet(Size imSize,
             {
 
                 tempFrameTester.clear();
-                getNextCombo(currentIndices, N+1, candidatePatternsCpy.size());
+                getNextCombo(currentIndices, N+1, int(candidatePatternsCpy.size()));
 
                 for (unsigned int j = 0; j < currentIndices.size(); j++)
                 {
