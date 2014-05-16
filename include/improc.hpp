@@ -17,6 +17,8 @@
 #define CUSTOM			3
 #define MAP_LENGTH		1024
 
+#define MAX_INPUT_LENGTH	256
+
 #define GRAYSCALE		0
 
 #define CIECOMP			100
@@ -253,18 +255,18 @@ class cScheme {
 protected:
 	
 	/// \brief		Short array of the intensities corresponding to the color mappings (rx, gx, bx)
-	double* dx;
+	double dx[MAX_INPUT_LENGTH];
 	
 	/// \brief		Short array of red-weightings of intensity mappings
-	double* rx;
+	double rx[MAX_INPUT_LENGTH];
 	/// \brief		Long array of red-weightings of intensity mappings
 	double red[MAP_LENGTH];
 	/// \brief		Short array of green-weightings of intensity mappings
-	double* gx;
+	double gx[MAX_INPUT_LENGTH];
 	/// \brief		Long array of green-weightings of intensity mappings
 	double green[MAP_LENGTH];
 	/// \brief		Short array of blue-weightings of intensity mappings
-	double* bx;
+	double bx[MAX_INPUT_LENGTH];
 	/// \brief		Long of blue-weightings of intensity mappings
 	double blue[MAP_LENGTH];
 	/// \brief		Number of elements in shortened colour arrays
@@ -280,34 +282,29 @@ public:
 	/// \brief 		Constructor.
 	cScheme();
 
-
-
 	/// \brief 		Constructor.
-	/// \param 		r		Pointer to red weightings
-	/// \param 		g		Pointer to green weightings
-	/// \param 		b		Pointer to blue weightings
-	/// \param 		len		Length of all three arrays
-	cScheme(double *d, double *r, double *g, double *b, int len);
+	/// \param 		mapCode: 1 for safe, 0 for unsafe (with blacks and whites)
+	cScheme(int mapCode, int mapParam = 0);
 
 	/// \brief 		Destructor.
 	~cScheme();
 
 	/// \brief 		Load a standard colour map in as the scheme.
-	/// \param 		mapCode...
+	/// \param 		mapCode: 1 for safe, 0 for unsafe (with blacks and whites)
 	void load_standard(int mapCode, int mapParam = 0);
 
 	/// \brief 		Creates a long map using the shortened map.
 	void create_long_map();
 
 	/// \brief		Recreates lookup table
-	void setupLookupTable(unsigned int depth = 65536);
+	void setupLookupTable(unsigned int depth = 2);
 
 	/// \brief 		Create and apply a new colour map as the scheme.
 	/// \param 		r		Pointer to red weightings
 	/// \param 		g		Pointer to green weightings
 	/// \param 		b		Pointer to blue weightings
 	/// \param 		len		Length of all three arrays
-	void customize(double* d, double* r, double* g, double* b, int len);
+	// void customize(double* d, double* r, double* g, double* b, int len);
 
 	/// \brief 		Create a false colour version of a monochromatic thermal image.
 	/// \param 		thermIm		Monochrocv::Matic Thermal Image

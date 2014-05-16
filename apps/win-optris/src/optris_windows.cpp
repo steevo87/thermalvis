@@ -5,9 +5,8 @@ optrisManager::optrisManager(HWND hostHandle) {
 	ipcInitialized = false;
 	hr = -1;
 
-	cMapping = new cScheme;
+	cMapping = new cScheme(DEFAULT_COLORSCHEME_CODE);
 	colormap_index = DEFAULT_COLORSCHEME_CODE;
-	cMapping->load_standard(colormap_index);
 
 	this->Text = "Win-Optris Control";
 	this->Size = System::Drawing::Size(400,300);
@@ -122,8 +121,7 @@ void optrisManager::button_click(Object^ sender, System::EventArgs^ e) {
 }
 
 void optrisManager::safety_changed(Object^ sender, System::EventArgs^ e) {
-	safety->Checked ? colormap_index += 1 : colormap_index -= 1;
-	cMapping->load_standard(colormap_index);
+	cMapping->load_standard(colormap_index, safety->Checked ? 1 : 0);
 }
 
 void optrisManager::autoscale_changed(Object^ sender, System::EventArgs^ e) {
@@ -186,6 +184,7 @@ void optrisManager::Init(int frameWidth, int frameHeight, int frameDepth) {
 	FrameRatio = (double)FrameWidth /  (double)FrameHeight;
 	FrameDepth = frameDepth;
 
+	printf("%s << Building images with dimensions (%d) x (%d)\n", __FUNCTION__, FrameWidth, FrameHeight);
 	rawImage = new cv::Mat(FrameHeight, FrameWidth, CV_16UC1);
 	scaledImage = new cv::Mat(FrameHeight, FrameWidth, CV_16UC1);
 	_8bitImage = new cv::Mat(FrameHeight, FrameWidth, CV_8UC1);

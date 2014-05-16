@@ -16,7 +16,6 @@ endif()
 
 add_definitions( -D_CRT_SECURE_NO_WARNINGS )
 
-
 IF(USE_PCL)
 
 	set(Boost_USE_STATIC_LIBS OFF) 
