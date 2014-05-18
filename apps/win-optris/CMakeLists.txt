@@ -17,18 +17,11 @@ find_package( OpenCV REQUIRED )
 
 project(win-optris)
 
-option(USE_OPTRIS_SDK "Build with Optris compatability" TRUE)
-
 set (ADDITIONAL_LIBS "")
 
-IF(WIN32 OR win64)
-	IF(USE_OPTRIS_SDK)
-		set(OptrisSDK "$ENV{USERPROFILE}/Documents/Optris/SDK" CACHE FILEPATH "Include directory for Optris SDK")
-		include_directories(${OptrisSDK})
-		link_directories(${OptrisSDK})
-		set (ADDITIONAL_LIBS ${ADDITIONAL_LIBS} "ImagerIPC2.dll")
-	ENDIF()
-ENDIF()
+include_directories(${OptrisSDK})
+link_directories(${OptrisSDK})
+set (ADDITIONAL_LIBS ${ADDITIONAL_LIBS} "ImagerIPC2.dll")
 
 # To add all necessary source and header files (courtesy of https://github.com/StevenHickson)
 file(GLOB_RECURSE WINOPTRIS_HEADERS include/*.h)
