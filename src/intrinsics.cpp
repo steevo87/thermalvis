@@ -1026,7 +1026,7 @@ void optimizeCalibrationSet(Size imSize,
 
             possibleCombos = (unsigned long)(factorial(int(candidatePatternsCpy.size())) / (factorial(N+1) * factorial(int(candidatePatternsCpy.size()) - N - 1)));
 
-            printf("%s << possibleCombos = %d\n", __FUNCTION__, possibleCombos);
+            printf("%s << possibleCombos = %d\n", __FUNCTION__, int(possibleCombos));
 
             currentIndices.clear();
 

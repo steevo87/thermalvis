@@ -51,7 +51,7 @@ IF(BUILD_FOR_ROS)
 	add_definitions( -D_BUILD_FOR_ROS_ )
 ENDIF()
 	
-find_package( OpenCV 2.4.8 HINTS "$ENV{USERPROFILE}/Documents/GitHub/BUILDS/OpenCV" "C:/Users/Public/Documents/opencv/build")
+find_package( OpenCV HINTS "/usr/local/share/OpenCV" "$ENV{USERPROFILE}/Documents/GitHub/BUILDS/OpenCV" "C:/Users/Public/Documents/opencv/build")
 
 string(REGEX REPLACE "/Release/Release" "/Release" OpenCV_LIB_DIR_OPT "${OpenCV_LIB_DIR_OPT}")
 string(REGEX REPLACE "/Debug/Debug" "/Debug" OpenCV_LIB_DIR_DBG "${OpenCV_LIB_DIR_DBG}")

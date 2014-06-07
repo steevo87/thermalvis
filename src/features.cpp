@@ -589,7 +589,7 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	
 	bool debugFlag = false;
 	
-	if (debugFlag) { printf("%s << ENTERED. im1 = (%u, %u); im2 = (%u, %u), pts1 = (%lu), pts2 = (%lu)\n", __FUNCTION__, im1.cols, im1.rows, im2.cols, im2.rows, pts1.size(), pts2.size()); }
+	if (debugFlag) { printf("%s << ENTERED. im1 = (%u, %u); im2 = (%u, %u), pts1 = (%lu), pts2 = (%lu)\n", __FUNCTION__, im1.cols, im1.rows, im2.cols, im2.rows, (long unsigned int)(pts1.size()), (long unsigned int)(pts2.size())); }
 	
 	//testTime = timeElapsedMS(test_timer, true);
 	//printf("%s << ENTERED.\n", __FUNCTION__);
@@ -716,13 +716,13 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	//printf("XDebug 2: (%f)\n", testTime);
 
 	if (warping) {
-		if (debugFlag) { printf("%s << (warped) Before. (%u, %u) (%u, %u) (%lu) (%u, %u)\n", __FUNCTION__, im1b.rows, im1b.cols, im2.rows, im2.cols, pts1b.size(), winSize.height, winSize.width); }
+		if (debugFlag) { printf("%s << (warped) Before. (%u, %u) (%u, %u) (%lu) (%u, %u)\n", __FUNCTION__, im1b.rows, im1b.cols, im2.rows, im2.cols, (long unsigned int)(pts1b.size()), winSize.height, winSize.width); }
 		cv::calcOpticalFlowPyrLK(im1b, im2, pts1b, pts2, statusVec, err, winSize, maxLevel, criteria, opticalFlowFlags, thresh);
 		checkDistances(originalEstimates, pts2, statusVec, (double) distanceConstraint);
 		if (debugFlag) { printf("%s << After.\n", __FUNCTION__); }
 		markAbsentPoints(pts1b, pts2, statusVec, im1.size());
 	} else {
-		if (debugFlag) { printf("%s << (not-warped) Before. (%u, %u) (%u, %u) (%lu) (%u, %u)\n", __FUNCTION__, im1b.rows, im1b.cols, im2.rows, im2.cols, pts1.size(), winSize.height, winSize.width); }
+		if (debugFlag) { printf("%s << (not-warped) Before. (%u, %u) (%u, %u) (%lu) (%u, %u)\n", __FUNCTION__, im1b.rows, im1b.cols, im2.rows, im2.cols, (long unsigned int)(pts1.size()), winSize.height, winSize.width); }
 		
 		/*
 		for (unsigned int xxx = 0; xxx < pts1.size(); xxx++) {
@@ -786,7 +786,7 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 				imshow("test2", b);
 				cv::waitKey(1);
 				
-				printf("%s << After flow: %d good out of / %lu\n", __FUNCTION__, cv::countNonZero(statusVec), statusVec.size());
+				printf("%s << After flow: %d good out of / %lu\n", __FUNCTION__, cv::countNonZero(statusVec), (long unsigned int)(statusVec.size()));
 			}
 			
 			//for (unsigned int iii = 0; iii < pts1.size(); iii++) {

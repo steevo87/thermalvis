@@ -16,12 +16,14 @@
 	#include <sys/mman.h>
 	#include <sys/ioctl.h>
 	#include <termios.h>
+	#include <string.h>
+	#include <cstdlib>
+	#include <cmath>
 #endif
 
 #include <iostream>
 #include <fstream>
 #include <vector>
-//#include <opencv2/gpu/gpu.hpp>
 
 #define USE_CLAHE 0
 

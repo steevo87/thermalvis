@@ -2,7 +2,7 @@
  *  \brief	Definitions for managing video sources and formats.
 */
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) || !defined(_BUILD_FOR_ROS_)
 	// ..
 #else
 
