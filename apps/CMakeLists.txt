@@ -6,13 +6,12 @@ IF(USE_OPTRIS_SDK)
 
 	set(OptrisSDK "$ENV{USERPROFILE}/Documents/Optris/SDK" CACHE FILEPATH "Include directory for Optris SDK")
 
-	IF(IS_DIRECTORY OptrisSDK)
+	IF(EXISTS "${OptrisSDK}")
 		set(OptrisSDK_FOUND TRUE)
-		MESSAGE(STATUS "Found OptrisSDK directory at specified path.")
-		add_subdirectory(win-optris)
+		MESSAGE(STATUS "Found OptrisSDK directory at specified path <${OptrisSDK}>.")
 	ELSE()
 		set(OptrisSDK_FOUND FALSE)
-		MESSAGE(FATAL_ERROR "Unable to find OptrisSDK directory at specified path.")
+		MESSAGE(FATAL_ERROR "Unable to find OptrisSDK directory at specified path <${OptrisSDK}>.")
 	ENDIF()
 
 	 IF(OptrisSDK_FOUND)

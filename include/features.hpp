@@ -63,7 +63,7 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::
 void drawMatchPaths(cv::Mat& src, cv::Mat& dst, vector<cv::KeyPoint>& kp1, vector<cv::KeyPoint>& kp2, vector<vector<cv::DMatch> >& matches1to2);
 
 /// \brief      Prints cv::Match paths onto a copy of an image, given vectors containing corresponding points
-void drawMatchPaths(cv::Mat& src, cv::Mat& dst, vector<cv::Point2f>& kp1, vector<cv::Point2f>& kp2, const cv::Scalar& color = CV_RGB(255, 0, 0));
+void drawMatchPaths(cv::Mat& src, cv::Mat& dst, vector<cv::Point2f>& kp1, vector<cv::Point2f>& kp2, const cv::Scalar& color = cv::Scalar(255, 0, 0));
 
 /// \brief      Creates cv::Matrix representing descriptor distance between sets of features
 void createMatchingMatrix(cv::Mat& MatchingMatrix, const cv::Mat& desc1, const cv::Mat& desc2);

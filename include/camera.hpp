@@ -2,7 +2,7 @@
  *  \brief	Declarations for geometric camera parameters.
 */
  
- #ifndef _THERMALVIS_CAMERA_H_
+#ifndef _THERMALVIS_CAMERA_H_
 #define _THERMALVIS_CAMERA_H_
 
 #include "opencv_resources.hpp"

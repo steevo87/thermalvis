@@ -4,8 +4,8 @@
 
 #ifdef _USE_PCL_
 
-#ifndef _RECONSTRUCTION_H_
-#define _RECONSTRUCTION_H_
+#ifndef _THERMALVIS_RECONSTRUCTION_H_
+#define _THERMALVIS_RECONSTRUCTION_H_
 
 #include "general_resources.hpp"
 #include "opencv_resources.hpp"

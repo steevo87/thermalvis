@@ -130,7 +130,11 @@ bool findMaskCorners(const Mat& image, Size patternSize, vector<Point2f>& corner
 {
         Mat grayIm;
         if (image.channels() > 1) {
-                cvtColor(image, grayIm, CV_RGB2GRAY);
+				#ifdef _OPENCV_VERSION_3_PLUS_
+                cvtColor(image, grayIm, COLOR_RGB2GRAY);
+				#else
+				cvtColor(image, grayIm, CV_RGB2GRAY);
+				#endif
         } else {
                 grayIm = Mat(image);
         }
@@ -198,12 +202,13 @@ void findAllPatches(const Mat& image, Size patternSize, vector<vector<Point> >& 
 
     // Copy image but into greyscale
     Mat imGrey;
-    if (image.channels() > 1)
-    {
-        cvtColor(image, imGrey, CV_RGB2GRAY);
-    }
-    else
-    {
+    if (image.channels() > 1) {
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(image, imGrey, COLOR_RGB2GRAY);
+		#else
+		cvtColor(image, imGrey, CV_RGB2GRAY);
+		#endif
+    } else {
         image.copyTo(imGrey);
     }
 
@@ -1682,7 +1687,7 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
 
 }
 
-void addToBinMap(Mat& binMap, cv::vector<Point2f>& cornerSet, Size imSize)
+void addToBinMap(Mat& binMap, std::vector<Point2f>& cornerSet, Size imSize)
 {
     int x, y;
     for (unsigned int i = 0; i < cornerSet.size(); i++)
@@ -1760,7 +1765,7 @@ void prepForDisplay(const Mat& distributionMap, Mat& distributionDisplay)
     return;
 }
 
-void addToRadialDistribution(double *radialDistribution, cv::vector<Point2f>& cornerSet, Size imSize)
+void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& cornerSet, Size imSize)
 {
 
     Point2f center((float)((double(imSize.height-1))/2), (float)((double(imSize.width-1))/2));
@@ -1800,7 +1805,7 @@ void addToDistributionMap(Mat& distributionMap, vector<Point2f>& corners)
 double obtainSetScore(Mat& distributionMap,
                       Mat& binMap,
                       Mat& gaussianMat,
-                      cv::vector<Point2f>& cornerSet,
+                      std::vector<Point2f>& cornerSet,
                       double *radialDistribution)
 {
     double score = 1.0;
@@ -1815,7 +1820,7 @@ double obtainSetScore(Mat& distributionMap,
 
     center = Point(distributionMap.size().width/2 - 1, distributionMap.size().height/2 - 1);
 
-    cv::vector<Point> fullHull, simplifiedHull;
+    std::vector<Point> fullHull, simplifiedHull;
 
     for (unsigned int i = 0; i < cornerSet.size(); i++)
     {
@@ -3132,7 +3137,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
     }
 
     Point3f newPoint;
-    cv::vector<Point3f> row;
+    std::vector<Point3f> row;
 
     //printf("%s << patternSize = (%d, %d)\n", __FUNCTION__, patternSize.width, patternSize.height);
 
@@ -3171,7 +3176,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
 
     //printf("%s << STEP 1a...\n", __FUNCTION__);
 
-    cv::vector< cv::vector<Point3f> > objectPoints;
+    std::vector< std::vector<Point3f> > objectPoints;
     objectPoints.push_back(row);
 
     vector<vector<Point2f> > vvOriginalCentres;
@@ -3181,7 +3186,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
 
     Mat cameraMatrix, distCoeffs, newCamMat;
 
-    cv::vector<Mat> rvecs, tvecs;
+    std::vector<Mat> rvecs, tvecs;
 
     calibrateCamera(objectPoints, vvOriginalCentres, image.size(), cameraMatrix, distCoeffs, rvecs, tvecs, PATCH_CORRECTION_INTRINSICS_FLAGS);
 

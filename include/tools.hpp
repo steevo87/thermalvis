@@ -6,6 +6,7 @@
 #define _THERMALVIS_TOOLS_H_
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+	#define NOMINMAX 1
 	#include <windows.h>
 #else
 	#include <unistd.h>

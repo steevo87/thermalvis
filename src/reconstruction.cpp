@@ -512,13 +512,13 @@ bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<
 	
 	//printf("%s << debug (%d)\n", __FUNCTION__, 0);
 	
-	cv::vector<cv::Point3f> validPts;
+	std::vector<cv::Point3f> validPts;
 	for (unsigned int iii = 0; iii < inlierPts.size(); iii++) {
 		validPts.push_back(points_3d.at(inlierPts.at(iii)));
 	}
 	
 	//printf("%s << debug (%d)\n", __FUNCTION__, 1);
-	cv::vector<cv::Point2f> point_2f;
+	std::vector<cv::Point2f> point_2f;
 	projectPoints(validPts, Rvec, t, camData.K, camData.blankCoeffs, point_2f);
 	
 	//printf("%s << debug (%d)\n", __FUNCTION__, 2);

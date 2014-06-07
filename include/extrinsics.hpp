@@ -5,8 +5,8 @@
  * Functions required by both should be included in the "calibration.hpp/cpp" files.
  */
 
-#ifndef EXTRINSICS_HPP
-#define EXTRINSICS_HPP
+#ifndef _THERMALVIS_EXTRINSICS_HPP_
+#define _THERMALVIS_EXTRINSICS_HPP_
 
 #define EXTRINSICS_DEFAULT_FLAGS 0
 
@@ -18,26 +18,26 @@
 
 /// \brief      Calculate the Extended Reprojection Error for the extrinsic case.
 double calculateExtrinsicERE(int nCams,
-                             cv::vector<Point3f>& physicalPoints,
-                             cv::vector< cv::vector<Point2f> > *corners,
+                             std::vector<Point3f>& physicalPoints,
+                             std::vector< std::vector<Point2f> > *corners,
                              Mat *cameraMatrix,
                              Mat *distCoeffs,
                              Mat *R,
                              Mat *T);
 
 /// \brief      Cut down the given vectors of pointsets to those optimal for extrinsic calibration
-void optimizeCalibrationSets(cv::vector<Size> imSize,
+void optimizeCalibrationSets(std::vector<Size> imSize,
                              int nCams,
                              Mat *cameraMatrix,
                              Mat *distCoeffs,
-                             cv::vector<Mat>& distributionMap,
-                             cv::vector< cv::vector<Point2f> > *candidateCorners,
-                             cv::vector< cv::vector<Point2f> > *testCorners,
-                             cv::vector<Point3f> row,
+                             std::vector<Mat>& distributionMap,
+                             std::vector< std::vector<Point2f> > *candidateCorners,
+                             std::vector< std::vector<Point2f> > *testCorners,
+                             std::vector<Point3f> row,
                              int selection,
                              int num,
-                             cv::vector<cv::vector<int> >& tagNames,
-                             cv::vector<cv::vector<int> >& selectedTags,
+                             std::vector<std::vector<int> >& tagNames,
+                             std::vector<std::vector<int> >& selectedTags,
                              int flags = EXTRINSICS_DEFAULT_FLAGS);
 
 /// \brief      Calculate the scores for a set if pointsets in terms of their contribution to extrinsic calibration
@@ -45,7 +45,7 @@ double obtainMultisetScore(int nCams,
                            vector<Mat>& distributionMap,
                            vector<Mat>& binMap,
                            vector<vector<double> >& distances,
-                           cv::vector<cv::vector<Point2f> > *corners,
+                           std::vector<std::vector<Point2f> > *corners,
                            int index);
 
 #endif

@@ -642,7 +642,13 @@ void drawFeatureTracks(cv::Mat& src, cv::Mat& dst, vector<featureTrack>& tracks,
 		
 		if (tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).imageIndex == index) {
 			p1 = cv::Point(int(tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).featureCoord.x * 16.0), int(tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).featureCoord.y * 16.0));
+			
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			circle(dst, p1, 1, kColor, 2, cv::LINE_AA, 4);
+			#else
 			circle(dst, p1, 1, kColor, 2, CV_AA, 4);
+			#endif
+
 		} else {
 			continue;
 		}
@@ -671,8 +677,11 @@ void drawFeatureTracks(cv::Mat& src, cv::Mat& dst, vector<featureTrack>& tracks,
 			p1 = cv::Point(int(tracks.at(iii).locations.at(((unsigned int) jjj)+1).featureCoord.x * 16.0), int(tracks.at(iii).locations.at(((unsigned int) jjj)+1).featureCoord.y * 16.0));
 			p2 = cv::Point(int(tracks.at(iii).locations.at(((unsigned int) jjj)).featureCoord.x * 16.0), int(tracks.at(iii).locations.at(((unsigned int) jjj)).featureCoord.y * 16.0));
 	
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			cv::line(dst, p1, p2, tColor, 1, cv::LINE_AA, 4);
+			#else
 			cv::line(dst, p1, p2, tColor, 1, CV_AA, 4);
-		
+			#endif
 		}
 		
 	}

@@ -5,8 +5,8 @@
 #include "intrinsics.hpp"
 
 double calculateERE( Size imSize,
-                     cv::vector<Point3f>& physicalPoints,
-                     cv::vector< cv::vector<Point2f> >& corners,
+                     std::vector<Point3f>& physicalPoints,
+                     std::vector< std::vector<Point2f> >& corners,
                      const Mat& cameraMatrix,
                      const Mat& distCoeffs,
                      bool removeSpatialBias, 
@@ -66,7 +66,7 @@ double calculateERE( Size imSize,
 
 
     Mat fsRvec, fsTvec;
-    cv::vector<Point2f> cornerSet;
+    std::vector<Point2f> cornerSet;
     cornerSet.resize(physicalPoints.size());
 
     double err = 0.0, xSum = 0, ySum = 0, tSum = 0, xMean = 0, yMean = 0, tMean = 0, xDev = 0, yDev = 0, tDev = 0;
@@ -366,9 +366,9 @@ double calculateERE( Size imSize,
 }
 
 void optimizeCalibrationSet(Size imSize,
-                            cv::vector< cv::vector<Point2f> >& candidatePatterns,
-                            cv::vector< cv::vector<Point2f> >& testPatterns,
-                            cv::vector<Point3f> row,
+                            std::vector< std::vector<Point2f> >& candidatePatterns,
+                            std::vector< std::vector<Point2f> >& testPatterns,
+                            std::vector<Point3f> row,
                             vector<int>& selectedTags,
                             int selection,
                             int num,
@@ -398,22 +398,22 @@ void optimizeCalibrationSet(Size imSize,
     srand ( (unsigned int)(time(NULL)) );
 
     // Calibration Variables
-    cv::vector< cv::vector<Point3f> > objectPoints;
+    std::vector< std::vector<Point3f> > objectPoints;
     Mat cameraMatrix = Mat::eye(3, 3, CV_64F);
     
     cameraMatrix.at<double>(0,2) = (double(imSize.width)-1.0)/2.0;
     cameraMatrix.at<double>(1,2) = (double(imSize.height)-1.0)/2.0;
     Mat distCoeffs = cv::Mat::zeros(1, 8, CV_64F);
-    cv::vector<Mat> rvecs, tvecs;
+    std::vector<Mat> rvecs, tvecs;
 
     // Pointset Variables
-    cv::vector< cv::vector<Point2f> > candidatePatternsCpy;
+    std::vector< std::vector<Point2f> > candidatePatternsCpy;
     candidatePatternsCpy.assign(candidatePatterns.begin(), candidatePatterns.end());     // So all corners are preserved for ERE calculation/s
-    cv::vector< cv::vector<Point2f> > fullSetCorners;
+    std::vector< std::vector<Point2f> > fullSetCorners;
     fullSetCorners.assign(testPatterns.begin(), testPatterns.end());     // So all corners are preserved for ERE calculation/s
-    cv::vector< cv::vector<Point2f> > selectedFrames;
-    cv::vector< cv::vector<Point2f> > tempFrameTester;
-    cv::vector< cv::vector<Point2f> > newCorners;
+    std::vector< std::vector<Point2f> > selectedFrames;
+    std::vector< std::vector<Point2f> > tempFrameTester;
+    std::vector< std::vector<Point2f> > newCorners;
 
     // Error Measurement Variables
     double err;

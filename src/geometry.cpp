@@ -19,7 +19,7 @@ int possiblePairs(int projections) {
 	return int(retVal);
 }
 
-void transformPoints(cv::vector<cv::Point3d>& pts, int *options) {
+void transformPoints(std::vector<cv::Point3d>& pts, int *options) {
 	
 	int signs[3];
 	
@@ -76,7 +76,7 @@ void transformPoints(cv::vector<cv::Point3d>& pts, int *options) {
 	
 }
 
-void transformPoints(cv::vector<cv::Point3d>& pts, unsigned int option) {
+void transformPoints(std::vector<cv::Point3d>& pts, unsigned int option) {
 	
 	
 	for (unsigned int iii = 0; iii < pts.size(); iii++) {

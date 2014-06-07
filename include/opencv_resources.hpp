@@ -13,7 +13,10 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/video/video.hpp"
+
+#ifdef _USE_OPENCV_GPU_
 #include "opencv2/gpu/gpu.hpp"
+#endif
 
 // #include <cv_bridge/CvBridge.h>
 

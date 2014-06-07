@@ -13,7 +13,7 @@ double scoreColorImage(const cv::Mat& src) {
 	findPercentiles(src, intensityVals, percentileVals, 3);
 
 	
-	double range = std::max(abs(intensityVals[2] - intensityVals[1]), abs(intensityVals[0] - intensityVals[1]));
+	double range = max(abs(intensityVals[2] - intensityVals[1]), abs(intensityVals[0] - intensityVals[1]));
 	
 	//printf("%s << range = (%f)\n", __FUNCTION__, range);
 	
@@ -531,7 +531,7 @@ double scoreThermalImage(const cv::Mat& src) {
 	findPercentiles(src, intensityVals, percentileVals, 3);
 
 	
-	double range = std::max(abs(intensityVals[2] - intensityVals[1]), abs(intensityVals[0] - intensityVals[1]));
+	double range = max(abs(intensityVals[2] - intensityVals[1]), abs(intensityVals[0] - intensityVals[1]));
 	
 	range /= 10.0;
 	
@@ -766,7 +766,7 @@ void temperatureDownsample(const cv::Mat& src, cv::Mat& dst, double minVal, doub
 	for (int iii = 0; iii < src.rows; iii++) {
 		for (int jjj = 0; jjj < src.cols; jjj++) {
 
-			dst.at<unsigned char>(iii,jjj) = (unsigned char)(std::min(255.0, std::max(0.0, (std::max(src.at<float>(iii,jjj) - minVal, 0.0) / (maxVal - minVal)) * 255.0)));
+			dst.at<unsigned char>(iii,jjj) = (unsigned char)(std::min(float(255.0), float(max(0.0, (std::max(src.at<float>(iii,jjj) - minVal, 0.0) / (maxVal - minVal)) * 255.0))));
 			
 			/*
 			if ((iii % 10 == 0) && (jjj % 10 == 0)) {
@@ -902,10 +902,10 @@ void drawGrid(const cv::Mat& src, cv::Mat& dst, int mode) {
 
 	if (mode == 0) {
 		shift = 0;
-		col = CV_RGB(255, 0, 0);
+		col = cv::Scalar(255, 0, 0);
 	} else {
 		shift = 1;
-		col = CV_RGB(0, 0, 255);
+		col = cv::Scalar(0, 0, 255);
 	}
 
 	cv::Point2f startPt, endPt;
@@ -917,7 +917,11 @@ void drawGrid(const cv::Mat& src, cv::Mat& dst, int mode) {
 		startPt = cv::Point2f(float(16.0 * double(iii)*amt), float(16.0 * double(shift)*amt));
 		endPt = cv::Point2f(float(16.0 * double(iii)*amt), float(16.0 * (double(src.rows) - double(shift)*amt)));
 
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		line(dst, startPt, endPt, col, 1, cv::LINE_AA, 4);
+		#else
 		line(dst, startPt, endPt, col, 1, CV_AA, 4);
+		#endif
 	}
 
 	// Horizontal lines
@@ -926,7 +930,11 @@ void drawGrid(const cv::Mat& src, cv::Mat& dst, int mode) {
 		startPt = cv::Point2f(float(16.0 * double(shift)*amt), float(16.0 * double(iii)*amt));
 		endPt = cv::Point2f(float(16.0 * (double(src.cols) - double(shift)*amt)), float(16.0 * double(iii)*amt));
 
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		line(dst, startPt, endPt, col, 1, cv::LINE_AA, 4);
+		#else
 		line(dst, startPt, endPt, col, 1, CV_AA, 4);
+		#endif
 
 	}
 
@@ -1031,7 +1039,7 @@ cv::Rect meanRectangle(vector<cv::Rect>& rectangles) {
     return retVal;
 }
 
-void weightedMixture(cv::Mat& dst, const cv::vector<cv::Mat>& srcs, const std::vector<double>& weightings) {
+void weightedMixture(cv::Mat& dst, const std::vector<cv::Mat>& srcs, const std::vector<double>& weightings) {
 
     double totalWeighting = 0.0;
     vector<double> newWeightings;
@@ -1071,7 +1079,7 @@ void weightedMixture(cv::Mat& dst, const cv::vector<cv::Mat>& srcs, const std::v
 
 }
 
-void mixImages(cv::Mat& dst, cv::vector<cv::Mat>& images) {
+void mixImages(cv::Mat& dst, std::vector<cv::Mat>& images) {
     // No checks at present...
 
     dst = cv::Mat::zeros(images.at(0).size(), CV_64FC3);
@@ -1281,7 +1289,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 		
 		//cout << "minVal = " << minVal << ", maxVal = " << maxVal << endl;
 		
-		normalize_16(_16, src, minVal, maxVal);
+		//normalize_16(_16, src, minVal, maxVal);
 		down_level(dst, _16);
 
 	} else if (code == NORMALIZATION_CENTRALIZED) {
@@ -1300,7 +1308,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 		//minVal = ((intensityVals[0] + intensityVals[2]) / 2.0) - 127.5 * compressionFactor;
 		//maxVal = ((intensityVals[0] + intensityVals[2]) / 2.0) + 127.5 * compressionFactor;
 		
-		normalize_16(_16, src, minVal, maxVal);
+		//normalize_16(_16, src, minVal, maxVal);
 		
 		//imshow("test", _16);
 		//waitKey(1);
@@ -1322,7 +1330,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 		//minVal = ((intensityVals[0] + intensityVals[2]) / 2.0) - 127.5 * compressionFactor;
 		//maxVal = ((intensityVals[0] + intensityVals[2]) / 2.0) + 127.5 * compressionFactor;
 		
-		normalize_16(_16, src, minVal, maxVal);
+		//normalize_16(_16, src, minVal, maxVal);
 		
 		//imshow("test", _16);
 		//waitKey(1);
@@ -1330,7 +1338,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 
 	} else if (code == NORMALIZATION_EQUALIZE) {
 
-		normalize_16(_16, src, intensityVals[1], intensityVals[3]);
+		//normalize_16(_16, src, intensityVals[1], intensityVals[3]);
 		down_level(dwn, _16);
 		equalizeHist(dwn, dst);
 
@@ -1365,8 +1373,13 @@ void drawLinesBetweenPoints(cv::Mat& image, const vector<cv::Point2f>& src, cons
         p1 = cv::Point(int(src.at(i).x*16.0), int(src.at(i).y*16.0));
         p2 = cv::Point(int(dst.at(i).x*16.0), int(dst.at(i).y*16.0));
 
-        //line(image, p1, p2, CV_RGB(0,0,255), 1, CV_AA, 4);
-        circle(image, p2, 4*16, CV_RGB(0,0,255), 1, CV_AA, 4);
+        //line(image, p1, p2, cv::Scalar(0,0,255), 1, CV_AA, 4);
+        
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		circle(image, p2, 4*16, cv::Scalar(0,0,255), 1, cv::LINE_AA, 4);
+		#else
+		circle(image, p2, 4*16, cv::Scalar(0,0,255), 1, CV_AA, 4);
+		#endif
     }
 
 }
@@ -2025,43 +2038,67 @@ void obtainEightBitRepresentation(cv::Mat& src, cv::Mat& dst) {
 	if (src.type() == CV_8UC1) {
 		dst = src;
 	} else if (src.type() == CV_8UC3) {
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(src, dst, cv::COLOR_RGB2GRAY);
+		#else
 		cvtColor(src, dst, CV_RGB2GRAY);
+		#endif
 	} else if (src.type() == CV_16UC1) {
 		cv::Mat nMat;
 		double currMin, currMax;
 		minMaxLoc(src, &currMin, &currMax);
-		normalize_16(nMat, src, currMin, currMax);
+		//normalize_16(nMat, src, currMin, currMax);
 		down_level(dst, nMat);
 	} else if (src.type() == CV_16UC3) {
 		cv::Mat nMat, tMat;
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(src, tMat, cv::COLOR_RGB2GRAY);
+		#else
 		cvtColor(src, tMat, CV_RGB2GRAY);
+		#endif
 		double currMin, currMax;
 		minMaxLoc(tMat, &currMin, &currMax);
-		normalize_16(nMat, tMat, currMin, currMax);
+		//normalize_16(nMat, tMat, currMin, currMax);
 		down_level(dst, nMat);
 	}
 }
 
 void obtainColorRepresentation(cv::Mat& src, cv::Mat& dst) {
 	if (src.type() == CV_8UC1) {
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(src, dst, cv::COLOR_GRAY2RGB);
+		#else
 		cvtColor(src, dst, CV_GRAY2RGB);
+		#endif
 	} else if (src.type() == CV_8UC3) {
 		dst = src;
 	} else if (src.type() == CV_16UC1) {
 		cv::Mat nMat, tMat;
 		double currMin, currMax;
 		minMaxLoc(src, &currMin, &currMax);
-		normalize_16(nMat, src, currMin, currMax);
+		//normalize_16(nMat, src, currMin, currMax);
 		down_level(tMat, nMat);
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(tMat, dst, cv::COLOR_GRAY2RGB);
+		#else
 		cvtColor(tMat, dst, CV_GRAY2RGB);
+		#endif
 	} else if (src.type() == CV_16UC3) {
 		cv::Mat nMat, tMat, tMat2;
 		double currMin, currMax;
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(src, tMat, cv::COLOR_RGB2GRAY);
+		#else
 		cvtColor(src, tMat, CV_RGB2GRAY);
+		#endif
 		minMaxLoc(tMat, &currMin, &currMax);
-		normalize_16(nMat, tMat, currMin, currMax);
+		//normalize_16(nMat, tMat, currMin, currMax);
 		down_level(tMat2, nMat);
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(tMat2, dst, cv::COLOR_GRAY2RGB);
+		#else
 		cvtColor(tMat2, dst, CV_GRAY2RGB);
+		#endif
 	}
 }
 
@@ -2205,10 +2242,7 @@ void normalize_16(cv::Mat& dst, const cv::Mat& src, double dblmin, double dblmax
     minv = 65535;
 	maxv = 0;
 
-    //printf("%s << min = %d; max = %d\n", __FUNCTION__, min, max);
-
     unsigned short val; //, new_val;
-    //double limitTester;
 
     cv::Size matSize = src.size();
     src.copyTo(dst);
@@ -2218,8 +2252,6 @@ void normalize_16(cv::Mat& dst, const cv::Mat& src, double dblmin, double dblmax
 		printf("svLib::normalize_16() << Image dimensions don't match.\n");
 		return;
 	}
-
-
 
     if (1) { // (!presetLimits) {
 
@@ -2240,21 +2272,12 @@ void normalize_16(cv::Mat& dst, const cv::Mat& src, double dblmin, double dblmax
 	} else {
 		minv = (unsigned short) dblmin;
 		maxv = (unsigned short) dblmax;
-		
 	}
 	
 	if (!presetLimits) {
 		dblmin = double(minv);
 		dblmax = double(maxv);
 	}
-	
-	// dblmin, dblmax are the limits you want to use for normalization
-	// minv, maxv are the actual limits of the image
-	
-	//cout << "minv = " << minv << ", maxv = " << maxv << endl;
-
-	//unsigned short abs_min = std::max(minv, (unsigned short) dblmin);
-	//unsigned short abs_max = std::min(maxv, (unsigned short) dblmax);
 
 	#pragma omp parallel for
 	for (int i = 0; i < matSize.height; i++) {
@@ -2263,15 +2286,7 @@ void normalize_16(cv::Mat& dst, const cv::Mat& src, double dblmin, double dblmax
 		}
 	}
 
-	// Compare actual min with the desired min in order to determine lower bound...
-
-	//double total_range = abs(std::min(dblmin, double(minv)) - std::max(dblmax, double(maxv)));
-	
 	double total_range = dblmax - dblmin;
-
-	//printf("%s << (minv / dblmin) = (%f, %f); (maxv / dblmax) = (%f, %f)\n", __FUNCTION__, double(minv), dblmin, double(maxv), dblmax);
-
-	//cout << "total_range = " << total_range << endl;
 
 	if (double(minv) > dblmin) {
 		lower_bound = 65535.0 * (abs(double(minv) - dblmin) / total_range);
@@ -2281,65 +2296,10 @@ void normalize_16(cv::Mat& dst, const cv::Mat& src, double dblmin, double dblmax
 		upper_bound = 65535.0 - 65535.0 * (abs(double(maxv) - dblmax) / total_range);
 	}
 
-	//printf("%s << lower_bound = (%f); upper_bound = (%f)\n", __FUNCTION__, lower_bound, upper_bound);
-
-
 	normalize(dst, dst, lower_bound, upper_bound, cv::NORM_MINMAX);
 
 	return;
 
-	/*
-    //printf("PURPLE MONKEY!\n");
-
-    //printf("%s << Debug %d.\n", __FUNCTION__, -1);
-
-    // Perform image processing
-    for (int i = 0; i < matSize.height; i++) {
-        for (int j = 0; j < matSize.width; j++) {
-            for (int k = 0; k < src.channels(); k++) {
-                val = src.at<unsigned short>(i,j);             // how do I incorporate channels?
-
-                if (val < min) {
-                    val = min;
-                } else if (val > max) {
-                    val = max;
-                }
-                // attempt at normalization
-
-                limitTester = std::max(double(val - min), 0.0);
-                limitTester *= 65535.0/(max-min);
-
-                if (limitTester < 0) {
-                    //printf("%s << limitTester too low: %f\n", __FUNCTION__, limitTester);
-                    //cin.get();
-			limitTester = 0;
-                } else if (limitTester > 65535) {
-                    //printf("%s << limitTester too high: %f\n", __FUNCTION__, limitTester);
-                    //cin.get();
-			limitTester = 65535;
-                }
-
-                new_val = (unsigned short) limitTester;
-
-                //new_val = (unsigned short) (65535*((double(val - min))/(double(max - min))));   // 255 for VXL..
-
-                //printf("%s << val = %d; new_val = %d\n", __FUNCTION__, val, new_val);
-
-                if (new_val == 0) {
-                    if (1) {
-                        //printf("%s << val = %d; new_val = %d\n", __FUNCTION__, val, new_val);
-                        //cin.get();
-                    }
-                }
-
-                dst.at<unsigned short>(i,j) = new_val;
-            }
-        }
-    }
-
-    //printf("%s << min = %d; max = %d\n", __FUNCTION__, min, max);
-    //cin.get();
-	*/
 }
 
 cScheme::cScheme() {
@@ -3290,17 +3250,6 @@ int cScheme::current_scheme() {
 	return code;
 }
 
-/*
-void cScheme::customize(double* d, double* r, double* g, double* b, int len) {
-	code = CUSTOM;
-	dx = d;
-	rx = r;
-	gx = g;
-	bx = b;
-	length = len;
-}
-*/
-
 void cScheme::falsify_image(const cv::Mat& thermIm, cv::Mat& outputIm, int param) {
 
 	if ((outputIm.size() != thermIm.size()) || (outputIm.type() != CV_8UC3)) {
@@ -3488,7 +3437,11 @@ void cScheme::fuse_image(cv::Mat& thermIm, cv::Mat& visualIm, cv::Mat& outputIm,
 	if (thermIm.channels() > 1) {
 		
 		if (checkIfActuallyGray(thermIm)) {
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			cvtColor(thermIm, newTherm, cv::COLOR_RGB2GRAY);
+			#else
 			cvtColor(thermIm, newTherm, CV_RGB2GRAY);
+			#endif
 		} else {
 			thermIm.copyTo(outputIm);
 			alreadyMapped = true;
@@ -3501,7 +3454,11 @@ void cScheme::fuse_image(cv::Mat& thermIm, cv::Mat& visualIm, cv::Mat& outputIm,
 	cv::Mat newVisual;
 
     if (visualIm.channels() > 1) {
-        cvtColor(visualIm, newVisual, CV_RGB2GRAY);
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cvtColor(visualIm, newVisual, cv::COLOR_RGB2GRAY);
+		#else
+		cvtColor(visualIm, newVisual, CV_RGB2GRAY);
+		#endif
     } else {
         visualIm.copyTo(newVisual);
     }
@@ -3594,7 +3551,8 @@ void generateHistogram(cv::Mat& src, cv::Mat& dst, double* im_hist, double* im_s
     int verticalScale = 480;
     cv::Mat histImg = cv::Mat::zeros(verticalScale, intensityBins*horizontalScale, CV_8UC3); //, cv::Vec3b::all(255));
 
-    cv::Scalar col = CV_RGB(255, 255, 255);
+    cv::Scalar col = cv::Scalar(255, 255, 255);
+
     histImg.setTo(col);
 
     //int quant01, quant05, quant50, quant95, quant99;
@@ -3631,7 +3589,12 @@ void generateHistogram(cv::Mat& src, cv::Mat& dst, double* im_hist, double* im_s
 
         //printf("%s << count = %f\n", __FUNCTION__, count);
 
-        rectangle(histImg, cv::Point(int(iii*horizontalScale+1), int(verticalScale)), cv::Point(int((iii+1)*horizontalScale-2), int((verticalScale-1)*(1-count)+1)), CV_RGB(0, 64, 192), CV_FILLED);
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		rectangle(histImg, cv::Point(int(iii*horizontalScale+1), int(verticalScale)), cv::Point(int((iii+1)*horizontalScale-2), int((verticalScale-1)*(1-count)+1)), cv::Scalar(0, 64, 192), -1);
+		#else
+		rectangle(histImg, cv::Point(int(iii*horizontalScale+1), int(verticalScale)), cv::Point(int((iii+1)*horizontalScale-2), int((verticalScale-1)*(1-count)+1)), cv::Scalar(0, 64, 192), CV_FILLED);
+		#endif
+
     }
 
     histImg.copyTo(dst);

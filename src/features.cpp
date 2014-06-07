@@ -61,8 +61,13 @@ draws KeyPoints to scale with coloring proportional to feature strength
 void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::Mat& dst) {
 	
 	cv::Mat grayFrame;
-	cvtColor(src, grayFrame, CV_RGB2GRAY);
 	
+	#ifdef _OPENCV_VERSION_3_PLUS_
+	cvtColor(src, grayFrame, cv::COLOR_RGB2GRAY);
+	#else
+	cvtColor(src, grayFrame, CV_RGB2GRAY);
+	#endif
+
 	dst = cv::Mat::zeros(src.size(), src.type());
 	
 	
@@ -111,7 +116,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 	double normalizedScore;
 	
 	if (minResponse == maxResponse) {
-		colour = CV_RGB(255, 0, 0);
+		colour = cv::Scalar(255, 0, 0);
 	}
 	
 	for (int iii = int(kpts_sorted.size())-1; iii >= 0; iii--) {
@@ -120,7 +125,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 			normalizedScore = pow((kpts_sorted.at(iii).response - minResponse) / (maxResponse - minResponse), 0.25);
 			red = int(255.0 * normalizedScore);
 			green = int(255.0 - 255.0 * normalizedScore);
-			colour = CV_RGB(red, green, blue);
+			colour = cv::Scalar(red, green, blue);
 		}
 		
 		//center = kpts_sorted.at(iii).pt;
@@ -130,7 +135,11 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
         radius = int(16.0 * (double(kpts_sorted.at(iii).size)/2.0));
         
         if (radius > 0) {
-            circle(dst, center, radius, colour, -1, CV_AA, 4);
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			circle(dst, center, radius, colour, -1, cv::LINE_AA, 4);
+			#else
+			circle(dst, center, radius, colour, -1, CV_AA, 4);
+			#endif
         }
 		
 	}
@@ -144,7 +153,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 			normalizedScore = pow((kpts_sorted.at(iii).response - minResponse) / (maxResponse - minResponse), 0.25);
 			red = int(255.0 * normalizedScore);
 			green = int(255.0 - 255.0 * normalizedScore);
-			colour = CV_RGB(red, green, blue);
+			colour = cv::Scalar(red, green, blue);
 		}
 		
 		center = kpts_sorted.at(iii).pt;
@@ -154,7 +163,11 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
         radius = int(16.0 * (double(kpts_sorted.at(iii).size)/2.0));
         
         if (radius > 0) {
-            circle(dst, center, radius, colour, thickness, CV_AA, 4);
+            #ifdef _OPENCV_VERSION_3_PLUS_
+			circle(dst, center, radius, colour, thickness, cv::LINE_AA, 4);
+			#else
+			circle(dst, center, radius, colour, thickness, CV_AA, 4);
+			#endif
         }
 		
 	}
@@ -249,9 +262,17 @@ void showMatches(const cv::Mat& pim1, vector<cv::Point2f>& pts1, const cv::Mat& 
 		pt2.x = int(16.0 * (pts2.at(iii).x + 640.0));
 		pt2.y = int(16.0 * pts2.at(iii).y);
 		
-		circle(drawImg, pt1, radius, CV_RGB(255, 0, 0), thickness, CV_AA, 4);
-		circle(drawImg, pt2, radius, CV_RGB(255, 0, 0), thickness, CV_AA, 4);
-		line(drawImg, pt1, pt2, CV_RGB(0, 0, 255), thickness, CV_AA, 4);
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		circle(drawImg, pt1, radius, cv::Scalar(255, 0, 0), thickness, cv::LINE_AA, 4);
+		circle(drawImg, pt2, radius, cv::Scalar(255, 0, 0), thickness, cv::LINE_AA, 4);
+		line(drawImg, pt1, pt2, cv::Scalar(0, 0, 255), thickness, cv::LINE_AA, 4);
+		#else
+		circle(drawImg, pt1, radius, cv::Scalar(255, 0, 0), thickness, CV_AA, 4);
+		circle(drawImg, pt2, radius, cv::Scalar(255, 0, 0), thickness, CV_AA, 4);
+		line(drawImg, pt1, pt2, cv::Scalar(0, 0, 255), thickness, CV_AA, 4);
+		#endif
+		
+		
 	}
 	
 }
@@ -468,32 +489,32 @@ void initializeDrawingColors(cv::Scalar* kColors, cv::Scalar* tColors, int num) 
 	for (int iii = 0; iii < num; iii++) {
 		switch (iii) {
 			case 0:
-				tColors[iii] = CV_RGB(255, 128, 128);
-				kColors[iii] = CV_RGB(255, 0, 0);
+				tColors[iii] = cv::Scalar(255, 128, 128);
+				kColors[iii] = cv::Scalar(255, 0, 0);
 				break;
 			case 1:
-				tColors[iii] = CV_RGB(128, 128, 255);
-				kColors[iii] = CV_RGB(0, 0, 255);
+				tColors[iii] = cv::Scalar(128, 128, 255);
+				kColors[iii] = cv::Scalar(0, 0, 255);
 				break;
 			case 2:
-				tColors[iii] = CV_RGB(128, 255, 128);
-				kColors[iii] = CV_RGB(0, 255, 0);
+				tColors[iii] = cv::Scalar(128, 255, 128);
+				kColors[iii] = cv::Scalar(0, 255, 0);
 				break;
 			case 3:
-				tColors[iii] = CV_RGB(128, 255, 255);
-				kColors[iii] = CV_RGB(0, 255, 255);
+				tColors[iii] = cv::Scalar(128, 255, 255);
+				kColors[iii] = cv::Scalar(0, 255, 255);
 				break;
 			case 4:
-				tColors[iii] = CV_RGB(128, 128, 255);
-				kColors[iii] = CV_RGB(255, 0, 255);
+				tColors[iii] = cv::Scalar(128, 128, 255);
+				kColors[iii] = cv::Scalar(255, 0, 255);
 				break;
 			case 5:
-				tColors[iii] = CV_RGB(255, 255, 128);
-				kColors[iii] = CV_RGB(255, 255, 0);
+				tColors[iii] = cv::Scalar(255, 255, 128);
+				kColors[iii] = cv::Scalar(255, 255, 0);
 				break;
 			default:
-				tColors[iii] = CV_RGB(128, 128, 255);
-				kColors[iii] = CV_RGB(255, 255, 255);
+				tColors[iii] = cv::Scalar(128, 128, 255);
+				kColors[iii] = cv::Scalar(255, 255, 255);
 				break;
 
 		}
@@ -588,7 +609,12 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	int maxLevel = 3;
 	cv::TermCriteria criteria = cv::TermCriteria( cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01);
 	//double derivLambda = 0.5;
+	
+	#ifdef _OPENCV_VERSION_3_PLUS_
+	int opticalFlowFlags = cv::OPTFLOW_LK_GET_MIN_EIGENVALS;
+	#else
 	int opticalFlowFlags = CV_LKFLOW_GET_MIN_EIGENVALS;
+	#endif
 
 	bool guiding = false;
 	bool warping = false;
@@ -750,8 +776,8 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 			
 			cv::Mat a, b;
 			
-			displayKeyPoints(im2, pts1, a, CV_RGB(255,0,0), 0);
-			displayKeyPoints(im2, pts2, b, CV_RGB(0,0,255), 0);
+			displayKeyPoints(im2, pts1, a, cv::Scalar(255,0,0), 0);
+			displayKeyPoints(im2, pts2, b, cv::Scalar(0,0,255), 0);
 			
 			if /*while*/ (1) {
 				
@@ -843,8 +869,8 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 			im1.copyTo(im1x);
 			im2.copyTo(im2x);
 
-			displayKeyPoints(im1, pts1, im1x, CV_RGB(255,0,0), 0);
-			displayKeyPoints(im2x, pts2, im2x, CV_RGB(255,0,0), 0);
+			displayKeyPoints(im1, pts1, im1x, cv::Scalar(255,0,0), 0);
+			displayKeyPoints(im2x, pts2, im2x, cv::Scalar(255,0,0), 0);
 
 			//warpPerspective(im1, im1b, H12, im1.size());
 
@@ -885,11 +911,17 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 			cv::Mat im1x, im2x;
 			//warpPerspective(grayImageBuffer[(current_idx-1) % MAXIMUM_FRAMES_TO_STORE], im2, H12, grayImageBuffer[(current_idx-1) % MAXIMUM_FRAMES_TO_STORE].size());
 
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			cvtColor(im1b, im1x, cv::COLOR_GRAY2RGB);
+			cvtColor(im2, im2x, cv::COLOR_GRAY2RGB);
+			#else
 			cvtColor(im1b, im1x, CV_GRAY2RGB);
 			cvtColor(im2, im2x, CV_GRAY2RGB);
+			#endif
+			
 
-			displayKeyPoints(im1x, originalPts, im1x, CV_RGB(255,0,0), 0);
-			displayKeyPoints(im2x, pts2, im2x, CV_RGB(255,0,0), 0);
+			displayKeyPoints(im1x, originalPts, im1x, cv::Scalar(255,0,0), 0);
+			displayKeyPoints(im2x, pts2, im2x, cv::Scalar(255,0,0), 0);
 
 			//warpPerspective(im1, im1b, H12, im1.size());
 
@@ -965,7 +997,12 @@ void trackPoints2(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& p
         pts2.clear();
         pts2.insert(pts2.end(), pts1.begin(), pts1.end());
 
-        int opticalFlowFlags = cv::OPTFLOW_USE_INITIAL_FLOW + CV_LKFLOW_GET_MIN_EIGENVALS; // + OPTFLOW_LK_GET_MIN_EIGENVALS;
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		int opticalFlowFlags = cv::OPTFLOW_USE_INITIAL_FLOW + cv::OPTFLOW_LK_GET_MIN_EIGENVALS; // + OPTFLOW_LK_GET_MIN_EIGENVALS;
+		#else
+		int opticalFlowFlags = cv::OPTFLOW_USE_INITIAL_FLOW + CV_LKFLOW_GET_MIN_EIGENVALS; // + OPTFLOW_LK_GET_MIN_EIGENVALS;
+		#endif
+        
 
 		//printf("%s << Before. (%d, %d) (%d, %d) (%d) (%d, %d)\n", __FUNCTION__, im1b.rows, im1b.cols, im2.rows, im2.cols, pts1.size(), winSize.height, winSize.width);
         cv::calcOpticalFlowPyrLK(im1b, im2, pts1, pts2, statusVec, err, winSize, maxLevel, criteria, opticalFlowFlags, thresh);
@@ -1065,7 +1102,11 @@ void extendKeyPoints(cv::Mat& img, vector<cv::KeyPoint>& pts, bool updateStrengt
 		vector<cv::Point2f> candidates;
 		cv::KeyPoint::convert(pts, candidates);
 
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cv::cornerSubPix(img, candidates, cv::Size(1,1), cv::Size(-1,-1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 15, 0.1));
+		#else
 		cv::cornerSubPix(img, candidates, cv::Size(1,1), cv::Size(-1,-1), cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+		#endif
 
 		#pragma omp parallel for
 		for (unsigned int iii = 0; iii < candidates.size(); iii++) {
@@ -1133,7 +1174,12 @@ double getValueFromPatch(cv::Mat& patch) {
 	}
 
     cv::Mat eigenMat;
+	
+	#ifdef _OPENCV_VERSION_3_PLUS_
+	cornerMinEigenVal(convertedPatch, eigenMat, patch.rows, cv::BORDER_REFLECT);
+	#else
 	cornerMinEigenVal(convertedPatch, eigenMat, patch.rows, CV_SCHARR);
+	#endif
 
     double eigenValue = 0.0, blankVal;
 
@@ -1278,7 +1324,7 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::KeyPoint>& KeyPoint
 
 		//printf("%s << %d: c = %d\n", __FUNCTION__, i, colorCoeff);
 		//cin.get();
-        newColour = color; // CV_RGB(255, 255-colorCoeff, 0);
+        newColour = color; // cv::Scalar(255, 255-colorCoeff, 0);
 
         //printf("%s << DEBUG %d_%d\n", __FUNCTION__, 2, i);
 
@@ -1299,14 +1345,28 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::KeyPoint>& KeyPoint
         crossLength = int(2 * 16.0);
         
         if (pointsOnly) {
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			circle(outImg, centerPt, 1, newColour, 2, cv::LINE_AA, 4);
+			#else
 			circle(outImg, centerPt, 1, newColour, 2, CV_AA, 4);
+			#endif
 		} else {
 			 if (radius > 0) {
+				#ifdef _OPENCV_VERSION_3_PLUS_
+				circle(outImg, centerPt, radius, newColour, thickness, cv::LINE_AA, 4);
+				#else
 				circle(outImg, centerPt, radius, newColour, thickness, CV_AA, 4);
+				#endif
 			}
 
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			line(outImg, cv::Point(centerPt.x-crossLength, centerPt.y), cv::Point(centerPt.x+crossLength, centerPt.y), newColour, thickness, cv::LINE_AA, 4);
+			line(outImg, cv::Point(centerPt.x, centerPt.y-crossLength), cv::Point(centerPt.x, centerPt.y+crossLength), newColour, thickness, cv::LINE_AA, 4);
+			#else
 			line(outImg, cv::Point(centerPt.x-crossLength, centerPt.y), cv::Point(centerPt.x+crossLength, centerPt.y), newColour, thickness, CV_AA, 4);
 			line(outImg, cv::Point(centerPt.x, centerPt.y-crossLength), cv::Point(centerPt.x, centerPt.y+crossLength), newColour, thickness, CV_AA, 4);
+			#endif
+			
 
 		}
 
@@ -1353,14 +1413,21 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::
         crossLength = int(2 * 16.0);
 
 		if (pointsOnly) {
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			circle(outImg, centerPt, 1, color, 2, cv::LINE_AA, 4);
+			#else
 			circle(outImg, centerPt, 1, color, 2, CV_AA, 4);
+			#endif
 		} else {
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			line(outImg, cv::Point(centerPt.x-crossLength, centerPt.y), cv::Point(centerPt.x+crossLength, centerPt.y), color, thickness, cv::LINE_AA, 4);
+			line(outImg, cv::Point(centerPt.x, centerPt.y-crossLength), cv::Point(centerPt.x, centerPt.y+crossLength), color, thickness, cv::LINE_AA, 4);
+			#else
 			line(outImg, cv::Point(centerPt.x-crossLength, centerPt.y), cv::Point(centerPt.x+crossLength, centerPt.y), color, thickness, CV_AA, 4);
 			line(outImg, cv::Point(centerPt.x, centerPt.y-crossLength), cv::Point(centerPt.x, centerPt.y+crossLength), color, thickness, CV_AA, 4);
+			#endif
+			
 		}
-
-        
-
 
     }
 
@@ -1914,10 +1981,11 @@ void drawMatchPaths(cv::Mat& src, cv::Mat& dst, vector<cv::Point2f>& kp1, vector
 		a = cv::Point(int(kp1.at(iii).x * 16.0), int(kp1.at(iii).y * 16.0));
 		b = cv::Point(int(kp2.at(iii).x * 16.0), int(kp2.at(iii).y * 16.0));
 
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cv::line(dst, a, b, color, 1, cv::LINE_AA, 4);
+		#else
 		cv::line(dst, a, b, color, 1, CV_AA, 4);
-
-		// a = b;
-
+		#endif
 	}
 }
 
@@ -1937,8 +2005,14 @@ void drawMatchPaths(cv::Mat& src, cv::Mat& dst, vector<cv::KeyPoint>& kp1, vecto
 			a = cv::Point(int(kp1.at(matches1to2.at(iii).at(jjj).queryIdx).pt.x * 16.0), int(kp1.at(matches1to2.at(iii).at(jjj).queryIdx).pt.y * 16.0));
 			b = cv::Point(int(kp2.at(matches1to2.at(iii).at(jjj).trainIdx).pt.x * 16.0), int(kp2.at(matches1to2.at(iii).at(jjj).trainIdx).pt.y * 16.0));
 
-			line(dst, a, b, CV_RGB(0,0,255), 1, CV_AA, 4);
-			circle(dst, b, 1, CV_RGB(255, 0, 0), 1, CV_AA, 4);
+			#ifdef _OPENCV_VERSION_3_PLUS_
+			line(dst, a, b, cv::Scalar(0,0,255), 1, cv::LINE_AA, 4);
+			circle(dst, b, 1, cv::Scalar(255, 0, 0), 1, cv::LINE_AA, 4);
+			#else
+			line(dst, a, b, cv::Scalar(0,0,255), 1, CV_AA, 4);
+			circle(dst, b, 1, cv::Scalar(255, 0, 0), 1, CV_AA, 4);
+			#endif
+			
 		}
 	}
 }
@@ -1957,7 +2031,7 @@ void markEdgyTracks(vector<cv::Point2f>& pts, vector<uchar>& statusVec, cameraPa
 	tmpDisp = cv::Mat::zeros(camData.expandedSize, CV_8UC3);
 
 	cv::Mat testMat;
-	displayKeyPoints(tmpDisp, rpts, tmpDisp, CV_RGB(0,255,0), 0);
+	displayKeyPoints(tmpDisp, rpts, tmpDisp, cv::Scalar(0,255,0), 0);
 
 	unsigned int edgyMarks = 0;
 
@@ -1980,7 +2054,7 @@ void markEdgyTracks(vector<cv::Point2f>& pts, vector<uchar>& statusVec, cameraPa
 
 	}
 
-	displayKeyPoints(tmpDisp, rpts, tmpDisp, CV_RGB(0,0,255), 0);
+	displayKeyPoints(tmpDisp, rpts, tmpDisp, cv::Scalar(0,0,255), 0);
 
 	//imshow("tmpDisp", tmpDisp);
 	//cv::waitKey(1);

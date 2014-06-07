@@ -42,8 +42,8 @@ void composeTransform(const cv::Mat& R, const cv::Mat& t, cv::Mat& c);
 void matrixToQuaternion(const cv::Mat& mat, Eigen::Quaternion<double>& quat);
 void quaternionToMatrix(const Eigen::Quaternion<double>& quat, cv::Mat& mat, bool handedness = false);
 
-void transformPoints(cv::vector<cv::Point3d>& pts, unsigned int option = 0);
-void transformPoints(cv::vector<cv::Point3d>& pts, int *options);
+void transformPoints(std::vector<cv::Point3d>& pts, unsigned int option = 0);
+void transformPoints(std::vector<cv::Point3d>& pts, int *options);
 
 /// \brief 		Minimum number of projections required to achieve the specified number of pairs
 int minProjections(int pairs);

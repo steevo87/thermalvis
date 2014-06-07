@@ -26,12 +26,22 @@ void getContours(const cv::Mat& src, vector<vector<vector<cv::Point> > >& contou
 	GaussianBlur(src, blurredIm, cv::Size(25,25), 7.0, 7.0);
 	
 	for (unsigned int iii = 0; iii < 244; iii++) {
-		cv::threshold(blurredIm, workingIm, iii, 255, CV_THRESH_BINARY);
 		
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cv::threshold(blurredIm, workingIm, iii, 255, cv::THRESH_BINARY);
+		#else
+		cv::threshold(blurredIm, workingIm, iii, 255, CV_THRESH_BINARY);
+		#endif
+
 		vector<vector<cv::Point> > c;
 		
 		// CV_RETR_TREE - can use this for heirarchical tree...
+		
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cv::findContours( workingIm, c, cv::RETR_LIST, cv::CHAIN_APPROX_NONE );
+		#else
 		cv::findContours( workingIm, c, CV_RETR_LIST, CV_CHAIN_APPROX_NONE );
+		#endif
 
 		contours.push_back(c);
 		
@@ -62,11 +72,21 @@ void drawContours(const cv::Mat& src, cv::Mat& dst) {
 	printf("%s << min/max = (%f / %f)\n", __FUNCTION__, minVal, maxVal);
 	
 	for (unsigned int iii = (unsigned int)(minVal); iii < (unsigned int)(minVal); iii++) {
+		
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cv::threshold(blurredIm, workingIm, iii, 255, cv::THRESH_BINARY);
+		#else
 		cv::threshold(blurredIm, workingIm, iii, 255, CV_THRESH_BINARY);
+		#endif
 		
 		std::vector<std::vector<cv::Point> > contours;
 		cv::Mat contourOutput = workingIm.clone();
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		cv::findContours( contourOutput, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE );
+		#else
 		cv::findContours( contourOutput, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE );
+		#endif
+		
 		
 		//Draw the contours
 		
@@ -165,9 +185,17 @@ void drawEpipolarLines(cv::Mat& im1, cv::Mat& im2, cv::Mat& F) {
 				end *= 16.0;
 				
 				if (jjj == 0) {
-					line(im2, start, end, CV_RGB(0,0,255), 1, CV_AA, 4);
+					#ifdef _OPENCV_VERSION_3_PLUS_
+					line(im2, start, end, cv::Scalar(0,0,255), 1, cv::LINE_AA, 4);
+					#else
+					line(im2, start, end, cv::Scalar(0,0,255), 1, CV_AA, 4);
+					#endif
 				} else {
-					line(im1, start, end, CV_RGB(0,0,255), 1, CV_AA, 4);
+					#ifdef _OPENCV_VERSION_3_PLUS_
+					line(im1, start, end, cv::Scalar(0,0,255), 1, cv::LINE_AA, 4);
+					#else
+					line(im1, start, end, cv::Scalar(0,0,255), 1, CV_AA, 4);
+					#endif
 				}
 				
 				
@@ -386,8 +414,8 @@ void findRadiometricMapping2(const cv::Mat& im1, const cv::Mat& im2, const cv::M
 					
 					
 					
-					//circle(debug1_, reproj_1, 1, CV_RGB(255, 0, 0), 1, CV_AA, 0);
-					//circle(debug2_, reproj_2, 1, CV_RGB(255, 0, 0), 1, CV_AA, 0);
+					//circle(debug1_, reproj_1, 1, cv::Scalar(255, 0, 0), 1, CV_AA, 0);
+					//circle(debug2_, reproj_2, 1, cv::Scalar(255, 0, 0), 1, CV_AA, 0);
 					
 					
 					
@@ -524,8 +552,12 @@ void plotPoints(cv::Mat& dispMat, vector<unsigned short>& i1, vector<unsigned sh
 			//printf("%s << i1 = (%d); i2 = (%d)\n", __FUNCTION__, i1.at(iii), i2.at(iii));
 		}
 		
-		circle(dispMat, cv::Point(col,row), 1, CV_RGB(255, 0, 0), 1, CV_AA, 0);
-		
+		#ifdef _OPENCV_VERSION_3_PLUS_
+		circle(dispMat, cv::Point(col,row), 1, cv::Scalar(255, 0, 0), 1, cv::LINE_AA, 0);
+		#else
+		circle(dispMat, cv::Point(col,row), 1, cv::Scalar(255, 0, 0), 1, CV_AA, 0);
+		#endif
+
 		//dispMat.at<cv::Vec3b>(row,col)[0] = 0;
 		//dispMat.at<cv::Vec3b>(row,col)[1] = 0;
 		
@@ -557,9 +589,13 @@ void plotPoints(cv::Mat& dispMat, vector<unsigned short>& i1, vector<unsigned sh
 	p2 = cv::Point(col,row);
 	
 	printf("%s << Drawing line from (%d, %d) to (%d, %d)\n", __FUNCTION__, p1.x, p1.y, p2.x, p2.y);
-	line(dispMat, p1, p2, CV_RGB(0,0,255), 2, CV_AA, 0);
 	
-	
+	#ifdef _OPENCV_VERSION_3_PLUS_
+	line(dispMat, p1, p2, cv::Scalar(0,0,255), 2, cv::LINE_AA, 0);
+	#else
+	line(dispMat, p1, p2, cv::Scalar(0,0,255), 2, CV_AA, 0);
+	#endif
+
 }
 		
 /*
@@ -629,12 +665,12 @@ bool findRadiometricMapping(const Mat& im1, const Mat& im2, double& grad, double
 		
 	}
 	
-	//displayKeypoints(pim1, pts1, drawImg, CV_RGB(255, 0, 0));
-	//displayKeypoints(drawImg, pts2, drawImg, CV_RGB(0, 0, 255));
+	//displayKeypoints(pim1, pts1, drawImg, cv::Scalar(255, 0, 0));
+	//displayKeypoints(drawImg, pts2, drawImg, cv::Scalar(0, 0, 255));
 	
 	showMatches(pim1, pts1, pim2, pts2, drawImg);
 	
-	// drawMatches( pim1, kp1, pim2, kp2, filteredMatches, drawImg, CV_RGB(0, 0, 255), CV_RGB(255, 0, 0), vector<char>(), matchesFlag );
+	// drawMatches( pim1, kp1, pim2, kp2, filteredMatches, drawImg, cv::Scalar(0, 0, 255), cv::Scalar(255, 0, 0), vector<char>(), matchesFlag );
 	
 	imshow("display", drawImg);
 	cv::waitKey(1);

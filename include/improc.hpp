@@ -5,88 +5,87 @@
 #ifndef _THERMALVIS_IMPROC_H_
 #define _THERMALVIS_IMPROC_H_
 
-//#include "general_resources.hpp"
-//#include "opencv_resources.hpp"
+#include "opencv2/opencv.hpp"
+//#include <opencv2/calib3d/calib3d.hpp>
+//#include <opencv2/imgproc/imgproc.hpp>
 
 #include "tools.hpp"
 
-#include <opencv2/calib3d/calib3d.hpp>
-#include "opencv2/imgproc/imgproc.hpp"
-
 /// \brief		ID for custom mapping
-#define CUSTOM			3
-#define MAP_LENGTH		1024
+namespace tv {
+	#define MAP_LENGTH		1024
 
-#define MAX_INPUT_LENGTH	256
+	#define MAX_INPUT_LENGTH	256
 
-#define GRAYSCALE		0
+	#define GRAYSCALE		0
 
-#define CIECOMP			100
-#define CIECOMP_ALT_1	110
-#define CIECOMP_ALT_2	120
-#define CIECOMP_ALT_3	130
+	#define CIECOMP			100
+	#define CIECOMP_ALT_1	110
+	#define CIECOMP_ALT_2	120
+	#define CIECOMP_ALT_3	130
 
-#define CIELUV			140
+	#define CIELUV			140
 
-#define BLACKBODY		150
+	#define BLACKBODY		150
 
-#define HIGHLIGHTED		180
+	#define HIGHLIGHTED		180
 
-#define RAINBOW			200
-#define RAINBOW_ALT_1	210
-#define RAINBOW_ALT_2	220
-#define RAINBOW_ALT_3	230
-#define RAINBOW_ALT_4	240
+	#define RAINBOW			200
+	#define RAINBOW_ALT_1	210
+	#define RAINBOW_ALT_2	220
+	#define RAINBOW_ALT_3	230
+	#define RAINBOW_ALT_4	240
 
-#define IRON			300
-#define IRON_ALT_1		310
-#define IRON_ALT_2		320
-#define IRON_ALT_3		330
+	#define IRON			300
+	#define IRON_ALT_1		310
+	#define IRON_ALT_2		320
+	#define IRON_ALT_3		330
 
-#define BLUERED			400
-#define BLUERED_ALT_1	410
-#define BLUERED_ALT_2	420
+	#define BLUERED			400
+	#define BLUERED_ALT_1	410
+	#define BLUERED_ALT_2	420
 
-#define JET				500
-#define JET_ALT_1		510
+	#define JET				500
+	#define JET_ALT_1		510
 
-#define ICE				600
-#define ICE_ALT_1		610
-#define ICE_ALT_2		620
-#define ICE_ALT_3		630
+	#define ICE				600
+	#define ICE_ALT_1		610
+	#define ICE_ALT_2		620
+	#define ICE_ALT_3		630
 
-#define ICEIRON			700
-#define ICEIRON_ALT_1	710
-#define ICEIRON_ALT_2	720
+	#define ICEIRON			700
+	#define ICEIRON_ALT_1	710
+	#define ICEIRON_ALT_2	720
 
-#define ICEFIRE			800
-#define ICEFIRE_ALT_1	810
-#define ICEFIRE_ALT_2	820
-#define ICEFIRE_ALT_3	830
+	#define ICEFIRE			800
+	#define ICEFIRE_ALT_1	810
+	#define ICEFIRE_ALT_2	820
+	#define ICEFIRE_ALT_3	830
 
-#define REPEATED		900
-#define REPEATED_ALT_1	910
-#define REPEATED_ALT_2	920
-#define REPEATED_ALT_3	930
-#define REPEATED_ALT_4	940
-#define REPEATED_ALT_5	950
-#define REPEATED_ALT_6	960
+	#define REPEATED		900
+	#define REPEATED_ALT_1	910
+	#define REPEATED_ALT_2	920
+	#define REPEATED_ALT_3	930
+	#define REPEATED_ALT_4	940
+	#define REPEATED_ALT_5	950
+	#define REPEATED_ALT_6	960
 
-#define NORMALIZATION_STANDARD 			0
-#define NORMALIZATION_EQUALIZE 			1
-//#define NORMALIZATION_CLAHE				2
-#define NORMALIZATION_ADAPTIVE 			3
-#define NORMALIZATION_CENTRALIZED		4
-#define NORMALIZATION_EXPANDED			5
+	#define NORMALIZATION_STANDARD 			0
+	#define NORMALIZATION_EQUALIZE 			1
+	//#define NORMALIZATION_CLAHE				2
+	#define NORMALIZATION_ADAPTIVE 			3
+	#define NORMALIZATION_CENTRALIZED		4
+	#define NORMALIZATION_EXPANDED			5
 
-#define NO_FILTERING 					0
-#define GAUSSIAN_FILTERING 				1
-#define BILATERAL_FILTERING 			2
+	#define NO_FILTERING 					0
+	#define GAUSSIAN_FILTERING 				1
+	#define BILATERAL_FILTERING 			2
 
-#define MIN_PROP_THRESHOLD 0.002
+	#define MIN_PROP_THRESHOLD 0.002
 
-#define DEFAULT_LOWER_VISIBLE_FUSION_LIMIT 		0.2
-#define DEFAULT_UPPER_VISIBLE_FUSION_LIMIT 		0.8
+	#define DEFAULT_LOWER_VISIBLE_FUSION_LIMIT 		0.2
+	#define DEFAULT_UPPER_VISIBLE_FUSION_LIMIT 		0.8
+}
 
 void applyFilter(const cv::Mat& src, cv::Mat& dst, int filter = NO_FILTERING, double param = 2.0);
 
@@ -94,7 +93,7 @@ void applyFilter(const cv::Mat& src, cv::Mat& dst, int filter = NO_FILTERING, do
 
 double findBestAlpha(const cv::Mat& K, const cv::Mat& coeff, const cv::Size& camSize);
 
-void weightedMixture(cv::Mat& dst, const cv::vector<cv::Mat>& srcs, const std::vector<double>& weightings);
+void weightedMixture(cv::Mat& dst, const std::vector<cv::Mat>& srcs, const std::vector<double>& weightings);
 
 void addBorder(cv::Mat& inputMat, int borderSize);
 
@@ -127,7 +126,7 @@ double distBetweenPts2f(cv::Point2f& P1, cv::Point2f& P2);
 
 bool matricesAreEqual(cv::Mat& mat1, cv::Mat& mat2);
 
-void mixImages(cv::Mat& dst, cv::vector<cv::Mat>& images);
+void mixImages(cv::Mat& dst, std::vector<cv::Mat>& images);
 
 double getInterpolatedVal(const cv::Mat& img, cv::Point2f& coord);
 
@@ -190,14 +189,8 @@ void swapElements(vector<cv::Point2f>& corners, int index1, int index2);
 /// \brief      Determine the width and height of a contour (in x and y directions at this stage)
 void contourDimensions(vector<cv::Point> contour, double& width, double& height);
 
-
-
 /// \brief      Draws lines between initial and corrected points
 void drawLinesBetweenPoints(cv::Mat& image, const vector<cv::Point2f>& src, const vector<cv::Point2f>& dst);
-
-
-
-
 
 /// \brief      Returns a score which reflects the information content of the image for visualization
 double scoreColorImage(const cv::Mat& src);
@@ -210,6 +203,7 @@ void transferElement(vector<cv::Point2f>& dst, vector<cv::Point2f>& src, int ind
 
 /// \brief 		Stretches the histogram to span the whole 16-bit scale (16-bit to 16-bit)
 void normalize_16(cv::Mat& dst, const cv::Mat& src, double dblmin = -1.0, double dblmax = -1.0);
+
 void histExpand8(const cv::Mat& src, cv::Mat& dst);
 void reduceToPureImage(cv::Mat& dst, cv::Mat& src);
 void fix_bottom_right(cv::Mat& mat);
@@ -249,6 +243,7 @@ void down_level(cv::Mat& dst, cv::Mat& src);
 void applyIntensityShift(const cv::Mat& src1, cv::Mat& dst1, const cv::Mat& src2, cv::Mat& dst2, double grad, double shift);
 
 cv::Mat normForDisplay(cv::Mat origMat);
+
 
 /// \brief		For configuring and applying false-colormapping or modality-fusion schemes
 class cScheme {

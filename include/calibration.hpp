@@ -2,8 +2,8 @@
  *  \brief	Declarations for generic geometric calibration.
 */
 
-#ifndef CALIBRATION_HPP
-#define CALIBRATION_HPP
+#ifndef _THERMALVIS_CALIBRATION_HPP_
+#define _THERMALVIS_CALIBRATION_HPP_
 
 //#include "cv_utils.hpp"
 #include "improc.hpp"
@@ -18,6 +18,9 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+#include "cvaux.h"
 
 #include <sys/stat.h>
 #include <stdio.h>
@@ -111,16 +114,16 @@ void generateRandomIndexArray(int * randomArray, int maxElements, int maxVal);
 void prepForDisplay(const Mat& distributionMap, Mat& distributionDisplay);
 
 /// \brief      Adds a pointset to a radial distribution array
-void addToRadialDistribution(double *radialDistribution, cv::vector<Point2f>& cornerSet, Size imSize);
+void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& cornerSet, Size imSize);
 
 /// \brief      Add a cornerset to the tally matrix
-void addToBinMap(Mat& binMap, cv::vector<Point2f>& cornerSet, Size imSize);
+void addToBinMap(Mat& binMap, std::vector<Point2f>& cornerSet, Size imSize);
 
 /// \brief      Calculate the score for a pointset in terms of its contribution to calibration
 double obtainSetScore(Mat& distributionMap,
                       Mat& binMap,
                       Mat& gaussianMat,
-                      cv::vector<Point2f>& cornerSet,
+                      std::vector<Point2f>& cornerSet,
                       double *radialDistribution);
 
 /// \brief 		Verifies that the final patches do actually represent a grid pattern

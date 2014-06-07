@@ -5,8 +5,8 @@
 #include "extrinsics.hpp"
 
 double calculateExtrinsicERE(int nCams,
-                             cv::vector<Point3f>& physicalPoints,
-                             cv::vector< cv::vector<Point2f> > *corners,
+                             std::vector<Point3f>& physicalPoints,
+                             std::vector< std::vector<Point2f> > *corners,
                              Mat *cameraMatrix,
                              Mat *distCoeffs,
                              Mat *R,
@@ -22,9 +22,9 @@ double calculateExtrinsicERE(int nCams,
     esRvec = new Mat[nCams];
     esTvec = new Mat[nCams];
 
-    cv::vector<Point2f> *estimatedPattern, *projectedPattern;
-    estimatedPattern = new cv::vector<Point2f>[nCams];
-    projectedPattern = new cv::vector<Point2f>[nCams];
+    std::vector<Point2f> *estimatedPattern, *projectedPattern;
+    estimatedPattern = new std::vector<Point2f>[nCams];
+    projectedPattern = new std::vector<Point2f>[nCams];
 
     for (int k = 0; k < nCams; k++)
     {
@@ -99,16 +99,16 @@ double calculateExtrinsicERE(int nCams,
 
 }
 
-double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>& binMap, vector<vector<double> >& distances, cv::vector<cv::vector<Point2f> > *corners, int index)
+double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>& binMap, vector<vector<double> >& distances, std::vector<std::vector<Point2f> > *corners, int index)
 {
     double score = 0.0;
     double *viewScore;
     viewScore = new double[nCams];
 
-    cv::vector<Point> hull;
-    cv::vector<Point2f> hull2;
+    std::vector<Point> hull;
+    std::vector<Point2f> hull2;
     double area;
-    cv::vector<cv::vector<double> > distancesCpy;
+    std::vector<std::vector<double> > distancesCpy;
 
     //distances.copyTo(distancesCpy);   // why the fuck won't this work??
 
@@ -118,26 +118,26 @@ double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>&
     distFromCenter = new double[nCams];         // delete
     proportionOfView = new double[nCams];
 
-    printf("KHAAAN!!! 2\n");
+    std::printf("KHAAAN!!! 2\n");
 
     // for each view
     for (int k = 0; k < nCams; k++)
     {
-        printf("K00\n");
+        std::printf("K00\n");
         center = Point((distributionMap.at(k).size().width-1)/2, (distributionMap.at(k).size().height-1)/2);
 
-        printf("K01\n");
+        std::printf("K01\n");
         // obtain a convex hull around the points
         convexHull(Mat(corners[k].at(index)), hull2);
 
         convertVectorToPoint(hull2, hull);
 
-        printf("K02\n");
+        std::printf("K02\n");
         // measure the convex hull's distance from the centre of the image
         centroid = findCentroid(hull);
         distFromCenter[k] = distBetweenPts(centroid, center);
 
-        printf("K03\n");
+        std::printf("K03\n");
         // measure the convex hull's proportional coverage from the centre of the image
         area = contourArea(Mat(hull));
         proportionOfView[k] = area;
@@ -166,17 +166,17 @@ double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>&
     return score;
 }
 
-void optimizeCalibrationSets(cv::vector<Size> imSize,
+void optimizeCalibrationSets(std::vector<Size> imSize,
                              int nCams,
                              Mat *cameraMatrix,
                              Mat *distCoeffs,
-                             cv::vector<Mat>& distributionMap,
-                             cv::vector< cv::vector<Point2f> > *candidateCorners,
-                             cv::vector< cv::vector<Point2f> > *testCorners,
-                             cv::vector<Point3f> row,
+                             std::vector<Mat>& distributionMap,
+                             std::vector< std::vector<Point2f> > *candidateCorners,
+                             std::vector< std::vector<Point2f> > *testCorners,
+                             std::vector<Point3f> row,
                              int selection, int num,
-                             cv::vector<cv::vector<int> >& tagNames,
-                             cv::vector<cv::vector<int> >& selectedTags, 
+                             std::vector<std::vector<int> >& tagNames,
+                             std::vector<std::vector<int> >& selectedTags, 
                              int flags)
 {
 
@@ -199,10 +199,10 @@ void optimizeCalibrationSets(cv::vector<Size> imSize,
     char windowName[20];
 
     int randomNum = 0;
-    cv::vector<Mat> distributionDisplay(nCams);
-    cv::vector<Mat> binMap(nCams);
-    cv::vector<Mat> binTemp(nCams);
-    cv::vector<cv::vector<double> > distances(nCams);
+    std::vector<Mat> distributionDisplay(nCams);
+    std::vector<Mat> binMap(nCams);
+    std::vector<Mat> binTemp(nCams);
+    std::vector<std::vector<double> > distances(nCams);
 
     // Scoring Variables
     double score, maxScore = 0.0;
@@ -223,12 +223,12 @@ void optimizeCalibrationSets(cv::vector<Size> imSize,
 
     double testingProbability = 1.00;
 
-    cv::vector< cv::vector<Point3f> > objectPoints;
+    std::vector< std::vector<Point3f> > objectPoints;
 
-    cv::vector< cv::vector< cv::vector<Point2f> > > originalFramesCpy;
-    cv::vector< cv::vector< cv::vector<Point2f> > > selectedFrames;
-    cv::vector< cv::vector< cv::vector<Point2f> > > tempFrameTester;
-    cv::vector< cv::vector< cv::vector<Point2f> > > newCorners;
+    std::vector< std::vector< std::vector<Point2f> > > originalFramesCpy;
+    std::vector< std::vector< std::vector<Point2f> > > selectedFrames;
+    std::vector< std::vector< std::vector<Point2f> > > tempFrameTester;
+    std::vector< std::vector< std::vector<Point2f> > > newCorners;
 
     originalFramesCpy.resize(nCams);
     selectedFrames.resize(nCams);
@@ -519,15 +519,25 @@ void optimizeCalibrationSets(cv::vector<Size> imSize,
                         for (int k = 0; k < nCams-1; k++) {
 							
 							
-
-                            stereoCalibrate(objectPoints,
+							#ifdef _OPENCV_VERSION_3_PLUS_
+							stereoCalibrate(objectPoints,
+                                            tempFrameTester.at(0), tempFrameTester.at(k+1),
+                                            working_cameraMatrix[0], working_distCoeffs[0],
+                                            working_cameraMatrix[k+1], working_distCoeffs[k+1],
+                                            imSize[0],                      // hopefully multiple cameras allow multiple image sizes
+                                            R[k+1], T[k+1], E[k+1], F[k+1],
+                                            flags,
+                                            term_crit);
+							#else
+							stereoCalibrate(objectPoints,
                                             tempFrameTester.at(0), tempFrameTester.at(k+1),
                                             working_cameraMatrix[0], working_distCoeffs[0],
                                             working_cameraMatrix[k+1], working_distCoeffs[k+1],
                                             imSize[0],                      // hopefully multiple cameras allow multiple image sizes
                                             R[k+1], T[k+1], E[k+1], F[k+1],
                                             term_crit,
-                                            flags); //
+                                            flags);
+							#endif
 
                         }
 
@@ -716,7 +726,17 @@ void optimizeCalibrationSets(cv::vector<Size> imSize,
 
                 //printf("%s << tempFrameTester.at(%d).size() = %d\n", __FUNCTION__, k+1, tempFrameTester.at(k+1).size());
 
-                stereoCalibrate(objectPoints,
+				#ifdef _OPENCV_VERSION_3_PLUS_
+				stereoCalibrate(objectPoints,
+                                tempFrameTester.at(0), tempFrameTester.at(k+1),
+                                cameraMatrix[0], distCoeffs[0],
+                                cameraMatrix[k+1], distCoeffs[k+1],
+                                imSize[0],                      // hopefully multiple cameras allow multiple image sizes
+                                R[k+1], T[k+1], E[k+1], F[k+1],
+                                flags,
+                                term_crit);
+				#else
+				stereoCalibrate(objectPoints,
                                 tempFrameTester.at(0), tempFrameTester.at(k+1),
                                 cameraMatrix[0], distCoeffs[0],
                                 cameraMatrix[k+1], distCoeffs[k+1],
@@ -724,6 +744,9 @@ void optimizeCalibrationSets(cv::vector<Size> imSize,
                                 R[k+1], T[k+1], E[k+1], F[k+1],
                                 term_crit,
                                 flags);
+				#endif
+
+                
             }
 
             //printf("%s << DEBUG [%d] %d\n", __FUNCTION__, iii, 4);
@@ -839,7 +862,17 @@ void optimizeCalibrationSets(cv::vector<Size> imSize,
                             //printf("%s << op.size() = %d, tFT.at(0).size() = %d; tFT.at(%d).size() = %d\n", __FUNCTION__, objectPoints.size(), tempFrameTester.at(0).size(), k+1, tempFrameTester.at(k+1).size());
                             //printf("%s << op.at(0).size() = %d, tFT.at(0).at(0).size() = %d; tFT.at(%d).at(0).size() = %d\n", __FUNCTION__, objectPoints.at(0).size(), tempFrameTester.at(0).at(0).size(), k+1, tempFrameTester.at(k+1).at(0).size());
 
-                            stereoCalibrate(objectPoints,
+							#ifdef _OPENCV_VERSION_3_PLUS_
+							stereoCalibrate(objectPoints,
+                                            tempFrameTester.at(0), tempFrameTester.at(k+1),
+                                            cameraMatrix[0], distCoeffs[0],
+                                            cameraMatrix[k+1], distCoeffs[k+1],
+                                            imSize[0],                      // hopefully multiple cameras allow multiple image sizes
+                                            R[k+1], T[k+1], E[k+1], F[k+1],
+                                            flags,
+                                            term_crit); //
+							#else
+							stereoCalibrate(objectPoints,
                                             tempFrameTester.at(0), tempFrameTester.at(k+1),
                                             cameraMatrix[0], distCoeffs[0],
                                             cameraMatrix[k+1], distCoeffs[k+1],
@@ -847,6 +880,9 @@ void optimizeCalibrationSets(cv::vector<Size> imSize,
                                             R[k+1], T[k+1], E[k+1], F[k+1],
                                             term_crit,
                                             flags); //
+							#endif
+
+                            
 
                             //printf("%s << Stereo Calibration complete.\n", __FUNCTION__);
 
