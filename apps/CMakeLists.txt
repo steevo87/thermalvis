@@ -19,8 +19,8 @@ IF(WIN32 OR win64)
 			ENDIF()
 		ENDIF()
 	ENDIF()
-ELSE()
-	MESSAGE(STATUS "Unfortunately no apps are included for Linux yet.")
 ENDIF()
 
-	
+IF(Boost_FOUND)
+	ADD_SUBDIRECTORY(dir-reader)
+ENDIF()
