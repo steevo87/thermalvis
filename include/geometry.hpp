@@ -28,7 +28,13 @@ typedef Eigen::Quaternion<double>   QuaternionDbl;
 #define DEFAULT_ASSIGN_MODE			0
 #define MAPPER_ASSIGN_MODE			1
 
+#ifdef _BUILD_FOR_ROS_
 void assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C, int idx, ros::Time timestamp, int mode = DEFAULT_ASSIGN_MODE);
+void convertPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q);
+void convertPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose);
+void convertAndShiftPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q);
+void convertAndShiftPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose);
+#endif
 
 void convertTvecToEigenvec(const cv::Mat& T_src, Eigen::Vector3f& T_dst);
 void convertRmatTo3frm(const cv::Mat& R_src, Matrix3frm& R_dst);
@@ -54,11 +60,7 @@ int possiblePairs(int projections);
 //void matrixToQuaternion(const cv::Mat& mat, Quaterniond& quat);
 //void quaternionToMatrix(const Quaterniond& quat, cv::Mat& mat);
 
-void convertPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q);
-void convertPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose);
 
-void convertAndShiftPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q);
-void convertAndShiftPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose);
 
 void transformationToProjection(const cv::Mat& trans, cv::Mat& proj);
 void projectionToTransformation(const cv::Mat& proj, cv::Mat& trans);

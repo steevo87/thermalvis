@@ -112,6 +112,7 @@ void transformPoints(std::vector<cv::Point3d>& pts, unsigned int option) {
 	
 }
 
+#ifdef _BUILD_FOR_ROS_
 void assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C, int idx, ros::Time timestamp, int mode) {
 	
 	pPose.header.seq = idx;
@@ -189,24 +190,75 @@ void assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C, int idx, ros::Tim
 	}
 }
 
+void convertPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose) {
+	
+	pose.position.x = t.at<double>(0,0);
+	pose.position.y = t.at<double>(1,0);
+	pose.position.z = t.at<double>(2,0);
+	
+	pose.orientation.w = Q.w();
+	pose.orientation.x = Q.x();
+	pose.orientation.y = Q.y();
+	pose.orientation.z = Q.z();
+	
+}
+
+void convertPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q) {
+	
+	t = cv::Mat(3,1, CV_64FC1);
+	
+	t.at<double>(0,0) = pose.position.x;
+	t.at<double>(1,0) = pose.position.y;
+	t.at<double>(2,0) = pose.position.z;
+	
+	Q = Eigen::Quaternion<double>(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
+	
+}
+
+void convertAndShiftPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q) {
+	
+	t = cv::Mat(3,1, CV_64FC1);
+	
+	t.at<double>(2,0) = pose.position.x;
+	t.at<double>(0,0) = -pose.position.y;
+	t.at<double>(1,0) = -pose.position.z;
+	
+	Q = Eigen::Quaternion<double>(pose.orientation.w, pose.orientation.x, -pose.orientation.y, -pose.orientation.z);
+	
+}
+
+void convertAndShiftPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose) {
+	
+	pose.position.x = t.at<double>(2,0);
+	pose.position.y = -t.at<double>(0,0);
+	pose.position.z = -t.at<double>(1,0);
+	
+	pose.orientation.x = Q.z();
+	pose.orientation.y = -Q.x();
+	pose.orientation.z = -Q.y();
+	pose.orientation.w = Q.w();
+	
+}
+#endif
+
 void convertRmatTo3frm(const cv::Mat& R_src, Matrix3frm& R_dst) {
-	R_dst(0,0) = R_src.at<double>(0,0);
-	R_dst(0,1) = R_src.at<double>(0,1);
-	R_dst(0,2) = R_src.at<double>(0,2);
+	R_dst(0,0) = float(R_src.at<double>(0,0));
+	R_dst(0,1) = float(R_src.at<double>(0,1));
+	R_dst(0,2) = float(R_src.at<double>(0,2));
 	
-	R_dst(1,0) = R_src.at<double>(1,0);
-	R_dst(1,1) = R_src.at<double>(1,1);
-	R_dst(1,2) = R_src.at<double>(1,2);
+	R_dst(1,0) = float(R_src.at<double>(1,0));
+	R_dst(1,1) = float(R_src.at<double>(1,1));
+	R_dst(1,2) = float(R_src.at<double>(1,2));
 	
-	R_dst(2,0) = R_src.at<double>(2,0);
-	R_dst(2,1) = R_src.at<double>(2,1);
-	R_dst(2,2) = R_src.at<double>(2,2);
+	R_dst(2,0) = float(R_src.at<double>(2,0));
+	R_dst(2,1) = float(R_src.at<double>(2,1));
+	R_dst(2,2) = float(R_src.at<double>(2,2));
 }
 
 void convertTvecToEigenvec(const cv::Mat& T_src, Eigen::Vector3f& T_dst) {
-	T_dst[0] = T_src.at<double>(0,0);
-	T_dst[1] = T_src.at<double>(1,0);
-	T_dst[2] = T_src.at<double>(2,0);
+	T_dst[0] = float(T_src.at<double>(0,0));
+	T_dst[1] = float(T_src.at<double>(1,0));
+	T_dst[2] = float(T_src.at<double>(2,0));
 }
 
 void convertEigenvecToTvec(const Eigen::Vector3f& T_src, cv::Mat& T_dst) {
@@ -313,56 +365,6 @@ void rotationToProjection(const cv::Mat& src, cv::Mat& dst) {
 	dst.at<double>(0,3) = 0.0;	
 	dst.at<double>(1,3) = 0.0;
 	dst.at<double>(2,3) = 0.0;
-	
-}
-
-void convertPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose) {
-	
-	pose.position.x = t.at<double>(0,0);
-	pose.position.y = t.at<double>(1,0);
-	pose.position.z = t.at<double>(2,0);
-	
-	pose.orientation.w = Q.w();
-	pose.orientation.x = Q.x();
-	pose.orientation.y = Q.y();
-	pose.orientation.z = Q.z();
-	
-}
-
-void convertPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q) {
-	
-	t = cv::Mat(3,1, CV_64FC1);
-	
-	t.at<double>(0,0) = pose.position.x;
-	t.at<double>(1,0) = pose.position.y;
-	t.at<double>(2,0) = pose.position.z;
-	
-	Q = Eigen::Quaternion<double>(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
-	
-}
-
-void convertAndShiftPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q) {
-	
-	t = cv::Mat(3,1, CV_64FC1);
-	
-	t.at<double>(2,0) = pose.position.x;
-	t.at<double>(0,0) = -pose.position.y;
-	t.at<double>(1,0) = -pose.position.z;
-	
-	Q = Eigen::Quaternion<double>(pose.orientation.w, pose.orientation.x, -pose.orientation.y, -pose.orientation.z);
-	
-}
-
-void convertAndShiftPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose) {
-	
-	pose.position.x = t.at<double>(2,0);
-	pose.position.y = -t.at<double>(0,0);
-	pose.position.z = -t.at<double>(1,0);
-	
-	pose.orientation.x = Q.z();
-	pose.orientation.y = -Q.x();
-	pose.orientation.z = -Q.y();
-	pose.orientation.w = Q.w();
 	
 }
 
@@ -669,7 +671,7 @@ double calculateGRIC(std::vector<cv::Point2f>& pts1, std::vector<cv::Point2f>& p
 	
 	double retVal = 0.00;
 
-	int n = pts1.size(); // countNonZero(mask);
+	int n = int(pts1.size()); // countNonZero(mask);
 	
 	double lambda_1 = log(r);
 	double lambda_2 = log(r*((double)n));
