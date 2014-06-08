@@ -12,7 +12,10 @@
 //#include "pcl_ros/io/bag_io.h"
 
 #include "pcl/point_cloud.h" //<--Just Added
+
+#ifdef _BUILD_FOR_ROS_
 #include "sensor_msgs/point_cloud_conversion.h" //<--Just Added
+#endif
 
 #include <pcl/ros/conversions.h>
 #include <pcl/point_types.h>

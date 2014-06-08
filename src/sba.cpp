@@ -3,6 +3,7 @@
 */
 
 #ifdef _USE_PCL_
+#ifdef _USE_SBA_
 
 #include "sba.hpp"
 
@@ -3107,4 +3108,5 @@ void finishTracks(vector<featureTrack>& tracks, vector<cv::Point2f>& pts, double
 	
 }
 
+#endif
 #endif

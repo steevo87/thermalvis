@@ -14,19 +14,25 @@
 #include "geometry.hpp"
 #include "tracks.hpp"
 
+#ifdef _BUILD_FOR_ROS_
 #include <visualization_msgs/MarkerArray.h>
+#endif
 
 // SBA Includes
+#ifdef _USE_SBA_
 #include <sba/sba.h>
 #include <sba/sba_file_io.h>
 #include <sba/visualization.h>
+#endif
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
 #define DEFAULT_NEAR_RADIUS 0.3
 
+#ifdef _USE_SBA_
 using namespace sba;
+#endif
 
 // #include <pcl/visualization/cloud_viewer.h>
 
@@ -53,8 +59,10 @@ void findTriangulatableTracks3(vector<featureTrack>& tracks, vector<unsigned int
 void filterNearPoints(vector<featureTrack>& featureTrackVector, double x, double y, double z, double limit = DEFAULT_NEAR_RADIUS);
 
 // For odometry node, avoids triangulating if pairs of camera views are not sufficiently spaced..
+#ifdef _BUILD_FOR_ROS_
 int initialTrackTriangulationDummy(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation = 0.2, double maxSeparation = 1.0, int minEstimates = 3, double maxStandardDev = 0.1, bool handedness = false, int xCode = 0);
 int initialTrackTriangulation(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation = 0.2, double maxSeparation = 1.0, int minEstimates = 3, double maxStandardDev = 0.1, double maxReprojectionDisparity = MAX_REPROJECTION_DISPARITY);
+#endif
 
 void findP1Matrix(cv::Mat& P1, const cv::Mat& R, const cv::Mat& t);
 
@@ -85,6 +93,7 @@ void getWandZ(cv::Mat& W, cv::Mat& Winv, cv::Mat& Z);
 
 bool findBestReconstruction(const cv::Mat& P0, cv::Mat& P1, cv::Mat& R, cv::Mat& t, const cv::SVD& svd, const cv::Mat& K, const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2, bool useDefault = false);
 
+#ifdef _USE_SBA_
 int addToTracks(SysSBA& sys, int im1, vector<cv::Point2f>& pts1, int im2, vector<cv::Point2f>& pts2);
 
 void addFixedCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C);
@@ -93,7 +102,10 @@ void updateCameraNode_2(SysSBA& sys, const cv::Mat& R, const cv::Mat& t, int ima
 void updateCameraNode_2(SysSBA& sys, const cv::Mat& C, int image_index);
 void addBlankCamera(SysSBA& sys, cameraParameters& cameraData, bool isFixed = false);
 
+#ifdef _BUILD_FOR_ROS_
 double retrieveCameraPose(const SysSBA& sys, unsigned int idx, geometry_msgs::Pose& pose);
+#endif
+
 void retrieveCameraPose(const SysSBA& sys, unsigned int idx, cv::Mat& camera);
 void retrieveAllCameras(cv::Mat *allCameraPoses, const SysSBA& sys);
 void retrieveAllPoints(vector<cv::Point3d>& pts, const SysSBA& sys);
@@ -102,23 +114,30 @@ void updateTracks(vector<featureTrack>& trackVector, const SysSBA& sys);
 void updateCameraNode(SysSBA& sys, cv::Mat R, cv::Mat t, int img1, int img2);
 void printSystemSummary(SysSBA& sys);
 
+void assignTracksToSBA(SysSBA& sys, vector<featureTrack>& trackVector, int maxIndex);
+
+void addNewPoints(SysSBA& sys, const vector<cv::Point3d>& pc);
+void constrainDodgyPoints(SysSBA& sys);
+
+void updateSystemTracks(SysSBA& sys, vector<featureTrack>& tracks, unsigned int start_index);
+#endif
 
 
 float ReciprocalSqrt( float x );
 
 // maxIndex says what's the latest frame for which tracks should be included
-void assignTracksToSBA(SysSBA& sys, vector<featureTrack>& trackVector, int maxIndex);
+
 
 void transfer3dPoint(const cv::Point3d& src, cv::Point3d& dst, const cv::Mat& C);
 
 void transfer3DPoints(const vector<cv::Point3d>& src, vector<cv::Point3d>& dst, const cv::Mat& C);
 
-void addNewPoints(SysSBA& sys, const vector<cv::Point3d>& pc);
+
 
 double getRotationInDegrees(const cv::Mat& R);
 double getDistanceInUnits(const cv::Mat& t);
 
-double getQuaternionAngle(const Quaterniond& q1, const Quaterniond& q2);
+double getQuaternionAngle(const Eigen::Quaterniond& q1, const Eigen::Quaterniond& q2);
 
 void convertPoint3dToMat(const cv::Point3d& src, cv::Mat& dst);
 
@@ -130,7 +149,7 @@ void convertProjectionMatEigenToCV(const Eigen::Matrix< double, 3, 4 > m, cv::Ma
 double dotProduct(const cv::Mat& vec1, const cv::Mat& vec2);
 double dotProduct(const Quaterniond& q1, const Quaterniond& q2);
 
-void constrainDodgyPoints(SysSBA& sys);
+
 
 //void convertFromMatToQuaternion(const Mat& mat, Quaterniond& quat);
 
@@ -191,7 +210,7 @@ void filterToActivePoints(vector<featureTrack>& tracks, vector<cv::Point2f>& pts
 
 void reduceActiveToTriangulated(vector<featureTrack>& tracks, vector<unsigned int>& indices, vector<unsigned int>& untriangulated);
 
-void updateSystemTracks(SysSBA& sys, vector<featureTrack>& tracks, unsigned int start_index);
+
 
 int findBestCandidate(const cv::Mat *CX, const cv::Mat& K, const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2, cv::Mat& C);
 

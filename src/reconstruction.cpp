@@ -176,6 +176,7 @@ void removeShortTracks(vector<featureTrack>& tracks, int idx1, int idx2) {
 	
 }
 
+#ifdef _USE_SBA_
 void updateSystemTracks(SysSBA& sys, vector<featureTrack>& tracks, unsigned int start_index) {
 	
 	//sys = SysSBA();
@@ -239,6 +240,7 @@ void updateSystemTracks(SysSBA& sys, vector<featureTrack>& tracks, unsigned int 
 	}
 	
 }
+#endif
 
 void updateTriangulatedPoints(vector<featureTrack>& tracks, vector<unsigned int>& indices, vector<cv::Point3d>& cloud) {
 	
@@ -729,6 +731,7 @@ void getTranslationBetweenCameras(cv::Mat& C1, cv::Mat& C2, double *translations
 
 }
 
+#ifdef _BUILD_FOR_ROS_
 int initialTrackTriangulationDummy(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation, double maxSeparation, int minEstimates, double maxStandardDev, bool handedness, int xCode) {
 	
 	int lim = 10; // 10
@@ -914,6 +917,7 @@ int initialTrackTriangulationDummy(vector<featureTrack>& tracks, vector<unsigned
 	return lim;
 	
 }
+#endif
 
 void filterNearPoints(vector<featureTrack>& featureTrackVector, double x, double y, double z, double limit) {
 	
@@ -931,6 +935,7 @@ void filterNearPoints(vector<featureTrack>& featureTrackVector, double x, double
 	
 }
 
+#ifdef _BUILD_FOR_ROS_
 int initialTrackTriangulation(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation, double maxSeparation, int minEstimates, double maxStandardDev, double maxReprojectionDisparity) {
 	
 	cv::Point3d pt3d, mean3d(0.0, 0.0, 0.0), stddev3d(0.0, 0.0, 0.0);
@@ -1196,6 +1201,7 @@ int initialTrackTriangulation(vector<featureTrack>& tracks, vector<unsigned int>
 	return triangulatedCounter;
 	
 }
+#endif
 
 bool findClusterMean(const vector<cv::Point3d>& pts, cv::Point3d& pt3d, int mode, int minEstimates, double maxStandardDev) {
 	
@@ -2540,8 +2546,16 @@ double getDistanceInUnits(const cv::Mat& t) {
 	return retVal;
 }
 
+void convertVec4dToMat(const Vector4d& vec4, cv::Mat& mat) {
+	mat = cv::Mat::zeros(3, 1, CV_64FC1);
+	
+	mat.at<double>(0,0) = vec4.x();
+	mat.at<double>(1,0) = vec4.y();
+	mat.at<double>(2,0) = vec4.z();
+	
+}
 
-
+#ifdef _USE_SBA_
 void addFixedCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C) {
 	addBlankCamera(sys, cameraData, true);
 	updateCameraNode_2(sys, C, sys.nodes.size()-1);
@@ -2550,15 +2564,6 @@ void addFixedCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C)
 void addNewCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C) {
 	addBlankCamera(sys, cameraData, false);
 	updateCameraNode_2(sys, C, sys.nodes.size()-1);
-}
-
-void convertVec4dToMat(const Vector4d& vec4, cv::Mat& mat) {
-	mat = cv::Mat::zeros(3, 1, CV_64FC1);
-	
-	mat.at<double>(0,0) = vec4.x();
-	mat.at<double>(1,0) = vec4.y();
-	mat.at<double>(2,0) = vec4.z();
-	
 }
 
 void updateTracks(vector<featureTrack>& trackVector, const SysSBA& sys) {
@@ -2686,6 +2691,7 @@ void assignTracksToSBA(SysSBA& sys, vector<featureTrack>& trackVector, int maxIn
 	}
 	
 }
+#endif
 
 void estimateNewPose(vector<featureTrack>& tracks, cv::Mat& K, int idx, cv::Mat& pose) {
 	// Find any tracks that have at least 2 "sightings" (so that 3d location is known)
@@ -2732,6 +2738,7 @@ void estimateNewPose(vector<featureTrack>& tracks, cv::Mat& K, int idx, cv::Mat&
 	composeTransform(R, t, pose);
 }
 
+#ifdef _USE_SBA_
 void addNewPoints(SysSBA& sys, const vector<cv::Point3d>& pc) {
 	
 	Vector2d proj;
@@ -2917,12 +2924,6 @@ void printSystemSummary(SysSBA& sys) {
 	printf("%s << sys.tracks.size() = %d\n", __FUNCTION__, ((int)sys.tracks.size()));
 }
 
-Quaterniond defaultQuaternion() {
-	Quaterniond defQuaternion(1, 0, 0, 0);
-	
-	return defQuaternion;
-}
-
 void updateCameraNode_2(SysSBA& sys, const cv::Mat& C, int image_index) {
 	cv::Mat R, t;
 	
@@ -2990,6 +2991,13 @@ void updateCameraNode_2(SysSBA& sys, const cv::Mat& R, const cv::Mat& t, int ima
 	sys.nodes[image_index].qrot = rotation;
 	
 }
+#endif
+
+Quaterniond defaultQuaternion() {
+	Quaterniond defQuaternion(1, 0, 0, 0);
+	
+	return defQuaternion;
+}
 
 void convertProjectionMatCVToEigen(const cv::Mat& mat, Eigen::Matrix< double, 3, 4 > m) {
 	
@@ -3046,7 +3054,7 @@ float ReciprocalSqrt( float x ) {
 	return r;
 }
 
-
+#ifdef _USE_SBA_
 void updateCameraNode(SysSBA& sys, cv::Mat R, cv::Mat t, int img1, int img2) {
 	
 	cv::Mat full_R;
@@ -3182,6 +3190,7 @@ void updateCameraNode(SysSBA& sys, cv::Mat R, cv::Mat t, int img1, int img2) {
 	
 }
 
+
 void constrainDodgyPoints(SysSBA& sys) {
 	
 	for (unsigned int iii = 0; iii < sys.nodes.size(); iii++) {
@@ -3200,6 +3209,7 @@ void constrainDodgyPoints(SysSBA& sys) {
 		}
 	}
 }
+#endif
 
 int TriangulateNewTracks(vector<featureTrack>& trackVector, const int index1, const int index2, const cv::Mat& K, const cv::Mat& K_inv, const cv::Mat& P0, const cv::Mat& P1, bool initializeOnFocalPlane) {
 	

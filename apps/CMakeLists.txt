@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 IF(WIN32 OR win64)
-	OPTION(USE_OPTRIS_SDK "Build with Optris compatability" TRUE)
+	IF(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+		OPTION(USE_OPTRIS_SDK "Build with Optris compatability" TRUE)
+	ELSE()
+		OPTION(USE_OPTRIS_SDK "Build with Optris compatability" FALSE)
+	ENDIF()
+	
 	IF(USE_OPTRIS_SDK)
 		SET(OptrisSDK "$ENV{USERPROFILE}/Documents/Optris/SDK" CACHE FILEPATH "Include directory for Optris SDK")
 		IF(EXISTS "${OptrisSDK}")

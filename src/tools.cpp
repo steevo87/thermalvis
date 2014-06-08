@@ -154,16 +154,16 @@ double timeElapsedMS(struct timeval& timer, bool reset) {
 
 
 
-void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max) {
+void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max_val) {
 
 	dst.clear();
 	dst.insert(dst.end(), src.begin(), src.end());
 
-	if (dst.size() <= max) {
+	if (dst.size() <= max_val) {
 		return;
 	}
 
-	while (dst.size() > max) {
+	while (dst.size() > max_val) {
 		dst.erase(dst.begin() + (rand() % dst.size()));
 	}
 

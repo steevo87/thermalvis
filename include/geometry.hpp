@@ -16,6 +16,8 @@
 
 typedef Eigen::Matrix<float, 3, 3, Eigen::RowMajor> Matrix3frm;
 typedef Eigen::Quaternion<double>   QuaternionDbl;
+typedef Eigen::Quaternion<double>   Quaterniond;
+typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vector4d;
 
 //#include <math.h>
 

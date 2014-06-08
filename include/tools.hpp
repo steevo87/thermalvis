@@ -6,7 +6,7 @@
 #define _THERMALVIS_TOOLS_H_
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-	#define NOMINMAX 1
+	#define NOMINMAX 1	// Don't remove this, even though it causes a warning!
 	#include <windows.h>
 #else
 	#include <unistd.h>
@@ -60,7 +60,7 @@ void addUniqueToVector(vector<unsigned int>& dst, vector<unsigned int>& src);
 
 double asymmetricGaussianValue(double score, double mean, double loVar, double hiVar);
 
-void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max);
+void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max_val);
 
 
 

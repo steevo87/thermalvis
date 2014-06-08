@@ -3,6 +3,7 @@
 */
 
 #ifdef _USE_PCL_
+#ifdef _USE_SBA_
 
 #ifndef _THERMALSFM_SBA_H_
 #define _THERMALSFM_SBA_H_
@@ -14,8 +15,11 @@
 #include "keyframes.hpp"
 #include "tracks.hpp"
 // #include <ros/ros.h>
+
+
 #include <sba/sba.h>
 #include <sba/visualization.h>
+
 
 #define DEFAULT_MAX_DISPLACEMENT 	0.3
 
@@ -24,6 +28,7 @@
 //#include <visualization_msgs/Marker.h>
 
 /// \brief		Scales up system size
+
 void normalizeSystem(SysSBA& sys, double factor = 1.0);
 
 /// \brief		Determines distance between farthest cameras
@@ -116,4 +121,5 @@ double optimizeSubsystem(cameraParameters& camData, cv::Mat *C, vector<unsigned 
 void finishTracks(vector<featureTrack>& tracks, vector<cv::Point2f>& pts, double retainProp = 0.80, unsigned int maxOccurrences = 0);
 #endif
 
+#endif
 #endif
