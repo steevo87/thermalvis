@@ -1,6 +1,6 @@
 #include "optris_windows.h"
 
-optrisManager::optrisManager(HWND hostHandle) {
+optrisManager::optrisManager(HWND hostHandle) : wantsToOutput(false), FrameCounter1(0) {
 	ipc = nullptr;
 	ipcInitialized = false;
 	hr = -1;
@@ -236,6 +236,13 @@ HRESULT optrisManager::NewFrame(short *ImgBuf, int frameCounter) {
 	cMapping->falsify_image(*_8bitImage, *colorImage, 0);		// THIS IS SLOWING THINGS DOWN!!
 	
 	!pauseMode ? cv::imshow("optrisVideo", *colorImage) : 0;
+
+	if (wantsToOutput) {
+		char imFilename[256];
+		sprintf(imFilename, "%s/frame%06d.png", output_directory, (FrameCounter1-1));
+		string imageFilename(imFilename);
+		cv::imwrite(imageFilename, *rawImage);	
+	}
 	
 	return 0;
 }
@@ -249,6 +256,13 @@ void optrisManager::ReleaseIPC() {
 	}
 }
 
+bool optrisManager::setOutputDir(char* output_dir) {
+	printf("%s << User has opted to output images to the following directory: <%s>\n", __FUNCTION__, output_dir);
+	wantsToOutput = true;
+	output_directory = new char[256];
+	sprintf(output_directory, "%s", output_dir);
+	return true;
+}
 
 void optrisManager::initialize() {
 	ipc = gcnew IPC(1);
@@ -292,6 +306,7 @@ int main(int argc, char* argv[]) {
 
 	oM = gcnew optrisManager(hwnd);
 	oM->initialize();
+	if (argc > 1) oM->setOutputDir(argv[1]);
 	System::Windows::Forms::Application::Run(oM);
 	oM->ReleaseIPC();
 

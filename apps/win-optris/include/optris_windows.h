@@ -29,6 +29,8 @@ protected:
 	
 	bool ipcInitialized;
 	bool Connected;
+	bool wantsToOutput;
+	char *output_directory;
 
 	int colormap_index;
 
@@ -67,6 +69,7 @@ protected:
 public:
 	optrisManager(HWND hostHandle);
 	void initialize();
+	bool setOutputDir(char* output_dir);
 	void ReleaseIPC();
 
 	HRESULT OnFrameInit(int frameWidth, int frameHeight, int frameDepth);
