@@ -12,7 +12,6 @@ ENDIF()
 OPTION(USE_BOOST "Build Boost-dependent functions." FALSE)
 OPTION(USE_PCL "Build PCL-dependent functions." FALSE)
 OPTION(USE_EIGEN "Build Eigen-dependent functions." FALSE)
-OPTION(USE_SBA "Build SBA-dependent functions." FALSE)
 
 SET(ADDITIONAL_INCLUDES "")
 SET(ADDITIONAL_LIBRARIES "")
@@ -77,10 +76,6 @@ IF(USE_PCL)
 	IF(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 		MESSAGE(WARNING "This is a 32-bit build, so be careful that CMake didn't automatically find the 64-bit PCL libraries to link to!")
 	ENDIF()
-ENDIF()
-
-IF (USE_SBA)
-	MESSAGE(FATAL_ERROR "SBA not found! Much of the libraries can be built without SBA, however, so consider opting not to use it.")
 ENDIF()
 
 IF(BUILD_FOR_ROS)
