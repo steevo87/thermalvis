@@ -8,7 +8,13 @@ IF(WIN32 OR win64)
 	ENDIF()
 	
 	IF(USE_OPTRIS_SDK)
-		SET(OptrisSDK "$ENV{USERPROFILE}/Documents/Optris/SDK" CACHE FILEPATH "Include directory for Optris SDK")
+		SET(OptrisTestLoc "$ENV{USERPROFILE}/Documents/Optris/SDK")
+		IF(NOT EXISTS "${OptrisTestLoc}")
+			SET(OptrisTestLoc "C:/Users/Public/Documents/Optris/SDK")
+		ENDIF()
+	
+		SET(OptrisSDK "${OptrisTestLoc}" CACHE FILEPATH "Include directory for Optris SDK")
+		
 		IF(EXISTS "${OptrisSDK}")
 			SET(OptrisSDK_FOUND TRUE)
 			MESSAGE(STATUS "Found OptrisSDK directory at specified path <${OptrisSDK}>.")
