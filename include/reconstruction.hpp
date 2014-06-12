@@ -143,8 +143,8 @@ void convertPoint3dToMat(const cv::Point3d& src, cv::Mat& dst);
 
 Quaterniond defaultQuaternion();
 
-void convertProjectionMatCVToEigen(const cv::Mat& mat, Eigen::Matrix< double, 3, 4 > m);
-void convertProjectionMatEigenToCV(const Eigen::Matrix< double, 3, 4 > m, cv::Mat& mat);
+void convertProjectionMatCVToEigen(const cv::Mat& mat, Eigen::Matrix< double, 3, 4 >& m);
+void convertProjectionMatEigenToCV(const Eigen::Matrix< double, 3, 4 >& m, cv::Mat& mat);
 
 double dotProduct(const cv::Mat& vec1, const cv::Mat& vec2);
 double dotProduct(const Quaterniond& q1, const Quaterniond& q2);

@@ -2999,7 +2999,7 @@ Quaterniond defaultQuaternion() {
 	return defQuaternion;
 }
 
-void convertProjectionMatCVToEigen(const cv::Mat& mat, Eigen::Matrix< double, 3, 4 > m) {
+void convertProjectionMatCVToEigen(const cv::Mat& mat, Eigen::Matrix< double, 3, 4 >& m) {
 	
 	m(0,0) = mat.at<double>(0,0);
 	m(0,1) = mat.at<double>(0,1);
@@ -3018,7 +3018,7 @@ void convertProjectionMatCVToEigen(const cv::Mat& mat, Eigen::Matrix< double, 3,
 	
 }
 
-void convertProjectionMatEigenToCV(const Eigen::Matrix< double, 3, 4 > m, cv::Mat& mat) {
+void convertProjectionMatEigenToCV(const Eigen::Matrix< double, 3, 4 >& m, cv::Mat& mat) {
 	
 	mat = cv::Mat::zeros(3, 4, CV_64FC1);
 	
