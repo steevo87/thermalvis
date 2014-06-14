@@ -6,6 +6,24 @@
 
 #include "ros_resources.hpp"
 
+#ifdef _BUILD_FOR_ROS_ // Should definitely be defined if this file is called..
+void displayMessage(string msg, int msg_code) {
+	switch (msg_code) {
+	case MESSAGE_NORMAL:
+		ROS_INFO(msg.c_str());
+		break;
+	case MESSAGE_WARNING:
+		ROS_WARNING(msg.c_str());
+		break;
+	case MESSAGE_ERROR:
+		ROS_ERROR(msg.c_str());
+		break;
+	default:
+		ROS_INFO(msg.c_str());
+	}
+}
+#endif
+
 void changemode(int dir)
 {
   static struct termios oldt, newt;

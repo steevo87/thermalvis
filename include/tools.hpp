@@ -8,6 +8,12 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	#define NOMINMAX 1	// Don't remove this, even though it causes a warning!
 	#include <windows.h>
+	#include <time.h>
+	#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+	  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+	#else
+	  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+	#endif
 #else
 	#include <unistd.h>
 	#include <getopt.h>
@@ -25,9 +31,23 @@
 #include <fstream>
 #include <vector>
 
+#define MESSAGE_NORMAL	0
+#define MESSAGE_WARNING 1
+#define MESSAGE_ERROR	2
+
 #define USE_CLAHE 0
 
 using namespace std;
+
+// http://social.msdn.microsoft.com/Forums/vstudio/en-US/430449b3-f6dd-4e18-84de-eebd26a8d668/gettimeofday?forum=vcgeneral
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__) 
+struct timezone 
+{
+  int  tz_minuteswest; /* minutes W of Greenwich */
+  int  tz_dsttime;     /* type of dst correction */
+};
+int gettimeofday(struct timeval *tv, struct timezone *tz);
+#endif
 
 typedef std::pair<unsigned int,unsigned int> mypair;
 bool comparator ( const mypair& l, const mypair& r);
@@ -62,14 +82,15 @@ double asymmetricGaussianValue(double score, double mean, double loVar, double h
 
 void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max_val);
 
-
-
-
+#ifndef _BUILD_FOR_ROS_
+#define ROS_INFO printf
+#define ROS_WARN printf
+#define ROS_ERROR printf
+void displayMessage(string msg, int msg_code = MESSAGE_NORMAL);
+#endif
 
 /// \brief		Calculates Factorial of an integer
 long long int factorial(int num);
-
-
 
 /// \brief      Gets next possible combination for an exhaustive combinatorial search
 void getNextCombo(vector<unsigned int>& currentIndices, int r, int n);

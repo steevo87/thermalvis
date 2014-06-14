@@ -1,4 +1,4 @@
-#include "dir_reader.h"
+#include "mono_slam.h"
 
 directoryManager::directoryManager() : wantsToOutput(false), FrameCounter1(0), isValid(true) {
 	cMapping = cScheme(DEFAULT_COLORSCHEME_CODE);
@@ -10,6 +10,11 @@ directoryManager::directoryManager() : wantsToOutput(false), FrameCounter1(0), i
 	pauseMode = false;
 	autoscaleTemps = true;
 
+	tD.debugMode = true;
+	fD = new featureTrackerNode(tD);
+
+	//fD = new cv::FastFeatureDetector( 15 );
+
 }
 
 bool directoryManager::grabFrame() {
@@ -17,7 +22,7 @@ bool directoryManager::grabFrame() {
 	if (FrameCounter1 >= int(file_list.size())) return false;
 
 	
-	
+		
 	std::string full_path = std::string(input_directory) + "/" + file_list.at(FrameCounter1);
 
 	
@@ -42,7 +47,15 @@ bool directoryManager::grabFrame() {
 		#endif
 	}
 	
-	
+	if (FrameCounter1 == 0) {
+		tD.cameraData.cameraSize.width = rawImage.cols;
+		tD.cameraData.cameraSize.height = rawImage.rows;
+		tD.cameraData.imageSize.at<unsigned short>(0, 0) = tD.cameraData.cameraSize.width;
+		tD.cameraData.imageSize.at<unsigned short>(0, 1) = tD.cameraData.cameraSize.height;
+		tD.cameraData.updateCameraParameters();
+		fD->updateTrackerData(tD);
+		fD->process_info();
+	}
 
 	// Read in image to rawImage!
 
@@ -58,13 +71,14 @@ bool directoryManager::grabFrame() {
 
 	// Try local feature tracking here?
 	
+	//if (FrameCounter1 == 0) {
+		//fD->detect(_8bitImage, detectedKeypoints);
+		//cv::KeyPoint::convert(detectedKeypoints, newlySensedPoints);
+	//}
 	
-	cMapping.falsify_image(_8bitImage, colorImage, 0);		// THIS IS SLOWING THINGS DOWN!!
-	
-	
-
-
-	
+	fD->handle_camera(_8bitImage);
+	fD->features_loop();
+	fD->getDisplayImage(colorImage);
 	
 	!pauseMode ? cv::imshow("optrisVideo", colorImage) : 0;
 

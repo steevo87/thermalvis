@@ -14,6 +14,24 @@ bool comparator ( const mypair& l, const mypair& r) {
 	return l.first < r.first; 
 }
 
+#ifndef _BUILD_FOR_ROS_
+void displayMessage(string msg, int msg_code) {
+	switch (msg_code) {
+	case MESSAGE_NORMAL:
+		printf("%s\n", msg.c_str());
+		break;
+	case MESSAGE_WARNING:
+		printf("WARNING! %s\n", msg.c_str());
+		break;
+	case MESSAGE_ERROR:
+		printf("ERROR! %s\n", msg.c_str());
+		break;
+	default:
+		printf("%s\n", msg.c_str());
+	}
+}
+#endif
+
 void findLinearModel(double* x, double* y, int termsToConsider, double &m, double &c) {
 	
 	double mean_x = 0.0, mean_y = 0.0;
@@ -122,14 +140,45 @@ int countElementsInFolder(const char* folderName, vector<string>& elementNames, 
 #endif
 }
 
-
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__) 
+int gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+  FILETIME ft;
+  unsigned __int64 tmpres = 0;
+  static int tzflag;
+ 
+  if (NULL != tv)
+  {
+    GetSystemTimeAsFileTime(&ft);
+ 
+    tmpres |= ft.dwHighDateTime;
+    tmpres <<= 32;
+    tmpres |= ft.dwLowDateTime;
+ 
+    /*converting file time to unix epoch*/
+    tmpres /= 10;  /*convert into microseconds*/
+	tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+    tv->tv_sec = (long)(tmpres / 1000000UL);
+    tv->tv_usec = (long)(tmpres % 1000000UL);
+  }
+ 
+  if (NULL != tz)
+  {
+    if (!tzflag)
+    {
+      _tzset();
+      tzflag++;
+    }
+    tz->tz_minuteswest = _timezone / 60;
+    tz->tz_dsttime = _daylight;
+  }
+ 
+  return 0;
+}
+#endif
 
 double timeElapsedMS(struct timeval& timer, bool reset) {
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-	printf("%s << ERROR! THIS FUNCTION HAS NOT BEEN IMPLEMENTED IN WINDOWS!\n", __FUNCTION__);
-	return -1.0;
-#else
 	struct timeval new_time;
 
 	long seconds, useconds;
@@ -146,9 +195,6 @@ double timeElapsedMS(struct timeval& timer, bool reset) {
 	}
 
     return retVal;
-#endif
-	
-
 
 }
 
