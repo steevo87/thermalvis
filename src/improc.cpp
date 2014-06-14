@@ -379,7 +379,7 @@ void redistortPoints(const vector<cv::Point2f>& src, vector<cv::Point2f>& dst, c
     cx = newCamMat.at<double>(0, 2);
     cy = newCamMat.at<double>(1, 2);
 
-    for (unsigned int i = 0; i < distCoeffs.cols; i++){
+    for (int i = 0; i < distCoeffs.cols; i++){
         k[i] = distCoeffs.at<double>(0, i);
     }
 

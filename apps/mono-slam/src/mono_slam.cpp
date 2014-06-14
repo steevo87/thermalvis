@@ -193,17 +193,22 @@ bool directoryManager::initialize(char* input_dir) {
 }
 
 int main(int argc, char* argv[]) {
-	printf("%s << Launching Directory Reader Demo App!\n", __FUNCTION__);
+	printf("%s << Launching Monocular SLAM Demo App!\n", __FUNCTION__);
 	
+	char directory_loc[256];
+
 	if (argc < 2) {
-		printf("%s << Error! A directory must be specified for input images.\n", __FUNCTION__);
-		return -1;
+		sprintf(directory_loc, "%s", DEFAULT_DATA_DIRECTORY);
+		printf("%s << Warning! No directory specified for input images. Assuming default location of <%s>\n", __FUNCTION__, directory_loc);
+	} else {
+		sprintf(directory_loc, "%s", argv[1]);
+		printf("%s << User has specified the following directory for input images: <%s>\n", __FUNCTION__, directory_loc);
 	}
 		
 	directoryManager *dM;
 
 	dM = new directoryManager();
-	if (!dM->initialize(argv[1])) return -1;
+	if (!dM->initialize(directory_loc)) return -1;
 	if (argc > 2) dM->setOutputDir(argv[2]);
 	while (dM->wantsToRun()) {
 		dM->grabFrame();

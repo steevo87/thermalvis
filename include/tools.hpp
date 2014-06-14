@@ -37,6 +37,8 @@
 
 #define USE_CLAHE 0
 
+#define DEFAULT_DATA_DIRECTORY "C:\\Users\\Public\\Documents\\Data\\optris\\test_seq_001"
+
 using namespace std;
 
 // http://social.msdn.microsoft.com/Forums/vstudio/en-US/430449b3-f6dd-4e18-84de-eebd26a8d668/gettimeofday?forum=vcgeneral
