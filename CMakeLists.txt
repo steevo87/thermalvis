@@ -128,7 +128,7 @@ IF(BUILD_FOR_ROS)
 	ADD_DEFINITIONS( -D_BUILD_FOR_ROS_ )
 ENDIF()
 	
-FIND_PACKAGE( OpenCV HINTS "/usr/local/share/OpenCV" "$ENV{USERPROFILE}/Documents/GitHub/BUILDS/OpenCV" "C:/Users/Public/Documents/opencv/build")
+FIND_PACKAGE( OpenCV HINTS "/usr/local/share/OpenCV" "$ENV{USERPROFILE}/Documents/opencv/build" "C:/Users/Public/Documents/opencv/build" "$ENV{USERPROFILE}/Documents/GitHub/BUILDS/OpenCV")
 STRING(REGEX REPLACE "/Release/Release" "/Release" OpenCV_LIB_DIR_OPT "${OpenCV_LIB_DIR_OPT}")
 STRING(REGEX REPLACE "/Debug/Debug" "/Debug" OpenCV_LIB_DIR_DBG "${OpenCV_LIB_DIR_DBG}")
 

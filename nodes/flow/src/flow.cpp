@@ -336,9 +336,9 @@ void featureTrackerNode::attemptTracking() {
 	
 	//ROS_INFO("(%d / %d) points successfully tracked. last time: (%d) tracks.", globalFinishingPoints.size(), ptsBefore, previouslyTrackedPoints);
 	
-	successfullyTrackedFeatures += globalFinishingPoints.size();
+	successfullyTrackedFeatures += int(globalFinishingPoints.size());
 	
-	lostTrackCount += lostTrackIndices.size();
+	lostTrackCount += int(lostTrackIndices.size());
 	
 	// Filter points that may be in high-noise region...
 	//double distProp = 0.75;
@@ -385,7 +385,7 @@ void featureTrackerNode::updateDistanceConstraint() {
 	if (configData.adaptiveWindow) {
 		
 		unsigned int activePoints = 0;
-		activePoints += globalFinishingPoints.size();
+		activePoints += int(globalFinishingPoints.size());
 		
 		double predictedDisplacement;
 		
@@ -969,7 +969,7 @@ void featureTrackerNode::detectNewFeatures() {
 			
 			//ROS_INFO("(%d) new points detected...", currPoints[jjj].size());
 			
-			discardedNewFeatures += currPoints.size();
+			discardedNewFeatures += int(currPoints.size());
 
 			testTime = timeElapsedMS(test_timer, false);
 			//ROS_WARN("3: (%f)", testTime);
@@ -1046,8 +1046,8 @@ void featureTrackerNode::detectNewFeatures() {
 
 				if (configData.verboseMode) { ROS_INFO("Further reduced to (%d) candidate points based on maxFeatures limit.", currPoints.size()); }
 				
-				newlyDetectedFeatures += currPoints.size();
-				discardedNewFeatures -= currPoints.size();
+				newlyDetectedFeatures += int(currPoints.size());
+				discardedNewFeatures -= int(currPoints.size());
 				
 				cv::KeyPoint::convert(currPoints, candidates);
 				
@@ -1209,7 +1209,7 @@ void featureTrackerNode::features_loop() {
 	//if (((int) globalFinishingPoints.size()) < max(configData.minFeatures, ((int) ((1.00 - FEATURE_DROP_TRIGGER)*double(previousTrackedPointsPeak))) ) ) {
 		featuresTooLow = true;
 		if (configData.verboseMode) { ROS_ERROR("featuresTooLow == true, because feature count is (%d) vs (%d, %u).", globalFinishingPoints.size(), configData.minFeatures, previousTrackedPointsPeak); }
-		previousTrackedPointsPeak = globalFinishingPoints.size();
+		previousTrackedPointsPeak = (unsigned int)(globalFinishingPoints.size());
 	} else {
 		featuresTooLow = false;
 	}

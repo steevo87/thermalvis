@@ -9,6 +9,8 @@ required dependencies:
 
 OPENCV
 	recommended to download a pre-compiled binary installer e.g. from here: http://sourceforge.net/projects/opencvlibrary/files/opencv-win/
+	preferable to unpack the library at one of the following locations:
+		"C:/Users/<username>/Documents/opencv/build" OR "C:/Users/Public/Documents/opencv/build"
 
 optional dependencies:
 ----------------------
