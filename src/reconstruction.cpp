@@ -487,7 +487,12 @@ bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<
 		return false;
 	}
 	
+	#ifdef _OPENCV_VERSION_3_PLUS_
+	solvePnPRansac(points_3d, points_2d, camData.K, camData.blankCoeffs, Rvec, t, guided, iterCount, maxReprojErr, ((unsigned int) ((double) points_2d.size()) * inliersPercentage), inlierPts, cv::EPNP); // ITERATIVE, P3P
+	#else
 	solvePnPRansac(points_3d, points_2d, camData.K, camData.blankCoeffs, Rvec, t, guided, iterCount, maxReprojErr, ((unsigned int) ((double) points_2d.size()) * inliersPercentage), inlierPts, CV_EPNP); // ITERATIVE, CV_P3P
+	#endif
+	
 	
 	
 	//if ( ((unsigned int) inlierPts.size()) < ((unsigned int) (((double) points_2d.size()) * inliersPercentage)) ) {
