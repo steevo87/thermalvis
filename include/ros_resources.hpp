@@ -41,5 +41,9 @@ ros::Time findAverageTime(ros::Time time1, ros::Time time2);
 
 #define MAX_RVIZ_DISPLACEMENT 	1000
 
+#ifdef _BUILD_FOR_ROS_ // Should definitely be defined if this file is called..
+void displayMessage(string msg, int msg_code = MESSAGE_NORMAL);
+#endif
+
 #endif
 #endif

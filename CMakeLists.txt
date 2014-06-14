@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
+project(THERMALVIS)
+
 OPTION(BUILD_APPS "Build demo apps." TRUE)
+OPTION(BUILD_NODES "Build process nodes." TRUE)
 OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." FALSE)
 
 IF(WIN32 OR win64)
@@ -74,7 +77,7 @@ IF(USE_BOOST)
 	SET(Boost_USE_MULTITHREADED ON)  
 	SET(Boost_USE_STATIC_RUNTIME OFF) 
 	
-	FIND_PACKAGE(Boost COMPONENTS system filesystem program_options REQUIRED)
+	FIND_PACKAGE(Boost COMPONENTS system filesystem program_options date_time REQUIRED)
 	
 	IF(Boost_FOUND)
 		MESSAGE(STATUS "Boost found!")
@@ -94,7 +97,7 @@ IF(USE_BOOST)
 			SET(Boost_LIBRARY_DIR "${Boost_INCLUDE_DIR}/lib32-msvc-12.0" CACHE PATH "" FORCE)
 		ENDIF()
 		
-		FIND_PACKAGE(Boost COMPONENTS system filesystem program_options REQUIRED)
+		FIND_PACKAGE(Boost COMPONENTS system filesystem program_options date_time REQUIRED)
 		
 		MESSAGE(STATUS "Boost_INCLUDE_DIR = ${Boost_INCLUDE_DIR}")
 		MESSAGE(STATUS "Boost_LIBRARY_DIR = ${Boost_LIBRARY_DIR}")
@@ -186,4 +189,8 @@ SET_TARGET_PROPERTIES(thermalvis PROPERTIES COMPILE_FLAGS ${THERMALVIS_COMPILE_F
 
 IF(BUILD_APPS)
 	ADD_SUBDIRECTORY(apps)
+ENDIF()
+
+IF(BUILD_NODES)
+	ADD_SUBDIRECTORY(nodes)
 ENDIF()

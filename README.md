@@ -1,10 +1,30 @@
 thermalvis
 ==========
 
-Cross-platform, OpenCV-based functionality for image processing and computer vision in thermal-infrared
+Cross-platform, OpenCV-based functionality for image processing and computer vision in thermal-infrared.
+For Windows, the recommended build environment is Visual Studio 2012, though it should work on others.
+
+required dependencies:
+----------------------
+
+OPENCV
+	recommended to download a pre-compiled binary installer e.g. from here: http://sourceforge.net/projects/opencvlibrary/files/opencv-win/
 
 optional dependencies:
 ----------------------
+
+BOOST
+	recommended version is boost_1_55_0-msvc-11.0-64.exe (http://sourceforge.net/projects/boost/files/boost-binaries/1.55.0/)
+	may need to add the following to the System Path: 
+		BOOST_LIBRARYDIR = C:\local\boost_1_55_0\lib64-msvc-11.0
+		BOOST_ROOT = C:\local\boost_1_55_0
+	beware of the directions of the slashes in the directory paths!
+
+PCL
+	There is no all-in-one installer for VS2012, or for the latest version (1.7.1)
+	May want to compile from source:
+		it's a GitHub project, at: https://github.com/PointCloudLibrary/pcl
+	Try compiling from source and then let me know if you have any problems!
 
 EIGEN
 	can download from here: http://eigen.tuxfamily.org/index.php?title=Main_Page
@@ -18,6 +38,6 @@ EIGEN
 troubleshooting:
 ----------------
 
-DODGY IMAGE
+DODGY IMAGE FROM CAMERA
 	try refocussing by manually rotating the physical lens
 	try shutting down the Optris PI Connect software, unplugging the camera, and then testing again

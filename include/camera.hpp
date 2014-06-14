@@ -25,8 +25,9 @@ struct cameraParameters {
 	
 	cv::Mat R, P;
 	
-	cameraParameters() { }
+	cameraParameters();
 	
+	bool updateCameraParameters();
 	bool getCameraParameters(std::string intrinsics);
 	
 };
