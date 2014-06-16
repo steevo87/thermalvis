@@ -15,6 +15,7 @@ ENDIF()
 OPTION(USE_BOOST "Build Boost-dependent functions." FALSE)
 OPTION(USE_PCL "Build PCL-dependent functions." FALSE)
 OPTION(USE_EIGEN "Build Eigen-dependent functions." FALSE)
+OPTION(USE_OPTRIS_SDK "Build with Optris compatability" FALSE)
 
 SET(ADDITIONAL_INCLUDES "")
 SET(ADDITIONAL_LIBRARIES "")
