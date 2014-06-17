@@ -1,12 +1,22 @@
 #include "directory_stream.hpp"
 
-directoryManager::directoryManager() {
+directoryManager::directoryManager() : loopMode(false) {
 	input_directory = new char[MAX_INPUT_ARG_LENGTH];
+}
+
+void directoryManager::setLoopMode(bool val) {
+	loopMode = val;
 }
 
 bool directoryManager::grabFrame() {
 	
-	if (FrameCounter1 >= int(file_list.size())) return false;
+	if (FrameCounter1 >= int(file_list.size())) {
+		if (loopMode) {
+			FrameCounter1 = 0;
+		} else {
+			return false;
+		}
+	}
 
 	std::string full_path = std::string(input_directory) + "/" + file_list.at(FrameCounter1);
 

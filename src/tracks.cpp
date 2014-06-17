@@ -739,24 +739,20 @@ void redistortTracks(const vector<featureTrack>& src, vector<featureTrack>& dst,
 
 bool createTrackMatrix(const vector<featureTrack>& src, cv::Mat& dst, int latest) {
 	
-	unsigned int rows = 240, cols = 640;
-	dst = cv::Mat(rows, cols, CV_8UC3);
+	unsigned int rows = 60, cols = 160;
+	cv::Mat tmp(rows, cols, CV_8UC3);
 	
-	for (int iii = 0; iii < dst.rows; iii++) {
-		for (int jjj = 0; jjj < dst.cols; jjj++) {
-			dst.at<cv::Vec3b>(iii,jjj) = cv::Vec3b(255,255,255);
-			// dst.at<cv::Vec3b>(iii,jjj)[1] = 255;
-			//dst.at<cv::Vec3b>(iii,jjj)[2] = 255;
+	for (int iii = 0; iii < tmp.rows; iii++) {
+		for (int jjj = 0; jjj < tmp.cols; jjj++) {
+			tmp.at<cv::Vec3b>(iii,jjj) = cv::Vec3b(255,255,255);
 		}
 	}
 	
-	// printf("%s << A.\n", __FUNCTION__);
 	int earliest = -1;
+
 	// Determine the latest frame index
 	if (latest == -1) {
-		
-		
-		
+
 		for (unsigned int iii = 0; iii < src.size(); iii++) {
 			
 			// printf("%s << iii = (%d / %d) : (%d)\n", __FUNCTION__, iii, src.size(), src.at(iii).locations.size());
@@ -777,25 +773,16 @@ bool createTrackMatrix(const vector<featureTrack>& src, cv::Mat& dst, int latest
 		}
 	}
 	
-	printf("%s << earliest/latest = (%d/%d)\n", __FUNCTION__, earliest, latest);
-	
 	vector<int> activeTrackIndices;
 	
 	// Determine which tracks in the feature track structure were identified in latest frame
 	for (unsigned int iii = 0; iii < src.size(); iii++) {
-		
 		if (src.at(iii).locations.size() > 0) {
 			if (src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex == ((int) latest)) {
 				activeTrackIndices.push_back(iii);
-
 			}
 		}
-		
-		
 	}
-
-	// printf("%s << activeTrackIndices.size() = (%d)\n", __FUNCTION__, activeTrackIndices.size());
-
 	
 	// Colorize the pixels in the debug image
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -808,17 +795,18 @@ bool createTrackMatrix(const vector<featureTrack>& src, cv::Mat& dst, int latest
 			unsigned int column = latest - src.at(activeTrackIndices.at(iii)).locations.at(jjj).imageIndex;
 			
 			if (column < cols) {
-				dst.at<cv::Vec3b>(iii,column)[1] = 0;
-				dst.at<cv::Vec3b>(iii,column)[2] = 0;				
+				tmp.at<cv::Vec3b>(iii,column)[1] = 0;
+				tmp.at<cv::Vec3b>(iii,column)[2] = 0;				
 			}
 
 		}
 		
 	}
+
+	resize(tmp, dst, cv::Size(4*tmp.cols, 4*tmp.rows), 0.0, 0.0, cv::INTER_NEAREST);
 	
 	return true;
-	
-	
+
 }
 
 void assignHistoricalPoints(const vector<featureTrack>& src, unsigned int idx_1, unsigned int idx_2, vector<cv::Point2f>& dst) {

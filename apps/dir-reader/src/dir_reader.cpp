@@ -9,7 +9,8 @@ int main(int argc, char* argv[]) {
 	if (!dM.initializeInput(argc, argv)) return -1;
 	dM.initializeOutput(argc, argv);
 	dM.initialize();
-	dM.setWriteMode(!(argc >= 4)); 
+	dM.setWriteMode(!(argc >= 4));
+	dM.setLoopMode(true);
 	
 	while (dM.wantsToRun()) {
 		dM.grabFrame();

@@ -15,12 +15,13 @@ class directoryManager : public inputStream {
 
 protected:
 	char *input_directory;
-
+	bool loopMode;
 	std::vector<std::string> file_list;
 
 public:
 	directoryManager();
 	bool grabFrame();
+	void setLoopMode(bool val);
 	bool initialize();
 	bool initializeInput(int argc, char* argv[]);
 };

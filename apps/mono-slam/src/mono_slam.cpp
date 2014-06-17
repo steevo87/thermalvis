@@ -7,12 +7,13 @@
 
 int main(int argc, char* argv[]) {
 	
-	displayMessage("Launching Monocular SLAM Demo App!", MESSAGE_NORMAL, __FUNCTION__);
+	ROS_INFO("Launching Monocular SLAM Demo App!");
 
 	directoryManager dM;
 
 	if (!dM.initializeInput(argc, argv)) return -1;
 	dM.initialize();
+	dM.setLoopMode(true);
 
 	cameraInfoStruct camInfo;
 
@@ -21,7 +22,8 @@ int main(int argc, char* argv[]) {
 	
 	fcData.debugMode = true;
 	fcData.showTrackHistory = true;
-		
+	fcData.autoTrackManagement = false;
+
 	featureTrackerNode *fM;
 
 	bool configurationDataProvided = false;
@@ -55,6 +57,7 @@ int main(int argc, char* argv[]) {
 		fM->handle_camera(workingFrame, &camInfo);
 		fM->features_loop();
 
+		
 	}
 	
 	return S_OK;

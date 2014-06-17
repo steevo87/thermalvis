@@ -30,6 +30,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string.h>
 
 #define MESSAGE_NORMAL	0
 #define MESSAGE_WARNING 1
@@ -85,12 +86,18 @@ double asymmetricGaussianValue(double score, double mean, double loVar, double h
 void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max_val);
 
 #ifndef _BUILD_FOR_ROS_
-#define ROS_INFO printf
-#define ROS_WARN printf
-#define ROS_ERROR printf
+
+#ifdef _WIN32
+#define __SHORTENED_FILE__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+#else
+#define __SHORTENED_FILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
-void displayMessage(string msg, int msg_code = MESSAGE_NORMAL, string function_name = std::string());
+#define ROS_INFO(fmt, ...) std::printf("%s:%s << " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
+#define ROS_WARN(fmt, ...) std::printf("%s:%s << WARNING! " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
+#define ROS_ERROR(fmt, ...) std::printf("%s:%s << ERROR! " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
+
+#endif
 
 /// \brief		Calculates Factorial of an integer
 long long int factorial(int num);

@@ -52,7 +52,7 @@ bool GenericOptions::writeImageToDisk() {
 		if (writeInColor) {
 			cv::imwrite(imageFilename, *displayImage);
 		} else {
-			displayMessage("Cannot write in raw mode, because this class does not have access to that data!", MESSAGE_WARNING, __FUNCTION__);
+			ROS_WARN("Cannot write in raw mode, because this class does not have access to that data!");
 			return false;
 		}
 			
