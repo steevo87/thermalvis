@@ -1,22 +1,16 @@
 #include "optris_windows.h"
 
-optrisManager::optrisManager(HWND hostHandle) : wantsToOutput(false), FrameCounter1(0) {
+optrisManager::optrisManager(HWND hostHandle) {
 	ipc = nullptr;
 	ipcInitialized = false;
 	hr = -1;
 
-	cMapping = new cScheme(DEFAULT_COLORSCHEME_CODE);
-	colormap_index = DEFAULT_COLORSCHEME_CODE;
+	opStream = new winOptrisStream();
 
 	this->Text = "Win-Optris Control";
-	this->Size = System::Drawing::Size(400,300);
+	this->Size = System::Drawing::Size(500,300);
 
-	minTemp = DEFAULT_MIN_TEMP; 
-	maxTemp = DEFAULT_MAX_TEMP;
-
-	pauseMode = false;
-	autoscaleTemps = true;
-
+	
 	setupForm();
 	
 }
@@ -61,7 +55,7 @@ void optrisManager::setupForm() {
 	minSlider->Location = System::Drawing::Point( 120, 115+FORM_OBJECT_OFFSET );
 	minSlider->Height = 3;
 	minSlider->SetRange(10, 50);
-	minSlider->Width = 240;
+	minSlider->Width = 335;
 	minSlider->Value = int(DEFAULT_MIN_TEMP);
 	this->Controls->Add(minSlider);
 	minSlider->ValueChanged += gcnew System::EventHandler(this, &optrisManager::minslider_changed );
@@ -72,7 +66,7 @@ void optrisManager::setupForm() {
 	addLabel(max_temp_label, 338, 200, maxTempString);
 	maxSlider = gcnew System::Windows::Forms::TrackBar();
 	maxSlider->SetRange(10, 50);
-	maxSlider->Width = 240;
+	maxSlider->Width = 335;
 	maxSlider->Location = System::Drawing::Point( 120, 155+FORM_OBJECT_OFFSET );
 	maxSlider->Value = int(DEFAULT_MAX_TEMP);
 	this->Controls->Add(maxSlider);
@@ -116,59 +110,60 @@ void optrisManager::InitializeComboBox() {
 }
 
 void optrisManager::button_click(Object^ sender, System::EventArgs^ e) {
-	pauseMode ? button->Text = "Pause" : button->Text = "Resume";
-	pauseMode = !pauseMode;
+	opStream->getPauseMode() ? button->Text = "Pause" : button->Text = "Resume";
+	opStream->switchPauseMode();
 }
 
 void optrisManager::safety_changed(Object^ sender, System::EventArgs^ e) {
-	cMapping->load_standard(colormap_index, safety->Checked ? 1 : 0);
+	opStream->load_standard(opStream->get_colormap_index(), safety->Checked ? 1 : 0);
 }
 
 void optrisManager::autoscale_changed(Object^ sender, System::EventArgs^ e) {
-	autoscale->Checked ? autoscaleTemps = true : autoscaleTemps = false;
-	cMapping->load_standard(colormap_index);
+	autoscale->Checked ? opStream->set_autoscaleTemps(true) : opStream->set_autoscaleTemps(false);
+	opStream->load_standard(opStream->get_colormap_index());
 }
 
 void optrisManager::minslider_changed(Object^ sender, System::EventArgs^ e) {    
-	minTemp = double(minSlider->Value); 
+	opStream->setMinTemp(double(minSlider->Value)); 
 }
 
 void optrisManager::maxslider_changed(Object^ sender, System::EventArgs^ e) {    
-	maxTemp = double(maxSlider->Value);
+	opStream->setMaxTemp(double(minSlider->Value)); 
+
 }
 
 void optrisManager::dropdown_changed(Object^ sender, System::EventArgs^ e) {
     
 	switch (dropdown->SelectedIndex) {
 	case 0:
-		colormap_index = IRON;
+		opStream->set_colormap_index(IRON);
 		break;
 	case 1:
-		colormap_index = RAINBOW;
+		opStream->set_colormap_index(RAINBOW);
 		break;
 	case 2:
-		colormap_index = CIECOMP;
+		opStream->set_colormap_index(CIECOMP);
 		break;
 	case 3:
-		colormap_index = CIELUV;
+		opStream->set_colormap_index(CIELUV);
 		break;
 	case 4:
-		colormap_index = BLACKBODY;
+		opStream->set_colormap_index(BLACKBODY);
 		break;
 	case 5:
-		colormap_index = BLUERED;
+		opStream->set_colormap_index(BLUERED);
 		break;
 	case 6:
-		colormap_index = JET;
+		opStream->set_colormap_index(JET);
 		break;
 	case 7:
-		colormap_index = GRAYSCALE;
+		opStream->set_colormap_index(GRAYSCALE);
 		break;
 	default:
-		colormap_index = GRAYSCALE;
+		opStream->set_colormap_index(GRAYSCALE);
 	}
 	
-	cMapping->load_standard(colormap_index);
+	opStream->load_standard(opStream->get_colormap_index());
 
 }
 
@@ -185,10 +180,9 @@ void optrisManager::Init(int frameWidth, int frameHeight, int frameDepth) {
 	FrameDepth = frameDepth;
 
 	printf("%s << Building images with dimensions (%d) x (%d)\n", __FUNCTION__, FrameWidth, FrameHeight);
-	rawImage = new cv::Mat(FrameHeight, FrameWidth, CV_16UC1);
-	scaledImage = new cv::Mat(FrameHeight, FrameWidth, CV_16UC1);
-	_8bitImage = new cv::Mat(FrameHeight, FrameWidth, CV_8UC1);
-	colorImage = new cv::Mat(FrameHeight, FrameWidth, CV_8UC3);
+	
+	opStream->assignMemoryToRawImage(FrameHeight, FrameWidth);
+	
 }
 
 HRESULT optrisManager::OnNewFrameEx(void * pBuffer, FrameMetadata *pMetadata) {
@@ -210,6 +204,7 @@ HRESULT optrisManager::OnNewFrameEx(void * pBuffer, FrameMetadata *pMetadata) {
 		0;
 		/*printf("%s << unknown.\n", __FUNCTION__);*/
 	}
+	
 	return NewFrame((short*)pBuffer, pMetadata->Counter);
 }
 
@@ -217,33 +212,16 @@ HRESULT optrisManager::NewFrame(short *ImgBuf, int frameCounter) {
 	System::DateTime time = System::DateTime::Now;
 	System::TimeSpan ts = time - LastFrameTime;
 	LastFrameTime = time;
+	opStream->updateFrameCounter(frameCounter);
 
-	FrameCounter0 = frameCounter;
-	FrameCounter1++;
-	
-	rawImage->data = (uchar*) ImgBuf;
+	opStream->assignDataToRawImage((uchar*) ImgBuf);
+	opStream->processFrame();
+	opStream->colorizeFrame();
+	opStream->displayFrame();
+	opStream->writeImageToDisk();
 
-	if (autoscaleTemps) {
-		normalize_16(*scaledImage, *rawImage);
-	} else {
-		double minLevel = minTemp * 100.0;
-		double maxLevel = maxTemp * 100.0;
-		normalize_16(*scaledImage, *rawImage, minLevel, maxLevel);
-	}
 	
-	down_level(*_8bitImage, *scaledImage);
 
-	cMapping->falsify_image(*_8bitImage, *colorImage, 0);		// THIS IS SLOWING THINGS DOWN!!
-	
-	!pauseMode ? cv::imshow("optrisVideo", *colorImage) : 0;
-
-	if (wantsToOutput) {
-		char imFilename[256];
-		sprintf(imFilename, "%s/frame%06d.png", output_directory, (FrameCounter1-1));
-		string imageFilename(imFilename);
-		cv::imwrite(imageFilename, *rawImage);	
-	}
-	
 	return 0;
 }
 
@@ -254,14 +232,6 @@ void optrisManager::ReleaseIPC() {
 		ipc->Release(0);
 		ipcInitialized = false;
 	}
-}
-
-bool optrisManager::setOutputDir(char* output_dir) {
-	printf("%s << User has opted to output images to the following directory: <%s>\n", __FUNCTION__, output_dir);
-	wantsToOutput = true;
-	output_directory = new char[256];
-	sprintf(output_directory, "%s", output_dir);
-	return true;
 }
 
 void optrisManager::initialize() {
@@ -294,21 +264,5 @@ void optrisManager::initialize() {
 
 HRESULT optrisManager::OnInitCompleted() {
 	Connected = true;
-	return S_OK;
-}
-
-[System::STAThreadAttribute]
-int main(int argc, char* argv[]) {
-	printf("%s << Launching Optris Windows Demo App!\n", __FUNCTION__);
-		
-	HWND hwnd = 0;
-	optrisManager^ oM;
-
-	oM = gcnew optrisManager(hwnd);
-	oM->initialize();
-	if (argc > 1) oM->setOutputDir(argv[1]);
-	System::Windows::Forms::Application::Run(oM);
-	oM->ReleaseIPC();
-
 	return S_OK;
 }

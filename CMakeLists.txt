@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(THERMALVIS)
 
 OPTION(BUILD_APPS "Build demo apps." TRUE)
-OPTION(BUILD_NODES "Build process nodes." TRUE)
 OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." FALSE)
+OPTION(BUILD_NODES "Build process nodes." FALSE)
 
 IF(WIN32 OR win64)
 	IF (BUILD_FOR_ROS)
@@ -16,6 +16,12 @@ OPTION(USE_BOOST "Build Boost-dependent functions." FALSE)
 OPTION(USE_PCL "Build PCL-dependent functions." FALSE)
 OPTION(USE_EIGEN "Build Eigen-dependent functions." FALSE)
 OPTION(USE_OPTRIS_SDK "Build with Optris compatability" FALSE) # dummy change (to be removed)
+
+string(REGEX REPLACE "\\\\" "/" USERPROFILE "$ENV{USERPROFILE}")
+MESSAGE(STATUS "USERPROFILE = ${USERPROFILE}")
+
+SET(DEFAULT_SAMPLE_DATA "${USERPROFILE}/Documents/Data/optris/test_seq_001" CACHE STRING "...")
+ADD_DEFINITIONS(-D_DEFAULT_SAMPLE_DATA_="${DEFAULT_SAMPLE_DATA}")
 
 SET(ADDITIONAL_INCLUDES "")
 SET(ADDITIONAL_LIBRARIES "")
@@ -193,5 +199,9 @@ IF(BUILD_APPS)
 ENDIF()
 
 IF(BUILD_NODES)
-	ADD_SUBDIRECTORY(nodes)
+	IF(BUILD_FOR_ROS)
+		ADD_SUBDIRECTORY(nodes)
+	ELSE()
+		MESSAGE(FATAL_ERROR "Nodes are only applicable for a linux build for ROS. Please either enable a ROS build or disable the <BUILD_NODES> selection.")
+	ENDIF()
 ENDIF()

@@ -40,6 +40,16 @@ EIGEN
 troubleshooting:
 ----------------
 
-DODGY IMAGE FROM CAMERA
-	try refocussing by manually rotating the physical lens
+NO DATA FROM OPTRIS PI450 IN WINDOWS
+	launch the Optris PI Connect software, and verify that the camera is streaming correctly
+		go to [ Tools -> Configuration -> External Communication ] select "IPC" and click "Apply"
+	rebooting the Optris PI Connect software sometimes helps
+	NOTE: often this problem is caused by terminating the program using the "STOP button" in Visual Studio
+
+CORRUPT IMAGE FROM PI450 IN WINDOWS
 	try shutting down the Optris PI Connect software, unplugging the camera, and then testing again
+	
+POOR QUALITY IMAGE FROM PI450 (ANY OS)
+	try refocussing by manually rotating the physical lens
+
+

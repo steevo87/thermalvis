@@ -88,8 +88,9 @@ void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsig
 #define ROS_INFO printf
 #define ROS_WARN printf
 #define ROS_ERROR printf
-void displayMessage(string msg, int msg_code = MESSAGE_NORMAL);
 #endif
+
+void displayMessage(string msg, int msg_code = MESSAGE_NORMAL, string function_name = std::string());
 
 /// \brief		Calculates Factorial of an integer
 long long int factorial(int num);

@@ -28,7 +28,5 @@ ENDIF()
 
 IF(Boost_FOUND)
 	ADD_SUBDIRECTORY(dir-reader)
-	IF(BUILD_NODES)
-		ADD_SUBDIRECTORY(mono-slam)
-	ENDIF()
+	ADD_SUBDIRECTORY(mono-slam)
 ENDIF()

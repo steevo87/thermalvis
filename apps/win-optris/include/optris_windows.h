@@ -1,6 +1,8 @@
 #ifndef __OPTRIS_WINDOWS_H__
 #define __OPTRIS_WINDOWS_H__
 
+#include "optris_stream.hpp"
+
 #include <iostream>
 #include <windows.h>
 //#include <opencv2/highgui/highgui.hpp>
@@ -11,14 +13,6 @@
 
 #include "IPC2.h"
 
-#include "improc.hpp"
-
-#define DEFAULT_COLORSCHEME_INDEX	3
-#define DEFAULT_COLORSCHEME_CODE	CIELUV
-
-#define DEFAULT_MIN_TEMP			25.0
-#define DEFAULT_MAX_TEMP			35.0
-
 #define FORM_OBJECT_OFFSET			-4
 
 ref class optrisManager : public System::Windows::Forms::Form {
@@ -26,17 +20,9 @@ ref class optrisManager : public System::Windows::Forms::Form {
 protected:
 	HRESULT hr;
 	IPC^ ipc;
-	
+
 	bool ipcInitialized;
 	bool Connected;
-	bool wantsToOutput;
-	char *output_directory;
-
-	int colormap_index;
-
-	bool pauseMode, autoscaleTemps;
-
-	double minTemp, maxTemp;
 
 	System::Windows::Forms::Button ^button;
 	System::Windows::Forms::ComboBox ^dropdown;
@@ -44,8 +30,6 @@ protected:
 	System::Windows::Forms::TrackBar ^minSlider, ^maxSlider;
 
 	System::DateTime LastFrameTime;
-
-	int FrameCounter0, FrameCounter1, LastFrameCounter, FC0, FC1;
 
 	void button_click(Object^ sender, System::EventArgs^ e);
 	void dropdown_changed(Object^ sender, System::EventArgs^ e);
@@ -57,9 +41,6 @@ protected:
 	short FrameWidth, FrameHeight, FrameDepth;
 	double FrameRatio;
 	int FrameSize;
-
-	cv::Mat *rawImage, *scaledImage, *_8bitImage, *colorImage;
-	cScheme *cMapping;
 	
 	void InitializeComboBox();
 	void Init(int frameWidth, int frameHeight, int frameDepth);
@@ -69,8 +50,9 @@ protected:
 public:
 	optrisManager(HWND hostHandle);
 	void initialize();
-	bool setOutputDir(char* output_dir);
 	void ReleaseIPC();
+
+	winOptrisStream *opStream;
 
 	HRESULT OnFrameInit(int frameWidth, int frameHeight, int frameDepth);
 	HRESULT OnNewFrameEx(void * pBuffer, FrameMetadata *pMetadata);

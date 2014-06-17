@@ -14,23 +14,56 @@ bool comparator ( const mypair& l, const mypair& r) {
 	return l.first < r.first; 
 }
 
-#ifndef _BUILD_FOR_ROS_
-void displayMessage(string msg, int msg_code) {
+
+void displayMessage(string msg, int msg_code, string function_name) {
+	#ifdef _BUILD_FOR_ROS_
 	switch (msg_code) {
 	case MESSAGE_NORMAL:
-		printf("%s\n", msg.c_str());
+		ROS_INFO("%s", msg.c_str());
 		break;
 	case MESSAGE_WARNING:
-		printf("WARNING! %s\n", msg.c_str());
+		ROS_WARNING("%s", msg.c_str());
 		break;
 	case MESSAGE_ERROR:
-		printf("ERROR! %s\n", msg.c_str());
+		ROS_ERROR("%s", msg.c_str());
 		break;
 	default:
-		printf("%s\n", msg.c_str());
+		ROS_INFO("%s", msg.c_str());
 	}
+	#else
+	if (function_name.empty()) {
+		switch (msg_code) {
+		case MESSAGE_NORMAL:
+			printf("%s\n", msg.c_str());
+			break;
+		case MESSAGE_WARNING:
+			printf("WARNING! %s\n", msg.c_str());
+			break;
+		case MESSAGE_ERROR:
+			printf("ERROR! %s\n", msg.c_str());
+			break;
+		default:
+			printf("%s\n", msg.c_str());
+		}
+	} else {
+		switch (msg_code) {
+		case MESSAGE_NORMAL:
+			printf("%s << %s\n", function_name.c_str(), msg.c_str());
+			break;
+		case MESSAGE_WARNING:
+			printf("%s << WARNING! %s\n", function_name.c_str(), msg.c_str());
+			break;
+		case MESSAGE_ERROR:
+			printf("%s << ERROR! %s\n", function_name.c_str(), msg.c_str());
+			break;
+		default:
+			printf("%s << %s\n", function_name.c_str(), msg.c_str());
+		}
+	}
+	
+	#endif
 }
-#endif
+
 
 void findLinearModel(double* x, double* y, int termsToConsider, double &m, double &c) {
 	
