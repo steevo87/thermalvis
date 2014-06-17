@@ -4,58 +4,61 @@
 
 #include "sparse_flow.hpp"
 
-flowManager::flowManager() {
-	tD.debugMode = true;
-	fD = new featureTrackerNode(tD);
+cameraInfoStruct::cameraInfoStruct() : width(384), height(288), distortion_model("plumb bob") {
+
+	K[0] = 500.0;
+	K[1] = 0.0;
+	K[2] = 191.5;
+
+	K[3] = 0.0;
+	K[4] = 500.0;
+	K[5] = 143.5;
+
+	K[6] = 0.0;
+	K[7] = 0.0;
+	K[8] = 1.0;
+	
+	for (int iii = 0; iii < 8; iii++) D[iii] = 0.0;
+	
 
 }
 
-bool flowManager::applyToFrame(cv::Mat& targetFrame) {
-	
-	if (tD.cameraData.cameraSize.width == 0) {
-		tD.cameraData.cameraSize.width = targetFrame.cols;
-		tD.cameraData.cameraSize.height = targetFrame.rows;
-		tD.cameraData.imageSize.at<unsigned short>(0, 0) = tD.cameraData.cameraSize.width;
-		tD.cameraData.imageSize.at<unsigned short>(0, 1) = tD.cameraData.cameraSize.height;
-		tD.cameraData.updateCameraParameters();
-		fD->updateTrackerData(tD);
-		fD->process_info();
-	}
-	
-	fD->handle_camera(targetFrame);
-	fD->features_loop();
-	
-	return 0;
-}
-
-trackerData::trackerData() : 
+flowSharedData::flowSharedData() : 
 	maxFeatures(300), 
-	minFeatures(30), 
-	flowThreshold(0.002), 
-	attemptMatching(true),
-	detectEveryFrame(false),
-	matchingMode(2),
-	//detector_1(1),
-	//sensitivity_1(0.1),
-	//detector_2(0),
-	//sensitivity_2(0.1),
-	//detector_3(0),
-	//sensitivity_3(0.1),
-	adaptiveWindow(false), // originally was true - once fixed it can be again
-	velocityPrediction(false), // originally was true - once fixed it can be again 
-	maxVelocity(200.0),
-	maxFrac(0.05),
+	minFeatures(30),
+	flowThreshold(0.002),
 	minSeparation(3.0),
-	delayTimeout(0.0),
-	newFeaturesPeriod(0.5),
-	attemptHistoricalRecovery(false), // originally was true - once fixed it can be again  
-	//multiplier_1(3),
-	//multiplier_2(10),
+	maxVelocity(200.0), 
+	maxFrac(0.05),
 	verboseMode(false),
 	debugMode(false),
+	adaptiveWindow(false), // originally was true - once fixed it can be again
+	velocityPrediction(false), // originally was true - once fixed it can be again 
+	attemptHistoricalRecovery(false), // originally was true - once fixed it can be again  
 	autoTrackManagement(true),
-	showTrackHistory(false),
+	attemptMatching(true),
+	showTrackHistory(false), 
+	detectEveryFrame(false),
+	newFeaturesPeriod(0.5), 
+	delayTimeout(0.0),
 	drawingHistory(25),
+    matchingMode(MATCHING_MODE_LDA)
+{ }
+
+#ifndef _BUILD_FOR_ROS_
+flowConfig::flowConfig() : 
+	sensitivity_1(0.1), 
+	sensitivity_2(0.1), 
+	sensitivity_3(0.1), 
+	detector_1(DETECTOR_GFTT), 
+	detector_2(DETECTOR_OFF), 
+	detector_3(DETECTOR_OFF), 
+	multiplier_1(3), 
+	multiplier_2(10)	 
+{ }
+#endif
+
+trackerData::trackerData() : 
 	numDetectors(1), 
 	outputTrackCount(false), 
 	outputFeatureMotion(false) 
@@ -63,17 +66,12 @@ trackerData::trackerData() :
 	detector[0] = "FAST";
 }
 
-void trackerData::initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom) {
-	
-	desc[0] = new cv::BriefDescriptorExtractor( );
-	// desc[0] = new cv::OrbDescriptorExtractor( );
-	
-	hom[0] = new cv::BriefDescriptorExtractor( );
-	
-}
-
-void featureTrackerNode::updateTrackerData(trackerData newTrackerData) {
-	configData = newTrackerData;
+void featureTrackerNode::displayFrame() {
+	if (drawImage_resized.rows != 0) {
+		!pauseMode ? cv::imshow("display", drawImage_resized) : 0;
+		char key = cv::waitKey(1);
+		if (key == 'q') isValid = false;
+	}
 }
 
 void featureTrackerNode::act_on_image() {
@@ -81,7 +79,7 @@ void featureTrackerNode::act_on_image() {
 	#ifdef _BUILD_FOR_ROS_
 	cv::Mat newImage(cv_ptr->image);
 	#else
-	cv::Mat newImage(bridgeReplacement);
+	cv::Mat newImage(*bridgeReplacement);
 	#endif
 
 	if ((newImage.type() == CV_16UC3) || (newImage.type() == CV_16UC1)) {
@@ -131,46 +129,11 @@ void featureTrackerNode::act_on_image() {
 	//ROS_WARN("Historical prep time: (%f)", testTime);
 		
 	if (configData.debugMode) {
-		// downsampleToColor(grayImageBuffer[(frameCount-1) % MAXIMUM_FRAMES_TO_STORE], drawImage);
-		//adaptiveDownsample(grayImageBuffer[(frameCount-1) % MAXIMUM_FRAMES_TO_STORE], dispMat, STANDARD_NORM_MODE);
-		
-		
-		//double vals[2], percentiles[2], thresh = 0.005;
-		//percentiles[0] = thresh;
-		//percentiles[1] = 1 - thresh;
-		
-		//findPercentiles(grayImageBuffer[(frameCount) % MAXIMUM_FRAMES_TO_STORE], vals, percentiles, 2);
-		
-		//displayImage = Mat(grayImageBuffer[(frameCount) % MAXIMUM_FRAMES_TO_STORE].size(), CV_8UC1);
-		
-		//double v;
-		
-		//for (int iii = 0; iii < displayImage.rows; iii++) {
-			//for (int jjj = 0; jjj < displayImage.cols; jjj++) {
-				
-				//v = (double) grayImageBuffer[(frameCount) % MAXIMUM_FRAMES_TO_STORE].at<unsigned char>(iii,jjj);
-				
-				//v -= vals[0];
-				//v *= (255.0/(vals[1]-vals[0]));
-				//v = max(0.0, v);
-				//v = min(255.0, v);
-				
-				//displayImage.at<unsigned char>(iii,jjj) = (unsigned char) v;
-				
-			//}
-		//}
-		
-		
+
 		displayImage = grayImageBuffer[frameCount % 2];
 		
-		//normalize(grayImageBuffer[(frameCount) % MAXIMUM_FRAMES_TO_STORE], displayImage, -255*vals[0], 255 + 255*(vals[1]-255), NORM_MINMAX);
-		//normalize(grayImageBuffer[(frameCount) % MAXIMUM_FRAMES_TO_STORE], displayImage, 0, 255, NORM_MINMAX);
-		//straightCLAHE(grayImageBuffer[(frameCount) % MAXIMUM_FRAMES_TO_STORE], displayImage, 0.2);
-		
 		cvtColor(displayImage, drawImage, CV_GRAY2RGB);
-		
-		
-		//displayImage.copyTo(drawImage);
+
 	}
 	
 	frameCount++;
@@ -182,6 +145,140 @@ void featureTrackerNode::act_on_image() {
 	testTime = timeElapsedMS(test_timer, true);
 	//ROS_WARN("Detection time: (%f)", testTime);
 }
+
+#ifdef _BUILD_FOR_ROS_
+void featureTrackerNode::serverCallback(thermalvis::flowConfig &config, uint32_t level) {
+#else
+void featureTrackerNode::serverCallback(flowConfig &config) {
+#endif
+
+	configData.minSeparation = config.minSeparation;
+    
+    configData.adaptiveWindow = config.adaptiveWindow;
+    configData.autoTrackManagement = config.autoTrackManagement;
+    configData.attemptMatching = config.attemptMatching;
+    configData.maxVelocity = config.maxVelocity;
+    
+    configData.detectEveryFrame = config.detectEveryFrame;
+    
+    configData.matchingMode = config.matchingMode;
+    
+    configData.showTrackHistory = config.showTrackHistory;
+      
+    configData.sensitivity[0] = config.sensitivity_1;
+	configData.sensitivity[1] = config.sensitivity_2;
+	configData.sensitivity[2] = config.sensitivity_3;
+	
+	configData.velocityPrediction = config.velocityPrediction;    
+	
+	// ROS_INFO("Sens = (%f, %f, %f)", configData.sensitivity[0], configData.sensitivity[1], configData.sensitivity[2]);
+	
+	if (config.maxFeatures > configData.maxFeatures) {
+		previousTrackedPointsPeak = config.maxFeatures;
+	}
+	configData.maxFeatures = config.maxFeatures;
+	
+	
+	configData.minFeatures = config.minFeatures;
+	
+	int det_array[3];
+	det_array[0] = config.detector_1;
+	det_array[1] = config.detector_2;
+	det_array[2] = config.detector_3;
+	
+	configData.newFeaturesPeriod = config.newFeaturesPeriod;
+	configData.attemptHistoricalRecovery = config.attemptHistoricalRecovery;
+	
+	updateHistoryParameters();
+
+	configData.multiplier[1] = config.multiplier_1;
+	configData.multiplier[2] = config.multiplier_2;
+	
+	//ROS_INFO("Selected detectors: (%d, %d, %d)", config.detector_1, config.detector_2, config.detector_3);
+	
+	for (unsigned int iii = 0; iii < 3; iii++) {
+		
+		if (det_array[iii] == 1) {
+			configData.detector[iii] = "GFTT";
+		} else if (det_array[iii] == 2) {
+			configData.detector[iii] = "FAST";
+		} else if (det_array[iii] == 3) {
+			configData.detector[iii] = "HARRIS";
+		}
+		
+	}
+	
+	if (config.detector_1 > 0) {
+		
+		if (config.detector_2 > 0) {
+			
+			if (config.detector_3 > 0) {
+				configData.numDetectors = 3;
+				
+			} else {
+				configData.numDetectors = 2;
+			}
+			
+		} else {
+			configData.numDetectors = 1;
+		}
+		
+	} else {
+		configData.numDetectors = 0;
+	}
+    
+    configData.verboseMode = config.verboseMode;
+    
+    
+	configData.debugMode = config.debugMode;
+	
+	if ((configData.debugMode) && !debugInitialized) {
+		#ifdef _BUILD_FOR_ROS_
+		debug_pub = it->advertiseCamera(debug_pub_name, 1);
+		ROS_INFO("Advertising tracker debugging video (%s)", debug_pub_name);
+		#endif
+		debugInitialized = true;
+	}
+	
+	configData.flowThreshold = config.flowThreshold;
+	
+	configData.maxFrac = config.maxFrac;
+	
+	configData.delayTimeout = config.delayTimeout;
+	
+	if (configData.delayTimeout == 0) {
+		handleDelays = false;
+	} else {
+		handleDelays = true;
+	}
+	
+	
+	
+	configData.initializeDetectors(keypointDetector, &homographyDetector);
+	
+	configData.drawingHistory = config.drawingHistory;
+	
+	//configData.minPointsForWarning = config.minPointsForWarning;
+	
+}
+
+void featureTrackerNode::updateHistoryParameters() {
+		if (configData.attemptHistoricalRecovery) {
+			configData.multiplier[0] = 1;
+			numHistoryFrames = 1;
+		} else {
+			configData.multiplier[0] = 0;
+			numHistoryFrames = 0;
+		}
+	
+		if ((numHistoryFrames == 1) && (configData.multiplier[1] > 0)) {
+			numHistoryFrames++;
+		}
+	
+		if ((numHistoryFrames == 2) && (configData.multiplier[2] > 0)) {
+			numHistoryFrames++;
+		}
+	}
 
 void featureTrackerNode::trimFeatureTrackVector() {
 	
@@ -203,11 +300,7 @@ void featureTrackerNode::trimFeatureTrackVector() {
 	for (unsigned int iii = 0; iii < activeFrameIndices.size(); iii++) {
 		if (configData.verboseMode) { ROS_INFO("activeFrameIndices(%d) = (%d)", iii, activeFrameIndices.at(iii)); }
 	}
-	
-	
-	
-	//ROS_ERROR("activeFrameIndices.size() = (%d)", activeFrameIndices.size());
-	
+
 	removeObsoleteElements(featureTrackVector, activeFrameIndices);
 		
 }
@@ -235,10 +328,6 @@ void featureTrackerNode::attemptTracking() {
 	
 	startingPoints.insert(startingPoints.end(), globalStartingPoints.begin(), globalStartingPoints.end());
 
-	// unsigned int ptsBefore = globalStartingPoints.size();
-	
-	//ROS_INFO("Debug (%d)", 4);
-	
 	// =========================================================
 	// ACTUAL TRACKING
 	// =========================================================
@@ -254,38 +343,9 @@ void featureTrackerNode::attemptTracking() {
 		
 		transformPoints(finishingPoints, H12);
 		originalFinishingPoints.insert(originalFinishingPoints.end(), finishingPoints.begin(), finishingPoints.end());
-			
-		#ifdef _BUILD_FOR_ROS_
-		while (0) {
-			
-			cv::Mat im1_col, im2_col;
-			
-			cvtColor(grayImageBuffer[(readyFrame-1) % 2], im1_col, CV_GRAY2RGB);
-			cvtColor(grayImageBuffer[readyFrame % 2], im2_col, CV_GRAY2RGB);
-			
-			
-			//warpPerspective(im1, im1b, H12, im1.size());
-			
-			cv::Scalar color_x = CV_RGB(255, 0, 0);
-			displayKeyPoints(im1_col, startingPoints, im1_col, color_x);
-			displayKeyPoints(im2_col, finishingPoints, im2_col, color_x);
-			
-			//imshow("temp_disp", im1);	// Current image
-			
-			std::copy(&(im1_col.at<unsigned char>(0,0)), &(im1_col.at<unsigned char>(0,0))+(drawImage.cols*drawImage.rows*drawImage.channels()), msg_debug.data.begin());				
-			debug_pub.publish(msg_debug, debug_camera_info);
-			cv::waitKey(500);
-			//imshow("temp_disp", im2);	// Previous image under transform
-			std::copy(&(im2_col.at<unsigned char>(0,0)), &(im2_col.at<unsigned char>(0,0))+(drawImage.cols*drawImage.rows*drawImage.channels()), msg_debug.data.begin());				
-			debug_pub.publish(msg_debug, debug_camera_info);
-			cv::waitKey(500);
-	
-		}
-		#endif
 
 		cv::Mat H_;
 		trackPoints(grayImageBuffer[(readyFrame-1) % 2], grayImageBuffer[readyFrame % 2], startingPoints, finishingPoints, distanceConstraint, 0.0, lostTrackIndices, H_, configData.cameraData);
-		// trackPoints(grayImageBuffer[(readyFrame-1) % 2], grayImageBuffer[readyFrame % 2], startingPoints, finishingPoints, distanceConstraint, configData.flowThreshold, lostTrackIndices, H12, configData.cameraData);
 		
 		if (lostTrackIndices.size() > finishingPoints.size()) {
 			ROS_WARN("(%d) tracks lost and (%d) retained over interruption handling.", ((int)lostTrackIndices.size()), ((int)finishingPoints.size()));
@@ -293,17 +353,7 @@ void featureTrackerNode::attemptTracking() {
 		} else {
 			ROS_INFO("(%d) tracks lost and (%d) retained over interruption handling.", ((int)lostTrackIndices.size()), ((int)finishingPoints.size()));
 		}
-		
-		
-	
-		/*
-		if ((globalFinishingPoints.size() > 10) && (lostTrackIndices.size() < 10)) {
-			ROS_ERROR("Freezing next output");
-			freezeNextOutput = true;
-		}
-		*/
-		
-		//if (configData.verboseMode) { ROS_WARN("Tracking complete."); }
+
 		elapsedTime = timeElapsedMS(cycle_timer, false);
 		
 	} else {
@@ -312,9 +362,6 @@ void featureTrackerNode::attemptTracking() {
 		if (configData.verboseMode) { ROS_INFO("About to attempt tracking of (%d) points (no homography for guidance)..", ((int)startingPoints.size())); }
 		
 		if (configData.velocityPrediction) {
-			// ROS_WARN("(%d) About to try and use existing feature velocity knowledge to initialize search locations...", globalFinishingPoints.size());
-			// create finishing points estimates...
-			//ROS_WARN("Estimating point locations : (%f)", original_time.toSec() - previous_time.toSec());
 			#ifdef _BUILD_FOR_ROS_
 			assignEstimatesBasedOnVelocities(featureTrackVector, startingPoints, finishingPoints, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), original_time.toSec());
 			#else
@@ -327,51 +374,18 @@ void featureTrackerNode::attemptTracking() {
 			originalFinishingPoints.insert(originalFinishingPoints.end(), finishingPoints.begin(), finishingPoints.end());
 		}
 		
-		
-		
-		//if (configData.verboseMode) { ROS_WARN("About to attempt to track points in regular mode (without homography)..."); }
 		trackPoints(grayImageBuffer[(readyFrame-1) % 2], grayImageBuffer[readyFrame % 2], startingPoints, finishingPoints, distanceConstraint, configData.flowThreshold, lostTrackIndices, H_, configData.cameraData);
 		
 	}
 	
-	/*
-	for (unsigned int xxx = 0; xxx < startingPoints.size(); xxx++) {
-		cv::Point2f disp1, disp2, disp3;
-		
-		disp1.x = startingPoints.at(xxx).x - finishingPoints.at(xxx).x;
-		disp1.y = startingPoints.at(xxx).y - finishingPoints.at(xxx).y;
-		
-		double totalDisplacement = pow(pow(disp1.x,2.0)+pow(disp1.y,2.0),0.5);
-		
-		if (totalDisplacement > 100.0) {
-			ROS_WARN("Point displaced: (%f) : ", totalDisplacement);
-		}
-
-		
-	}
-	*/
-	
 	if (configData.verboseMode) { ROS_INFO("trackPoints returned (%d) points.", ((int)finishingPoints.size())); }
 	
-	//ROS_INFO("Debug (%d)", 5);
-	
 	testTime = timeElapsedMS(test_timer, false);
-	//ROS_WARN("2: (%f)", testTime);
-	
-	//ROS_INFO("(%d / %d) points successfully tracked. last time: (%d) tracks.", globalFinishingPoints.size(), ptsBefore, previouslyTrackedPoints);
-	
+
 	successfullyTrackedFeatures += int(globalFinishingPoints.size());
 	
 	lostTrackCount += int(lostTrackIndices.size());
-	
-	// Filter points that may be in high-noise region...
-	//double distProp = 0.75;
-	//filterTrackingsByRadialProportion(globalStartingPoints, globalFinishingPoints, configData.cameraData.Kx, configData.cameraData.expandedCamMat, configData.cameraData.distCoeffs, configData.cameraData.cameraSize, distProp);
-	
-	//printf("%s::%s << Points (%d:%d) after tracking: %d\n", __PROGRAM__, __FUNCTION__, current_idx, kkk, globalFinishingPoints.size());
-	
-	
-	
+
 	if ((previousIndex == 0) || (currentIndex == 0)) { ROS_WARN("About to add matches from (%d) to (%d): (%d, %d)", previousIndex, currentIndex, ((int)startingPoints.size()), ((int)finishingPoints.size())); }
 	addMatchesToVector(featureTrackVector, previousIndex, startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation, false);
 	
@@ -460,7 +474,7 @@ void featureTrackerNode::updateDistanceConstraint() {
 #ifdef _BUILD_FOR_ROS_
 void featureTrackerNode::process_info(const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-void featureTrackerNode::process_info() {
+void featureTrackerNode::process_info(const cameraInfoStruct *info_msg) {
 #endif
 
 	try	{
@@ -469,7 +483,6 @@ void featureTrackerNode::process_info() {
 		configData.cameraData.K = cv::Mat::eye(3, 3, CV_64FC1);
 		unsigned int maxDistortionIndex;
 
-		#ifdef _BUILD_FOR_ROS_
 		for (unsigned int mmm = 0; mmm < 3; mmm++) {
 				for (unsigned int nnn = 0; nnn < 3; nnn++) {
 						configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
@@ -491,16 +504,14 @@ void featureTrackerNode::process_info() {
 		} else {
 			maxDistortionIndex = 5;
 		}
-		#else
-			maxDistortionIndex = 5;
-		#endif
+		
 		configData.cameraData.distCoeffs = cv::Mat::zeros(1, maxDistortionIndex, CV_64FC1);
 		
-		#ifdef _BUILD_FOR_ROS_
+		
 		for (unsigned int iii = 0; iii < maxDistortionIndex; iii++) {
 				configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg->D[iii];		
 		}
-		#endif
+		
 
 		cout << configData.cameraData.distCoeffs << endl;
 		
@@ -547,72 +558,22 @@ void featureTrackerNode::process_info() {
 		ROS_INFO("Image info processed.");
 		
 	} catch (...) {
-		#ifdef _BUILD_FOR_ROS_
-		ROS_ERROR("Some failure in reading in the camera parameters...");
-		#else
-		printf("%s << Some failure in reading in the camera parameters...\n", __FUNCTION__);
-		#endif
+		displayMessage("Some failure in reading in the camera parameters...", MESSAGE_ERROR, __FUNCTION__);
 	}
 		
 }
 
 void featureTrackerNode::publishRoutine() {
-	// =================================
-	// PUBLICATION
-	// =================================
+
 	if (configData.debugMode) {
-		
-
-		//vector<Point2f> redistortedPoints;
-		//redistortPoints(globalFinishingPoints[jjj], redistortedPoints, configData.cameraData.Kx, configData.cameraData.distCoeffs, configData.cameraData.expandedCamMat);
-		
-		
-
-		/*
-		vector<cv::Point2f> dummyVelocities;
-		addMatchesToVector(displayTracks, previousIndex, finalPoints1, currentIndex, finalPoints2, configData.minSeparation, dummyVelocities);
-		*/
-		
 		if (configData.autoTrackManagement) { trimDisplayTrackVectors(); }
 		
-		//drawFeatureTracks(drawImage2, drawImage2, displayTracks, drawingColors, current_idx, history);
-		
-		//vector<featureTrack> redistortedTracks;
-		//redistortTracks(displayTracks, redistortedTracks, configData.cameraData.Kx, configData.cameraData.distCoeffs, (readyFrame), configData.cameraData.expandedCamMat, history);
-		
-		//ROS_WARN("displayTracks[%d].size() = (%d)", kkk, displayTracks.size());
-		
-		if (configData.verboseMode) { ROS_INFO("Drawing (%d) pts from image index (%d)...", ((int)displayTracks.size()), currentIndex); }
 		drawFeatureTracks(drawImage, drawImage, displayTracks, COLOR_TRACKED_PATH, COLOR_TRACKED_POINTS, currentIndex, configData.drawingHistory);
-		if (configData.verboseMode) { ROS_INFO("Points drawn."); }
 		
-			
-		/*
-		if (preservedRecoveredPoints.size() > 0) {
-			
-			if (configData.verboseMode) { ROS_INFO("Drawing (%d) recovered pts...", preservedRecoveredPoints.size()); }
-			
-			//ROS_ERROR("allRecoveredPoints.size() = (%d)", allRecoveredPoints.size());
-
-		
-			displayKeyPoints(drawImage, preservedRecoveredPoints, drawImage, COLOR_RECOVERED_POINTS, 0, true);
-			preservedRecoveredPoints.clear();
-			
-			if (0) {
-				cv::imshow("test", drawImage);
-				cv::waitKey(1);
-			}
-			
-			allRecoveredPoints.clear();
-		}
-		*/
 		
 		if (newlySensedFeatures.size() > 0) {
-			
 			if (configData.verboseMode) { ROS_INFO("Drawing (%d) new pts...", ((int)newlySensedFeatures.size())); }
-		
 			displayKeyPoints(drawImage, newlySensedFeatures, drawImage, COLOR_UNMATCHED_POINTS, 0, true);
-			
 		}
 		
 		if (matchedFeatures.size() > 0) {
@@ -622,10 +583,6 @@ void featureTrackerNode::publishRoutine() {
 			
 		}
 		
-		
-		
-		//ROS_INFO("Debug (%d)", 26);
-		
 		if (drawImage.size() != configData.cameraData.cameraSize) {
 			if (configData.verboseMode) { ROS_INFO("Resizing image..."); }
 			resize(drawImage, drawImage_resized, configData.cameraData.cameraSize, 0, 0, cv::INTER_CUBIC);
@@ -633,29 +590,15 @@ void featureTrackerNode::publishRoutine() {
 			drawImage_resized = drawImage;
 		}
 		
-		//ROS_INFO("Debug (%d)", 27);
-		
-		
 		if (configData.verboseMode) { ROS_INFO("Copying image (%u, %u) to publisher...", drawImage_resized.rows, drawImage_resized.cols); }
 		
 		#ifdef _BUILD_FOR_ROS_
 		std::copy(&(drawImage_resized.at<cv::Vec3b>(0,0)[0]), &(drawImage_resized.at<cv::Vec3b>(0,0)[0])+(drawImage_resized.cols*drawImage_resized.rows*drawImage_resized.channels()), msg_debug.data.begin());
-		#endif
-
-		//ROS_INFO("Debug (%d)", 28);
-		
-		#ifdef _BUILD_FOR_ROS
-		if (configData.verboseMode) { ROS_INFO("Publishing to: (%s) with (%d) and (%d)", debug_pub_name, msg_debug.header.seq, debug_camera_info.header.seq); }
 		debug_pub.publish(msg_debug, debug_camera_info);
-		if (configData.verboseMode) { ROS_INFO("Published."); }
+		#else
+		displayFrame();
 		#endif
-		//ROS_INFO("Debug (%d)", 29);
-		
-		//imshow("test", drawImage);
-		//waitKey(1);
 
-
-		
 	}
 	
 	//ROS_INFO("Debug (%d)", 30);
@@ -663,7 +606,7 @@ void featureTrackerNode::publishRoutine() {
 	#ifdef _BUILD_FOR_ROS_
 	int publishedTrackCount = publish_tracks(&tracks_pub, currentIndex);
 	#else
-	int publishedTrackCount = -1;
+	int publishedTrackCount = publish_tracks(currentIndex);
 	#endif
 
 	if (configData.outputTrackCount) {
@@ -705,6 +648,94 @@ void featureTrackerNode::publishRoutine() {
 		configData.debugMode = false;
 	}
 	//ROS_INFO("Debug (%d)", 31);
+}
+
+int featureTrackerNode::publish_tracks(
+#ifdef _BUILD_FOR_ROS_
+	ros::Publisher *pub_message, unsigned int latestIndex) {
+#else
+	unsigned int latestIndex) {
+#endif
+	
+	averageTrackLength = 0.0;
+	
+	int publishedTrackCount = 0;
+	
+	#ifdef _BUILD_FOR_ROS_
+	thermalvis::feature_tracks msg;
+	msg.source = configData.topic;
+	#endif
+
+	if (configData.autoTrackManagement) { trimFeatureTrackVector(); }
+	
+	vector<unsigned int> tracksToInclude;
+	for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
+			tracksToInclude.push_back(iii);
+			publishedTrackCount++;
+			averageTrackLength += featureTrackVector.at(iii).locations.size();
+	}
+	
+	averageTrackLength /= ((double) publishedTrackCount);
+	
+	unsigned int projCount = 0;
+	for (unsigned int iii = 0; iii < tracksToInclude.size(); iii++) {
+		projCount += featureTrackVector.at(tracksToInclude.at(iii)).locations.size();
+	}
+	
+
+	cv::Mat trackMatrix;
+	
+	if (configData.showTrackHistory) {
+		if (createTrackMatrix(featureTrackVector, trackMatrix)) {
+			imshow("trackMatrix : " + configData.topic, trackMatrix);
+			cv::waitKey(1);
+		}		
+	}
+	
+	vector<unsigned int> currentIndices;
+	vector<cv::Point2f> currentProjections;
+	
+	#ifdef _BUILD_FOR_ROS_
+	msg.projection_count = projCount;
+	msg.cameras.clear();
+	msg.indices.clear();
+	msg.projections_x.clear();
+	msg.projections_y.clear();
+	
+
+	for (unsigned int iii = 0; iii < tracksToInclude.size(); iii++) {
+		
+		//unsigned int startIndex = featureTrackVector.at(tracksToInclude.at(iii)).locations.size() - std::min(configData.maxProjectionsPerFeature, ((int)featureTrackVector.at(tracksToInclude.at(iii)).locations.size()));
+		
+		//for (unsigned int jjj = startIndex; jjj < featureTrackVector.at(tracksToInclude.at(iii)).locations.size(); jjj++) {
+		for (unsigned int jjj = 0; jjj < featureTrackVector.at(tracksToInclude.at(iii)).locations.size(); jjj++) {
+			
+			//msg.indices.push_back(tracksToInclude.at(iii));
+			msg.indices.push_back(featureTrackVector.at(tracksToInclude.at(iii)).trackIndex);
+			msg.cameras.push_back(featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).imageIndex);
+			
+			if (featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).imageIndex == 0) {
+				//ROS_ERROR("Publishing an invalid track! [%d] (%d, %d) - why does it exist??", iii, tracksToInclude.at(iii), jjj);
+			}
+			
+			msg.projections_x.push_back(((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.x));
+			msg.projections_y.push_back(((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.y));
+		}
+		
+	}
+
+	// Assign header info
+	msg.header.seq = currentIndex;
+	msg.header.stamp = original_time;
+	msg.header.frame_id = optical_frame;
+	pub_message->publish(msg);
+
+	#endif
+
+	previousIndex = currentIndex;
+	previous_time = original_time;
+	
+	return publishedTrackCount;
 }
 
 void featureTrackerNode::matchWithExistingTracks() {
@@ -955,7 +986,7 @@ void featureTrackerNode::detectNewFeatures() {
 	//ROS_INFO("Debug (%d)", 11);
 	
 	
-	for (unsigned int jjj = 0; jjj < configData.numDetectors; jjj++) {
+	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {
 		
 
 		
@@ -1569,9 +1600,7 @@ void featureTrackerNode::handle_very_new() {
 	unsigned int current_idx = frameCount-1;
 	
 	if (configData.verboseMode) { ROS_WARN("Handling new frame (interruption backend)"); }
-	
-	
-	
+
 	// Feature detection
 	
 	homogPoints[1].clear();
@@ -1590,8 +1619,6 @@ void featureTrackerNode::handle_very_new() {
 	}
 
 	if (configData.verboseMode) { ROS_INFO("About to extract homography descriptors for second frame.."); }
-
-	// Feature description
 
 	homographyExtractor -> compute(grayImageBuffer[current_idx % 2], homogPoints[1], homogDescriptors[1]);
 	
@@ -1631,8 +1658,6 @@ void featureTrackerNode::handle_very_new() {
 	vector<uchar> validityMask;
 	vector<char> validityMask2;  
 	
-	// Homography determination
-	
 	if ((points1.size() < 4) || (points2.size() < 4)) {
 		H12 = cv::Mat::eye(3, 3, CV_64FC1);
 		undergoingDelay = false;
@@ -1640,8 +1665,6 @@ void featureTrackerNode::handle_very_new() {
 	}
 	
 	if (configData.verboseMode) { ROS_INFO("Attempting to find homography with (%d, %d) matched points..", points1.size(), points2.size()); }
-	
-	
 	
 	H12 = cv::findHomography( cv::Mat(points1), cv::Mat(points2), validityMask, CV_RANSAC, 5.0 );
 		
@@ -1653,112 +1676,62 @@ void featureTrackerNode::handle_very_new() {
 		}
 	}
 	
-	//if (configData.verboseMode) { ROS_INFO("Homography found (%d / %d / %d)", points1.size(), points2.size(), validPoints); }
 	cv::Mat im1, im2;
-	
-	
 	warpPerspective(grayImageBuffer[(current_idx-1) % 2], im2, H12, grayImageBuffer[(current_idx-1) % 2].size());
-	//grayImageBuffer[(current_idx-1) % MAXIMUM_FRAMES_TO_STORE].copyTo(im2);
-	
 	grayImageBuffer[current_idx % 2].copyTo(im1);
-	
-	// homogPoints[1] and therefore points2 are actually from the newer image...
-	
+
 	unsigned int inlierPoints = cv::countNonZero(validityMask);
 	
 	if (configData.verboseMode) { ROS_INFO("Number of matches for interruption homography = (%u/%d)", inlierPoints, homogPoints[0].size()); } // , matches.size(), points1.size() 
-	
 	if (configData.verboseMode) { cout << "H12 = " << H12 << endl; }
 	
-	#ifdef _BUILD_FOR_ROS_
-	while (0) {
-		
-		cv::Mat im1_col, im1_col_B, im2_col;
-		
-		cvtColor(im1, im1_col, CV_GRAY2RGB);
-		cvtColor(im2, im2_col, CV_GRAY2RGB);
-		
-		cv::Scalar color_x = CV_RGB(255, 0, 0);
-		displayKeyPoints(im1_col, homogPoints[1], im1_col_B, color_x);
-
-		//imshow("temp_disp", im1);	// Current image
-		std::copy(&(im1_col_B.at<unsigned char>(0,0)), &(im1_col_B.at<unsigned char>(0,0))+(drawImage.cols*drawImage.rows*drawImage.channels()), msg_debug.data.begin());				
-		debug_pub.publish(msg_debug, debug_camera_info);
-		cv::waitKey(500);
-		//imshow("temp_disp", im2);	// Previous image under transform
-		std::copy(&(im2_col.at<unsigned char>(0,0)), &(im2_col.at<unsigned char>(0,0))+(drawImage.cols*drawImage.rows*drawImage.channels()), msg_debug.data.begin());				
-		debug_pub.publish(msg_debug, debug_camera_info);
-		cv::waitKey(500);
-		
-		
-	}
-	#endif
-	
-	
 	// Then, do you want to move "globalFinishingPoints" so that they're at the locations estimated by H12?
-	
-	
-	
+
 	undergoingDelay = false;
 }
 
 void featureTrackerNode::handle_delay() {
-		
 	unsigned int current_idx = frameCount-1;
-	
-	//ROS_WARN("Handling a delay now...");
-	
-	
-	// Feature detection
-	
-	
-	
-	//ROS_INFO("Current index: (%d)", current_idx);
-	
-	//ROS_INFO("grayIm: (%d, %d, %d, %d))", grayImageBuffer[current_idx % 2].rows, grayImageBuffer[current_idx % 2].cols, grayImageBuffer[current_idx % 2].depth(), grayImageBuffer[current_idx % 2].channels());
-	
 	homogPoints[0].clear();
 	homographyDetector -> detect(grayImageBuffer[current_idx % 2], homogPoints[0]);
-	//keypointDetector[0] -> detect(grayImageBuffer[current_idx % MAXIMUM_FRAMES_TO_STORE], homogPoints[0]);
-	
-	//ROS_INFO("Homography frame #1 (%d) pts detected", homogPoints[0].size());
-	
 	if (homogPoints[0].size() < 4) {
 		ROS_ERROR("Insufficient points detected (%d) in first frame for calculating homography..", homogPoints[0].size());
-		
 	} else {
-
 		sortKeyPoints(homogPoints[0], 200);
-		
-		//ROS_INFO("Sorting points...");
-	
-		if (configData.debugMode) {
-			/*
-			displayImage.copyTo(drawImage);
-			displayKeyPoints(displayImage, homogPoints[0], drawImage, CV_RGB(255, 0, 0), 0);
-			
-			std::copy(&(drawImage.at<unsigned char>(0,0)), &(drawImage.at<unsigned char>(0,0))+(drawImage.cols*drawImage.rows*drawImage.channels()), msg_debug.data.begin());				
-			debug_pub.publish(msg_debug, debug_camera_info);
-			*/
-		}
-		
 		homographyExtractor -> compute(grayImageBuffer[current_idx % 2], homogPoints[0], homogDescriptors[0]);
 	}
-	
-	// Feature description
 	undergoingDelay = true;
 }
 
+
 #ifdef _BUILD_FOR_ROS_
-featureTrackerNode::featureTrackerNode(ros::NodeHandle& nh, trackerData startupData) {
+featureTrackerNode::featureTrackerNode(ros::NodeHandle& nh, trackerData startupData) :
 #else
-featureTrackerNode::featureTrackerNode(trackerData startupData) {
+featureTrackerNode::featureTrackerNode(trackerData startupData) :
 #endif
-	debugInitialized = false;
-	lastAllocatedTrackIndex = -1;
-	cycleFlag = false;
-	cycleCount = 0;
-	freezeNextOutput = false;
+	debugInitialized(false), 
+	lastAllocatedTrackIndex(-1), 
+	cycleFlag(false), 
+	cycleCount(0), 
+	freezeNextOutput(false),
+	peakTracks(0),	
+	skippedFrameCount(0),
+	capturedFrameCount(0),
+	previousIndex(-1),
+	currentIndex(-1),
+	undergoingDelay(false),
+	referenceFrame(-1), 	
+	frameCount(0),
+	readyFrame(0),
+	infoProcessed(false),
+	infoSent(false),
+	numHistoryFrames(0)
+{
+
+	debug_pub_name = new char[MAX_INPUT_ARG_LENGTH];
+	tracks_pub_name = new char[MAX_INPUT_ARG_LENGTH];
+	nodeName = new char[MAX_INPUT_ARG_LENGTH];
+
 	#ifdef _BUILD_FOR_ROS_
 	lastCycleFrameTime = ros::Time(0.0);
 	#else
@@ -1766,17 +1739,8 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) {
 	bridgeReplacement = new cv::Mat();
 	#endif
 	
-	peakTracks = 0;
-	
-	skippedFrameCount = 0;
-	capturedFrameCount = 0;
-	
+
 	skipTime = timeElapsedMS(skip_timer);
-	
-	previousIndex = -1;
-	currentIndex = -1;
-	
-	undergoingDelay = false;
 	
 	if (configData.outputFolder == "outputFolder") {
 		
@@ -1788,7 +1752,6 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) {
 		boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
 		sprintf(timeString, "%010d.%09d", pt.time_of_day().total_seconds(), pt.time_of_day().total_microseconds());
 		#endif
-		
 		
 		string defaultOutput = configData.read_addr + "nodes/flow/log/" + timeString;
 		ROS_WARN("No output folder specified, outputting by default to (%s)", defaultOutput.c_str());
@@ -1805,26 +1768,15 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) {
 	
 		if (configData.verboseMode) { ROS_INFO("Checking that directory (%s) has been created..", buffer_check); }
 	
-		while (!boost::filesystem::exists( buffer_check ) ) {
-			
-		}
-		
+		while (!boost::filesystem::exists( buffer_check )) { }
 	}
-		
-	referenceFrame = -1;
-	
-	frameCount = 0;
-	readyFrame = 0;
-	
+
 	#ifdef _BUILD_FOR_ROS_
 	sprintf(nodeName, "%s", ros::this_node::getName().c_str());
 	#else
 	sprintf(nodeName, "/%s", __PROGRAM__);
 	#endif
 	sprintf(debug_pub_name, "thermalvis%s/image_col", nodeName);
-	
-	infoProcessed = false;
-	infoSent = false;
 	
 	configData = startupData;
 	
@@ -1835,54 +1787,29 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) {
 	configData.initializeDetectors(keypointDetector, &homographyDetector);
 	configData.initializeDescriptors(&descriptorExtractor, &homographyExtractor);
 	
-	//printf("%s::%s << Startup data: (%s)\n", __PROGRAM__, __FUNCTION__, configData.video_stream.c_str());
-	
-	//std::string topic = nh.resolveName(configData.video_stream + configData.video_sequence);
 	#ifdef _BUILD_FOR_ROS_
 	std::string topic = nh.resolveName(configData.topic);
 	string topic_info = configData.topic.substr(0, configData.topic.find_last_of("/") + 1) + "camera_info";
-	
-	//ROS_INFO("Connecting to camera_info. %s", topic_info.c_str());
-	
-	//image_transport::ImageTransport it(nh);
 	it = new image_transport::ImageTransport(nh);
-	
 	ROS_INFO("Subscribing to camera topic (%s)", topic.c_str());
 	camera_sub = it->subscribeCamera(topic, 1, &featureTrackerNode::handle_camera, this);
-#endif
+	#endif
 
 	if (configData.tracksOutputTopic == "tracksOutputTopic") {
-		
-		
 		string tmpString = configData.topicParent + "/tracks";
-		//string tmpString = configData.topic.substr(0, configData.topic.find_last_of("/") + 1);
-		//ROS_WARN("(%s), (%s)", configData.topic.c_str(), tmpString.c_str());
 		sprintf(tracks_pub_name, "%s", tmpString.c_str());
-		
-		
-		
 	} else {
-		// sprintf(tracks_pub_name, "thermalvis%s/tracks", nodeName);
 		sprintf(tracks_pub_name, "%s", configData.tracksOutputTopic.c_str());
 	}
 	
 	#ifdef _BUILD_FOR_ROS_
 	ROS_INFO("Publishing tracks data at (%s)", tracks_pub_name);
-	
 	ros::AdvertiseOptions op = ros::AdvertiseOptions::create<thermalvis::feature_tracks>(tracks_pub_name, 1, &connected, &disconnected, ros::VoidPtr(), NULL);
 	op.has_header = false;
-	
-	//tracks_pub = nh.advertise<thermalvis::feature_tracks>(tracks_pub_name, 1);
 	tracks_pub = nh.advertise(op);
-	
 	timer = nh.createTimer(ros::Duration(0.05), &featureTrackerNode::timed_loop, this);
-	
 	features_timer = nh.createTimer(ros::Duration(0.01), &featureTrackerNode::features_loop, this);
 	#endif
-	//printf("%s::%s << Image transport subscribed.\n", __PROGRAM__, __FUNCTION__);
-	
-	
-	
 	
 	if (configData.outputTrackCount) {
 		#ifdef _BUILD_FOR_ROS_
@@ -1891,44 +1818,34 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) {
 		string outputTrackCountFile = configData.outputFolder + "/" + __PROGRAM__ + "_trackcount.txt";
 		#endif
 		ROS_INFO("outputTrackCountFile = (%s)", outputTrackCountFile.c_str());
-		
 		trackCountStream.open(outputTrackCountFile.c_str(), ios::out);
 	}
 	
 	if (configData.outputFeatureMotion) {
-		
 		#ifdef _BUILD_FOR_ROS_
 		string outputFeatureMotionFile = configData.outputFolder + "/" + ros::this_node::getName().substr(1,ros::this_node::getName().size()-1) + "_motion.txt";
 		#else
 		string outputFeatureMotionFile = configData.outputFolder + "/" + __PROGRAM__ + "_motion.txt";
 		#endif
-		
-	
 		ROS_INFO("outputFeatureMotionFile = (%s)", outputFeatureMotionFile.c_str());
-		
 		featureMotionStream.open(outputFeatureMotionFile.c_str(), ios::out);
 	}
-	
-	//cin.get();
 	
 	#ifdef _BUILD_FOR_ROS_
 	ROS_INFO("Establishing server callback...");
 	f = boost::bind (&featureTrackerNode::serverCallback, this, _1, _2);
     server.setCallback (f);
 	#endif
-    
 }
 
 #ifdef _BUILD_FOR_ROS_
 void featureTrackerNode::handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-void featureTrackerNode::handle_camera(const cv::Mat& inputImage) {
+void featureTrackerNode::handle_camera(const cv::Mat& inputImage, const cameraInfoStruct *info_msg) {
 #endif
-	#ifdef _BUILD_FOR_ROS_
 	while (!infoProcessed) { 
 		process_info(info_msg);
 	}
-	#endif
 
 	if (readyFrame < frameCount) {
 		// Want to skip if you're still processing previous frame
@@ -2013,7 +1930,7 @@ void featureTrackerNode::handle_camera(const cv::Mat& inputImage) {
 
 void trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom) {
 	
-	for (unsigned int iii = 0; iii < numDetectors; iii++) {
+	for (int iii = 0; iii < numDetectors; iii++) {
 		if (detector[iii] == "SURF") {
 			ROS_ERROR("SURF has been deactivated due to copyright protection!");
 			//det[iii] = new SurfFeatureDetector( sensitivity[iii] );

@@ -14,9 +14,15 @@ inputStream::inputStream() {
 	_8bitImage = new cv::Mat();
 }
 
-bool inputStream::accessLatestFrame(cv::Mat& latestFrame) {
+bool inputStream::accessLatestRawFrame(cv::Mat& latestFrame) {
 	if (rawImage->rows == 0) return false;
 	latestFrame = *rawImage;
+	return true;
+}
+
+bool inputStream::accessLatest8bitFrame(cv::Mat& latestFrame) {
+	if (_8bitImage->rows == 0) return false;
+	latestFrame = *_8bitImage;
 	return true;
 }
 

@@ -26,7 +26,6 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #endif
 
-
 const char __PROGRAM__[] = "THERMALVIS_FLOW";
 
 #define DEFAULT_ALPHA 	0.00
@@ -61,79 +60,65 @@ const char __PROGRAM__[] = "THERMALVIS_FLOW";
 #define MIN_FEATURES_FOR_FEATURE_MOTION	10
 #define MAX_HISTORY_FRAMES	16
 
+#define MATCHING_MODE_NN	0
+#define MATCHING_MODE_NNDR	1
+#define MATCHING_MODE_LDA	2
+
+#define DETECTOR_OFF	0
+#define DETECTOR_GFTT	1
+#define DETECTOR_FAST	2
+#define DETECTOR_HARRIS 3
+
+/// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration
+struct flowSharedData {
+	int maxFeatures, minFeatures, drawingHistory, matchingMode;
+	double  maxFrac, flowThreshold, minSeparation, maxVelocity, newFeaturesPeriod, delayTimeout;
+	bool verboseMode, debugMode, adaptiveWindow, velocityPrediction, attemptHistoricalRecovery, autoTrackManagement, attemptMatching, showTrackHistory, detectEveryFrame;
+
+	flowSharedData();
+};
+
+#ifndef _BUILD_FOR_ROS_
+/// \brief		Substitute for ROS live configuration adjustments
+struct flowConfig : public flowSharedData {
+    double sensitivity_1, sensitivity_2, sensitivity_3;
+	int detector_1, detector_2, detector_3;
+	int multiplier_1, multiplier_2;
+
+	flowConfig();
+};
+
+#endif
+
+struct cameraInfoStruct {
+	double K[9], D[8];
+	int width, height;
+	string distortion_model;
+
+	cameraInfoStruct();
+};
+
 /// \brief		Stores configuration information for the sparse optical flow routine
-struct trackerData {
-	
-	string topic, topicParent; // video_stream, video_sequence;
-	string read_addr;
-	
-	string tracksOutputTopic;
-	
-	bool detectEveryFrame;
-	
-	bool verboseMode;
-	bool adaptiveWindow;
-	
-	double maxVelocity;
-	bool attemptMatching;
-	
-	bool attemptHistoricalRecovery;
-	
-	
-	double newFeaturesPeriod;
-	int multiplier[MAX_HISTORY_FRAMES];
-	
-	bool autoTrackManagement;
-	
-	string outputFolder;
-	
-	bool velocityPrediction;
-	
+struct trackerData : public flowSharedData {
+
 	cameraParameters cameraData;
 	
+	string topic, topicParent;
+	string read_addr;
+	string tracksOutputTopic;
+	string outputFolder;
 	
-	//double alpha;
-	double delayTimeout;
-	double flowThreshold;
-	double maxFrac;
-	
-	int matchingMode;
-	
-	int maxFeatures, minFeatures;
-	//int maxProjectionsPerFeature;
-	
-	bool debugMode, showTrackHistory;
 	bool outputTrackCount, outputFeatureMotion;
+
 	bool normalizeFeatureVelocities;
+	
+	int multiplier[MAX_HISTORY_FRAMES];
+	int numDetectors;
 	
 	string detector[MAX_DETECTORS], descriptor[MAX_DETECTORS];
 	double sensitivity[MAX_DETECTORS];
 	string method[MAX_DETECTORS];
 	bool method_match[MAX_DETECTORS];
-	
-	//int newDetectionFramecountTrigger;
-
-	
-	//string normalizationMode;
-	//int minLimit, maxLimit;
-	
-	
-	
-	//int minPointsForWarning;
-	
-	int drawingHistory;
-	
-	//double historyPeriods[MAX_HISTORY_FRAMES];
-	
-	/*
-	int nearSearchHistory;
-	int farSearchHistory;
-	int lossGaps[2];
-	*/
-	
-	double minSeparation;
-		
-	unsigned int numDetectors;
 
 	trackerData();
 
@@ -142,249 +127,199 @@ struct trackerData {
 	#endif
 
     void initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom);
-    void initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom);
+    void initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom) {
+		desc[0] = new cv::BriefDescriptorExtractor();
+		hom[0] = new cv::BriefDescriptorExtractor();
+	}
 	
 };
 
-
-
-// example: http://ua-ros-pkg.googlecode.com/svn/trunk/arrg/ua_vision/object_tracking/src/object_tracker_node.cpp
 /// \brief		Manages the optical flow procedure
-class featureTrackerNode {
+class featureTrackerNode : public GenericOptions {
 private:
 	
 	#ifdef _BUILD_FOR_ROS_
-	image_transport::ImageTransport *it;
-	
-	ros::Timer timer, features_timer;
-	sensor_msgs::CameraInfo debug_camera_info;
-	ros::Publisher tracks_pub;
-	image_transport::CameraPublisher debug_pub;
-	image_transport::CameraSubscriber camera_sub;
-	ros::Subscriber info_sub;
-	image_transport::Subscriber image_sub;
-	cv_bridge::CvImagePtr cv_ptr;
-	image_transport::CameraPublisher pub_debug;
-	sensor_msgs::Image msg_debug;
-	ros::NodeHandle private_node_handle;
 
+	ros::NodeHandle private_node_handle;
+	
+	dynamic_reconfigure::Server<thermalvis::flowConfig> server;
+	dynamic_reconfigure::Server<thermalvis::flowConfig>::CallbackType f;
+
+	ros::Publisher tracks_pub;
+	ros::Subscriber info_sub;
+
+	image_transport::ImageTransport *it;
+	image_transport::CameraPublisher debug_pub, pub_debug;
+	image_transport::CameraSubscriber camera_sub;
+	image_transport::Subscriber image_sub;
+
+	sensor_msgs::CameraInfo debug_camera_info;
+	sensor_msgs::Image msg_debug;
+
+	cv_bridge::CvImagePtr cv_ptr;
+
+	ros::Timer timer, features_timer;
 	ros::Time lastCycleFrameTime;
 	ros::Time olderTimes[MAX_HISTORY_FRAMES];
 	ros::Time info_time, image_time, previous_time, original_time, dodgeTime;
-    
-	dynamic_reconfigure::Server<thermalvis::flowConfig> server;
-	dynamic_reconfigure::Server<thermalvis::flowConfig>::CallbackType f;
-	#else
-	cv::Mat *bridgeReplacement;
 
+	#else
+
+	const cv::Mat *bridgeReplacement;
+
+	// TODO: non-ROS timers not implemented
 	boost::posix_time::ptime lastCycleFrameTime;
 	boost::posix_time::ptime olderTimes[MAX_HISTORY_FRAMES];
 	boost::posix_time::ptime info_time, image_time, previous_time, original_time, dodgeTime;
 
 	#endif
 
-	int previousIndex, currentIndex;
+	trackerData configData;
 
-	unsigned int cycleCount;
-	bool cycleFlag;
-	
-	
-	unsigned int skippedFrameCount, capturedFrameCount;
-	
+	ofstream trackCountStream, featureMotionStream;
+
+	string optical_frame;
+
+	bool cycleFlag, undergoingDelay, handleDelays;
+	unsigned int cycleCount, previousTrackedPointsPeak, frameCount, readyFrame;
+
+	std::vector<unsigned int> activeTrackIndices, lostTrackIndices;
+	int previousIndex, currentIndex, skippedFrameCount, capturedFrameCount, referenceFrame;
 	long int lastAllocatedTrackIndex;
 	
+	bool debugInitialized, lowPointsWarning, infoProcessed, infoSent, freezeNextOutput;
 	
-	ofstream trackCountStream, featureMotionStream;
-	
-	bool debugInitialized;
-	
-	int newlyDetectedFeatures;
-	
-	string optical_frame;
-	
-	bool lowPointsWarning;
+	int newlyDetectedFeatures, successfullyTrackedFeatures, discardedNewFeatures, newlyRecoveredFeatures, lostTrackCount;
 	
 	cv::Size ksize;
-	double blurSigma;
+	double blurSigma, factor, minResponse, featuresVelocity, averageTrackLength;
 	
-	//unsigned int historicalIndices[];
-	
-	std::vector<unsigned int> activeTrackIndices;
-
-	int successfullyTrackedFeatures;
-	int discardedNewFeatures;
-	
-	vector<unsigned int> lostTrackIndices;
-	int referenceFrame;
-	
-	bool undergoingDelay;
-	bool handleDelays;
-	
-	cv::Mat dispMat;
-	
-	bool infoProcessed, infoSent;
-	
-	cv::Mat H12;
-	
-	double factor, minResponse; // minVal, maxVal, 
-	
-	
-
-	trackerData configData;
-	
-	
-
-	unsigned int previousTrackedPointsPeak;
-	
-	
-	
+	cv::Mat H12, dispMat;	
 	cv::Mat normalizedMat, blownImage, displayImage2, subscribedImage, drawImage2;
-	cv::Mat newImage, grayImage, realImage, mappedImage, lastImage, olderImage;
-
-	//gpu::GpuMat gmap1, gmap2;
-	
-	// http://docs.opencv.org/doc/tutorials/gpu/gpu-basics-similarity/gpu-basics-similarity.html#how-to-do-it-the-gpu
-	//Mat I1;         // Main memory item - read image into with imread for example
-	//gpu::GpuMat gI; // GPU matrix - for now empty
-	//gI1.upload(I1); // Upload a data from the system memory to the GPU memory
-	//I1 = gI1;       // Download, gI1.download(I1) will work too
-
-	//Mat map1, map2;
+	cv::Mat blurredImage, newImage, grayImage, realImage, mappedImage, lastImage, olderImage;
 
 	struct timeval cycle_timer, test_timer, skip_timer;
 	double elapsedTime, testTime, skipTime;
 
-	unsigned int frameCount;
-	unsigned int readyFrame;
+	char *debug_pub_name, *tracks_pub_name, *nodeName;
+		
+	cv::Mat olderImages[MAX_HISTORY_FRAMES], grayImageBuffer[2], displayImage, drawImage, drawImage_resized;
 	
-
+	unsigned int numHistoryFrames, bufferIndices[2], olderIndices[MAX_HISTORY_FRAMES];
 	
-
-	char debug_pub_name[256];
-	char tracks_pub_name[256];
+	std::vector<featureTrack> displayTracks, featureTrackVector;
 	
-	
-	char nodeName[256];
-	
-	cv::Mat displayImage, drawImage, drawImage_resized;
-	
-	unsigned int bufferIndices[2];
-	cv::Mat grayImageBuffer[2];
-	
-	unsigned int numHistoryFrames;
-	unsigned int olderIndices[MAX_HISTORY_FRAMES];
-	
-	cv::Mat olderImages[MAX_HISTORY_FRAMES];
-	double featuresVelocity;
-	
-	//cv::Mat workingImOld[MAXIMUM_FRAMES_TO_STORE], workingImNew[MAXIMUM_FRAMES_TO_STORE];
-	
-	cv::Mat blurredImage;
-	
-	
-	vector<featureTrack> displayTracks;
-	
-	cv::Ptr<cv::FeatureDetector> keypointDetector[MAX_DETECTORS];
-    cv::Ptr<cv::FeatureDetector> homographyDetector;
+	cv::Ptr<cv::FeatureDetector> homographyDetector, keypointDetector[MAX_DETECTORS];
     
     vector<cv::KeyPoint> homogPoints[2];
-    cv::Ptr<cv::DescriptorExtractor> descriptorExtractor;
-    cv::Ptr<cv::DescriptorExtractor> homographyExtractor;
-    
+    cv::Ptr<cv::DescriptorExtractor> homographyExtractor, descriptorExtractor;
     cv::Mat homogDescriptors[2];
-    
-    
-	
-    int newlyRecoveredFeatures;
-    int lostTrackCount;
-    
-    // Point vectors:
-    vector<cv::Point2f> globalStartingPoints, globalFinishingPoints;
-    
-    vector<cv::Point2f> allRecoveredPoints, preservedRecoveredPoints, unmatchedPoints, matchedPoints;
 
-    
-    vector<cv::Point2f> newlySensedFeatures;
-	vector<cv::Point2f> matchedFeatures;
-    
-    
-    
-    int distanceConstraint;
-    
-    int peakTracks;
-    
-	vector<featureTrack> featureTrackVector;
-	
-	bool freezeNextOutput;
-	
-	
-	
-	
-	
-	double averageTrackLength;
+    vector<cv::Point2f> globalStartingPoints, globalFinishingPoints, allRecoveredPoints, preservedRecoveredPoints, unmatchedPoints, matchedPoints, newlySensedFeatures, matchedFeatures;
+
+    int distanceConstraint, peakTracks;
 	
 public:
 
+	///brief	Processes online changes in node configuration and applies them.
 #ifdef _BUILD_FOR_ROS_
-	featureTrackerNode(ros::NodeHandle& nh, trackerData startupData);
-	void timed_loop(const ros::TimerEvent& event);
-	void features_loop(const ros::TimerEvent& event);
-	void process_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
-	void handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg);
-	int publish_tracks(ros::Publisher *pub_message, unsigned int latestIndex);
 	void serverCallback(thermalvis::flowConfig &config, uint32_t level);
 #else
+	void serverCallback(flowConfig &config);
+#endif
+
+	///brief	Constructor. Must receive configuration data.
+#ifdef _BUILD_FOR_ROS_
+	featureTrackerNode(ros::NodeHandle& nh, trackerData startupData);
+#else
 	featureTrackerNode(trackerData startupData);
-	void handle_camera(const cv::Mat& inputImage);
-	void process_info();
+#endif
+
+	///brief	Periodically checks for delays in data transmission, for detection of NUCs. 
+#ifdef _BUILD_FOR_ROS_
+	void timed_loop(const ros::TimerEvent& event);
+#else
 	void timed_loop();
+#endif
+
+	///brief	Main function for attempting feature tracking. 
+#ifdef _BUILD_FOR_ROS_
+	void features_loop(const ros::TimerEvent& event);
+#else
 	void features_loop();
+#endif
+
+	///brief	Processes provided configuration data to determine other calibration parameters etc. 
+#ifdef _BUILD_FOR_ROS_
+	void process_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
+#else
+	void process_info(const cameraInfoStruct *info_msg);
+#endif
+
+	///brief	Initial receipt of an image. 
+#ifdef _BUILD_FOR_ROS_
+	void handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg);
+#else
+	void handle_camera(const cv::Mat& inputImage, const cameraInfoStruct *info_msg);
+#endif
+
+	///brief	Broadcasts tracking information. 
+#ifdef _BUILD_FOR_ROS_
+	int publish_tracks(ros::Publisher *pub_message, unsigned int latestIndex);
+#else
+	int publish_tracks(unsigned int latestIndex);
 #endif
 
 	///brief	Calculates the average motion of all features successfully tracked from the previous frame.
 	int calculateFeatureMotion(unsigned int idx, double& mx, double &my);
 	
-	void getDisplayImage(cv::Mat *dispIm) {
-		dispIm = &drawImage_resized;
-	}
-	
+	///brief	Handles the situation where a duplicate frame is received (implying a NUC interruption).
 	void handle_delay();
-	
-	void trimFeatureTrackVector();
-	void trimDisplayTrackVectors();
-	
+
+	///brief	Handles the situation where the first new frame after a NUC interruption arrives.
 	void handle_very_new();
 	
-	//int recoverTracks();
+	///brief	Reduces the size of the feature track vector by eliminating unlikely-to-be-recovered tracks.
+	void trimFeatureTrackVector();
+
+	///brief	Reduces the size of the debug/display feature track vector by eliminating unlikely-to-be-recovered tracks.
+	void trimDisplayTrackVectors();
+	
+	///brief	Updates the search distance radius, possibly based on factors such as feature velocity as well as user settings.
 	void updateDistanceConstraint();
+
+	///brief	Attempts to track features from preceding frame.
 	void attemptTracking();
+
+	///brief	Attempts to detect new features on current frame.
 	void detectNewFeatures();
+
+	///brief	Publishes all data relating to a completely processed frame, including for debugging.
 	void publishRoutine();
+
+	///brief	Attempts to match newly detected features with existing untracked features. 
 	void matchWithExistingTracks();
 	
+	///brief	Initial categorization (e.g. NUC/non-NUC) of an image. 
 	void act_on_image();
 
-	void updateTrackerData(trackerData newTrackerData);
+	///brief	Updates tracker configuration data, potentially based on first received image which contains image size etc. 
+	void updateTrackerData(trackerData newTrackerData) { configData = newTrackerData; }
+
+	///brief	Updates the history/loop closure parameters, potentially based on user input. 
+	void updateHistoryParameters();
 	
+	///brief	Sets the debug mode - if true, images and data for visualization will be displayed to the user. 
+	void setDebugMode(bool val) { 
+		debugMode = val;
+		configData.debugMode = val; 
+	}
 	
-	
-	
+	///brief	Prepares node for termination.
 	void prepareForTermination();
-	
-	
-};
 
-class flowManager : public GenericOptions {
-
-protected:
-
-	trackerData tD;
-	featureTrackerNode *fD;
-
-public:
-	flowManager();
-	
-	bool applyToFrame(cv::Mat& targetFrame);
+	///brief	Displays latest debug frame
+	void displayFrame();
 	
 };
 

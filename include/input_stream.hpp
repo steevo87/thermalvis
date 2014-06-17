@@ -38,7 +38,8 @@ public:
 	bool processFrame();
 	void colorizeFrame();
 	void displayFrame();
-	bool accessLatestFrame(cv::Mat& latestFrame);
+	bool accessLatestRawFrame(cv::Mat& latestFrame);
+	bool accessLatest8bitFrame(cv::Mat& latestFrame);
 	virtual bool writeImageToDisk();
 	
 };

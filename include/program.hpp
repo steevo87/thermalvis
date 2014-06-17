@@ -20,12 +20,14 @@ protected:
 	bool writeInColor;
 	cv::Mat *displayImage;
 	char *output_directory;
+	bool debugMode;
 
 public:
 	GenericOptions();
 	bool wantsToRun();
 	bool setOutputDir(char* output_dir);
 	bool initializeOutput(int argc, char* argv[]);
+	virtual void setDebugMode(bool val) { debugMode = val; }
 	void setWriteMode(bool mode);
 	bool writeImageToDisk();
 	virtual void displayFrame();
