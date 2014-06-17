@@ -23,6 +23,13 @@ int main(int argc, char* argv[]) {
 	fcData.debugMode = true;
 	fcData.showTrackHistory = true;
 	fcData.autoTrackManagement = false;
+	fcData.detector_1 = DETECTOR_FAST;
+
+	#ifdef _DEBUG
+	if ((fcData.detector_1 == DETECTOR_GFTT) || (fcData.detector_2 == DETECTOR_GFTT) || (fcData.detector_3 == DETECTOR_GFTT)) {
+		ROS_WARN("The GFTT detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
+	}
+	#endif
 
 	featureTrackerNode *fM;
 

@@ -48,7 +48,7 @@ flowConfig::flowConfig() :
 	sensitivity_1(0.1), 
 	sensitivity_2(0.1), 
 	sensitivity_3(0.1), 
-	detector_1(DETECTOR_GFTT), 
+	detector_1(DETECTOR_FAST), 
 	detector_2(DETECTOR_OFF), 
 	detector_3(DETECTOR_OFF), 
 	multiplier_1(3), 
