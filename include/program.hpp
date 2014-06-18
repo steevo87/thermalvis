@@ -5,8 +5,10 @@
 #ifndef _THERMALVIS_PROGRAM_H_
 #define _THERMALVIS_PROGRAM_H_
 
-#include "tools.hpp"
 #include "opencv2/opencv.hpp"
+
+#include "tools.hpp"
+#include "camera.hpp"
 
 #define MAX_INPUT_ARG_LENGTH 256
 
@@ -14,13 +16,10 @@ class GenericOptions {
 
 protected:
 	int FrameCounter1, LastFrameCounter, FC0, FC1;
-	bool pauseMode;
-	bool isValid;
-	bool wantsToOutput;
-	bool writeInColor;
+	bool pauseMode, isValid;
+	bool debugMode, wantsToOutput, writeInColor;
 	cv::Mat *displayImage;
 	char *output_directory;
-	bool debugMode;
 
 public:
 	GenericOptions();
@@ -32,6 +31,14 @@ public:
 	bool writeImageToDisk();
 	virtual void displayFrame();
 	void updateFrameCounter(int newCount) { FrameCounter1 = newCount; }
+};
+
+struct commonData {
+	cameraParameters cameraData;
+	bool outputForAnalysis;
+	string topic, topicParent, read_addr, outputFolder;
+
+	commonData() : outputFolder("outputFolder"), read_addr("./") { };
 };
 
 #endif

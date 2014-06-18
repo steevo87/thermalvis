@@ -73,7 +73,8 @@ const char __PROGRAM__[] = "THERMALVIS_FLOW";
 struct flowSharedData {
 	int maxFeatures, minFeatures, drawingHistory, matchingMode;
 	double  maxFrac, flowThreshold, minSeparation, maxVelocity, newFeaturesPeriod, delayTimeout;
-	bool verboseMode, debugMode, adaptiveWindow, velocityPrediction, attemptHistoricalRecovery, autoTrackManagement, attemptMatching, showTrackHistory, detectEveryFrame;
+	bool verboseMode, debugMode, showTrackHistory;
+	bool adaptiveWindow, velocityPrediction, attemptHistoricalRecovery, autoTrackManagement, attemptMatching, detectEveryFrame;
 
 	flowSharedData();
 };
@@ -99,15 +100,11 @@ struct cameraInfoStruct {
 };
 
 /// \brief		Stores configuration information for the sparse optical flow routine
-struct trackerData : public flowSharedData {
+struct trackerData : public flowSharedData, public commonData {
 
-	cameraParameters cameraData;
 	
-	string topic, topicParent;
-	string read_addr;
 	string tracksOutputTopic;
-	string outputFolder;
-	
+
 	bool outputTrackCount, outputFeatureMotion;
 
 	bool normalizeFeatureVelocities;
@@ -176,7 +173,7 @@ private:
 
 	trackerData configData;
 
-	ofstream trackCountStream, featureMotionStream;
+	ofstream trackCountStream, featureMotionStream, analysisStream;
 
 	string optical_frame;
 

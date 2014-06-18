@@ -17,13 +17,20 @@ int main(int argc, char* argv[]) {
 
 	cameraInfoStruct camInfo;
 
+	// Preliminary settings
 	trackerData startupData;
+	{
+		startupData.outputForAnalysis = true;
+	}
+
+	// Real-time changeable variables
 	flowConfig fcData;
-	
-	fcData.debugMode = true;
-	fcData.showTrackHistory = true;
-	fcData.autoTrackManagement = false;
-	fcData.detector_1 = DETECTOR_FAST;
+	{
+		fcData.debugMode = true;
+		fcData.showTrackHistory = true;
+		fcData.autoTrackManagement = false;
+		fcData.detector_1 = DETECTOR_FAST;
+	}
 
 	#ifdef _DEBUG
 	if ((fcData.detector_1 == DETECTOR_GFTT) || (fcData.detector_2 == DETECTOR_GFTT) || (fcData.detector_3 == DETECTOR_GFTT)) {
@@ -40,7 +47,6 @@ int main(int argc, char* argv[]) {
 		fM->initializeOutput(argc, argv);
 		fM->setWriteMode(!(argc >= 4));
 	}
-	
 	
 	cv::Mat workingFrame;
 
@@ -63,8 +69,6 @@ int main(int argc, char* argv[]) {
 		fM->serverCallback(fcData);
 		fM->handle_camera(workingFrame, &camInfo);
 		fM->features_loop();
-
-		
 	}
 	
 	return S_OK;

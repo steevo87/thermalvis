@@ -421,6 +421,7 @@ void featureTrackerNode::process_info(const cameraInfoStruct *info_msg) {
 		
 }
 
+
 void featureTrackerNode::publishRoutine() {
 
 	if (configData.debugMode) {
@@ -525,22 +526,50 @@ int featureTrackerNode::publish_tracks(
 	msg.indices.clear();
 	msg.projections_x.clear();
 	msg.projections_y.clear();
-	
+	#endif
+
+	if (configData.outputForAnalysis) {
+		char analysisFile[256];
+		sprintf(analysisFile, "%s/image_%06d.txt", configData.outputFolder.c_str(), readyFrame);
+		ROS_INFO("analysisFile = (%s)", analysisFile);
+		analysisStream.open(analysisFile, ios::out);
+		analysisStream << "currentIndex:" << currentIndex << endl;
+
+		char timeString[256];
+		sprintf(timeString, "%010u.%09u", original_time.time_of_day().total_seconds(), original_time.time_of_day().total_microseconds());
+		analysisStream << "currentTime:" << timeString << endl;
+	}
+
 	for (unsigned int iii = 0; iii < tracksToInclude.size(); iii++) {
 		for (unsigned int jjj = 0; jjj < featureTrackVector.at(tracksToInclude.at(iii)).locations.size(); jjj++) {
+			
+			#ifdef _BUILD_FOR_ROS_
 			msg.indices.push_back(featureTrackVector.at(tracksToInclude.at(iii)).trackIndex);
 			msg.cameras.push_back(featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).imageIndex);
 			msg.projections_x.push_back(((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.x));
 			msg.projections_y.push_back(((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.y));
+			#endif
+
+			if (configData.outputForAnalysis) {
+				analysisStream << 
+					featureTrackVector.at(tracksToInclude.at(iii)).trackIndex << " " << 
+					featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).imageIndex << " " << 
+					((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.x) << " " << 
+					((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.y) << endl;
+			}
+			
 		}
 	}
 
+	#ifdef _BUILD_FOR_ROS_
 	// Assign header info
 	msg.header.seq = currentIndex;
 	msg.header.stamp = original_time;
 	msg.header.frame_id = optical_frame;
 	pub_message->publish(msg);
 	#endif
+
+	analysisStream.close();
 
 	previousIndex = currentIndex;
 	previous_time = original_time;
@@ -1044,6 +1073,7 @@ int featureTrackerNode::calculateFeatureMotion(unsigned int idx, double& mx, dou
 void featureTrackerNode::prepareForTermination() {
 	if (trackCountStream.is_open()) trackCountStream.close();	
 	if (featureMotionStream.is_open()) featureMotionStream.close();
+	if (analysisStream.is_open()) analysisStream.close();
 }
 
 void featureTrackerNode::handle_very_new() {
@@ -1156,6 +1186,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	infoSent(false),
 	numHistoryFrames(0)
 {
+	configData = startupData;
 
 	debug_pub_name = new char[MAX_INPUT_ARG_LENGTH];
 	tracks_pub_name = new char[MAX_INPUT_ARG_LENGTH];
@@ -1176,27 +1207,24 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	
 		#ifdef _BUILD_FOR_ROS_
 		sprintf(timeString, "%010d.%09d", ros::Time::now().sec, ros::Time::now().nsec);
+		string defaultOutput = configData.read_addr + "nodes/flow/log/" + timeString;
 		#else
 		boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
-		sprintf(timeString, "%010d.%09d", pt.time_of_day().total_seconds(), pt.time_of_day().total_microseconds());
+		sprintf(timeString, "%010u.%09u", pt.time_of_day().total_seconds(), pt.time_of_day().total_microseconds());
+
+		string defaultDir = configData.read_addr + "data";
+		boost::filesystem::create_directory(defaultDir);
+		while (!boost::filesystem::exists(defaultDir)) { }
+
+		string defaultOutput = defaultDir + "/" + timeString;
 		#endif
-		
-		string defaultOutput = configData.read_addr + "nodes/flow/log/" + timeString;
+
 		ROS_WARN("No output folder specified, outputting by default to (%s)", defaultOutput.c_str());
 		configData.outputFolder = defaultOutput;
 		
-		char buffer[256];
-		sprintf(buffer,"mkdir -p %s",configData.outputFolder.c_str());
-		int mkdirResult = system(buffer);
-		
-		ROS_INFO("Result of mkdir command: (%d)", mkdirResult);
-		
-		char buffer_check[256];
-		sprintf(buffer_check,"%s", &buffer[9]);
-	
-		if (configData.verboseMode) { ROS_INFO("Checking that directory (%s) has been created..", buffer_check); }
-	
-		while (!boost::filesystem::exists( buffer_check )) { }
+		boost::filesystem::create_directory(configData.outputFolder);
+		if (configData.verboseMode) { ROS_INFO("Checking that directory (%s) has been created..", configData.outputFolder.c_str()); }
+		while (!boost::filesystem::exists(configData.outputFolder)) { }
 	}
 
 	#ifdef _BUILD_FOR_ROS_
@@ -1206,7 +1234,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	#endif
 	sprintf(debug_pub_name, "thermalvis%s/image_col", nodeName);
 	
-	configData = startupData;
+	
 	
 	for (unsigned int ppp = 0; ppp < MAX_HISTORY_FRAMES; ppp++) configData.multiplier[ppp] = 0;
 	
