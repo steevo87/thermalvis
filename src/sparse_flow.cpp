@@ -54,6 +54,68 @@ flowConfig::flowConfig() :
 	multiplier_1(3), 
 	multiplier_2(10)	 
 { }
+
+void flowConfig::assignStartingData(trackerData& startupData) {
+
+	maxFeatures = startupData.maxFeatures;
+	minFeatures = startupData.minFeatures;
+	drawingHistory = startupData.drawingHistory;
+	matchingMode = startupData.matchingMode;
+
+	maxFrac = startupData.maxFrac;
+	flowThreshold = startupData.flowThreshold;
+	minSeparation = startupData.minSeparation;
+	maxVelocity = startupData.maxVelocity;
+	newFeaturesPeriod = startupData.newFeaturesPeriod;
+	delayTimeout = startupData.delayTimeout;
+	
+	verboseMode = startupData.verboseMode;
+	debugMode = startupData.debugMode;
+	showTrackHistory = startupData.showTrackHistory;
+
+	adaptiveWindow = startupData.adaptiveWindow;
+	velocityPrediction = startupData.velocityPrediction;
+	attemptHistoricalRecovery = startupData.attemptHistoricalRecovery;
+	autoTrackManagement = startupData.autoTrackManagement;
+	attemptMatching = startupData.attemptMatching;
+	detectEveryFrame = startupData.detectEveryFrame;
+
+	sensitivity_1 = startupData.sensitivity[0];
+	sensitivity_2 = startupData.sensitivity[1];
+	sensitivity_3 = startupData.sensitivity[2];
+
+	if ((!startupData.detector[0].compare("FAST")) || (!startupData.detector[0].compare("fast"))) {
+		detector_1 = DETECTOR_FAST;
+	} else if ((!startupData.detector[0].compare("GFTT")) || (!startupData.detector[0].compare("gftt"))) {
+		detector_1 = DETECTOR_GFTT;
+	} else if ((!startupData.detector[0].compare("HARRIS")) || (!startupData.detector[0].compare("harris"))) {
+		detector_1 = DETECTOR_HARRIS;
+	} else {
+		ROS_ERROR("Could not identify provided detector..");
+		detector_1 = DETECTOR_FAST;
+	}
+
+	if ((!startupData.detector[1].compare("FAST")) || (!startupData.detector[1].compare("fast"))) {
+		detector_2 = DETECTOR_FAST;
+	} else if ((!startupData.detector[1].compare("GFTT")) || (!startupData.detector[1].compare("gftt"))) {
+		detector_2 = DETECTOR_GFTT;
+	} else if ((!startupData.detector[1].compare("HARRIS")) || (!startupData.detector[1].compare("harris"))) {
+		detector_2 = DETECTOR_HARRIS;
+	} else {
+		detector_2 = DETECTOR_OFF;
+	}
+
+	if ((!startupData.detector[2].compare("FAST")) || (!startupData.detector[2].compare("fast"))) {
+		detector_3 = DETECTOR_FAST;
+	} else if ((!startupData.detector[2].compare("GFTT")) || (!startupData.detector[2].compare("gftt"))) {
+		detector_3 = DETECTOR_GFTT;
+	} else if ((!startupData.detector[2].compare("HARRIS")) || (!startupData.detector[2].compare("harris"))) {
+		detector_3 = DETECTOR_HARRIS;
+	} else {
+		detector_3 = DETECTOR_OFF;
+	}
+	
+}
 #endif
 
 trackerData::trackerData() : 
@@ -62,6 +124,80 @@ trackerData::trackerData() :
 	outputFeatureMotion(false) 
 {
 	detector[0] = "FAST";
+}
+
+bool trackerData::assignFromXml(xmlParameters& xP) {
+
+	int countOfFlowNodes = 0;
+
+	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) {
+		if (v.first.compare("node")) continue; // only progresses if its a "node" tag
+		if (!v.second.get_child("<xmlattr>.type").data().compare("flow")) countOfFlowNodes++;
+	}
+
+	if (countOfFlowNodes == 0) {
+		ROS_ERROR("No flow nodes found in XML config!");
+		return false;
+	}
+
+	if (countOfFlowNodes > 1) {
+		ROS_ERROR("More than 1 flow node found in XML config! This functionality is not supported in Windows..");
+		return false;
+	}
+
+	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
+		if (v.first.compare("node")) continue;
+		if (v.second.get_child("<xmlattr>.type").data().compare("flow")) continue;
+
+		BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
+			if (v2.first.compare("param")) continue;
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("showTrackHistory")) showTrackHistory = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxFeatures")) maxFeatures = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("minFeatures")) minFeatures = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("drawingHistory")) drawingHistory = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("matchingMode")) matchingMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxFrac")) maxFrac = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("flowThreshold")) flowThreshold = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("minSeparation")) minSeparation = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxVelocity")) maxVelocity = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("newFeaturesPeriod")) newFeaturesPeriod = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("delayTimeout")) delayTimeout = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("adaptiveWindow")) adaptiveWindow = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("velocityPrediction")) velocityPrediction = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("attemptHistoricalRecovery")) attemptHistoricalRecovery = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoTrackManagement")) autoTrackManagement = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("attemptMatching")) attemptMatching = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("detectEveryFrame")) detectEveryFrame = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputForAnalysis")) outputForAnalysis = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFolder")) outputFolder = v2.second.get_child("<xmlattr>.value").data();
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTrackCount")) outputTrackCount = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFeatureMotion")) outputFeatureMotion = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("normalizeFeatureVelocities")) normalizeFeatureVelocities = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("detector_1")) {
+				detector[0] = v2.second.get_child("<xmlattr>.value").data();
+			}
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("detector_2")) detector[1] = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("detector_3")) detector[2] = v2.second.get_child("<xmlattr>.value").data();
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("sensitivity_1")) sensitivity[0] = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("sensitivity_2")) sensitivity[1] = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("sensitivity_3")) sensitivity[2] = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+        }
+	}
+
+	return true;
+
 }
 
 void featureTrackerNode::displayFrame() {
@@ -531,7 +667,7 @@ int featureTrackerNode::publish_tracks(
 	if (configData.outputForAnalysis) {
 		char analysisFile[256];
 		sprintf(analysisFile, "%s/image_%06d.txt", configData.outputFolder.c_str(), readyFrame);
-		ROS_INFO("analysisFile = (%s)", analysisFile);
+		
 		analysisStream.open(analysisFile, ios::out);
 		analysisStream << "currentIndex:" << currentIndex << endl;
 
@@ -1366,25 +1502,27 @@ void featureTrackerNode::handle_camera(const cv::Mat& inputImage, const cameraIn
 }
 
 
-void trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom) {
+bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom) {
 	for (int iii = 0; iii < numDetectors; iii++) {
-		if (detector[iii] == "SURF") {
+		if ((detector[iii] == "SURF") || (detector[iii] == "surf")) {
 			ROS_ERROR("SURF has been deactivated due to copyright protection!");
-		} else if (detector[iii] == "FAST") {
+		} else if ((detector[iii] == "FAST") || (detector[iii] == "fast")) {
 			det[iii] = new cv::FastFeatureDetector( int(sensitivity[iii] * FAST_DETECTOR_SENSITIVITY_SCALING) );
-		} else if (detector[iii] == "GFTT") {
+		} else if ((detector[iii] == "GFTT") || (detector[iii] == "gftt")) {
 			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii]), 1.0, 3, false );
-		} else if (detector[iii] == "STAR") {
+		} else if ((detector[iii] == "STAR") || (detector[iii] == "star")) {
 			det[iii] = new cv::StarFeatureDetector( 16, int(sensitivity[iii]) );
-		} else if (detector[iii] == "ORB") {
+		} else if ((detector[iii] == "ORB") || (detector[iii] == "orb")) {
 			det[iii] = new cv::OrbFeatureDetector( maxFeatures );
-		} else if (detector[iii] == "HARRIS") {
+		} else if ((detector[iii] == "HARRIS") || (detector[iii] == "harris")) {
 			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii]), 1.0, 3, true );
 		} else {
-			printf("%s << ERROR! Shouldn't have got here!\n", __FUNCTION__);
+			ROS_ERROR("Shouldn't have got here!");
+			return false;
 		}
 	}
 	hom[0] = new cv::FastFeatureDetector( int(FAST_DETECTOR_SENSITIVITY_SCALING*0.02) );
+	return true;
 }
 
 #ifdef _BUILD_FOR_ROS_

@@ -2,6 +2,7 @@
  *  \brief	Monocular SLAM demonstration app
 */
 
+#include "launch.hpp"
 #include "directory_stream.hpp"
 #include "sparse_flow.hpp"
 
@@ -9,9 +10,18 @@ int main(int argc, char* argv[]) {
 	
 	ROS_INFO("Launching Monocular SLAM Demo App!");
 
+	xmlParameters xP;
+	bool inputXmlSupplied = false;
+	if (argc > 1) {
+		xP.parseInputXML(argv[1]);
+		ROS_INFO("About to print XML summary..");
+		xP.printInputSummary();
+		inputXmlSupplied = true;
+	}
+
 	directoryManager dM;
 
-	if (!dM.initializeInput(argc, argv)) return -1;
+	if (!dM.initializeInput(!inputXmlSupplied ? argc : 1, argv)) return -1;
 	dM.initialize();
 	dM.setLoopMode(true);
 
@@ -20,21 +30,26 @@ int main(int argc, char* argv[]) {
 	// Preliminary settings
 	trackerData startupData;
 	{
+		if (!startupData.assignFromXml(xP)) return -1;
 		startupData.outputForAnalysis = true;
+
+		ROS_INFO("startupData.debugMode = (%d)", startupData.debugMode);
 	}
 
 	// Real-time changeable variables
 	flowConfig fcData;
 	{
-		fcData.debugMode = true;
-		fcData.showTrackHistory = true;
-		fcData.autoTrackManagement = false;
-		fcData.detector_1 = DETECTOR_FAST;
+		fcData.assignStartingData(startupData);
+		//fcData.setDetector1(DETECTOR_FAST);
 	}
 
 	#ifdef _DEBUG
-	if ((fcData.detector_1 == DETECTOR_GFTT) || (fcData.detector_2 == DETECTOR_GFTT) || (fcData.detector_3 == DETECTOR_GFTT)) {
-		ROS_WARN("The GFTT detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
+	if (
+		((fcData.getDetector1() != DETECTOR_FAST) && (fcData.getDetector1() != DETECTOR_OFF)) || 
+		((fcData.getDetector2() != DETECTOR_FAST) && (fcData.getDetector2() != DETECTOR_OFF)) || 
+		((fcData.getDetector3() != DETECTOR_FAST) && (fcData.getDetector3() != DETECTOR_OFF))
+	) {
+		ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
 	}
 	#endif
 

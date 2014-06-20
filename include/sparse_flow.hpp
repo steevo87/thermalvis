@@ -11,6 +11,7 @@
 #include "ros_resources.hpp"
 #include "opencv_resources.hpp"
 	
+#include "launch.hpp"
 #include "improc.hpp"
 #include "video.hpp"
 #include "features.hpp"
@@ -79,29 +80,23 @@ struct flowSharedData {
 	flowSharedData();
 };
 
-#ifndef _BUILD_FOR_ROS_
-/// \brief		Substitute for ROS live configuration adjustments
-struct flowConfig : public flowSharedData {
-    double sensitivity_1, sensitivity_2, sensitivity_3;
-	int detector_1, detector_2, detector_3;
-	int multiplier_1, multiplier_2;
-
-	flowConfig();
-};
-
-#endif
-
 struct cameraInfoStruct {
 	double K[9], D[8];
 	int width, height;
-	string distortion_model;
+	std::string distortion_model;
 
 	cameraInfoStruct();
 };
 
 /// \brief		Stores configuration information for the sparse optical flow routine
-struct trackerData : public flowSharedData, public commonData {
+class trackerData : public flowSharedData, public commonData {
+	friend class xmlParameters;
+	friend class featureTrackerNode;
+#ifndef _BUILD_FOR_ROS_
+	friend class flowConfig;
+#endif
 
+protected:
 	
 	string tracksOutputTopic;
 
@@ -117,19 +112,47 @@ struct trackerData : public flowSharedData, public commonData {
 	string method[MAX_DETECTORS];
 	bool method_match[MAX_DETECTORS];
 
+public:
 	trackerData();
+
+	bool assignFromXml(xmlParameters& xP);
 
 	#ifdef _BUILD_FOR_ROS_
 	bool obtainStartingData(ros::NodeHandle& nh);   
 	#endif
 
-    void initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom);
+    bool initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom);
     void initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom) {
 		desc[0] = new cv::BriefDescriptorExtractor();
 		hom[0] = new cv::BriefDescriptorExtractor();
 	}
 	
 };
+
+#ifndef _BUILD_FOR_ROS_
+/// \brief		Substitute for ROS live configuration adjustments
+class flowConfig : public flowSharedData {
+	friend class featureTrackerNode;
+
+protected:
+    double sensitivity_1, sensitivity_2, sensitivity_3;
+	int detector_1, detector_2, detector_3;
+	int multiplier_1, multiplier_2;
+
+public:
+	flowConfig();
+	void assignStartingData(trackerData& startupData);
+	
+	void setDetector1(int detector_1 = DETECTOR_FAST) {};
+	void setDetector2(int detector_2 = DETECTOR_FAST) {};
+	void setDetector3(int detector_3 = DETECTOR_FAST) {};
+
+	int getDetector1() { return detector_1; }
+	int getDetector2() { return detector_2; }
+	int getDetector3() { return detector_3; }
+
+};
+#endif
 
 /// \brief		Manages the optical flow procedure
 class featureTrackerNode : public GenericOptions {

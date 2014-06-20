@@ -1,0 +1,18 @@
+<launch>
+
+	<node name="streamer" pkg="thermalvis" type="streamer">
+		<param name="minTemperature" value="25" />
+		<param name="maxTemperature" value="40" />
+	</node>
+	
+	<node name="flow" pkg="thermalvis" type="flow" output="screen">
+		<param name="debugMode" value="true" />
+		<param name="showTrackHistory" value="true" />
+		<param name="autoTrackManagement" value="false" />
+		<param name="flowThreshold" value="0.00001" />
+		<param name="detector_1" value="HARRIS" />
+		<param name="sensitivity_1" value="0.001" />
+		
+	</node>
+	
+</launch>
