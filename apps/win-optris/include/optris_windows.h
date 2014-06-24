@@ -1,7 +1,7 @@
 #ifndef __OPTRIS_WINDOWS_H__
 #define __OPTRIS_WINDOWS_H__
 
-#include "optris_stream.hpp"
+#include "input_stream.hpp"
 
 #include <iostream>
 #include <windows.h>
@@ -33,10 +33,10 @@ protected:
 
 	void button_click(Object^ sender, System::EventArgs^ e);
 	void dropdown_changed(Object^ sender, System::EventArgs^ e);
-	void safety_changed(Object^ sender, System::EventArgs^ e);
+	void safety_changed(Object^ sender, System::EventArgs^ e) { opStream->load_standard(opStream->get_colormap_index(), safety->Checked ? 1 : 0); }
 	void autoscale_changed(Object^ sender, System::EventArgs^ e);
-	void minslider_changed(Object^ sender, System::EventArgs^ e);
-	void maxslider_changed(Object^ sender, System::EventArgs^ e);
+	void minslider_changed(Object^ sender, System::EventArgs^ e) { opStream->setMinTemp(double(minSlider->Value)); }
+	void maxslider_changed(Object^ sender, System::EventArgs^ e) { opStream->setMaxTemp(double(minSlider->Value)); }
 	
 	short FrameWidth, FrameHeight, FrameDepth;
 	double FrameRatio;
@@ -52,7 +52,7 @@ public:
 	void initialize();
 	void ReleaseIPC();
 
-	winOptrisStream *opStream;
+	inputStream *opStream;
 
 	HRESULT OnFrameInit(int frameWidth, int frameHeight, int frameDepth);
 	HRESULT OnNewFrameEx(void * pBuffer, FrameMetadata *pMetadata);

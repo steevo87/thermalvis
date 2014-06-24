@@ -24,8 +24,6 @@ protected:
 
 	double minTemp, maxTemp;
 
-	
-
 	short FrameWidth, FrameHeight, FrameDepth;
 	double FrameRatio;
 	int FrameSize;
@@ -36,11 +34,24 @@ protected:
 public:
 	inputStream();
 	bool processFrame();
-	void colorizeFrame();
+	void colorizeFrame() { cMapping->falsify_image(*_8bitImage, *displayImage, 0); }		// THIS IS SLOWING THINGS DOWN!!
 	void displayFrame();
 	bool accessLatestRawFrame(cv::Mat& latestFrame);
 	bool accessLatest8bitFrame(cv::Mat& latestFrame);
 	virtual bool writeImageToDisk();
+
+	void load_standard(int mapCode, int mapParam = 0) { cMapping->load_standard(mapCode, mapParam); }
+	int get_colormap_index() { return colormap_index; }
+	void set_colormap_index(int index) { colormap_index = index; }
+	void set_autoscaleTemps(bool setting) { autoscaleTemps = setting; }
+
+	void assignMemoryToRawImage(int height, int width) { rawImage = new cv::Mat(height, width, CV_16UC1); }
+	void assignDataToRawImage(uchar *buff) { rawImage->data = buff; }
+	bool getPauseMode() { return pauseMode; }
+	void switchPauseMode() { pauseMode = !pauseMode; }
+
+	void setMinTemp(double temperature) { minTemp = temperature; }
+	void setMaxTemp(double temperature) { maxTemp = temperature; }
 	
 };
 

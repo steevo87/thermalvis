@@ -6,24 +6,50 @@
 #include "directory_stream.hpp"
 #include "sparse_flow.hpp"
 
+#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/nodes/flow/launch/flow_windows_test.launch"
+
 int main(int argc, char* argv[]) {
 	
 	ROS_INFO("Launching Monocular SLAM Demo App!");
 
-	xmlParameters xP;
-	bool inputXmlSupplied = false;
+	char xmlAddress[256];
+
 	if (argc > 1) {
-		xP.parseInputXML(argv[1]);
-		ROS_INFO("About to print XML summary..");
-		xP.printInputSummary();
-		inputXmlSupplied = true;
+
+		// temporary hack to allow easy switching of auto-rescaling:
+		if (strcmp(argv[1], "0")) {
+			ROS_ERROR("is zero");
+#ifdef _WIN32
+		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
+#else
+		sprintf(xmlAddress, "~/%s", DEFAULT_LAUNCH_XML);
+#endif
+			break;
+		}
+
+		sprintf(xmlAddress, "%s", argv[1]);
+		ROS_INFO("Using XML file provided at (%s)", xmlAddress);
+	} else {
+#ifdef _WIN32
+		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
+#else
+		sprintf(xmlAddress, "~/%s", DEFAULT_LAUNCH_XML);
+#endif
+		ROS_INFO("No XML config file provided, therefore using default at (%s)", xmlAddress);
 	}
+
+	xmlParameters xP;
+	
+	xP.parseInputXML(xmlAddress);
+	ROS_INFO("About to print XML summary..");
+	xP.printInputSummary();
 
 	directoryManager dM;
 
-	if (!dM.initializeInput(!inputXmlSupplied ? argc : 1, argv)) return -1;
+	if (!dM.initializeInput(1, argv)) return -1;
 	dM.initialize();
 	dM.setLoopMode(true);
+	dM.set_autoscaleTemps(false);
 
 	cameraInfoStruct camInfo;
 

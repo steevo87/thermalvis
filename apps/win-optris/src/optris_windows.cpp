@@ -5,14 +5,12 @@ optrisManager::optrisManager(HWND hostHandle) {
 	ipcInitialized = false;
 	hr = -1;
 
-	opStream = new winOptrisStream();
+	opStream = new inputStream();
 
 	this->Text = "Win-Optris Control";
 	this->Size = System::Drawing::Size(500,300);
 
-	
 	setupForm();
-	
 }
 
 void optrisManager::setupForm() {
@@ -114,22 +112,10 @@ void optrisManager::button_click(Object^ sender, System::EventArgs^ e) {
 	opStream->switchPauseMode();
 }
 
-void optrisManager::safety_changed(Object^ sender, System::EventArgs^ e) {
-	opStream->load_standard(opStream->get_colormap_index(), safety->Checked ? 1 : 0);
-}
 
 void optrisManager::autoscale_changed(Object^ sender, System::EventArgs^ e) {
 	autoscale->Checked ? opStream->set_autoscaleTemps(true) : opStream->set_autoscaleTemps(false);
 	opStream->load_standard(opStream->get_colormap_index());
-}
-
-void optrisManager::minslider_changed(Object^ sender, System::EventArgs^ e) {    
-	opStream->setMinTemp(double(minSlider->Value)); 
-}
-
-void optrisManager::maxslider_changed(Object^ sender, System::EventArgs^ e) {    
-	opStream->setMaxTemp(double(minSlider->Value)); 
-
 }
 
 void optrisManager::dropdown_changed(Object^ sender, System::EventArgs^ e) {

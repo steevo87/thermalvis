@@ -26,10 +26,6 @@ bool inputStream::accessLatest8bitFrame(cv::Mat& latestFrame) {
 	return true;
 }
 
-void inputStream::colorizeFrame() {
-	cMapping->falsify_image(*_8bitImage, *displayImage, 0);		// THIS IS SLOWING THINGS DOWN!!
-}
-
 void inputStream::displayFrame() {
 	if (displayImage->rows != 0) {
 		!pauseMode ? cv::imshow("display", *displayImage) : 0;
