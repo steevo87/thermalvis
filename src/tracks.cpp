@@ -617,9 +617,9 @@ void drawFeatureTracks(cv::Mat& src, cv::Mat& dst, vector<featureTrack>& tracks,
 			p1 = cv::Point(int(tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).featureCoord.x * 16.0), int(tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).featureCoord.y * 16.0));
 			
 			#ifdef _OPENCV_VERSION_3_PLUS_
-			circle(dst, p1, 1, kColor, 2, cv::LINE_AA, 4);
+			circle(dst, p1, 16, kColor, -1, cv::LINE_AA, 4);
 			#else
-			circle(dst, p1, 1, kColor, 2, CV_AA, 4);
+			circle(dst, p1, 16, kColor, -1, CV_AA, 4);
 			#endif
 
 		} else {
