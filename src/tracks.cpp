@@ -109,39 +109,22 @@ double obtainFeatureSpeeds(const vector<featureTrack>& featureTrackVector, unsig
 double updateFeatureSpeeds(vector<featureTrack>& featureTrackVector, unsigned int idx1, double time1, unsigned int idx2, double time2, double maxVelocity) {
 	
 	for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
-		
 		featureTrackVector.at(iii).velocity_x = 0.0;
 		featureTrackVector.at(iii).velocity_y = 0.0;
-		
 	}
 	
-	if ((time1 == time2) || (time1 == 0.0) || (time2 == 0.0)) {
-		return -1.0;
-	} else if (abs(time1 - time2) > MAX_TIME_DIFF_FOR_PREDICTION) {
-		return -1.0;
-	}
-	
+	if ((time1 == time2) || (time2 == 0.0) || (abs(time1 - time2) > MAX_TIME_DIFF_FOR_PREDICTION)) return -1.0;
 	
 	double cumulativeVelocity = 0.0;
 	unsigned int cumulativeCount = 0;
 	
-	//printf("%s << Entered with (%d, %d)\n", __FUNCTION__, idx1, idx2);
-	
-	
 	for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
-
-		
-		if (featureTrackVector.at(iii).locations.size() < 2) {
-			continue;
-		}
+		if (featureTrackVector.at(iii).locations.size() < 2) continue;
 		
 		// If the last two features match the frame indices you're interested in...
-		
 		if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).imageIndex == idx2) {
-			
 			if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-2).imageIndex == idx1) {
 				
-				//printf("%s << Found match at (%d)\n", __FUNCTION__, iii);
 				cumulativeCount++;
 				cv::Point2f p1, p2, v;
 				
@@ -154,29 +137,19 @@ double updateFeatureSpeeds(vector<featureTrack>& featureTrackVector, unsigned in
 				double s = maxVelocity / pow(pow(v.x, 2.0)+pow(v.y,2.0),0.5);
 				s = min(s,1.0);
 				
-				//printf("%s << entered here...\n", __FUNCTION__);
-				
 				featureTrackVector.at(iii).velocity_x = v.x * s;
 				featureTrackVector.at(iii).velocity_y = v.y * s;
 				
 				cumulativeVelocity += pow(pow(featureTrackVector.at(iii).velocity_x, 2.0)+pow(featureTrackVector.at(iii).velocity_y, 2.0), 0.5);
-				
 			}
-			
 		}
-		
-		
 	}
-	
 	
 	if (cumulativeCount > 0) {
 		cumulativeVelocity /= double(cumulativeCount);
-	} else {
-		cumulativeVelocity = 0.0;
-	}
+	} else cumulativeVelocity = 0.0;
 	
 	return cumulativeVelocity;
-
 }
 
 void removeObsoleteElements(vector<featureTrack>& featureTrackVector, const vector<unsigned int>& activeFrameIndices) {

@@ -30,9 +30,9 @@ flowSharedData::flowSharedData() :
 	maxFrac(0.05),
 	verboseMode(false),
 	debugMode(false),
-	adaptiveWindow(false), // originally was true - once fixed it can be again
-	velocityPrediction(false), // originally was true - once fixed it can be again 
-	attemptHistoricalRecovery(false), // originally was true - once fixed it can be again  
+	adaptiveWindow(true), 
+	velocityPrediction(true),  
+	attemptHistoricalRecovery(true),
 	autoTrackManagement(true),
 	attemptMatching(true),
 	showTrackHistory(false), 
@@ -45,14 +45,14 @@ flowSharedData::flowSharedData() :
 
 #ifndef _BUILD_FOR_ROS_
 flowConfig::flowConfig() : 
-	sensitivity_1(0.1), 
-	sensitivity_2(0.1), 
-	sensitivity_3(0.1), 
+	sensitivity_1(DEFAULT_SENSITIVITY), 
+	sensitivity_2(DEFAULT_SENSITIVITY), 
+	sensitivity_3(DEFAULT_SENSITIVITY), 
 	detector_1(DETECTOR_FAST), 
 	detector_2(DETECTOR_OFF), 
 	detector_3(DETECTOR_OFF), 
-	multiplier_1(3), 
-	multiplier_2(10)	 
+	multiplier_1(DEFAULT_MULTIPLIER_1), 
+	multiplier_2(DEFAULT_MULTIPLIER_2)	 
 { }
 
 void flowConfig::assignStartingData(trackerData& startupData) {
@@ -124,6 +124,13 @@ trackerData::trackerData() :
 	outputFeatureMotion(false) 
 {
 	detector[0] = "FAST";
+
+	sensitivity[0] = DEFAULT_SENSITIVITY;
+	sensitivity[1] = DEFAULT_SENSITIVITY;
+	sensitivity[2] = DEFAULT_SENSITIVITY;
+	
+	multiplier[0] = DEFAULT_MULTIPLIER_1;
+	multiplier[1] = DEFAULT_MULTIPLIER_2;
 }
 
 bool trackerData::assignFromXml(xmlParameters& xP) {
@@ -399,7 +406,7 @@ void featureTrackerNode::attemptTracking() {
 		
 		if (configData.verboseMode) { ROS_INFO("About to attempt tracking of (%d) points (no homography for guidance)..", ((int)startingPoints.size())); }
 		
-		if (configData.velocityPrediction) {
+		if (configData.velocityPrediction && previousTimeInitialized) {
 			#ifdef _BUILD_FOR_ROS_
 			assignEstimatesBasedOnVelocities(featureTrackVector, startingPoints, finishingPoints, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), original_time.toSec());
 			#else
@@ -458,7 +465,7 @@ void featureTrackerNode::updateDistanceConstraint() {
 		
 		double predictedDisplacement;
 		
-		if (configData.velocityPrediction) {
+		if (configData.velocityPrediction && previousTimeInitialized && (featuresVelocity >= 0.0)) {
 			#ifdef _BUILD_FOR_ROS_
 			predictedDisplacement = featuresVelocity * (original_time.toSec() - previous_time.toSec());
 			#else
@@ -467,7 +474,10 @@ void featureTrackerNode::updateDistanceConstraint() {
 			#endif
 		} else predictedDisplacement = distanceConstraint;
 		
-		int predictedRequirement = int(ceil(ADAPTIVE_WINDOW_CONTINGENCY_FACTOR*predictedDisplacement));
+		int predictedRequirement = int(ceil(predictedDisplacement));
+
+		if (configData.velocityPrediction && (featuresVelocity >= 0.0)) predictedRequirement = max(predictedRequirement, int(ADAPTIVE_WINDOW_CONTINGENCY_FACTOR*double(predictedRequirement)));
+		
 		predictedRequirement += (predictedRequirement + 1) % 2;
 		
 		if (configData.verboseMode) { ROS_INFO("activePoints = (%d)", activePoints); }
@@ -709,6 +719,7 @@ int featureTrackerNode::publish_tracks(
 
 	previousIndex = currentIndex;
 	previous_time = original_time;
+	previousTimeInitialized = true;
 	
 	return publishedTrackCount;
 }
@@ -803,7 +814,7 @@ void featureTrackerNode::matchWithExistingTracks() {
 				cv::KeyPoint::convert(featuresFromPts[0], tempPts);
 				estimatedFinalLocs.insert(estimatedFinalLocs.end(), tempPts.begin(), tempPts.end());
 				transformPoints(estimatedFinalLocs, H12);
-			} else if ((configData.velocityPrediction) && (ppp == MAX_HISTORY_FRAMES)) {
+			} else if ((configData.velocityPrediction) && (ppp == MAX_HISTORY_FRAMES) && previousTimeInitialized) {
 				vector<cv::Point2f> tempPts;
 				cv::KeyPoint::convert(featuresFromPts[0], tempPts);
 				#ifdef _BUILD_FOR_ROS_
@@ -991,24 +1002,24 @@ void featureTrackerNode::features_loop() {
 	
 	testTime = timeElapsedMS(test_timer, true);
 	
-	if (configData.verboseMode) { ROS_ERROR("=========== Starting features loop for frame (%u [%u]) with (%d) finishing points.", readyFrame, bufferIndices[readyFrame % 2], globalFinishingPoints.size()); }
+	if (configData.verboseMode) { ROS_INFO("Starting features loop for frame (%u [%u]) with (%d) finishing points.", readyFrame, bufferIndices[readyFrame % 2], globalFinishingPoints.size()); }
 		
-	if (configData.verboseMode) { ROS_WARN("About to update distance constraint."); }
+	if (configData.verboseMode) { ROS_INFO("About to update distance constraint."); }
 	updateDistanceConstraint();
-	if (configData.verboseMode) { ROS_WARN("Distance constraint updated.\n"); }
+	if (configData.verboseMode) { ROS_INFO("Distance constraint updated."); }
 	
 	globalStartingPoints.clear();
 	globalStartingPoints.insert(globalStartingPoints.end(), globalFinishingPoints.begin(), globalFinishingPoints.end());
 	
 	if (H12.rows != 0) {		
 		transformPoints(globalFinishingPoints, H12);
-		featuresVelocity = 9e99;
+		featuresVelocity = -1.0;
 		if (configData.verboseMode) { ROS_INFO("(%d) Points transformed.", globalFinishingPoints.size()); }
 	} else globalFinishingPoints.clear();
 	
-	if (configData.verboseMode) { ROS_WARN("About to attempt tracking..."); }
+	if (configData.verboseMode) { ROS_INFO("About to attempt tracking..."); }
 	attemptTracking();
-	if (configData.verboseMode) { ROS_WARN("Tracking completed.\n"); }
+	if (configData.verboseMode) { ROS_INFO("Tracking completed."); }
 	
 	#ifdef _BUILD_FOR_ROS_
 	double prelimVelocity = obtainFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), bufferIndices[(readyFrame) % 2], original_time.toSec());
@@ -1016,15 +1027,16 @@ void featureTrackerNode::features_loop() {
 	boost::posix_time::time_duration diff = original_time - previous_time;
 	double prelimVelocity = obtainFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], 0.0, bufferIndices[(readyFrame) % 2], diff.total_milliseconds()/1000.0);
 	#endif
-	featuresVelocity = max(prelimVelocity, featuresVelocity);
+
+	previousTimeInitialized ? featuresVelocity = max(prelimVelocity, featuresVelocity) : featuresVelocity = -1.0;
 
 	bool featuresTooLow;
-	if (configData.verboseMode) { ROS_ERROR("Using (%d) to update (%d).", ((int)globalFinishingPoints.size()), previousTrackedPointsPeak); }
+	if (configData.verboseMode) { ROS_INFO("Using (%d) to update (%d).", ((int)globalFinishingPoints.size()), previousTrackedPointsPeak); }
 	previousTrackedPointsPeak = max(previousTrackedPointsPeak, ((unsigned int) globalFinishingPoints.size()));
 	
 	if (((int)globalFinishingPoints.size()) < configData.minFeatures) {
 		featuresTooLow = true;
-		if (configData.verboseMode) { ROS_ERROR("featuresTooLow == true, because feature count is (%d) vs (%d, %u).", globalFinishingPoints.size(), configData.minFeatures, previousTrackedPointsPeak); }
+		if (configData.verboseMode) { ROS_WARN("featuresTooLow == true, because feature count is (%d) vs (%d, %u).", globalFinishingPoints.size(), configData.minFeatures, previousTrackedPointsPeak); }
 		previousTrackedPointsPeak = (unsigned int)(globalFinishingPoints.size());
 	} else featuresTooLow = false;
 	
@@ -1055,7 +1067,7 @@ void featureTrackerNode::features_loop() {
 	
 	cycleFlag = false;
 	
-	if (configData.verboseMode) { ROS_WARN("globalFinishingPoints.size() = (%d)", ((int)globalFinishingPoints.size())); }
+	if (configData.verboseMode) { ROS_INFO("globalFinishingPoints.size() = (%d)", ((int)globalFinishingPoints.size())); }
 	
 	if (readyFrame > 0) {
 		
@@ -1071,11 +1083,13 @@ void featureTrackerNode::features_loop() {
 		featuresVelocity = updateFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], 0.0, bufferIndices[(readyFrame) % 2], diff.total_milliseconds()/1000.0, configData.maxVelocity);
 		#endif
 	}
+
+	if (!previousTimeInitialized) featuresVelocity = -1.0;
 	
 	publishRoutine();
 	
-	if (configData.verboseMode) { ROS_WARN("featuresVelocity = (%f)", featuresVelocity); }
-	if (configData.velocityPrediction) {
+	if (configData.verboseMode) { ROS_INFO("featuresVelocity = (%f)", featuresVelocity); }
+	if (configData.velocityPrediction && previousTimeInitialized) {
 		
 		unsigned int activeTrackCount = getActiveTrackCount(featureTrackVector, bufferIndices[(readyFrame-1) % 2], bufferIndices[(readyFrame) % 2]);
 		
@@ -1086,12 +1100,12 @@ void featureTrackerNode::features_loop() {
 			ROS_INFO("featuresVelocity = (%f) over (%f) seconds", featuresVelocity, (original_time.toSec()-previous_time.toSec()));
 			#else
 			boost::posix_time::time_duration diff = original_time - previous_time;
-			printf("%s << featuresVelocity = (%f) over (%f) seconds\n", __FUNCTION__, featuresVelocity, diff.total_milliseconds()/1000.0);
+			ROS_INFO("featuresVelocity = (%f) over (%f) seconds", __FUNCTION__, featuresVelocity, diff.total_milliseconds()/1000.0);
 			#endif
 		}
 	}
 	
-	if (configData.verboseMode) ROS_ERROR("Completed features loop\n");
+	if (configData.verboseMode) ROS_INFO("Completed features loop.");
 	readyFrame++;
 
 }
@@ -1320,7 +1334,8 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	readyFrame(0),
 	infoProcessed(false),
 	infoSent(false),
-	numHistoryFrames(0)
+	numHistoryFrames(0),
+	previousTimeInitialized(false)
 {
 	configData = startupData;
 
@@ -1465,12 +1480,12 @@ void featureTrackerNode::handle_camera(const cv::Mat& inputImage, const cameraIn
 		#else
 		printf("%s << WARNING: Current received image index is lower than previous, assuming watching a looped video. (%d) vs (%d) : (%d)\n", __FUNCTION__, previousIndex, currentIndex, frameCount);
 		#endif
-		featuresVelocity = 9e99;
+		featuresVelocity = -1.0;
 		capturedFrameCount++;
 	} else if (currentIndex > (previousIndex+1)) {
 		
 		if (!undergoingDelay) skippedFrameCount++;
-		featuresVelocity = 9e99;
+		featuresVelocity = -1.0;
 	} else capturedFrameCount++;
 	
 	#ifdef _BUILD_FOR_ROS_
@@ -1478,7 +1493,7 @@ void featureTrackerNode::handle_camera(const cv::Mat& inputImage, const cameraIn
 		if (info_msg->binning_y == 1) {
 			ROS_WARN("Current frame is a duplicate, going into NUC-handling routine...");
 			handle_delay();
-			featuresVelocity = 9e99;
+			featuresVelocity = -1.0;
 			return;
 		}	
 	} 
@@ -1533,7 +1548,7 @@ void featureTrackerNode::timed_loop() {
 	elapsedTime = timeElapsedMS(cycle_timer, false);
 	
 	if ((frameCount > 0) && (elapsedTime > configData.delayTimeout*MS_PER_SEC) && !undergoingDelay && handleDelays) {
-		featuresVelocity = 9e99;
+		featuresVelocity = -1.0;
 		handle_delay();
 	}
 	skipTime = timeElapsedMS(skip_timer, false);

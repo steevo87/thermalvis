@@ -29,12 +29,17 @@
 
 const char __PROGRAM__[] = "THERMALVIS_FLOW";
 
+#define DEFAULT_SENSITIVITY 0.2
+
+#define DEFAULT_MULTIPLIER_1 3
+#define DEFAULT_MULTIPLIER_2 10
+
 #define DEFAULT_ALPHA 	0.00
 #define MS_PER_SEC 		1000.0
 
 #define MINIMUM_GFTT_SENSITIVITY	0.001
 #define MINIMUM_HARRIS_SENSITIVITY	0.0001
-#define FAST_DETECTOR_SENSITIVITY_SCALING	200.0
+#define FAST_DETECTOR_SENSITIVITY_SCALING	40.0
 
 #define TIGHT_DISTANCE_CONSTRAINT 3
 #define FEATURE_DROP_TRIGGER 0.40
@@ -56,7 +61,7 @@ const char __PROGRAM__[] = "THERMALVIS_FLOW";
 #define COLOR_UNMATCHED_POINTS 		CV_RGB(255, 0, 255)		// Purple	
 #define COLOR_MATCHED_POINTS 		CV_RGB(255, 255, 0)		// Yellow
 
-#define ADAPTIVE_WINDOW_CONTINGENCY_FACTOR 5.0
+#define ADAPTIVE_WINDOW_CONTINGENCY_FACTOR 3.0
 
 #define MIN_FEATURES_FOR_FEATURE_MOTION	10
 #define MAX_HISTORY_FRAMES	16
@@ -195,6 +200,8 @@ private:
 	#endif
 
 	trackerData configData;
+
+	bool previousTimeInitialized;
 
 	ofstream trackCountStream, featureMotionStream, analysisStream;
 

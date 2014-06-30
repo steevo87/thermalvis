@@ -10,10 +10,12 @@
 		<param name="debugMode" value="true" />
 		<param name="showTrackHistory" value="true" />
 		<param name="autoTrackManagement" value="false" />
-		<param name="flowThreshold" value="0.001" />
-		<param name="detector_1" value="FAST" />
-		<param name="sensitivity_1" value="0.02" />
-		<param name="minFeatures" value="30" />
+		<!-- <param name="verboseMode" value="true" /> -->
+		
+		<!-- <param name="detector_1" value="FAST" /> -->
+		<!-- <param name="minFeatures" value="100" /> -->
+		<!-- <param name="sensitivity_1" value="0.05" /> -->
+		<!-- <param name="flowThreshold" value="0.001" /> -->
 		
 	</node>
 	
