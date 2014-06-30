@@ -1,9 +1,19 @@
 <launch>
 
 	<node name="streamer" pkg="thermalvis" type="streamer">
+		<!-- <param name="source" value="directory" /> -->
+		<!-- <param name="directory" value="C:/Users/Stephen/Documents/Data/optris/output" /> -->
+		
+		<!-- <param name="alreadyCorrected" value="true" /> -->
+		<!-- <param name="intrinsics" value="$(find thermalvis)/data/calibration/csiro-aslab/optris.yml" /> -->
+		<!-- <param name="markDuplicates" value="true" /> -->
+		
+		<!-- <param name="outputColor" value="false" /> -->
+		
 		<param name="minTemperature" value="25" />
 		<param name="maxTemperature" value="40" />
 	</node>
+
 	
 	<node name="flow" pkg="thermalvis" type="flow" output="screen">
 		

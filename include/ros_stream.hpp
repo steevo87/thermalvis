@@ -100,11 +100,6 @@ char message[90];
 
 #define MAX_THERMISTOR_READINGS_TO_STORE 		100
 
-#define DATATYPE_8BIT 	0
-#define DATATYPE_RAW  	1
-#define DATATYPE_MM   	2
-#define DATATYPE_DEPTH  3
-
 #define UVC_STREAM_PTS                                  (1 << 2)
 #define UVC_STREAM_SCR                                  (1 << 3)
 
@@ -121,15 +116,6 @@ char message[90];
 #define CALIBMODE_ALT_SHUTTER				1 // Alternates shutter and sends NUCs
 #define CALIBMODE_ALT_OUTPUT				2 // Alternates between RAW and INS camera outputs
 #define CALIBMODE_LONG_SHUTTER				3 // Alternates shutter, but lets NUCs occur naturally
-
-#define DETECTOR_MODE_RAW					0
-#define DETECTOR_MODE_LUM					1
-#define DETECTOR_MODE_INS					2
-#define DETECTOR_MODE_RAD					3
-#define DETECTOR_MODE_TMP					4
-
-#define USB_MODE_16							1
-#define USB_MODE_8							2
 
 #define MIN_THERMISTOR_READNG				-20.0
 #define MAX_THERMISTOR_READING				60.0
@@ -164,155 +150,6 @@ struct camExtrinsicsData_ {
     cv::Mat R, T;
     cv::Mat R0, R1, T0, T1, P0, P1, cameraMatrix0, cameraMatrix1, distCoeffs0, distCoeffs1;
     cv::Rect roi0, roi1;
-};
-
-/// \brief		Stores configuration information for the camera driver / streamer
-struct streamerData {
-	
-	bool autoTemperature;
-	bool radiometricCorrection, radiometricRaw;
-	double minTemperature, maxTemperature;
-	string radiometryFile;
-	int radiometricBias;
-	
-	bool serialFeedback;
-	
-	bool useCurrentRosTime;
-	
-	string externalNucManagement;
-	
-	bool alreadyCorrected;
-
-	bool wantsToMarkDuplicates;
-	bool wantsToOutputDuplicates;
-	
-	int calibrationMode; // various optional modes for calibration
-	int alternatePeriod;
-	
-	int dummy;
-	
-	int maxReadAttempts;
-	
-	bool smoothThermistor;
-	double thermistorWindow;
-	
-	
-	
-	bool radiometricInterpolation;
-	
-	int inputWidth, inputHeight;
-	bool imageDimensionsSpecified;
-	
-	double serialPollingRate;
-	int serialCommsConfigurationCode;
-	
-	bool outputColorFlag;
-	bool output16bitFlag;
-	bool output8bitFlag;
-	
-	
-	
-	bool verboseMode, displayThermistor;
-	
-	bool serialComms, readThermistor;
-	string portAddress;
-	
-	int maxNucInterval;
-	double maxNucThreshold;
-	
-	bool captureMode;
-	bool readMode;
-	bool loadMode;
-	bool subscribeMode;
-	bool resampleMode;
-	bool pollMode;
-	bool wantsToUndistort;
-	
-	bool forceInputGray;
-	bool fixDudPixels;
-	
-	bool disableSkimming;
-	
-	bool loopMode;
-	bool wantsToResize;
-	bool wantsToDumpTimestamps;
-	bool wantsToRemoveDuplicates;
-	
-	bool temporalSmoothing;
-	
-	bool pauseMode;
-	int syncMode;
-	
-	double syncDiff;
-	
-	bool extremes;
-	
-	double writeQuality;
-	
-	vector<int> outputFileParams;
-	
-	string read_addr;
-	string source, filename, folder, capture_device, intrinsics, extrinsics, topicname;
-	
-	int map;
-	
-	string normalizationMode;
-	double normFactor;
-	int normMode;
-	int inputDatatype;
-	int detectorMode, usbMode;
-	int camera_number;
-	int filterMode;
-	double filterParam;
-	
-	bool stepChangeTempScale;
-	
-	double framerate;
-	
-	double maxThermistorDiff;
-	
-	int serialWriteAttempts; //, serialReadAttempts;
-	
-	unsigned long soft_diff_limit;
-	
-	
-	
-	int desiredRows;
-	int desiredCols;
-	
-	string timeStampsAddress;
-	
-	int mapCode;
-	int mapParam;
-	
-	double maxIntensityChange;
-	int temporalMemory;
-	
-	
-	bool intrinsicsProvided, wantsToRectify, wantsToWrite, wantsToKeepNames, wantsToEncode;
-
-        //HGH
-        bool wantsToAddExtrinsics;
-        string republishTopic;
-        int republishSource;
-        bool republishNewTimeStamp;
-        bool drawReticle;
-	
-	int outputFormat;
-	string outputFolder, outputFormatString, outputType, outputTimeFile;
-	string outputVideo, videoType;
-	int device_num;
-	double alpha;
-	bool autoAlpha;
-
-        string frameID;
-	
-	streamerData(); 
-
-	#ifdef _BUILD_FOR_ROS_
-	bool obtainStartingData(ros::NodeHandle& nh);  
-	#endif
-	
 };
 
 /// \brief		Manages the driver / streamer

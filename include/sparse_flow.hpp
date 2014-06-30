@@ -75,7 +75,7 @@ const char __PROGRAM__[] = "THERMALVIS_FLOW";
 #define DETECTOR_FAST	2
 #define DETECTOR_HARRIS 3
 
-/// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration
+/// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for flow
 struct flowSharedData {
 	int maxFeatures, minFeatures, drawingHistory, matchingMode;
 	double  maxFrac, flowThreshold, minSeparation, maxVelocity, newFeaturesPeriod, delayTimeout;

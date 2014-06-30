@@ -6,7 +6,7 @@
 #include "directory_stream.hpp"
 #include "sparse_flow.hpp"
 
-#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/nodes/flow/launch/flow_windows_test.launch"
+#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_test.launch"
 
 int main(int argc, char* argv[]) {
 	
@@ -45,6 +45,22 @@ int main(int argc, char* argv[]) {
 	ROS_INFO("About to print XML summary..");
 	xP.printInputSummary();
 
+	// Preliminary settings
+	streamerData streamerStartupData;
+	{
+		if (!streamerStartupData.assignFromXml(xP)) return -1;
+		streamerStartupData.outputForAnalysis = true;
+
+		ROS_INFO("streamerStartupData.debugMode = (%d)", streamerStartupData.debugMode);
+	}
+
+	// Real-time changeable variables
+	streamerConfig scData;
+	{
+		scData.assignStartingData(streamerStartupData);
+	}
+
+
 	directoryManager dM;
 
 	if (!dM.initializeInput(1, argv)) return -1;
@@ -55,18 +71,18 @@ int main(int argc, char* argv[]) {
 	cameraInfoStruct camInfo;
 
 	// Preliminary settings
-	trackerData startupData;
+	trackerData trackerStartupData;
 	{
-		if (!startupData.assignFromXml(xP)) return -1;
-		startupData.outputForAnalysis = true;
+		if (!trackerStartupData.assignFromXml(xP)) return -1;
+		trackerStartupData.outputForAnalysis = true;
 
-		ROS_INFO("startupData.debugMode = (%d)", startupData.debugMode);
+		ROS_INFO("trackerStartupData.debugMode = (%d)", trackerStartupData.debugMode);
 	}
 
 	// Real-time changeable variables
 	flowConfig fcData;
 	{
-		fcData.assignStartingData(startupData);
+		fcData.assignStartingData(trackerStartupData);
 		//fcData.setDetector1(DETECTOR_FAST);
 	}
 
@@ -85,7 +101,7 @@ int main(int argc, char* argv[]) {
 	bool configurationDataProvided = false;
 
 	if (configurationDataProvided) {
-		fM = new featureTrackerNode(startupData);
+		fM = new featureTrackerNode(trackerStartupData);
 		fM->initializeOutput(argc, argv);
 		fM->setWriteMode(!(argc >= 4));
 	}
@@ -98,13 +114,13 @@ int main(int argc, char* argv[]) {
 		dM.accessLatest8bitFrame(workingFrame);
 		
 		if (!configurationDataProvided) {
-			startupData.cameraData.cameraSize.width = workingFrame.cols;
-			startupData.cameraData.cameraSize.height = workingFrame.rows;
-			startupData.cameraData.imageSize.at<unsigned short>(0, 0) = startupData.cameraData.cameraSize.width;
-			startupData.cameraData.imageSize.at<unsigned short>(0, 1) = startupData.cameraData.cameraSize.height;
-			startupData.cameraData.updateCameraParameters();
+			trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;
+			trackerStartupData.cameraData.cameraSize.height = workingFrame.rows;
+			trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 0) = trackerStartupData.cameraData.cameraSize.width;
+			trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 1) = trackerStartupData.cameraData.cameraSize.height;
+			trackerStartupData.cameraData.updateCameraParameters();
 			configurationDataProvided = true;
-			fM = new featureTrackerNode(startupData);
+			fM = new featureTrackerNode(trackerStartupData);
 			fM->initializeOutput(argc, argv);
 			fM->setWriteMode(!(argc >= 4));
 		}

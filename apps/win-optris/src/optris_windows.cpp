@@ -87,7 +87,7 @@ void optrisManager::addLabel(System::Windows::Forms::Label ^label, int posx, int
 // http://msdn.microsoft.com/en-us/library/system.windows.forms.comboboxstyle.aspx
 void optrisManager::InitializeComboBox() {
 
-	array<System::String^>^ schemes = {
+	cli::array<System::String^>^ schemes = {
 		"Iron",
 		"Rainbow",
 		"CIEComp",
