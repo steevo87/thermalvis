@@ -1369,18 +1369,9 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::KeyPoint>& KeyPoint
 			
 
 		}
-
-       
-        //printf("%s << DEBUG %d_X_%d\n", __FUNCTION__, 2, i);
-
-        //imshow("tempWin", outImg);
-
-        //cv::waitKey(200);
-
     }
 
     return;
-
 }
 
 void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::Mat& outImg, cv::Scalar color, int thickness, bool pointsOnly) {
@@ -1414,9 +1405,9 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::
 
 		if (pointsOnly) {
 			#ifdef _OPENCV_VERSION_3_PLUS_
-			circle(outImg, centerPt, 1, color, 2, cv::LINE_AA, 4);
+			circle(outImg, centerPt, 16, color, -1, cv::LINE_AA, 4);
 			#else
-			circle(outImg, centerPt, 1, color, 2, CV_AA, 4);
+			circle(outImg, centerPt, 16, color, -1, CV_AA, 4);
 			#endif
 		} else {
 			#ifdef _OPENCV_VERSION_3_PLUS_

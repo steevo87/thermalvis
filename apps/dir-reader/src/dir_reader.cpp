@@ -4,6 +4,8 @@ int main(int argc, char* argv[]) {
 	
 	//displayMessage("Launching Directory Reader Demo App!", MESSAGE_NORMAL, __FUNCTION__);
 
+	bool wantsToAutoscale = true;
+
 	directoryManager dM;
 
 	if (!dM.initializeInput(argc, argv)) return -1;
@@ -11,6 +13,7 @@ int main(int argc, char* argv[]) {
 	dM.initialize();
 	dM.setWriteMode(!(argc >= 4));
 	dM.setLoopMode(true);
+	dM.set_autoscaleTemps(wantsToAutoscale);
 	
 	while (dM.wantsToRun()) {
 		dM.grabFrame();
