@@ -13,23 +13,10 @@ int main(int argc, char* argv[]) {
 	ROS_INFO("Launching Monocular SLAM Demo App!");
 
 	char xmlAddress[256];
-	bool wantsToAutoscale = false;
-
+	
 	if (argc > 1) {
-
-		// temporary hack to allow easy switching of auto-rescaling:
-		if (!strcmp(argv[1], "0")) {
-			ROS_WARN("Temporary hack (<zero> argument detected): activating AUTO scaling.");
-			wantsToAutoscale = true;
-#ifdef _WIN32
-		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
-#else
-		sprintf(xmlAddress, "~/%s", DEFAULT_LAUNCH_XML);
-#endif
-		} else {
-			sprintf(xmlAddress, "%s", argv[1]);
-			ROS_INFO("Using XML file provided at (%s)", xmlAddress);
-		}
+		sprintf(xmlAddress, "%s", argv[1]);
+		ROS_INFO("Using XML file provided at (%s)", xmlAddress);
 	} else {
 #ifdef _WIN32
 		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
@@ -60,14 +47,11 @@ int main(int argc, char* argv[]) {
 		scData.assignStartingData(streamerStartupData);
 	}
 
+	streamerNode *sM;
 
-	directoryManager dM;
-
-	if (!dM.initializeInput(1, argv)) return -1;
-	dM.initialize();
-	dM.setLoopMode(true);
-	dM.set_autoscaleTemps(wantsToAutoscale);
-
+	sM = new streamerNode(streamerStartupData);
+	sM->initializeOutput(argc, argv);
+	
 	cameraInfoStruct camInfo;
 
 	// Preliminary settings
@@ -108,10 +92,14 @@ int main(int argc, char* argv[]) {
 	
 	cv::Mat workingFrame;
 
-	while (dM.wantsToRun()) {
-		dM.grabFrame();
-		dM.processFrame();
-		dM.accessLatest8bitFrame(workingFrame);
+	while (sM->wantsToRun()) {
+		
+		sM->serverCallback(scData);
+		//sM->handle_camera(workingFrame, &camInfo);
+		
+		//dM.grabFrame();
+		//dM.processFrame();
+		//dM.accessLatest8bitFrame(workingFrame);
 		
 		if (!configurationDataProvided) {
 			trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;

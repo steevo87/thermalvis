@@ -27,8 +27,6 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #endif
 
-const char __PROGRAM__[] = "THERMALVIS_FLOW";
-
 #define DEFAULT_SENSITIVITY 0.2
 
 #define DEFAULT_MULTIPLIER_1 3

@@ -649,10 +649,8 @@ int featureTrackerNode::publish_tracks(
 	
 	averageTrackLength /= ((double) publishedTrackCount);
 	
-	unsigned int projCount = 0;
-	for (unsigned int iii = 0; iii < tracksToInclude.size(); iii++) {
-		projCount += featureTrackVector.at(tracksToInclude.at(iii)).locations.size();
-	}
+	int projCount = 0;
+	for (int iii = 0; iii < tracksToInclude.size(); iii++) projCount += int(featureTrackVector.at(tracksToInclude.at(iii)).locations.size());
 	
 	cv::Mat trackMatrix;
 	
@@ -1381,7 +1379,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	#ifdef _BUILD_FOR_ROS_
 	sprintf(nodeName, "%s", ros::this_node::getName().c_str());
 	#else
-	sprintf(nodeName, "/%s", __PROGRAM__);
+	sprintf(nodeName, "/%s", "THERMALVIS_FLOW");
 	#endif
 	sprintf(debug_pub_name, "thermalvis%s/image_col", nodeName);
 	
@@ -1418,7 +1416,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		#ifdef _BUILD_FOR_ROS_
 		string outputTrackCountFile = configData.outputFolder + "/" + ros::this_node::getName().substr(1,ros::this_node::getName().size()-1) + "_trackcount.txt";
 		#else
-		string outputTrackCountFile = configData.outputFolder + "/" + __PROGRAM__ + "_trackcount.txt";
+		string outputTrackCountFile = configData.outputFolder + "/" + "THERMALVIS_FLOW" + "_trackcount.txt";
 		#endif
 		ROS_INFO("outputTrackCountFile = (%s)", outputTrackCountFile.c_str());
 		trackCountStream.open(outputTrackCountFile.c_str(), ios::out);
@@ -1428,7 +1426,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		#ifdef _BUILD_FOR_ROS_
 		string outputFeatureMotionFile = configData.outputFolder + "/" + ros::this_node::getName().substr(1,ros::this_node::getName().size()-1) + "_motion.txt";
 		#else
-		string outputFeatureMotionFile = configData.outputFolder + "/" + __PROGRAM__ + "_motion.txt";
+		string outputFeatureMotionFile = configData.outputFolder + "/" + "THERMALVIS_FLOW" + "_motion.txt";
 		#endif
 		ROS_INFO("outputFeatureMotionFile = (%s)", outputFeatureMotionFile.c_str());
 		featureMotionStream.open(outputFeatureMotionFile.c_str(), ios::out);

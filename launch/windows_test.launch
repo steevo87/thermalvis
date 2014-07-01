@@ -12,6 +12,10 @@
 		
 		<param name="minTemperature" value="25" />
 		<param name="maxTemperature" value="40" />
+		
+		<param name="loopMode" value="true" />
+		<param name="autoscaleTemps" value="true" />
+		
 	</node>
 
 	
