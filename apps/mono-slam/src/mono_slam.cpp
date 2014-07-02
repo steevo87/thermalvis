@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
 
 	sM = new streamerNode(streamerStartupData);
 	sM->initializeOutput(argc, argv);
+	sM->setupDevice();
 	
 	cameraInfoStruct camInfo;
 
@@ -95,7 +96,9 @@ int main(int argc, char* argv[]) {
 	while (sM->wantsToRun()) {
 		
 		sM->serverCallback(scData);
-		//sM->handle_camera(workingFrame, &camInfo);
+		sM->streamCallback();
+		sM->processImage();
+		sM->handle_camera(workingFrame, &camInfo); // Want to retrieve frame
 		
 		//dM.grabFrame();
 		//dM.processFrame();

@@ -102,6 +102,10 @@
 #define OUTPUT_TYPE_CV_8UC3		1
 #define OUTPUT_TYPE_CV_16UC1	2
 
+// "hardSync", int_t, 0, "Image and camera_info topics must be fully synchronized"),
+// "softSync", int_t, 1, "Image and camera_info topics do not have to be fully synchronized"),
+// "imageOnly", int_t, 2, "To be used when no camera_info topic is present") ],
+
 int getMapIndex(string mapping);
 void getMapping(int mapIndex, bool extremes, int& mapCode, int& mapParam);
 
@@ -124,21 +128,21 @@ class streamerData : public streamerSharedData, public commonData {
 #endif
 
 protected:
-	bool output16bitFlag, output8bitFlag, outputColorFlag;
+	bool dataValid;
 	int syncMode, camera_number, desiredRows, desiredCols, mapCode, mapParam, temporalMemory, outputType;
 	
 	string radiometryFile, externalNucManagement, portAddress, read_addr, source, filename, folder, capture_device, intrinsics, extrinsics, topicname, normalizationMode;
 	string timeStampsAddress, republishTopic, outputFolder, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
 
-	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, wantsToMarkDuplicates, wantsToOutputDuplicates, smoothThermistor;
-	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, wantsToUndistort, forceInputGray, fixDudPixels, disableSkimming;
+	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
+	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, undistortImages, forceInputGray, fixDudPixels, disableSkimming;
 	bool captureMode, readMode, loadMode, subscribeMode, resampleMode, pollMode;
-	bool loopMode, wantsToResize, wantsToDumpTimestamps, wantsToRemoveDuplicates, temporalSmoothing, pauseMode, extremes, stepChangeTempScale;
-	bool intrinsicsProvided, wantsToRectify, wantsToWrite, wantsToKeepNames, wantsToEncode, wantsToAddExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
+	bool loopMode, resizeImages, dumpTimestamps, removeDuplicates, temporalSmoothing, pauseMode, extremes, stepChangeTempScale;
+	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
 
-	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, inputWidth, inputHeight, serialCommsConfigurationCode, maxNucInterval, serialWriteAttempts;
+	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, inputWidth, inputHeight, serialCommsConfigurationCode, serialWriteAttempts;
 	int republishSource, outputFormat, device_num;
-	double filterParam, thermistorWindow, serialPollingRate, maxNucThreshold, syncDiff, writeQuality, framerate, maxThermistorDiff, maxIntensityChange, alpha;
+	double filterParam, thermistorWindow, syncDiff, writeQuality, maxThermistorDiff, maxIntensityChange, alpha;
 	
 	vector<int> outputFileParams;
 
@@ -164,7 +168,7 @@ protected:
     // ...
 
 public:
-	streamerConfig();
+	streamerConfig() { }
 	void assignStartingData(streamerData& startupData);
 
 };
@@ -200,7 +204,7 @@ private:
 
 	ros::Subscriber info_sub, nuc_management_sub;
 	
-	cv_bridge::CvImagePtr cv_ptr;
+	
 	sensor_msgs::Image msg_color, msg_16bit, msg_8bit;
 	sensor_msgs::CameraInfo original_camera_info, camera_info;
 
@@ -214,8 +218,10 @@ private:
 
 #ifdef _BUILD_FOR_ROS_
 	ros::Time info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
+	cv_bridge::CvImagePtr cv_ptr;
 #else
 	boost::posix_time::ptime info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
+	const cv::Mat *bridgeReplacement;
 #endif
 
 	char nodeName[256];
@@ -369,16 +375,14 @@ public:
 
 	CvCapture* capture;
 	
-#ifndef _WIN32
-	bool isVideoValid();
+#ifndef _BUILD_FOR_ROS_
+	bool streamerNode::isVideoValid() { return videoValid; }
 #endif
 	
 	void setValidity(bool val) { videoValid = val; }
 	
-
 #ifndef _WIN32
 	streamerSource * getMainVideoSource() { return mainVideoSource; }
-	
 #endif
 
 	cv::VideoCapture * getVideoCapture() { return &cap; }
@@ -392,17 +396,20 @@ public:
 	
 #ifdef _BUILD_FOR_ROS_
 	void overwriteCameraDims();
+	bool runBag();
+	void initializeMessages();
 #endif
 
 	bool sendSerialCommand(char *command, int max_attempts = 1);
 	
 	
-	void initializeMessages();
+	
 	
 	void act_on_image();
 	
+	bool run();
 	// Source alternatives
-	bool runBag();
+	
 	bool runRead();
 	bool runLoad();
 	bool runDevice();
@@ -429,6 +436,10 @@ public:
 	
 	int open_port();
     void getRectification();
+
+#ifndef _BUILD_FOR_ROS_
+	bool streamerNode::wantsToShutdown() { return false; }
+#endif
 	
 };
 
