@@ -302,10 +302,7 @@ public:
 	/// \brief 		Create a false colour version of a monochromatic thermal image.
 	/// \param 		thermIm		Monochrocv::Matic Thermal Image
 	/// \param 		outputIm	Colour output Image
-	/// \param 		param		Integer value dictating safe or unsafe mode:
-	///							[0] : unsafe mode - includes black and white
-	///							[1] : safe mode - no black or white (default)
-	void falsify_image(const cv::Mat& thermIm, cv::Mat& outputIm, int param = 1);
+	void falsify_image(const cv::Mat& thermIm, cv::Mat& outputIm);
 
 	/// \brief 		Create a false colour combination of a colour or monochrome visual image and a monochrome thermal image.
 	/// \param 		thermIm		Monochromatic Thermal Image

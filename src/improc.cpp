@@ -1236,112 +1236,43 @@ void process8bitImage(const cv::Mat& src, cv::Mat& dst, int code, double factor)
 void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double factor) {
 
 	cv::Mat dwn, _16;
-
 	double minVal, maxVal;
 	minMaxLoc(src, &minVal, &maxVal);
-	
-	//printf("%s << min/max = (%f / %f)\n", __FUNCTION__, minVal, maxVal);
-	
-	
-
-	//double percentileVals[3] = { MIN_PROP_THRESHOLD, 0.500, 1 - MIN_PROP_THRESHOLD };
 	double percentileVals[5] = { 0.001, (factor / 2.0), 0.500, 1.0 - (factor / 2.0), 0.999 };
 	double intensityVals[5];
 
 	findPercentiles(src, intensityVals, percentileVals, 5);
-	
 	intensityVals[1] = max(intensityVals[1], minVal);
 	intensityVals[3] = min(intensityVals[3], maxVal);
 
-	//printf("%s << factor = (%f); vals = (%f, %f)\n", __FUNCTION__, factor, intensityVals[0], intensityVals[2]);
-
-	double midVal = (intensityVals[0] + intensityVals[4]) / 2.0; // (intensityVals[0] + intensityVals[2]) / 2.0;
-	double centralVal = intensityVals[1]; // (maxVal + minVal) / 2.0; // 
-	//double halfRange = max(abs(intensityVals[3] - midVal), abs(intensityVals[1] - midVal));
+	double midVal = (minVal + maxVal) / 2.0;
+	double centralVal = intensityVals[1]; 
 	double fullRange = abs(intensityVals[3] - intensityVals[1]);
 	double compressionFactor = 1.0;
 
 	if (code == NORMALIZATION_STANDARD) {
+		if (fullRange > 255.0) compressionFactor = fullRange / 255.0;
 
-		if (fullRange > 255.0) {
-			compressionFactor = fullRange / 255.0;
-		}
-
-		minVal = intensityVals[1];
-		maxVal = intensityVals[3];
+		minVal = max(midVal - 127.5*compressionFactor, 0.0);
+		maxVal = min(midVal + 127.5*compressionFactor, 65535.0);
 		
-		//cout << "minVal = " << minVal << ", maxVal = " << maxVal << endl;
-		
-		//normalize_16(_16, src, minVal, maxVal);
+		normalize_16(_16, src, minVal, maxVal);
 		down_level(dst, _16);
-
 	} else if (code == NORMALIZATION_CENTRALIZED) {
-
 		compressionFactor = 255.0 / (4.0 * max(factor, 0.01));
 
-		//printf("%s << centralVal = (%f); compressionFactor = (%f)\n", __FUNCTION__, centralVal, compressionFactor);
-		minVal = centralVal - compressionFactor;
-		maxVal = centralVal + compressionFactor;
+		minVal = max(midVal - compressionFactor, 0.0);
+		maxVal = min(midVal + compressionFactor, 65535.0);
 		
-		minVal = max(minVal, 0.0);
-		maxVal = min(maxVal, 65535.0);
-		
-		//cout << "minVal = " << minVal << ", maxVal = " << maxVal << endl;
-		
-		//minVal = ((intensityVals[0] + intensityVals[2]) / 2.0) - 127.5 * compressionFactor;
-		//maxVal = ((intensityVals[0] + intensityVals[2]) / 2.0) + 127.5 * compressionFactor;
-		
-		//normalize_16(_16, src, minVal, maxVal);
-		
-		//imshow("test", _16);
-		//waitKey(1);
+		normalize_16(_16, src, minVal, maxVal);
 		down_level(dst, _16);
-
-	} else if (code == NORMALIZATION_EXPANDED) {
-
-		compressionFactor = 255.0 / (4.0 * max(factor, 0.01));
-
-		//printf("%s << centralVal = (%f); compressionFactor = (%f)\n", __FUNCTION__, centralVal, compressionFactor);
-		minVal = midVal - compressionFactor;
-		maxVal = midVal + compressionFactor;
-		
-		minVal = max(minVal, 0.0);
-		maxVal = min(maxVal, 65535.0);
-		
-		//cout << "minVal = " << minVal << ", maxVal = " << maxVal << endl;
-		
-		//minVal = ((intensityVals[0] + intensityVals[2]) / 2.0) - 127.5 * compressionFactor;
-		//maxVal = ((intensityVals[0] + intensityVals[2]) / 2.0) + 127.5 * compressionFactor;
-		
-		//normalize_16(_16, src, minVal, maxVal);
-		
-		//imshow("test", _16);
-		//waitKey(1);
-		down_level(dst, _16);
-
 	} else if (code == NORMALIZATION_EQUALIZE) {
-
-		//normalize_16(_16, src, intensityVals[1], intensityVals[3]);
+		normalize_16(_16, src, intensityVals[1], intensityVals[3]);
 		down_level(dwn, _16);
 		equalizeHist(dwn, dst);
-
-	} /* else if (code == NORMALIZATION_CLAHE) { 
-		cv::Mat dst_inter;
-		adaptiveDownsample(src, dst_inter, NORMALIZATION_STANDARD, 0.001);
-		straightCLAHE(dst_inter, dst, factor);
-		
-	} */ /* else if (code == NORMALIZATION_ADAPTIVE) {
-		cv::Mat dst_inter;
-		double adaptive_factor = min(1.0, (255.0 / (maxVal - minVal)) * factor);
-		adaptiveDownsample(src, dst_inter, NORMALIZATION_STANDARD, 0.001);
-		straightCLAHE(dst_inter, dst, adaptive_factor);
-		
-	} */ else {
-
+	} else {
 		src.convertTo(dst, CV_8UC1);
-
 	}
-
 }
 
 
@@ -3233,7 +3164,7 @@ int cScheme::current_scheme() {
 	return code;
 }
 
-void cScheme::falsify_image(const cv::Mat& thermIm, cv::Mat& outputIm, int param) {
+void cScheme::falsify_image(const cv::Mat& thermIm, cv::Mat& outputIm) {
 
 	if ((outputIm.size() != thermIm.size()) || (outputIm.type() != CV_8UC3)) {
 		outputIm = cv::Mat::zeros(thermIm.size(), CV_8UC3);
@@ -3408,7 +3339,6 @@ void cScheme::fuse_image(cv::Mat& thermIm, cv::Mat& visualIm, cv::Mat& outputIm,
 		working_params[1] = params[1];
 	}
 
-	int falseParam = 1;
 	double lumChange;
 
 	unsigned char sr, sg, sb;
@@ -3457,7 +3387,7 @@ void cScheme::fuse_image(cv::Mat& thermIm, cv::Mat& visualIm, cv::Mat& outputIm,
 	}
 
 	if (!alreadyMapped) {
-		falsify_image(newTherm, outputIm, falseParam);
+		falsify_image(newTherm, outputIm);
 	}
 
 	// For each pixel

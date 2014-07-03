@@ -66,10 +66,7 @@
 
 #define NORM_MODE_STANDARD			0
 #define NORM_MODE_EQUALIZE			1
-#define NORM_MODE_CLAHE				2
-#define NORM_MODE_CLAHE_ADAPTIVE	3
-#define NORM_MODE_CENTRALIZED		4
-#define NORM_MODE_EXPANDED			5
+#define NORM_MODE_CENTRALIZED		2
 
 #define CONFIG_MAP_CODE_GRAYSCALE		0
 #define CONFIG_MAP_CODE_CIECOMP			1
@@ -111,14 +108,14 @@
 // "softSync", int_t, 1, "Image and camera_info topics do not have to be fully synchronized"),
 // "imageOnly", int_t, 2, "To be used when no camera_info topic is present") ],
 
-int getMapIndex(string mapping);
-void getMapping(int mapIndex, bool extremes, int& mapCode, int& mapParam);
+//int getMapIndex(string mapping);
+void getMapping(int mapCode, int& fullMapCode);
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for streamer
 struct streamerSharedData {
 	bool output16bit, output8bit, outputColor, undistortImages, verboseMode, autoTemperature, debugMode;
-	int maxReadAttempts, normMode, maxNucInterval, map, inputDatatype, detectorMode, usbMode;
-	double framerate, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, tempGrad, tempIntercept;
+	int maxReadAttempts, normMode, maxNucInterval, mapCode, extremes, inputDatatype, detectorMode, usbMode;
+	double framerate, threshFactor, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, tempGrad, tempIntercept;
 
 	streamerSharedData();
 };
@@ -134,15 +131,15 @@ class streamerData : public streamerSharedData, public commonData {
 
 protected:
 	bool dataValid;
-	int syncMode, camera_number, desiredRows, desiredCols, mapCode, mapParam, temporalMemory, outputType;
+	int syncMode, camera_number, desiredRows, desiredCols, temporalMemory, outputType;
 	
-	string radiometryFile, externalNucManagement, portAddress, read_addr, source, filename, folder, capture_device, intrinsics, extrinsics, topicname, normalizationMode;
+	string radiometryFile, externalNucManagement, portAddress, read_addr, source, filename, folder, capture_device, intrinsics, extrinsics, topicname;
 	string timeStampsAddress, republishTopic, outputFolder, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
 
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
 	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;
 	bool captureMode, readMode, loadMode, subscribeMode, resampleMode, pollMode;
-	bool loopMode, resizeImages, dumpTimestamps, removeDuplicates, temporalSmoothing, pauseMode, extremes, stepChangeTempScale;
+	bool loopMode, resizeImages, dumpTimestamps, removeDuplicates, temporalSmoothing, pauseMode, stepChangeTempScale;
 	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
 
 	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, inputWidth, inputHeight, serialCommsConfigurationCode, serialWriteAttempts;
@@ -244,7 +241,7 @@ private:
 	
 	ofstream ofs;
 
-	int alternateCounter, pastMeanIndex;
+	int alternateCounter, pastMeanIndex, fullMapCode;
 	
 	double pastMeans[256];
 	
@@ -400,6 +397,7 @@ public:
 	bool streamCallback(bool capture = true);
 	void acceptImage(void *ptr);
 	bool processImage();
+	bool imageLoop();
 	void publishTopics();
 	void writeData();
 	bool processFolder();
@@ -473,7 +471,7 @@ protected:
 public:
 	inputStream();
 	bool processFrame();
-	void colorizeFrame() { cMapping->falsify_image(*_8bitImage, *displayImage, 0); }		// THIS IS SLOWING THINGS DOWN!!
+	void colorizeFrame() { cMapping->falsify_image(*_8bitImage, *displayImage); }		// THIS IS SLOWING THINGS DOWN!!
 	void displayFrame();
 	bool accessLatestRawFrame(cv::Mat& latestFrame);
 	bool accessLatest8bitFrame(cv::Mat& latestFrame);

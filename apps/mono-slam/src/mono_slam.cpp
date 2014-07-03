@@ -95,10 +95,9 @@ int main(int argc, char* argv[]) {
 	while (sM->wantsToRun()) {
 		
 		sM->serverCallback(scData);
-		if (!sM->retrieveRawFrame()) { continue; }
-		sM->processImage();
-		sM->writeData();
-		sM->get8bitImage(workingFrame);
+		if (!sM->retrieveRawFrame()) continue;
+		sM->imageLoop();
+		if (!sM->get8bitImage(workingFrame)) continue;
 			
 		if (!configurationDataProvided) {
 			trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;
