@@ -1,20 +1,20 @@
 <launch>
 
 	<node name="streamer" pkg="thermalvis" type="streamer">
-		<!-- <param name="source" value="directory" /> -->
-		<!-- <param name="directory" value="C:/Users/Stephen/Documents/Data/optris/output" /> -->
+		<param name="source" value="directory" />
+		<!-- <param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" /> -->
+		<param name="directory" value="C:\Users\Stephen\Documents\Data\optris\test_seq_001" />
+		<param name="outputFolder" value="~\Documents\Data\optris\output" />
+		<param name="writeImages" value="false" />
 		
-		<!-- <param name="alreadyCorrected" value="true" /> -->
-		<!-- <param name="intrinsics" value="$(find thermalvis)/data/calibration/csiro-aslab/optris.yml" /> -->
-		<!-- <param name="markDuplicates" value="true" /> -->
+		<!-- <param name="tempGrad" value="100.0" /> -->
+		<!-- <param name="tempIntercept" value="0.0" /> -->
 		
-		<!-- <param name="outputColor" value="false" /> -->
-		
-		<param name="minTemperature" value="25" />
-		<param name="maxTemperature" value="40" />
+		<!-- <param name="minTemperature" value="25" /> -->
+		<!-- <param name="maxTemperature" value="35" /> -->
 		
 		<param name="loopMode" value="true" />
-		<param name="autoscaleTemps" value="true" />
+		<!-- <param name="autoTemperature" value="true" /> -->
 		
 	</node>
 

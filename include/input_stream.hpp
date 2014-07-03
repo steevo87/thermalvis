@@ -16,6 +16,11 @@
 
 #include "boost/filesystem.hpp"  
 
+#ifndef _BUILD_FOR_ROS_
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/filesystem.hpp>
+#endif
+
 #define DEFAULT_SERIAL_POLLING_RATE			 	0.04
 
 #define DEFAULT_READ_RATE 						25.0
@@ -113,7 +118,7 @@ void getMapping(int mapIndex, bool extremes, int& mapCode, int& mapParam);
 struct streamerSharedData {
 	bool output16bit, output8bit, outputColor, undistortImages, verboseMode, autoTemperature, debugMode;
 	int maxReadAttempts, normMode, maxNucInterval, map, inputDatatype, detectorMode, usbMode;
-	double framerate, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature;
+	double framerate, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, tempGrad, tempIntercept;
 
 	streamerSharedData();
 };
@@ -135,7 +140,7 @@ protected:
 	string timeStampsAddress, republishTopic, outputFolder, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
 
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
-	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, undistortImages, forceInputGray, fixDudPixels, disableSkimming;
+	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;
 	bool captureMode, readMode, loadMode, subscribeMode, resampleMode, pollMode;
 	bool loopMode, resizeImages, dumpTimestamps, removeDuplicates, temporalSmoothing, pauseMode, extremes, stepChangeTempScale;
 	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
@@ -169,7 +174,7 @@ protected:
 
 public:
 	streamerConfig() { }
-	void assignStartingData(streamerData& startupData);
+	bool assignStartingData(streamerData& startupData);
 
 };
 #endif
@@ -368,10 +373,15 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void updateCameraInfo();
 	void assignCameraInfo();
-	void assignDefaultCameraInfo();
+	
 	void updateCameraInfoExtrinsics();
 	void refreshCameraAdvertisements();
+#else
+	bool retrieveRawFrame();
+	bool get8bitImage(cv::Mat& img);
 #endif
+
+	void assignDefaultCameraInfo();
 
 	CvCapture* capture;
 	

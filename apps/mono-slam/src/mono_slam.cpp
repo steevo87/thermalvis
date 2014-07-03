@@ -44,14 +44,13 @@ int main(int argc, char* argv[]) {
 	// Real-time changeable variables
 	streamerConfig scData;
 	{
-		scData.assignStartingData(streamerStartupData);
+		if (!scData.assignStartingData(streamerStartupData)) return -1;
 	}
 
 	streamerNode *sM;
 
 	sM = new streamerNode(streamerStartupData);
 	sM->initializeOutput(argc, argv);
-	sM->setupDevice();
 	
 	cameraInfoStruct camInfo;
 
@@ -96,14 +95,11 @@ int main(int argc, char* argv[]) {
 	while (sM->wantsToRun()) {
 		
 		sM->serverCallback(scData);
-		sM->streamCallback();
+		if (!sM->retrieveRawFrame()) { continue; }
 		sM->processImage();
-		sM->handle_camera(workingFrame, &camInfo); // Want to retrieve frame
-		
-		//dM.grabFrame();
-		//dM.processFrame();
-		//dM.accessLatest8bitFrame(workingFrame);
-		
+		sM->writeData();
+		sM->get8bitImage(workingFrame);
+			
 		if (!configurationDataProvided) {
 			trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;
 			trackerStartupData.cameraData.cameraSize.height = workingFrame.rows;
@@ -118,6 +114,7 @@ int main(int argc, char* argv[]) {
 		fM->serverCallback(fcData);
 		fM->handle_camera(workingFrame, &camInfo);
 		fM->features_loop();
+		
 	}
 	
 	return S_OK;

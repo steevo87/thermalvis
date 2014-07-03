@@ -784,19 +784,6 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 	}
 }
 
-void streamerNode::assignDefaultCameraInfo() {
-	
-	globalCameraInfo.imageSize = cv::Mat(1, 2, CV_16UC1);
-	globalCameraInfo.imageSize.at<unsigned short>(0, 1) = DEFAULT_IMAGE_HEIGHT;
-	globalCameraInfo.imageSize.at<unsigned short>(0, 0) = DEFAULT_IMAGE_WIDTH;
-	
-	globalCameraInfo.cameraMatrix = cv::Mat::eye(3, 3, CV_64FC1);
-	globalCameraInfo.distCoeffs = cv::Mat::zeros(1, 8, CV_64FC1);
-	globalCameraInfo.newCamMat = cv::Mat::eye(3, 3, CV_64FC1);
-	globalCameraInfo.cameraSize = cv::Size(globalCameraInfo.imageSize.at<unsigned short>(0, 0), globalCameraInfo.imageSize.at<unsigned short>(0, 1));
-	
-}
-
 void streamerNode::overwriteCameraDims() {
 	
 	camera_info.height = globalCameraInfo.imageSize.at<unsigned short>(0, 1);

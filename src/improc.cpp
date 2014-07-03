@@ -758,42 +758,25 @@ void downsampleCLAHE(const cv::Mat& src, cv::Mat& dst, double factor) {
 
 void temperatureDownsample(const cv::Mat& src, cv::Mat& dst, double minVal, double maxVal) {
 	
-	if (dst.rows == 0) {
-		dst = cv::Mat::zeros(src.size(), CV_8UC1);
-	}
+	if (dst.rows == 0) dst = cv::Mat::zeros(src.size(), CV_8UC1);
 	
 	#pragma omp parallel for
 	for (int iii = 0; iii < src.rows; iii++) {
 		for (int jjj = 0; jjj < src.cols; jjj++) {
-
 			dst.at<unsigned char>(iii,jjj) = (unsigned char)(std::min(float(255.0), float(max(0.0, (std::max(src.at<float>(iii,jjj) - minVal, 0.0) / (maxVal - minVal)) * 255.0))));
-			
-			/*
-			if ((iii % 10 == 0) && (jjj % 10 == 0)) {
-				printf("%s << (%f) to (%d)\n", __FUNCTION__, src.at<float>(iii,jjj), dst.at<unsigned char>(iii,jjj));
-			}
-			*/
-
 		}
 	}
-	
 }
-
-void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst) {
+void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad, double intercept) {
 	
-	if (dst.rows == 0) {
-		dst = cv::Mat::zeros(src.size(), CV_32FC1);
-	}
+	if (dst.rows == 0) dst = cv::Mat::zeros(src.size(), CV_32FC1);
 	
 	#pragma omp parallel for
 	for (int iii = 0; iii < src.rows; iii++) {
 		for (int jjj = 0; jjj < src.cols; jjj++) {
-
-			dst.at<float>(iii,jjj) = (float(src.at<unsigned short>(iii,jjj)) - float(1000.0)) / float(10.0);
-
+			dst.at<float>(iii,jjj) = (float(src.at<unsigned short>(iii,jjj)) - float(intercept)) / float(grad);
 		}
 	}
-	
 }
 
 void temperatureDownsample16(const cv::Mat& src, cv::Mat& dst) {

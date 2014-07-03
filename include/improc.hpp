@@ -216,7 +216,7 @@ void fixedDownsample(const cv::Mat& src, cv::Mat& dst, double center, double ran
 void temperatureDownsample(const cv::Mat& src, cv::Mat& dst, double minVal, double maxVal);
 
 /// \brief 		Converts a 16-bit image encoding temperature into floating point format
-void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst);
+void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad = 10, double intercept = 1000);
 
 /// \brief 		Downsamples a temperature matrix to a 16-bit image using Optris-like linear scaling
 void temperatureDownsample16(const cv::Mat& src, cv::Mat& dst);
