@@ -6,10 +6,18 @@
 #include "directory_stream.hpp"
 #include "sparse_flow.hpp"
 
+#ifdef _USE_QT_
+#include "streamer_qt.hpp"
+#endif
+
 #define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_test.launch"
 
 int main(int argc, char* argv[]) {
-	
+
+#ifdef _USE_QT_
+	QString testString;
+#endif
+
 	ROS_INFO("Launching Monocular SLAM Demo App!");
 
 	char xmlAddress[256];

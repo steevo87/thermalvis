@@ -37,6 +37,9 @@ EIGEN
 	then you may need to add the directory (e.g. C:\eigen) to the System PATH variable
 	to rebuild, deleting the cache and reconfiguring is not enough - CMake must be reloaded for this change to take effect
 	
+qt
+	try to download using the online installer: http://qt-project.org/downloads
+	
 troubleshooting:
 ----------------
 
