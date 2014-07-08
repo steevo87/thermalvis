@@ -33,6 +33,8 @@
 		
 		<param name="debugMode" value="true" />
 		<param name="outputDebugImages" value="false" />
+		<param name="outputTrackedFeatures" value="false" />
+		<param name="outputDetectedFeatures" value="false" />
 		<param name="showTrackHistory" value="true" />
 		<param name="autoTrackManagement" value="false" />
 		<!-- <param name="verboseMode" value="true" /> -->

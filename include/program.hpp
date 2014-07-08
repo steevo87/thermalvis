@@ -35,7 +35,6 @@ public:
 
 struct commonData {
 	cameraParameters cameraData;
-	bool outputForAnalysis;
 	string topic, topicParent, read_addr, outputFolder;
 
 	commonData() : outputFolder("outputFolder"), read_addr("./") { };

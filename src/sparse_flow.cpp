@@ -183,7 +183,8 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("attemptMatching")) attemptMatching = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("detectEveryFrame")) detectEveryFrame = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputForAnalysis")) outputForAnalysis = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTrackedFeatures")) outputTrackedFeatures = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputDetectedFeatures")) outputDetectedFeatures = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFolder")) outputFolder = v2.second.get_child("<xmlattr>.value").data();
 
@@ -670,7 +671,7 @@ int featureTrackerNode::publish_tracks(
 	averageTrackLength /= ((double) publishedTrackCount);
 	
 	int projCount = 0;
-	for (int iii = 0; iii < tracksToInclude.size(); iii++) projCount += int(featureTrackVector.at(tracksToInclude.at(iii)).locations.size());
+	for (int iii = 0; iii < int(tracksToInclude.size()); iii++) projCount += int(featureTrackVector.at(tracksToInclude.at(iii)).locations.size());
 	
 	cv::Mat trackMatrix;
 	
@@ -692,16 +693,18 @@ int featureTrackerNode::publish_tracks(
 	msg.projections_y.clear();
 	#endif
 
-	if (configData.outputForAnalysis) {
-		char analysisFile[256];
-		sprintf(analysisFile, "%s/image_%06d.txt", configData.outputFolder.c_str(), readyFrame);
+	if (configData.outputTrackedFeatures) {
+		char trackedFeaturesFile[256];
+		sprintf(trackedFeaturesFile, "%s/tracks/frame_%06d.txt", configData.outputFolder.c_str(), readyFrame);
 		
-		analysisStream.open(analysisFile, ios::out);
-		analysisStream << "currentIndex:" << currentIndex << endl;
+		trackedFeaturesStream.open(trackedFeaturesFile, ios::out);
+		trackedFeaturesStream << "currentIndex:" << currentIndex << endl;
 
 		char timeString[256];
 		sprintf(timeString, "%010u.%09u", original_time.time_of_day().total_seconds(), original_time.time_of_day().total_microseconds());
-		analysisStream << "currentTime:" << timeString << endl;
+		trackedFeaturesStream << "currentTime:" << timeString << endl;
+
+		trackedFeaturesStream << "track_index image_index x y" << endl;
 	}
 
 	for (unsigned int iii = 0; iii < tracksToInclude.size(); iii++) {
@@ -714,8 +717,8 @@ int featureTrackerNode::publish_tracks(
 			msg.projections_y.push_back(((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.y));
 			#endif
 
-			if (configData.outputForAnalysis) {
-				analysisStream << 
+			if (configData.outputTrackedFeatures) {
+				trackedFeaturesStream << 
 					featureTrackVector.at(tracksToInclude.at(iii)).trackIndex << " " << 
 					featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).imageIndex << " " << 
 					((double) featureTrackVector.at(tracksToInclude.at(iii)).locations.at(jjj).featureCoord.x) << " " << 
@@ -733,7 +736,7 @@ int featureTrackerNode::publish_tracks(
 	pub_message->publish(msg);
 	#endif
 
-	analysisStream.close();
+	trackedFeaturesStream.close();
 
 	previousIndex = currentIndex;
 	previous_time = original_time;
@@ -919,6 +922,23 @@ void featureTrackerNode::detectNewFeatures() {
 			
 			currPoints.clear();
 			keypointDetector[jjj] -> detect(grayImageBuffer[readyFrame % 2], currPoints);
+
+			if (configData.outputDetectedFeatures) {
+				char detectedFeaturesFile[256];
+				sprintf(detectedFeaturesFile, "%s/features/frame_%06d.txt", configData.outputFolder.c_str(), readyFrame);
+		
+				detectedFeaturesStream.open(detectedFeaturesFile, ios::out);
+				detectedFeaturesStream << "readyFrame:" << readyFrame << endl;
+
+				char timeString[256];
+				sprintf(timeString, "%010u.%09u", original_time.time_of_day().total_seconds(), original_time.time_of_day().total_microseconds());
+				detectedFeaturesStream << "currentTime:" << timeString << endl;
+				detectedFeaturesStream << "count:" << currPoints.size() << endl;
+				detectedFeaturesStream << "x y response" << endl;
+
+				for (unsigned int iii = 0; iii < currPoints.size(); iii++) detectedFeaturesStream << currPoints.at(iii).pt.x << " " << currPoints.at(iii).pt.y << " " << currPoints.at(iii).response << endl;
+				detectedFeaturesStream.close();
+			}
 			
 			if (configData.verboseMode) ROS_INFO("Detector (%u) found (%d) points.", jjj, currPoints.size());
 			
@@ -1241,7 +1261,7 @@ int featureTrackerNode::calculateFeatureMotion(unsigned int idx, double& mx, dou
 void featureTrackerNode::prepareForTermination() {
 	if (trackCountStream.is_open()) trackCountStream.close();	
 	if (featureMotionStream.is_open()) featureMotionStream.close();
-	if (analysisStream.is_open()) analysisStream.close();
+	if (detectedFeaturesStream.is_open()) detectedFeaturesStream.close();
 }
 
 void featureTrackerNode::handle_very_new() {
@@ -1401,6 +1421,18 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		string debugImagesFolder = configData.outputFolder + "/images";
 		boost::filesystem::create_directory(debugImagesFolder);
 		while (!boost::filesystem::exists(debugImagesFolder)) { }
+	}
+
+	if (configData.outputTrackedFeatures) {
+		string trackedFeaturesFolder = configData.outputFolder + "/tracks";
+		boost::filesystem::create_directory(trackedFeaturesFolder);
+		while (!boost::filesystem::exists(trackedFeaturesFolder)) { }
+	}
+
+	if (configData.outputDetectedFeatures) {
+		string detectedFeaturesFolder = configData.outputFolder + "/features";
+		boost::filesystem::create_directory(detectedFeaturesFolder);
+		while (!boost::filesystem::exists(detectedFeaturesFolder)) { }
 	}
 
 	#ifdef _BUILD_FOR_ROS_

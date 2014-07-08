@@ -35,48 +35,33 @@ int main(int argc, char* argv[]) {
 	}
 
 	xmlParameters xP;
-	
 	xP.parseInputXML(xmlAddress);
 	ROS_INFO("About to print XML summary..");
 	xP.printInputSummary();
 
+	// === STREAMER NODE === //
 	// Preliminary settings
 	streamerData streamerStartupData;
-	{
-		if (!streamerStartupData.assignFromXml(xP)) return -1;
-		streamerStartupData.outputForAnalysis = true;
-
-		ROS_INFO("streamerStartupData.debugMode = (%d)", streamerStartupData.debugMode);
-	}
+	if (!streamerStartupData.assignFromXml(xP)) return -1;
 
 	// Real-time changeable variables
 	streamerConfig scData;
-	{
-		if (!scData.assignStartingData(streamerStartupData)) return -1;
-	}
+	if (!scData.assignStartingData(streamerStartupData)) return -1;
 
 	streamerNode *sM;
-
 	sM = new streamerNode(streamerStartupData);
 	sM->initializeOutput(argc, argv);
 	
 	cameraInfoStruct camInfo;
 
+	// === FLOW NODE === //
 	// Preliminary settings
 	trackerData trackerStartupData;
-	{
-		if (!trackerStartupData.assignFromXml(xP)) return -1;
-		trackerStartupData.outputForAnalysis = true;
-
-		ROS_INFO("trackerStartupData.debugMode = (%d)", trackerStartupData.debugMode);
-	}
+	if (!trackerStartupData.assignFromXml(xP)) return -1;
 
 	// Real-time changeable variables
 	flowConfig fcData;
-	{
-		fcData.assignStartingData(trackerStartupData);
-		//fcData.setDetector1(DETECTOR_FAST);
-	}
+	fcData.assignStartingData(trackerStartupData);
 
 	#ifdef _DEBUG
 	if (
@@ -90,30 +75,22 @@ int main(int argc, char* argv[]) {
 
 	featureTrackerNode *fM;
 
-	bool configurationDataProvided = false;
-
-	if (configurationDataProvided) {
-		fM = new featureTrackerNode(trackerStartupData);
-		fM->initializeOutput(argc, argv);
-		fM->setWriteMode(!(argc >= 4));
-	}
-	
+	bool calibrationDataProcessed = false;
 	cv::Mat workingFrame;
 
 	while (sM->wantsToRun()) {
-		
 		sM->serverCallback(scData);
 		if (!sM->retrieveRawFrame()) continue;
 		sM->imageLoop();
 		if (!sM->get8bitImage(workingFrame)) continue;
 			
-		if (!configurationDataProvided) {
+		if (!calibrationDataProcessed) {
 			trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;
 			trackerStartupData.cameraData.cameraSize.height = workingFrame.rows;
 			trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 0) = trackerStartupData.cameraData.cameraSize.width;
 			trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 1) = trackerStartupData.cameraData.cameraSize.height;
 			trackerStartupData.cameraData.updateCameraParameters();
-			configurationDataProvided = true;
+			calibrationDataProcessed = true;
 			fM = new featureTrackerNode(trackerStartupData);
 			fM->initializeOutput(argc, argv);
 			fM->setWriteMode(!(argc >= 4));
@@ -121,7 +98,6 @@ int main(int argc, char* argv[]) {
 		fM->serverCallback(fcData);
 		fM->handle_camera(workingFrame, &camInfo);
 		fM->features_loop();
-		
 	}
 	
 	return S_OK;

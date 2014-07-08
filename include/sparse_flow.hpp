@@ -104,6 +104,7 @@ protected:
 	string tracksOutputTopic;
 
 	bool outputTrackCount, outputFeatureMotion, outputDebugImages;
+	bool outputDetectedFeatures, outputTrackedFeatures;
 
 	bool normalizeFeatureVelocities;
 	
@@ -201,7 +202,7 @@ private:
 
 	bool previousTimeInitialized;
 
-	ofstream trackCountStream, featureMotionStream, analysisStream;
+	ofstream trackCountStream, featureMotionStream, detectedFeaturesStream, trackedFeaturesStream;
 
 	string optical_frame;
 
