@@ -1,6 +1,7 @@
 <launch>
 
 	<node name="streamer" pkg="thermalvis" type="streamer">
+	
 		<param name="source" value="directory" />
 		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" />
 		<param name="writeImages" value="false" />
@@ -28,10 +29,10 @@
 		
 	</node>
 
-	
 	<node name="flow" pkg="thermalvis" type="flow" output="screen">
 		
 		<param name="debugMode" value="true" />
+		<param name="outputDebugImages" value="false" />
 		<param name="showTrackHistory" value="true" />
 		<param name="autoTrackManagement" value="false" />
 		<!-- <param name="verboseMode" value="true" /> -->

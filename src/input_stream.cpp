@@ -52,7 +52,6 @@ streamerData::streamerData() :
 	intrinsicsProvided(false), 
 	timeStampsAddress(""), 
 	republishTopic("specifyTopic/image_raw"), 
-	outputFolder("outputFolder"), 
 	frameID(""), 
 	outputTimeFile(""), 
 	outputVideo("outputVideo"), 

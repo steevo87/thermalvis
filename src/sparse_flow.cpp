@@ -121,7 +121,8 @@ void flowConfig::assignStartingData(trackerData& startupData) {
 trackerData::trackerData() : 
 	numDetectors(1), 
 	outputTrackCount(false), 
-	outputFeatureMotion(false) 
+	outputFeatureMotion(false) ,
+	outputDebugImages(false)
 {
 	detector[0] = "FAST";
 
@@ -187,6 +188,7 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFolder")) outputFolder = v2.second.get_child("<xmlattr>.value").data();
 
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTrackCount")) outputTrackCount = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputDebugImages")) outputDebugImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFeatureMotion")) outputFeatureMotion = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("normalizeFeatureVelocities")) normalizeFeatureVelocities = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 
@@ -201,6 +203,17 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("sensitivity_3")) sensitivity[2] = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 
         }
+
+		// Substitute tildes if in Windows
+#ifdef _WIN32
+		if (outputFolder.size() > 0) {
+			if (outputFolder[0] == '~') {
+				outputFolder.erase(outputFolder.begin());
+				outputFolder = std::getenv("USERPROFILE") + outputFolder;
+			}
+		}
+#endif
+
 	}
 
 	return true;
@@ -587,6 +600,13 @@ void featureTrackerNode::publishRoutine() {
 		#else
 		displayFrame();
 		#endif
+
+		if (configData.outputDebugImages) {
+			char debugImageFilename[256];
+			sprintf(debugImageFilename, "frame%06d.jpg", readyFrame);
+			string fullDebugImageFilename = configData.outputFolder + "/images/" + debugImageFilename;
+			cv::imwrite(fullDebugImageFilename, drawImage);
+		}
 	}
 	
 	#ifdef _BUILD_FOR_ROS_
@@ -1371,9 +1391,16 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		ROS_WARN("No output folder specified, outputting by default to (%s)", defaultOutput.c_str());
 		configData.outputFolder = defaultOutput;
 		
-		boost::filesystem::create_directory(configData.outputFolder);
-		if (configData.verboseMode) { ROS_INFO("Checking that directory (%s) has been created..", configData.outputFolder.c_str()); }
-		while (!boost::filesystem::exists(configData.outputFolder)) { }
+	}
+
+	boost::filesystem::create_directory(configData.outputFolder);
+	if (configData.verboseMode) { ROS_INFO("Checking that directory (%s) has been created..", configData.outputFolder.c_str()); }
+	while (!boost::filesystem::exists(configData.outputFolder)) { }
+
+	if (configData.outputDebugImages) {
+		string debugImagesFolder = configData.outputFolder + "/images";
+		boost::filesystem::create_directory(debugImagesFolder);
+		while (!boost::filesystem::exists(debugImagesFolder)) { }
 	}
 
 	#ifdef _BUILD_FOR_ROS_

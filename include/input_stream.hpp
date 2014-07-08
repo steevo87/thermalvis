@@ -134,7 +134,7 @@ protected:
 	int syncMode, camera_number, desiredRows, desiredCols, temporalMemory, outputType;
 	
 	string radiometryFile, externalNucManagement, portAddress, read_addr, source, filename, folder, capture_device, intrinsics, extrinsics, topicname;
-	string timeStampsAddress, republishTopic, outputFolder, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
+	string timeStampsAddress, republishTopic, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
 
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
 	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;

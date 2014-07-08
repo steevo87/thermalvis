@@ -6,7 +6,6 @@
 
 #include "ros_resources.hpp"
 
-#ifdef _BUILD_FOR_ROS_ // Should definitely be defined if this file is called..
 void displayMessage(string msg, int msg_code) {
 	switch (msg_code) {
 	case MESSAGE_NORMAL:
@@ -22,7 +21,6 @@ void displayMessage(string msg, int msg_code) {
 		ROS_INFO(msg.c_str());
 	}
 }
-#endif
 
 void changemode(int dir)
 {

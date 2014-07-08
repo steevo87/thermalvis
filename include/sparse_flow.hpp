@@ -103,7 +103,7 @@ protected:
 	
 	string tracksOutputTopic;
 
-	bool outputTrackCount, outputFeatureMotion;
+	bool outputTrackCount, outputFeatureMotion, outputDebugImages;
 
 	bool normalizeFeatureVelocities;
 	
