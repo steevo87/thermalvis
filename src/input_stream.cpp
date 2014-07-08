@@ -6,7 +6,7 @@ streamerSharedData::streamerSharedData() :
 	inputDatatype(DATATYPE_RAW),
 	maxReadAttempts(0), 
 	framerate(-1.0),
-	normMode(NORM_MODE_STANDARD),
+	normMode(NORM_MODE_FIXED_TEMP_RANGE),
 	normFactor(0.2),
 	threshFactor(0.0), 
 	output16bit(false), 
@@ -23,8 +23,9 @@ streamerSharedData::streamerSharedData() :
 	autoTemperature(false),
 	minTemperature(25.0), 
 	maxTemperature(35.0),
-	tempGrad(100.0),
-	tempIntercept(0.0),
+	degreesPerGraylevel(0.01),
+	desiredDegreesPerGraylevel(0.05), 
+	zeroDegreesOffset(0),
 	debugMode(false)
 { }
 	
@@ -36,7 +37,8 @@ streamerData::streamerData() :
 	camera_number(0), 
 	desiredRows(-1), 
 	desiredCols(-1), 
-	temporalMemory(5), 
+	temporalMemory(10), 
+	outputFormatString("png"),
 	radiometryFile("radiometryFile"), 
 	externalNucManagement(""), 
 	portAddress("/dev/ttyUSB0"), 
@@ -82,7 +84,7 @@ streamerData::streamerData() :
 	resizeImages(false), 
 	dumpTimestamps(false), 
 	removeDuplicates(false), 
-	temporalSmoothing(false), 
+	temporalSmoothing(true), 
 	pauseMode(false),  
 	stepChangeTempScale(false), 
 	rectifyImages(false), 
@@ -104,7 +106,7 @@ streamerData::streamerData() :
 	syncDiff(0.005), 
 	writeQuality(1.0), 
 	maxThermistorDiff(0.5),
-	maxIntensityChange(2.0), 
+	maxIntensityChange(1), 
 	alpha(0.00),
 	dataValid(true)
 { }
@@ -159,8 +161,9 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("fusionFactor")) fusionFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("minTemperature")) minTemperature = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxTemperature")) maxTemperature = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("tempGrad")) tempGrad = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("tempIntercept")) tempIntercept = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("degreesPerGraylevel")) degreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredDegreesPerGraylevel")) desiredDegreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("zeroDegreesOffset")) zeroDegreesOffset = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 
 			// Output settings
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("output16bit")) output16bit = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -250,6 +253,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialWriteAttempts")) serialWriteAttempts = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("republishSource")) republishSource = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("device_num")) device_num = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxIntensityChange")) maxIntensityChange = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("soft_diff_limit")) soft_diff_limit = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 
@@ -258,7 +262,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("syncDiff")) syncDiff = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeQuality")) writeQuality = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxThermistorDiff")) maxThermistorDiff = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxIntensityChange")) maxIntensityChange = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("alpha")) alpha = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
         }
 
@@ -312,8 +316,9 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	minTemperature = startupData.minTemperature;
 	maxTemperature = startupData.maxTemperature;
 
-	tempGrad = startupData.tempGrad;
-	tempIntercept = startupData.tempIntercept;
+	degreesPerGraylevel = startupData.degreesPerGraylevel;
+	desiredDegreesPerGraylevel = startupData.desiredDegreesPerGraylevel;
+	zeroDegreesOffset = startupData.zeroDegreesOffset;
 
 	framerate = startupData.framerate;
 	normFactor = startupData.normFactor;
@@ -323,7 +328,13 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	serialPollingRate = startupData.serialPollingRate;
 	maxNucThreshold = startupData.maxNucThreshold;
 
-	// ...
+	if (inputDatatype == DATATYPE_8BIT) {
+		if ((normMode == NORM_MODE_FIXED_TEMP_RANGE) || (normMode == NORM_MODE_FIXED_TEMP_LIMITS)) {
+			ROS_WARN("Specified <normMode> is not compatible with 8-bit input. Resetting to <NORM_MODE_FULL_STRETCHING>");
+			normMode = NORM_MODE_FULL_STRETCHING;
+			startupData.normMode = NORM_MODE_FULL_STRETCHING;
+		}
+	}
 
 	if (startupData.outputFolder.size() > 0) {
 		if (startupData.outputFolder.at(startupData.outputFolder.size()-1) == '/') startupData.outputFolder = startupData.outputFolder.substr(0, startupData.outputFolder.size()-1);
@@ -1463,8 +1474,9 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	configData.minTemperature = config.minTemperature;
 	configData.maxTemperature = config.maxTemperature;
 
-	configData.tempGrad = config.tempGrad;
-	configData.tempIntercept = config.tempIntercept;
+	configData.degreesPerGraylevel = config.degreesPerGraylevel;
+	configData.desiredDegreesPerGraylevel = config.desiredDegreesPerGraylevel;
+	configData.zeroDegreesOffset = config.zeroDegreesOffset;
 	
 	if (configData.autoTemperature != config.autoTemperature) {
 		lastMinDisplayTemp = -9e99, lastMaxDisplayTemp = 9e99;
@@ -1920,7 +1932,6 @@ bool streamerNode::retrieveRawFrame() {
 		frame = cv::imread(full_path, CV_LOAD_IMAGE_ANYDEPTH);
 		#endif
 
-		frameCounter++;
 		return true;
 	}
 	return false;
@@ -1993,23 +2004,48 @@ bool streamerNode::processImage() {
 			
 		}
 
-		if (canRadiometricallyCorrect && configData.radiometricCorrection) {
-			if (configData.radiometricBias != 0) _16bitMat += configData.radiometricBias;
-			radMapper.apply(_16bitMat, temperatureMat, lastThermistorReading, configData.radiometricInterpolation);
-		}
-
 		if ((configData.outputColor) || (configData.output8bit) || ((configData.writeImages) && ((configData.outputType == OUTPUT_TYPE_CV_8UC3) || (configData.outputType == OUTPUT_TYPE_CV_8UC1)) )) {
 			
 			if (configData.verboseMode) { ROS_INFO("Entering here x123..."); }
-			
-			if ((canRadiometricallyCorrect && configData.radiometricCorrection) || configData.alreadyCorrected) {
-				if (configData.verboseMode) { ROS_INFO("Entering here x124..."); }
+
+			double perc[1], vals[1];
+			perc[0] = 0.5;
+			findPercentiles(_16bitMat, vals, perc, 1);
+
+			int newCentralVal = int(round(vals[0]));
+
+			if (configData.temporalSmoothing && (configData.temporalMemory > 0)) {
+				past16bitMedians[frameCounter % _16BIT_MEDIAN_BUFFER_SIZE] = newCentralVal;
+				double temporalMedian = 0.0; // temporalMedian is the ideal value for the median
+
+				if (frameCounter > 0) {
+					for (int iii = max(0, frameCounter - configData.temporalMemory); iii < frameCounter; iii++) temporalMedian += past16bitMedians[iii % _16BIT_MEDIAN_BUFFER_SIZE];
+					temporalMedian /= min(frameCounter, configData.temporalMemory);
 				
-				if (configData.alreadyCorrected) convertToTemperatureMat(_16bitMat, temperatureMat, configData.tempGrad, configData.tempIntercept);
+					newCentralVal = min(newCentralVal, int(temporalMedian) + configData.maxIntensityChange);
+					newCentralVal = max(newCentralVal, int(temporalMedian) - configData.maxIntensityChange);
+
+					if (configData.verboseMode) { ROS_INFO("original median (%d), temporal median (%d), corrected median (%d)", int(vals[0]), int(temporalMedian), newCentralVal); }
+				}
+			}
+
+			if (configData.normMode == NORM_MODE_FIXED_TEMP_RANGE) {
+				if (configData.verboseMode) { ROS_INFO("newCentralVal = (%d)", newCentralVal); }
+				temperatureRangeBasedDownsample(_16bitMat, preFilteredMat, newCentralVal, configData.degreesPerGraylevel, configData.desiredDegreesPerGraylevel);
+			} else if (configData.normMode == NORM_MODE_FIXED_TEMP_LIMITS) {
 				
+				if (configData.alreadyCorrected) {
+					convertToTemperatureMat(_16bitMat, temperatureMat, (1.0 / configData.degreesPerGraylevel), configData.zeroDegreesOffset);
+				} else if (canRadiometricallyCorrect && configData.radiometricCorrection) {
+					if (configData.radiometricBias != 0) _16bitMat += configData.radiometricBias;
+					radMapper.apply(_16bitMat, temperatureMat, lastThermistorReading, configData.radiometricInterpolation);
+				} else {
+					ROS_ERROR("The input has not been radiometrically corrected, and no radiometric data has been provided, so temperature controls cannot be used.");
+					ROS_ERROR("Can consider simulating radiometric correction by setting <alreadyCorrected> to true and providing estimates for <degreesPerGraylevel> and/or <zeroDegreesOffset>.");
+					return false;
+				}
+
 				if (configData.autoTemperature) {
-					
-					if (configData.verboseMode) { ROS_INFO("Entering here x125..."); }
 					
 					if (configData.verboseMode) {
 						double currMin, currMax;
@@ -2068,9 +2104,9 @@ bool streamerNode::processImage() {
 				}
 
 			} else {
-				if (configData.verboseMode) { ROS_INFO("Entering here x126..."); }
-				adaptiveDownsample(_16bitMat, preFilteredMat, configData.normMode, configData.normFactor); //, configData.filterMode);
+				 adaptiveDownsample(_16bitMat, preFilteredMat, configData.normMode, configData.normFactor);
 			}
+			
 		} 
 		
 		if (configData.output16bit || (configData.writeImages && (configData.outputType == OUTPUT_TYPE_CV_16UC1))) {
@@ -2138,7 +2174,7 @@ bool streamerNode::processImage() {
 	
 	(configData.filterMode > 0) ? applyFilter(preFilteredMat, smoothedMat, configData.filterMode, configData.filterParam) : smoothedMat = preFilteredMat;
 	
-	if (configData.temporalSmoothing) {
+	if ((configData.temporalSmoothing) && (configData.inputDatatype != DATATYPE_RAW)) {
 		if (((configData.outputColor) || ((configData.writeImages) && (configData.outputType == OUTPUT_TYPE_CV_8UC3))) || ((configData.output8bit) || ((configData.writeImages) && (configData.outputType == OUTPUT_TYPE_CV_8UC1)))) {
 			// If you want to output any kind of 8-bit format...
 			
@@ -2150,7 +2186,7 @@ bool streamerNode::processImage() {
 			for (int iii = 0; iii < min(frameCounter+1, configData.temporalMemory); iii++) temporalMean += pastMeans[iii];
 			
 			temporalMean /= min(frameCounter+1, configData.temporalMemory);
-			shiftDiff = (((temporalMean - pastMeans[pastMeanIndex]) > 0.0) ? 1.0 : (((temporalMean - pastMeans[pastMeanIndex]) < 0.0) ? -1.0 : 0.0)) * min(abs((pastMeans[pastMeanIndex] - temporalMean)), configData.maxIntensityChange);
+			shiftDiff = (((temporalMean - pastMeans[pastMeanIndex]) > 0.0) ? 1.0 : (((temporalMean - pastMeans[pastMeanIndex]) < 0.0) ? -1.0 : 0.0)) * min(abs((pastMeans[pastMeanIndex] - temporalMean)), double(configData.maxIntensityChange));
 			_8bitMat = smoothedMat + shiftDiff;
 		}
 		

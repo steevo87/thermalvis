@@ -767,7 +767,7 @@ void temperatureDownsample(const cv::Mat& src, cv::Mat& dst, double minVal, doub
 		}
 	}
 }
-void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad, double intercept) {
+void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad, int intercept) {
 	
 	if (dst.rows == 0) dst = cv::Mat::zeros(src.size(), CV_32FC1);
 	
@@ -776,6 +776,24 @@ void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad, doub
 		for (int jjj = 0; jjj < src.cols; jjj++) {
 			dst.at<float>(iii,jjj) = (float(src.at<unsigned short>(iii,jjj)) - float(intercept)) / float(grad);
 		}
+	}
+}
+
+void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMedian, double degreesPerGraylevel, double desiredDegreesPerGraylevel) {
+
+	if (dst.rows == 0) dst = cv::Mat::zeros(src.size(), CV_8UC1);
+
+	if (newMedian == -1) {
+		double percentile_levels[1], percentile_values[1];
+		percentile_levels[0] = 0.5;
+		findPercentiles(src, percentile_values, percentile_levels, 2);
+		newMedian = int(percentile_values[0]);
+	}
+
+	for (int iii = 0; iii < src.rows; iii++) {
+		for (int jjj = 0; jjj < src.cols; jjj++) {
+			dst.at<unsigned char>(iii,jjj) = min(255, max(0, int(round((float(src.at<unsigned short>(iii,jjj)) - float(newMedian))*(float(degreesPerGraylevel)/float(desiredDegreesPerGraylevel))  + 127.5))));
+			}
 	}
 }
 
@@ -1214,24 +1232,7 @@ void trimToDimensions(cv::Mat& image, int width, int height) {
 
 }
 
-void process8bitImage(const cv::Mat& src, cv::Mat& dst, int code, double factor) {
-	
-	//printf("%s << processing... (%d)\n", __FUNCTION__, code);
-	
-	if (code == NORMALIZATION_EQUALIZE) {
-
-		equalizeHist(src, dst);
-
-	} /*else if (code == NORMALIZATION_CLAHE) { 
-	
-		//downsampleCLAHE(src, dst, factor);
-		//printf("%s << Trying to perform CLAHE...\n", __FUNCTION__);
-		straightCLAHE(src, dst, factor);
-	
-	} */ else {
-		src.copyTo(dst);
-	}
-}
+void process8bitImage(const cv::Mat& src, cv::Mat& dst, int code, double factor) { (code == NORM_MODE_EQUALIZATION) ? equalizeHist(src, dst) : src.copyTo(dst); }
 
 void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double factor) {
 
@@ -1242,6 +1243,9 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 	double intensityVals[5];
 
 	findPercentiles(src, intensityVals, percentileVals, 5);
+
+	printf("%s << percentileVals(%f, %f, %f, %f, %f) = (%d, %d, %d, %d, %d)\n", __FUNCTION__, percentileVals[0], percentileVals[1], percentileVals[2], percentileVals[3], percentileVals[4], intensityVals[0], intensityVals[1], intensityVals[2], intensityVals[3], intensityVals[4]);
+
 	intensityVals[1] = max(intensityVals[1], minVal);
 	intensityVals[3] = min(intensityVals[3], maxVal);
 
@@ -1250,7 +1254,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 	double fullRange = abs(intensityVals[3] - intensityVals[1]);
 	double compressionFactor = 1.0;
 
-	if (code == NORMALIZATION_STANDARD) {
+	if (code == NORM_MODE_FULL_STRETCHING) {
 		if (fullRange > 255.0) compressionFactor = fullRange / 255.0;
 
 		minVal = max(midVal - 127.5*compressionFactor, 0.0);
@@ -1258,7 +1262,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 		
 		normalize_16(_16, src, minVal, maxVal);
 		down_level(dst, _16);
-	} else if (code == NORMALIZATION_CENTRALIZED) {
+	} else if (code == NORM_MODE_CENTRALIZED) {
 		compressionFactor = 255.0 / (4.0 * max(factor, 0.01));
 
 		minVal = max(midVal - compressionFactor, 0.0);
@@ -1266,7 +1270,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 		
 		normalize_16(_16, src, minVal, maxVal);
 		down_level(dst, _16);
-	} else if (code == NORMALIZATION_EQUALIZE) {
+	} else if (code == NORM_MODE_EQUALIZATION) {
 		normalize_16(_16, src, intensityVals[1], intensityVals[3]);
 		down_level(dwn, _16);
 		equalizeHist(dwn, dst);

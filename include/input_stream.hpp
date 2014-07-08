@@ -21,6 +21,8 @@
 #include <boost/filesystem.hpp>
 #endif
 
+#define _16BIT_MEDIAN_BUFFER_SIZE				256
+
 #define DEFAULT_SERIAL_POLLING_RATE			 	0.04
 
 #define DEFAULT_READ_RATE 						25.0
@@ -64,9 +66,8 @@
 #define DEFAULT_MIN_TEMP			25.0
 #define DEFAULT_MAX_TEMP			35.0
 
-#define NORM_MODE_STANDARD			0
-#define NORM_MODE_EQUALIZE			1
-#define NORM_MODE_CENTRALIZED		2
+#define NORM_MODE_FIXED_TEMP_RANGE	3
+#define NORM_MODE_FIXED_TEMP_LIMITS	4
 
 #define CONFIG_MAP_CODE_GRAYSCALE		0
 #define CONFIG_MAP_CODE_CIECOMP			1
@@ -114,8 +115,8 @@ void getMapping(int mapCode, int& fullMapCode);
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for streamer
 struct streamerSharedData {
 	bool output16bit, output8bit, outputColor, undistortImages, verboseMode, autoTemperature, debugMode;
-	int maxReadAttempts, normMode, maxNucInterval, mapCode, extremes, inputDatatype, detectorMode, usbMode;
-	double framerate, threshFactor, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, tempGrad, tempIntercept;
+	int maxReadAttempts, normMode, maxNucInterval, mapCode, extremes, inputDatatype, detectorMode, usbMode, zeroDegreesOffset;
+	double framerate, threshFactor, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, degreesPerGraylevel, desiredDegreesPerGraylevel;
 
 	streamerSharedData();
 };
@@ -143,8 +144,8 @@ protected:
 	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
 
 	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, inputWidth, inputHeight, serialCommsConfigurationCode, serialWriteAttempts;
-	int republishSource, outputFormat, device_num;
-	double filterParam, thermistorWindow, syncDiff, writeQuality, maxThermistorDiff, maxIntensityChange, alpha;
+	int republishSource, outputFormat, device_num, maxIntensityChange;
+	double filterParam, thermistorWindow, syncDiff, writeQuality, maxThermistorDiff, alpha;
 	
 	vector<int> outputFileParams;
 
@@ -244,6 +245,7 @@ private:
 	int alternateCounter, pastMeanIndex, fullMapCode;
 	
 	double pastMeans[256];
+	int past16bitMedians[_16BIT_MEDIAN_BUFFER_SIZE];
 	
 	string callLogFile, retrieveLogFile, internalLogFile, writeLogFile, duplicatesLogFile, thermistorLogFile;
 	ofstream ofs_call_log, ofs_internal_log, ofs_retrieve_log, ofs_write_log, ofs_duplicates_log, ofs_thermistor_log;

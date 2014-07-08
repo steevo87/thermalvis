@@ -24,7 +24,7 @@ cameraInfoStruct::cameraInfoStruct() : width(384), height(288), distortion_model
 flowSharedData::flowSharedData() : 
 	maxFeatures(300), 
 	minFeatures(30),
-	flowThreshold(0.002),
+	flowThreshold(0.0002),
 	minSeparation(3.0),
 	maxVelocity(200.0), 
 	maxFrac(0.05),
@@ -34,7 +34,7 @@ flowSharedData::flowSharedData() :
 	velocityPrediction(true),  
 	attemptHistoricalRecovery(true),
 	autoTrackManagement(true),
-	attemptMatching(true),
+	attemptMatching(false),
 	showTrackHistory(false), 
 	detectEveryFrame(false),
 	newFeaturesPeriod(0.5), 
@@ -1581,13 +1581,13 @@ bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr
 		} else if ((detector[iii] == "FAST") || (detector[iii] == "fast")) {
 			det[iii] = new cv::FastFeatureDetector( int(sensitivity[iii] * FAST_DETECTOR_SENSITIVITY_SCALING) );
 		} else if ((detector[iii] == "GFTT") || (detector[iii] == "gftt")) {
-			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii]), 1.0, 3, false );
+			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii] * GFTT_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, false );
 		} else if ((detector[iii] == "STAR") || (detector[iii] == "star")) {
 			det[iii] = new cv::StarFeatureDetector( 16, int(sensitivity[iii]) );
 		} else if ((detector[iii] == "ORB") || (detector[iii] == "orb")) {
 			det[iii] = new cv::OrbFeatureDetector( maxFeatures );
 		} else if ((detector[iii] == "HARRIS") || (detector[iii] == "harris")) {
-			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii]), 1.0, 3, true );
+			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii] * HARRIS_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, true );
 		} else {
 			ROS_ERROR("Shouldn't have got here!");
 			return false;

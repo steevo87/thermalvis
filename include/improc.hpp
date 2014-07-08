@@ -68,12 +68,9 @@ namespace tv {
 	#define REPEATED_ALT_5	950
 	#define REPEATED_ALT_6	960
 
-	#define NORMALIZATION_STANDARD 			0
-	#define NORMALIZATION_EQUALIZE 			1
-	//#define NORMALIZATION_CLAHE				2
-	#define NORMALIZATION_ADAPTIVE 			3
-	#define NORMALIZATION_CENTRALIZED		4
-	#define NORMALIZATION_EXPANDED			5
+	#define NORM_MODE_FULL_STRETCHING 		0
+	#define NORM_MODE_EQUALIZATION 			1
+	#define NORM_MODE_CENTRALIZED			2	
 
 	#define NO_FILTERING 					0
 	#define GAUSSIAN_FILTERING 				1
@@ -216,15 +213,18 @@ void fixedDownsample(const cv::Mat& src, cv::Mat& dst, double center, double ran
 void temperatureDownsample(const cv::Mat& src, cv::Mat& dst, double minVal, double maxVal);
 
 /// \brief 		Converts a 16-bit image encoding temperature into floating point format
-void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad = 10, double intercept = 1000);
+void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad = 10, int intercept = 1000);
+
+/// \brief 		Converts a 16-bit raw image into an 8-bit image based on desired temperature range and provided median value
+void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMedian = -1, double degreesPerGraylevel = 0.01, double desiredDegreesPerGraylevel = 0.05);
 
 /// \brief 		Downsamples a temperature matrix to a 16-bit image using Optris-like linear scaling
 void temperatureDownsample16(const cv::Mat& src, cv::Mat& dst);
 
 //void downsampleCLAHE(const cv::Mat& src, cv::Mat& dst, double factor);
-void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code = NORMALIZATION_STANDARD, double factor = 0.0);
+void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code = NORM_MODE_FULL_STRETCHING, double factor = 0.0);
 
-void process8bitImage(const cv::Mat& src, cv::Mat& dst, int code = NORMALIZATION_STANDARD, double factor = 0.0);
+void process8bitImage(const cv::Mat& src, cv::Mat& dst, int code = NORM_MODE_FULL_STRETCHING, double factor = 0.0);
 
 bool checkIfActuallyGray(const cv::Mat& im);
 
