@@ -14,17 +14,30 @@
    <string>MainWindow_streamer</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QCheckBox" name="debugMode">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>180</y>
-      <width>75</width>
-      <height>23</height>
+      <x>10</x>
+      <y>10</y>
+      <width>81</width>
+      <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>debugMode</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="verboseMode">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>verboseMode</string>
     </property>
    </widget>
   </widget>

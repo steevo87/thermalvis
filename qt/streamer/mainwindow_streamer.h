@@ -15,8 +15,17 @@ public:
     explicit MainWindow_streamer(QWidget *parent = 0);
     ~MainWindow_streamer();
 
+private slots:
+    void on_debugMode_toggled(bool checked);
+
+    void on_verboseMode_toggled(bool checked);
+
 private:
     Ui::MainWindow_streamer *ui;
+
+    // Parameters
+    bool debugMode;
+    bool verboseMode;
 };
 
 #endif // MAINWINDOW_STREAMER_H

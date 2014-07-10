@@ -13,10 +13,10 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
@@ -27,7 +27,8 @@ class Ui_MainWindow_streamer
 {
 public:
     QWidget *centralWidget;
-    QPushButton *pushButton;
+    QCheckBox *debugMode;
+    QCheckBox *verboseMode;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -39,9 +40,12 @@ public:
         MainWindow_streamer->resize(400, 300);
         centralWidget = new QWidget(MainWindow_streamer);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
-        pushButton = new QPushButton(centralWidget);
-        pushButton->setObjectName(QStringLiteral("pushButton"));
-        pushButton->setGeometry(QRect(170, 180, 75, 23));
+        debugMode = new QCheckBox(centralWidget);
+        debugMode->setObjectName(QStringLiteral("debugMode"));
+        debugMode->setGeometry(QRect(10, 10, 81, 17));
+        verboseMode = new QCheckBox(centralWidget);
+        verboseMode->setObjectName(QStringLiteral("verboseMode"));
+        verboseMode->setGeometry(QRect(10, 30, 91, 17));
         MainWindow_streamer->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow_streamer);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -62,7 +66,8 @@ public:
     void retranslateUi(QMainWindow *MainWindow_streamer)
     {
         MainWindow_streamer->setWindowTitle(QApplication::translate("MainWindow_streamer", "MainWindow_streamer", 0));
-        pushButton->setText(QApplication::translate("MainWindow_streamer", "PushButton", 0));
+        debugMode->setText(QApplication::translate("MainWindow_streamer", "debugMode", 0));
+        verboseMode->setText(QApplication::translate("MainWindow_streamer", "verboseMode", 0));
     } // retranslateUi
 
 };

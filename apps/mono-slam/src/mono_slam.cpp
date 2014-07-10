@@ -6,20 +6,25 @@
 #include "directory_stream.hpp"
 #include "sparse_flow.hpp"
 
+#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_test.launch"
+
 #ifdef _USE_QT_
-#include "streamer_qt.hpp"
 #include "mainwindow_streamer.h"
 #include <QApplication>
-#endif
 
-#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_test.launch"
+#include <mutex>
+#include <thread>
+
+QApplication *a;;
+void qt_streamer_thread();
+std::mutex qt_streamer_mutex;
+#endif
 
 int main(int argc, char* argv[]) {
 
 #ifdef _USE_QT_
-	QString testString;
-	QApplication a(argc, argv);
-    MainWindow_streamer w;
+	a = new QApplication(argc, argv);
+	MainWindow_streamer w;
     w.show();
 #endif
 
@@ -83,6 +88,10 @@ int main(int argc, char* argv[]) {
 	bool calibrationDataProcessed = false;
 	cv::Mat workingFrame;
 
+	#ifdef _USE_QT_
+		std::thread t_streamer(qt_streamer_thread);
+	#endif
+
 	while (sM->wantsToRun()) {
 		sM->serverCallback(scData);
 		if (!sM->retrieveRawFrame()) continue;
@@ -105,5 +114,20 @@ int main(int argc, char* argv[]) {
 		fM->features_loop();
 	}
 	
+#ifdef _USE_QT_
+	t_streamer.join();
+#endif
+
 	return S_OK;
 }
+
+#ifdef _USE_QT_
+void qt_streamer_thread() {
+	while (a->exec()) {
+		if (qt_streamer_mutex.try_lock()) {
+			// ...
+			qt_streamer_mutex.unlock();
+		}
+	}
+}
+#endif

@@ -12,3 +12,13 @@ MainWindow_streamer::~MainWindow_streamer()
 {
     delete ui;
 }
+
+void MainWindow_streamer::on_debugMode_toggled(bool checked)
+{
+    debugMode = checked;
+}
+
+void MainWindow_streamer::on_verboseMode_toggled(bool checked)
+{
+    verboseMode = checked;
+}

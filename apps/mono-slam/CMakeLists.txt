@@ -105,7 +105,7 @@ IF(BUILD_GUI)
 	ENDIF()
 	
 	IF(EXISTS "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll")
-		add_custom_command(TARGET 3dDemo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll" $<TARGET_FILE_DIR:3dDemo>)
+		add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
 	ELSE()
 		MESSAGE(WARNING "Unable to find DLL at ${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll - has Boost Debug been built?")
 	ENDIF()	

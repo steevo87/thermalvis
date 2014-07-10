@@ -37,8 +37,20 @@ EIGEN
 	then you may need to add the directory (e.g. C:\eigen) to the System PATH variable
 	to rebuild, deleting the cache and reconfiguring is not enough - CMake must be reloaded for this change to take effect
 	
-qt
+Qt
+	minimum version Qt5
 	try to download using the online installer: http://qt-project.org/downloads
+		however, there's a good chance this won't work
+	can download a full installer from the website, e.g.
+		qt-opensource-windows-x86-msvc2012_opengl-5.3.1.exe
+		if the EXE doesn't launch properly, it's possible not all of the data was downloaded before the download manager or browser was closed, so it is corrupted
+	in CMake, you will need to make sure that the <Qt5Widgets_DIR> variable points to the directory containing the Qt5WidgetsConfig.cmake file:
+		usually something like: C:\Qt\Qt5.3.1\5.3\msvc2012_opengl\lib\cmake\Qt5Widgets
+	if CMake cannot find the relevent UI files (e.g. "ui_mainwindow_streamer.h"), you will need to use Qt Creator (installed automatically with above steps) to compile each of the Qt GUIs:
+		Open Qt Creator, and open a project (e.g. thermalvis\qt\streamer\streamer.pro)
+		Press < CTRL + SHIFT + B > to build
+		This will create an adjacent "build-..." directory, which will importantly contain a file such as <ui_mainwindow_streamer.h>
+		Repeat this procedure for each non-"build-..." directory in the "qt" folder
 	
 troubleshooting:
 ----------------
