@@ -8,6 +8,8 @@
 
 #ifdef _USE_QT_
 #include "streamer_qt.hpp"
+#include "mainwindow_streamer.h"
+#include <QApplication>
 #endif
 
 #define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_test.launch"
@@ -16,6 +18,9 @@ int main(int argc, char* argv[]) {
 
 #ifdef _USE_QT_
 	QString testString;
+	QApplication a(argc, argv);
+    MainWindow_streamer w;
+    w.show();
 #endif
 
 	ROS_INFO("Launching Monocular SLAM Demo App!");

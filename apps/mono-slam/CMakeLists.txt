@@ -1,9 +1,11 @@
 SET_PROPERTY(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
 
-# Flags necessary to get Managed Code functioning for Windows-Optris demo
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clr")
-STRING (REGEX REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-STRING (REGEX REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+IF(BUILD_GUI)
+	# Find includes in corresponding build directories
+	set(CMAKE_INCLUDE_CURRENT_DIR ON)
+	# Instruct CMake to run moc automatically when needed.
+	set(CMAKE_AUTOMOC ON)
+ENDIF()
 
 IF(WIN32 OR win64)
 	SET(CMAKE_FIND_LIBRARY_SUFFIXES .lib .dll)
@@ -18,8 +20,13 @@ set (ADDITIONAL_LIBS "")
 FILE(GLOB LOCAL_HEADERS include/*.h*)
 FILE(GLOB LOCAL_SOURCES src/*.cpp)
 
-INCLUDE_DIRECTORIES(include)
 INCLUDE_DIRECTORIES("../../include")
+
+IF(BUILD_GUI)
+	INCLUDE_DIRECTORIES("../../qt/${Qt_STREAMER_BUILD_DIR}")
+	INCLUDE_DIRECTORIES("../../qt/streamer")
+	LIST(APPEND ADDITIONAL_LIBS Qt5::Widgets)
+ENDIF()
 
 LIST(APPEND ADDITIONAL_LIBS ${OpenCV_LIBRARIES})
 LIST(APPEND ADDITIONAL_LIBS ${Boost_LIBRARIES})
@@ -27,12 +34,15 @@ LIST(APPEND ADDITIONAL_LIBS ${Boost_LIBRARIES})
 LIST(APPEND ADDITIONAL_LIBS thermalvis)
 
 SET(EXECUTABLE_NAME "MonocularSLAM")
-add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} )
-TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${ADDITIONAL_LIBS} )
-
 IF(BUILD_GUI)
-	qt5_use_modules(${EXECUTABLE_NAME} Widgets)
+	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} 
+	../../qt/streamer/mainwindow_streamer.cpp 
+	../../qt/streamer/mainwindow_streamer.h 
+	../../qt/${Qt_STREAMER_BUILD_DIR}/ui_mainwindow_streamer.h)
+ELSE()
+	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} )
 ENDIF()
+TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${ADDITIONAL_LIBS} )
 
 IF(EXISTS "${OpenCV_BIN_DIR_OPT}/opencv_core${OPENCV_VER}.dll")
 	ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OpenCV_BIN_DIR_OPT}/opencv_core${OPENCV_VER}.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
@@ -72,3 +82,32 @@ ELSE()
 	MESSAGE(WARNING "<${OpenCV_BIN_DIR_OPT}/opencv_core${OPENCV_VER}d.dll> unable to be located. Has OpenCV been built in Debug mode?")
 ENDIF()
 
+IF(BUILD_GUI)
+	IF(EXISTS "${Qt5Widgets_DIR}/../../../bin/Qt5Widgetsd.dll")
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/Qt5Widgetsd.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/Qt5Widgets.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/Qt5Cored.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/Qt5Core.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/Qt5Guid.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/Qt5Gui.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/icuin52.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/icuuc52.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+		ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/icudt52.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+	ELSE()
+		MESSAGE(WARNING "<${Qt5Widgets_DIR}/../../../bin/Qt5Widgetsd.dll> unable to be located. Has Qt5 been installed properly?")
+	ENDIF()
+	
+	IF(EXISTS "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-${Boost_LIB_VERSION}.dll")
+		add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-${Boost_LIB_VERSION}.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+	ELSE()
+		MESSAGE(WARNING "Unable to find DLL at ${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-${Boost_LIB_VERSION}.dll - has Boost Release been built?")
+	ENDIF()
+	
+	IF(EXISTS "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll")
+		add_custom_command(TARGET 3dDemo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll" $<TARGET_FILE_DIR:3dDemo>)
+	ELSE()
+		MESSAGE(WARNING "Unable to find DLL at ${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll - has Boost Debug been built?")
+	ENDIF()	
+	
+ENDIF()
