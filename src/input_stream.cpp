@@ -111,6 +111,7 @@ streamerData::streamerData() :
 	dataValid(true)
 { }
 
+#ifdef _USE_BOOST_
 bool streamerData::assignFromXml(xmlParameters& xP) {
 
 	int countOfNodes = 0;
@@ -288,6 +289,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 	return dataValid;
 
 }
+#endif
 
 #ifndef _BUILD_FOR_ROS_
 bool streamerConfig::assignStartingData(streamerData& startupData) {

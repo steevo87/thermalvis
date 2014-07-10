@@ -97,7 +97,9 @@ IF(BUILD_GUI)
 	ELSE()
 		MESSAGE(WARNING "<${Qt5Widgets_DIR}/../../../bin/Qt5Widgetsd.dll> unable to be located. Has Qt5 been installed properly?")
 	ENDIF()
-	
+ENDIF()
+
+IF(USE_BOOST)
 	IF(EXISTS "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-${Boost_LIB_VERSION}.dll")
 		add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-${Boost_LIB_VERSION}.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
 	ELSE()
@@ -109,5 +111,4 @@ IF(BUILD_GUI)
 	ELSE()
 		MESSAGE(WARNING "Unable to find DLL at ${Boost_LIBRARY_DIR}/boost_system${_boost_COMPILER}${_boost_MULTITHREADED}-gd-${Boost_LIB_VERSION}.dll - has Boost Debug been built?")
 	ENDIF()	
-	
 ENDIF()

@@ -4,8 +4,11 @@
 
 #ifndef _THERMALVIS_DIRECTORY_STREAM_H_
 #define _THERMALVIS_DIRECTORY_STREAM_H_
+
+#ifdef _USE_BOOST_
 	
 #include "input_stream.hpp"
+
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -26,4 +29,6 @@ public:
 	bool initializeInput(int argc, char* argv[]);
 };
 	
+#endif
+
 #endif

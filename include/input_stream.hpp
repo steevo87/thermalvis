@@ -14,11 +14,14 @@
 #include "improc.hpp"
 #include "radiometric.hpp"
 
+#ifdef _USE_BOOST_
 #include "boost/filesystem.hpp"  
 
 #ifndef _BUILD_FOR_ROS_
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
+#endif
+
 #endif
 
 #define _16BIT_MEDIAN_BUFFER_SIZE				256
@@ -223,7 +226,9 @@ private:
 	ros::Time info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
 	cv_bridge::CvImagePtr cv_ptr;
 #else
+#ifdef _USE_BOOST_
 	boost::posix_time::ptime info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
+#endif
 	const cv::Mat *bridgeReplacement;
 #endif
 

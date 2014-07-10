@@ -1,5 +1,7 @@
 #include "launch.hpp"
 
+#ifdef _USE_BOOST_
+
 bool xmlParameters::parseInputXML(char *file_address) {
 
 	boost::property_tree::xml_parser::read_xml(std::string(file_address), pt);
@@ -30,3 +32,5 @@ void xmlParameters::printInputSummary() {
 	std::cout << std::endl << "<<< END SUMMARY >>>" << std::endl; 
 
 }
+
+#endif
