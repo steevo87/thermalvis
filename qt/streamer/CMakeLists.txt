@@ -10,7 +10,7 @@ SET(EXECUTABLE_NAME "streamer_qt_test")
 INCLUDE_DIRECTORIES(../${Qt_STREAMER_BUILD_DIR})
 
 IF(NOT EXISTS "${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h")
-	MESSAGE(FATAL_ERROR "<ui_mainwindow_streamer.h> could not be found in <${QTSTREAMER_BUILD_PATH}>")
+	MESSAGE(FATAL_ERROR "<ui_mainwindow_streamer.h> could not be found in <${QTSTREAMER_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")
 ENDIF()
 
 # Tell CMake to create the executable

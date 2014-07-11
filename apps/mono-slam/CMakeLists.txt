@@ -23,7 +23,7 @@ FILE(GLOB LOCAL_SOURCES src/*.cpp)
 INCLUDE_DIRECTORIES("../../include")
 
 IF(BUILD_GUI)
-	INCLUDE_DIRECTORIES("../../qt/${Qt_STREAMER_BUILD_DIR}")
+	INCLUDE_DIRECTORIES("${QTSTREAMER_BUILD_PATH}")
 	INCLUDE_DIRECTORIES("../../qt/streamer")
 	LIST(APPEND ADDITIONAL_LIBS Qt5::Widgets)
 ENDIF()
@@ -35,10 +35,15 @@ LIST(APPEND ADDITIONAL_LIBS thermalvis)
 
 SET(EXECUTABLE_NAME "MonocularSLAM")
 IF(BUILD_GUI)
+
+	IF(NOT EXISTS "${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h")
+		MESSAGE(FATAL_ERROR "<ui_mainwindow_streamer.h> could not be found in <${QTSTREAMER_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")
+	ENDIF()
+
 	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} 
 	../../qt/streamer/mainwindow_streamer.cpp 
 	../../qt/streamer/mainwindow_streamer.h 
-	../../qt/${Qt_STREAMER_BUILD_DIR}/ui_mainwindow_streamer.h)
+	${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h)
 ELSE()
 	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} )
 ENDIF()
