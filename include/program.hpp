@@ -25,7 +25,7 @@ public:
 	GenericOptions();
 	bool wantsToRun();
 	bool setOutputDir(char* output_dir);
-	bool initializeOutput(int argc, char* argv[]);
+	bool initializeOutput(char *output_dir);
 	virtual void setDebugMode(bool val) { debugMode = val; }
 	void setWriteMode(bool mode);
 	bool writeImageToDisk();

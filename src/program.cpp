@@ -29,11 +29,11 @@ bool GenericOptions::setOutputDir(char* output_dir) {
 	return true;
 }
 
-bool GenericOptions::initializeOutput(int argc, char* argv[]) {
-	if (argc >= 3) {
-		printf("%s << Using data output directory of <%s>.\n", __FUNCTION__, argv[2]);
+bool GenericOptions::initializeOutput(char *output_dir) {
+	if (output_dir != NULL) {
+		printf("%s << Using data output directory of <%s>.\n", __FUNCTION__, output_dir);
 		wantsToOutput = true;
-		sprintf(output_directory, "%s", argv[2]);
+		sprintf(output_directory, "%s", output_dir);
 		return true;
 	}
 	return false;

@@ -10,87 +10,73 @@
 
 #ifdef _USE_QT_
 #include "mainwindow_streamer.h"
+
 #include <QApplication>
+#include <QThread>
+#include <QtCore>
 
 #include <mutex>
 #include <thread>
-
-QApplication *a;;
-void qt_streamer_thread();
-std::mutex qt_streamer_mutex;
 #endif
+
+#ifdef _USE_QT_
+class ProcessingThread : public QThread {
+#else
+class ProcessingThread {
+#endif
+public:
+	bool initialize(int argc, char* argv[]);
+	void run();
+#ifndef _USE_QT_
+	void start() { run(); }
+#endif
+private:
+	bool wantsToOutput, writeMode;
+	char *output_directory;
+	char *xmlAddress;
+	xmlParameters xP;
+	cameraInfoStruct camInfo;
+
+	streamerData streamerStartupData;
+	streamerConfig scData;
+	streamerNode *sM;
+
+	trackerData trackerStartupData;
+	flowConfig fcData;
+	featureTrackerNode *fM;
+};
 
 int main(int argc, char* argv[]) {
 
-#ifdef _USE_QT_
-	a = new QApplication(argc, argv);
-	MainWindow_streamer w;
-    w.show();
-#endif
-
 	ROS_INFO("Launching Monocular SLAM Demo App!");
 
-	char xmlAddress[256];
-	
-	if (argc > 1) {
-		sprintf(xmlAddress, "%s", argv[1]);
-		ROS_INFO("Using XML file provided at (%s)", xmlAddress);
-	} else {
-#ifdef _WIN32
-		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
-#else
-		sprintf(xmlAddress, "~/%s", DEFAULT_LAUNCH_XML);
+#ifdef _USE_QT_
+	QApplication a(argc, argv);
 #endif
-		ROS_INFO("No XML config file provided, therefore using default at (%s)", xmlAddress);
-	}
 
-	xmlParameters xP;
-	xP.parseInputXML(xmlAddress);
-	ROS_INFO("About to print XML summary..");
-	xP.printInputSummary();
-
-	// === STREAMER NODE === //
-	// Preliminary settings
-	streamerData streamerStartupData;
-	if (!streamerStartupData.assignFromXml(xP)) return -1;
-
-	// Real-time changeable variables
-	streamerConfig scData;
-	if (!scData.assignStartingData(streamerStartupData)) return -1;
-
-	streamerNode *sM;
-	sM = new streamerNode(streamerStartupData);
-	sM->initializeOutput(argc, argv);
+	ProcessingThread mainThread;
 	
-	cameraInfoStruct camInfo;
+#ifdef _USE_QT_
+	QObject::connect(&mainThread, SIGNAL(finished()), &a, SLOT(quit()));
+#endif
 
-	// === FLOW NODE === //
-	// Preliminary settings
-	trackerData trackerStartupData;
-	if (!trackerStartupData.assignFromXml(xP)) return -1;
+	if (!mainThread.initialize(argc, argv)) return S_FALSE;
+	mainThread.start();
+	
+#ifdef _USE_QT_
+	MainWindow_streamer w;
+    w.show();
+	return a.exec();
+#else
+	return S_OK;
+#endif
 
-	// Real-time changeable variables
-	flowConfig fcData;
-	fcData.assignStartingData(trackerStartupData);
+}
 
-	#ifdef _DEBUG
-	if (
-		((fcData.getDetector1() != DETECTOR_FAST) && (fcData.getDetector1() != DETECTOR_OFF)) || 
-		((fcData.getDetector2() != DETECTOR_FAST) && (fcData.getDetector2() != DETECTOR_OFF)) || 
-		((fcData.getDetector3() != DETECTOR_FAST) && (fcData.getDetector3() != DETECTOR_OFF))
-	) {
-		ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
-	}
-	#endif
-
-	featureTrackerNode *fM;
+void ProcessingThread::run() {
 
 	bool calibrationDataProcessed = false;
 	cv::Mat workingFrame;
-
-	#ifdef _USE_QT_
-		std::thread t_streamer(qt_streamer_thread);
-	#endif
 
 	while (sM->wantsToRun()) {
 		sM->serverCallback(scData);
@@ -106,28 +92,73 @@ int main(int argc, char* argv[]) {
 			trackerStartupData.cameraData.updateCameraParameters();
 			calibrationDataProcessed = true;
 			fM = new featureTrackerNode(trackerStartupData);
-			fM->initializeOutput(argc, argv);
-			fM->setWriteMode(!(argc >= 4));
+			fM->initializeOutput(output_directory);
+			fM->setWriteMode(writeMode);
 		}
 		fM->serverCallback(fcData);
 		fM->handle_camera(workingFrame, &camInfo);
 		fM->features_loop();
 	}
-	
-#ifdef _USE_QT_
-	t_streamer.join();
-#endif
-
-	return S_OK;
 }
 
-#ifdef _USE_QT_
-void qt_streamer_thread() {
-	while (a->exec()) {
-		if (qt_streamer_mutex.try_lock()) {
-			// ...
-			qt_streamer_mutex.unlock();
-		}
+bool ProcessingThread::initialize(int argc, char* argv[]) {
+
+	xmlAddress = new char[256];
+	output_directory = new char[256];
+
+	wantsToOutput = false;
+	if (argc >= 3) {
+		printf("%s << Using data output directory of <%s>.\n", __FUNCTION__, argv[2]);
+		wantsToOutput = true;
+		sprintf(output_directory, "%s", argv[2]);
+	} else {
+		output_directory = NULL;
 	}
-}
+
+	writeMode = !(argc >= 4);
+	
+	if (argc > 1) {
+		sprintf(xmlAddress, "%s", argv[1]);
+		ROS_INFO("Using XML file provided at (%s)", xmlAddress);
+	} else {
+#ifdef _WIN32
+		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
+#else
+		sprintf(xmlAddress, "~/%s", DEFAULT_LAUNCH_XML);
 #endif
+		ROS_INFO("No XML config file provided, therefore using default at (%s)", xmlAddress);
+	}
+
+	xP.parseInputXML(xmlAddress);
+	ROS_INFO("About to print XML summary..");
+	xP.printInputSummary();
+
+	// === STREAMER NODE === //
+	// Preliminary settings
+	if (!streamerStartupData.assignFromXml(xP)) return false;
+
+	// Real-time changeable variables
+	if (!scData.assignStartingData(streamerStartupData)) return false;
+
+	sM = new streamerNode(streamerStartupData);
+	sM->initializeOutput(output_directory);
+
+	// === FLOW NODE === //
+	// Preliminary settings
+	if (!trackerStartupData.assignFromXml(xP)) return false;
+
+	// Real-time changeable variables
+	fcData.assignStartingData(trackerStartupData);
+
+	#ifdef _DEBUG
+	if (
+		((fcData.getDetector1() != DETECTOR_FAST) && (fcData.getDetector1() != DETECTOR_OFF)) || 
+		((fcData.getDetector2() != DETECTOR_FAST) && (fcData.getDetector2() != DETECTOR_OFF)) || 
+		((fcData.getDetector3() != DETECTOR_FAST) && (fcData.getDetector3() != DETECTOR_OFF))
+	) {
+		ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
+	}
+	#endif
+
+	return true;
+}
