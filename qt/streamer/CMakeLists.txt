@@ -9,8 +9,12 @@ SET(EXECUTABLE_NAME "streamer_qt_test")
 
 INCLUDE_DIRECTORIES(../${Qt_STREAMER_BUILD_DIR})
 
+IF(NOT EXISTS "${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h")
+	MESSAGE(FATAL_ERROR "<ui_mainwindow_streamer.h> could not be found in <${QTSTREAMER_BUILD_PATH}>")
+ENDIF()
+
 # Tell CMake to create the executable
-add_executable(${EXECUTABLE_NAME} WIN32 main.cpp mainwindow_streamer.cpp mainwindow_streamer.h ../${Qt_STREAMER_BUILD_DIR}/ui_mainwindow_streamer.h)
+add_executable(${EXECUTABLE_NAME} WIN32 main.cpp mainwindow_streamer.cpp mainwindow_streamer.h ${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h)
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(${EXECUTABLE_NAME} Qt5::Widgets)
