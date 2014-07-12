@@ -3,7 +3,9 @@
 
 MainWindow_streamer::MainWindow_streamer(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow_streamer)
+    ui(new Ui::MainWindow_streamer),
+	debugMode(false),
+	verboseMode(false)
 {
     ui->setupUi(this);
 }

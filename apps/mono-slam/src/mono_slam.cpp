@@ -25,25 +25,33 @@ class ProcessingThread : public QThread {
 class ProcessingThread {
 #endif
 public:
+	ProcessingThread() : isLinked(false), wantsToOutput(false), writeMode(false), output_directory(NULL), xmlAddress(NULL) { }
 	bool initialize(int argc, char* argv[]);
 	void run();
 #ifndef _USE_QT_
 	void start() { run(); }
+#else
+	void updateDataFromGUI();
+	void establishLink(MainWindow_streamer *gui);
 #endif
 private:
-	bool wantsToOutput, writeMode;
+	bool isLinked, wantsToOutput, writeMode;
 	char *output_directory;
 	char *xmlAddress;
 	xmlParameters xP;
 	cameraInfoStruct camInfo;
 
-	streamerData streamerStartupData;
 	streamerConfig scData;
+	streamerData streamerStartupData;
 	streamerNode *sM;
 
 	trackerData trackerStartupData;
 	flowConfig fcData;
 	featureTrackerNode *fM;
+
+#ifdef _USE_QT_
+	MainWindow_streamer *linkToGUI;
+#endif
 };
 
 int main(int argc, char* argv[]) {
@@ -65,7 +73,8 @@ int main(int argc, char* argv[]) {
 	
 #ifdef _USE_QT_
 	MainWindow_streamer w;
-    w.show();
+	mainThread.establishLink(&w);
+	w.show();
 	return a.exec();
 #else
 	return S_OK;
@@ -73,12 +82,22 @@ int main(int argc, char* argv[]) {
 
 }
 
+#ifdef _USE_QT_
+void ProcessingThread::establishLink(MainWindow_streamer *gui) {
+	linkToGUI = gui;
+	isLinked = true;
+}
+#endif
+
 void ProcessingThread::run() {
 
 	bool calibrationDataProcessed = false;
 	cv::Mat workingFrame;
 
 	while (sM->wantsToRun()) {
+#ifdef _USE_QT_
+		if (isLinked) updateDataFromGUI();
+#endif
 		sM->serverCallback(scData);
 		if (!sM->retrieveRawFrame()) continue;
 		sM->imageLoop();
@@ -162,3 +181,10 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	return true;
 }
+
+#ifdef _USE_QT_
+void ProcessingThread::updateDataFromGUI() {
+	scData.debugMode = linkToGUI->getDebugMode();
+	scData.verboseMode = linkToGUI->getVerboseMode();
+}
+#endif

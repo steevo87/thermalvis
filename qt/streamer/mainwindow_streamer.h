@@ -15,6 +15,9 @@ public:
     explicit MainWindow_streamer(QWidget *parent = 0);
     ~MainWindow_streamer();
 
+	bool getDebugMode() { return debugMode; }
+	bool getVerboseMode() { return verboseMode; }
+
 private slots:
     void on_debugMode_toggled(bool checked);
 
