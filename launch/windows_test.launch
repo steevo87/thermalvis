@@ -2,7 +2,7 @@
 
 	<node name="streamer" pkg="thermalvis" type="streamer">
 	
-		<param name="debugMode" value="false" />
+		<param name="debugMode" value="true" />
 	
 		<param name="source" value="directory" />
 		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" />
@@ -19,25 +19,9 @@
 		
 		<param name="loopMode" value="true" />
 		
-		<param name="outputColor" value="false" />
+		<param name="outputColor" value="true" />
+		<param name="output8bit" value="false" />
 
-	</node>
-
-	<node name="flow" pkg="thermalvis" type="flow" output="screen">
-		
-		<param name="debugMode" value="true" />
-		<param name="outputDebugImages" value="false" />
-		<param name="outputTrackedFeatures" value="false" />
-		<param name="outputDetectedFeatures" value="false" />
-		<param name="showTrackHistory" value="true" />
-		<param name="autoTrackManagement" value="false" />
-		<!-- <param name="verboseMode" value="true" /> -->
-		
-		<param name="detector_1" value="FAST" />
-		<!-- <param name="minFeatures" value="100" /> -->
-		<param name="sensitivity_1" value="0.1" /> <!-- default is 0.1 -->
-		<param name="flowThreshold" value="0.0002" /> <!-- default is 0.0002 -->
-		
 	</node>
 	
 </launch>

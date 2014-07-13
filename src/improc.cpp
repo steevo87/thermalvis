@@ -5,29 +5,19 @@
 #include "improc.hpp"
 
 double scoreColorImage(const cv::Mat& src) {
-	
 	double score = 0.00;
-	
 	double percentileVals[3] = { 0.001, 0.500, 0.999 };
 	double intensityVals[3];
+	
 	findPercentiles(src, intensityVals, percentileVals, 3);
-
-	
 	double range = max(abs(intensityVals[2] - intensityVals[1]), abs(intensityVals[0] - intensityVals[1]));
-	
-	//printf("%s << range = (%f)\n", __FUNCTION__, range);
-	
 	score = min(range, 128.0) / 128.0;
-	
-	return score;
-	
+	return score;	
 }
 
 double getInterpolatedVal(const cv::Mat& img, cv::Point2f& coord) {
 
 	double retVal = 0.00;
-
-
 
 	// Find four neighbours
 	cv::Point dcoord[4];
@@ -38,8 +28,6 @@ double getInterpolatedVal(const cv::Mat& img, cv::Point2f& coord) {
 	val[1] = 0.0;
 	val[2] = 0.0;
 	val[3] = 0.0;
-
-	//printf("%s << coord = (%f, %f)\n", __FUNCTION__, coord.x, coord.y);
 
 	// #1:
 	dcoord[0] = cv::Point(int(floor(coord.x)), int(floor(coord.y)));
@@ -63,9 +51,6 @@ double getInterpolatedVal(const cv::Mat& img, cv::Point2f& coord) {
 	} else if (img.type() == CV_64FC1) {
         val[1] = float(img.at<double>(dcoord[1].y, dcoord[1].x));
 	}
-
-
-
 
 	dist[1] = float(pow(pow(coord.x - ((float) dcoord[1].x), 2.0) + pow(coord.y - ((float) dcoord[1].y), 2.0), 0.5));
 	total_dist += dist[1];
@@ -97,20 +82,13 @@ double getInterpolatedVal(const cv::Mat& img, cv::Point2f& coord) {
 
 	dist[3] = float(pow(pow(coord.x - ((float) dcoord[3].x), 2.0) + pow(coord.y - ((float) dcoord[3].y), 2.0), 0.5));
 	total_dist += dist[3];
-	//printf("%s << coord[3] = (%d, %d); (%f); (%f)\n", __FUNCTION__, dcoord[3].x, dcoord[3].y, val[3], dist[3]);
-
-	//printf("%s << (%f, %f, %f, %f) : (%f, %f, %f, %f) : (%f)\n", __FUNCTION__, val[0], val[1], val[2], val[3], dist[0], dist[1], dist[2], dist[3], total_dist);
 
 	cv::Point ref_coord = cv::Point(int(floor(coord.x)), int(floor(coord.y)));
 
 	if (total_dist == 0.0) {
 		retVal = val[0];
-		//printf("%s << returning reference val...\n", __FUNCTION__);
-		//printf("%s << (%f, %f, %f, %f) : (%f, %f) vs (%d, %d) : (%f)\n", __FUNCTION__, val[0], val[1], val[2], val[3], coord.x, coord.y, ref_coord.x, ref_coord.y, retVal);
 		return retVal;
 	}
-
-
 
 	cv::Mat x_mat(1, 2, CV_64FC1);
 	x_mat.at<double>(0,0) = 1 - abs(coord.x - ((double) ref_coord.x));
@@ -125,8 +103,6 @@ double getInterpolatedVal(const cv::Mat& img, cv::Point2f& coord) {
 	f_vals.at<double>(0,1) = val[3];
 	f_vals.at<double>(1,0) = val[1];
 	f_vals.at<double>(1,1) = val[2];
-
-
 
 	cv::Mat A = x_mat * f_vals * y_mat;
 
@@ -143,31 +119,14 @@ double getInterpolatedVal(const cv::Mat& img, cv::Point2f& coord) {
         cin.get();
 	}
 
-
-
-
-
-
-
-
 	return retVal;
-
-
 }
 
 bool matricesAreEqual(cv::Mat& mat1, cv::Mat& mat2) {
 
-	if (mat1.rows != mat2.rows) {
-		return false;
-	}
-
-	if (mat1.cols != mat2.cols) {
-		return false;
-	}
-
-	if (mat1.type() != mat2.type()) {
-		return false;
-	}
+	if (mat1.rows != mat2.rows) return false;
+	if (mat1.cols != mat2.cols) return false;
+	if (mat1.type() != mat2.type()) return false;
 
 	if ((mat1.type() != CV_16UC1) && (mat1.type() != CV_16SC1) && (mat1.type() != CV_8UC1) && (mat1.type() != CV_8UC3) && (mat1.type() != CV_8SC1) && (mat1.type() != CV_16UC3) && (mat1.type() != CV_16SC3) && (mat1.type() != CV_64FC1) && (mat1.type() != CV_32FC1))  {
 		printf("%s << ERROR! Equality check for this type (%d) has not been implemented!\n", __FUNCTION__, mat1.type());
@@ -180,65 +139,35 @@ bool matricesAreEqual(cv::Mat& mat1, cv::Mat& mat2) {
 	for (int iii = 0; iii < mat1.rows; iii++) {
 		for (int jjj = 0; jjj < mat1.cols; jjj++) {
 			
-			if (!isStillValid) {
-				break;
-			}
-
+			if (!isStillValid) break;
 			switch (mat1.type()) {
 				case CV_64FC1:
-					//printf("%s << type: CV_64FC1\n", __FUNCTION__);
-					if (mat1.at<double>(iii,jjj) != mat2.at<double>(iii,jjj)) {
-						//printf("%s << (%d) (%d) \n", __FUNCTION__, mat1.at<double>(iii,jjj), mat2.at<double>(iii,jjj));
-						isStillValid = false;
-					}
+					if (mat1.at<double>(iii,jjj) != mat2.at<double>(iii,jjj)) isStillValid = false;
 					break;
 				case CV_32FC1:
-					//printf("%s << type: CV_32FC1\n", __FUNCTION__);
-					if (mat1.at<float>(iii,jjj) != mat2.at<float>(iii,jjj)) {
-						//printf("%s << (%d) (%d) \n", __FUNCTION__, mat1.at<float>(iii,jjj), mat2.at<float>(iii,jjj));
-						isStillValid = false;
-					}
+					if (mat1.at<float>(iii,jjj) != mat2.at<float>(iii,jjj)) isStillValid = false;
 					break;
 				case CV_16UC1:
-					//printf("%s << type: CV_16UC1\n", __FUNCTION__);
-					if (mat1.at<unsigned short>(iii,jjj) != mat2.at<unsigned short>(iii,jjj)) {
-						//printf("%s << (%d) (%d) \n", __FUNCTION__, mat1.at<unsigned short>(iii,jjj), mat2.at<unsigned short>(iii,jjj));
-						isStillValid = false;
-					}
+					if (mat1.at<unsigned short>(iii,jjj) != mat2.at<unsigned short>(iii,jjj)) isStillValid = false;
 					break;
 				case CV_16SC1:
-					//printf("%s << type: CV_16SC1\n", __FUNCTION__);
-					if (mat1.at<short>(iii,jjj) != mat2.at<short>(iii,jjj)) {
-						isStillValid = false;
-					}
+					if (mat1.at<short>(iii,jjj) != mat2.at<short>(iii,jjj)) isStillValid = false;
 					break;
 				case CV_8UC1:
-					//printf("%s << type: CV_8UC1\n", __FUNCTION__);
-					if (mat1.at<unsigned char>(iii,jjj) != mat2.at<unsigned char>(iii,jjj)) {
-						//printf("%s << (%d) (%d) \n", __FUNCTION__, mat1.at<unsigned char>(iii,jjj), mat2.at<unsigned char>(iii,jjj));
-						isStillValid = false;
-					}
+					if (mat1.at<unsigned char>(iii,jjj) != mat2.at<unsigned char>(iii,jjj)) isStillValid = false;
 					break;
 				case CV_8UC3:
-					//printf("%s << type: CV_8UC3\n", __FUNCTION__);
-					if ((mat1.at<cv::Vec3b>(iii,jjj)[0] != mat2.at<cv::Vec3b>(iii,jjj)[0]) || (mat1.at<cv::Vec3b>(iii,jjj)[1] != mat2.at<cv::Vec3b>(iii,jjj)[1]) || (mat1.at<cv::Vec3b>(iii,jjj)[2] != mat2.at<cv::Vec3b>(iii,jjj)[2])) {
-						isStillValid = false;
-					}
+					if ((mat1.at<cv::Vec3b>(iii,jjj)[0] != mat2.at<cv::Vec3b>(iii,jjj)[0]) || (mat1.at<cv::Vec3b>(iii,jjj)[1] != mat2.at<cv::Vec3b>(iii,jjj)[1]) || (mat1.at<cv::Vec3b>(iii,jjj)[2] != mat2.at<cv::Vec3b>(iii,jjj)[2])) isStillValid = false;
 					break;
 				case CV_8SC1:
-					//printf("%s << type: CV_8SC1\n", __FUNCTION__);
-					if (mat1.at<char>(iii,jjj) != mat2.at<char>(iii,jjj)) {
-						isStillValid = false;
-					}
+					if (mat1.at<char>(iii,jjj) != mat2.at<char>(iii,jjj)) isStillValid = false;
 					break;
 				case CV_16UC3:
-					//printf("%s << type: CV_16UC3\n", __FUNCTION__);
 					if ((mat1.at<cv::Vec3s>(iii,jjj)[0] != mat2.at<cv::Vec3s>(iii,jjj)[0]) || (mat1.at<cv::Vec3s>(iii,jjj)[1] != mat2.at<cv::Vec3s>(iii,jjj)[1]) || (mat1.at<cv::Vec3s>(iii,jjj)[2] != mat2.at<cv::Vec3s>(iii,jjj)[2])) {
 						isStillValid = false;
 					}
 					break;
 				case CV_16SC3:
-					//printf("%s << type: CV_16SC3\n", __FUNCTION__);
 					if ((mat1.at<cv::Vec3s>(iii,jjj)[0] != mat2.at<cv::Vec3s>(iii,jjj)[0]) || (mat1.at<cv::Vec3s>(iii,jjj)[1] != mat2.at<cv::Vec3s>(iii,jjj)[1]) || (mat1.at<cv::Vec3s>(iii,jjj)[2] != mat2.at<cv::Vec3s>(iii,jjj)[2])) {
 						isStillValid = false;
 					}
@@ -249,11 +178,8 @@ bool matricesAreEqual(cv::Mat& mat1, cv::Mat& mat2) {
 		}
 	}
 
-	if (!isStillValid) {
-		return false;
-	}
+	if (!isStillValid) return false;
 	return true;
-
 }
 
 double perpDist(cv::Point2f& P1, cv::Point2f& P2, cv::Point2f& P3)
@@ -1147,16 +1073,11 @@ double rectangleOverlap(cv::Rect rectangle1, cv::Rect rectangle2) {
     exTop = max(rectangle1.y, rectangle2.y);
     exBot = min(rectangle1.y+rectangle1.height, rectangle2.y+rectangle2.height);
 
-    if ((exLeft > exRight) || (exTop > exBot)) {
-        return 0.0;
-    }
+    if ((exLeft > exRight) || (exTop > exBot)) return 0.0;
 
     overlapArea = (exRight-exLeft)*(exBot-exTop);
-
     overlapProp = overlapArea / (max(area1, area2));
-
     return overlapProp;
-
 }
 
 void trimToDimensions(cv::Mat& image, int width, int height) {
@@ -1170,9 +1091,6 @@ void trimToDimensions(cv::Mat& image, int width, int height) {
     double wantedRatio = double(width)/double(height);
 
     int initialWidth, initialHeight;
-
-    //imshow("cropping", image);
-    //waitKey(0);
 
     printf("%s << image dimensions = %d x %d.\n", __FUNCTION__, imWidth, imHeight);
     printf("%s << desired dimensions = %d x %d.\n", __FUNCTION__, width, height);
@@ -1211,9 +1129,6 @@ void trimToDimensions(cv::Mat& image, int width, int height) {
         // resize to get width to exactly desired width
         resize(image, dst, cv::Size(initialWidth, initialHeight));
 
-        //imshow("cropping", dst);
-        //waitKey(0);
-
         // cut down height to desired height
         int leftX = (dst.cols - width)/2;
         int rightX = leftX + width;
@@ -1221,15 +1136,9 @@ void trimToDimensions(cv::Mat& image, int width, int height) {
         printf("%s << leftX  = %d; rightX = %d\n", __FUNCTION__, leftX , rightX);
 
         cropImage(dst, cv::Point(leftX, 0), cv::Point(rightX, height));
-
-        //imshow("cropping", dst);
-        //waitKey(0);
-
     }
 
     dst.copyTo(image);
-
-
 }
 
 void process8bitImage(const cv::Mat& src, cv::Mat& dst, int code, double factor) { (code == NORM_MODE_EQUALIZATION) ? equalizeHist(src, dst) : src.copyTo(dst); }
@@ -1244,7 +1153,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 
 	findPercentiles(src, intensityVals, percentileVals, 5);
 
-	printf("%s << percentileVals(%f, %f, %f, %f, %f) = (%d, %d, %d, %d, %d)\n", __FUNCTION__, percentileVals[0], percentileVals[1], percentileVals[2], percentileVals[3], percentileVals[4], intensityVals[0], intensityVals[1], intensityVals[2], intensityVals[3], intensityVals[4]);
+	//printf("%s << percentileVals(%f, %f, %f, %f, %f) = (%d, %d, %d, %d, %d)\n", __FUNCTION__, percentileVals[0], percentileVals[1], percentileVals[2], percentileVals[3], percentileVals[4], intensityVals[0], intensityVals[1], intensityVals[2], intensityVals[3], intensityVals[4]);
 
 	intensityVals[1] = max(intensityVals[1], minVal);
 	intensityVals[3] = min(intensityVals[3], maxVal);
@@ -1274,9 +1183,7 @@ void adaptiveDownsample(const cv::Mat& src, cv::Mat& dst, int code, double facto
 		normalize_16(_16, src, intensityVals[1], intensityVals[3]);
 		down_level(dwn, _16);
 		equalizeHist(dwn, dst);
-	} else {
-		src.convertTo(dst, CV_8UC1);
-	}
+	} else src.convertTo(dst, CV_8UC1);
 }
 
 

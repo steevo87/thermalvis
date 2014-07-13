@@ -13,7 +13,7 @@ streamerSharedData::streamerSharedData() :
 	output8bit(true),
 	outputColor(false),
 	mapCode(CONFIG_MAP_CODE_CIELUV),
-	extremes(true),
+	showExtremeColors(true),
 	undistortImages(false), 
 	fusionFactor(0.6),  
 	serialPollingRate(25.0),

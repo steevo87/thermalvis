@@ -22,7 +22,7 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 
 	normMode = startupData.normMode;
 	mapCode = startupData.mapCode;
-	extremes = startupData.extremes;
+	showExtremeColors = startupData.showExtremeColors;
 	
 	minTemperature = startupData.minTemperature;
 	maxTemperature = startupData.maxTemperature;
@@ -470,7 +470,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("dumpTimestamps")) dumpTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("removeDuplicates")) removeDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("temporalSmoothing")) temporalSmoothing = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("extremes")) extremes = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("showExtremeColors")) showExtremeColors = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("stepChangeTempScale")) stepChangeTempScale = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("rectifyImages")) rectifyImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -912,7 +912,7 @@ streamerNode::streamerNode(streamerData startupData) :
 	mainVideoSource->initialize_video_source();
 #endif
 	getMapping(configData.mapCode, fullMapCode);
-	colourMap.load_standard(fullMapCode, configData.extremes ? 0 : 1);
+	colourMap.load_standard(fullMapCode, configData.showExtremeColors);
 	
 #ifdef _BUILD_FOR_ROS_
 	refreshCameraAdvertisements();
@@ -1633,31 +1633,24 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	configData.normMode = config.normMode;
 	
 	bool wantsToRefreshCameras = false;
+	if (config.output16bit != configData.output16bit) wantsToRefreshCameras = true;
+	if (config.output8bit != configData.output8bit) wantsToRefreshCameras = true;
+	if (config.outputColor != configData.outputColor) wantsToRefreshCameras = true;
 	
-	if (config.output16bit) {
-		wantsToRefreshCameras = true;
-	} else if (!config.output16bit) {
-		wantsToRefreshCameras = true;
-	}
-	
-	if (config.output8bit) {
-		wantsToRefreshCameras = true;
-	} else if (!config.output8bit) {
-		wantsToRefreshCameras = true;
-	}
-	
-	if (config.outputColor) {
-		wantsToRefreshCameras = true;
-	} else if (!config.outputColor) {
-		wantsToRefreshCameras = true;
-	}
-	
+	if (wantsToRefreshCameras) {
 #ifdef _BUILD_FOR_ROS_
-	if (wantsToRefreshCameras) refreshCameraAdvertisements();
+		refreshCameraAdvertisements();
+#else
+		configData.output8bit = config.output8bit;
+		configData.output16bit = config.output16bit;
+		configData.outputColor = config.outputColor;
 #endif
-            
+	}
+
+	configData.mapCode = config.mapCode;
+	configData.showExtremeColors = config.showExtremeColors;
 	getMapping(configData.mapCode, fullMapCode);
-	colourMap.load_standard(fullMapCode, configData.extremes ? 0 : 1);
+	colourMap.load_standard(fullMapCode, !configData.showExtremeColors);
     
 	if (configData.outputFolder == "outputFolder") {
 		

@@ -40,6 +40,211 @@
      <string>verboseMode</string>
     </property>
    </widget>
+   <widget class="QCheckBox" name="output8bit">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>10</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>output8bit</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="output16bit">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>30</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>output16bit</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="outputColor">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>50</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>outputColor</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="autoTemperature">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>10</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>autoTemperature</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="undistortImages">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>30</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>undistortImages</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="normMode">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>151</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="currentText">
+     <string>FIXED_TEMP_RANGE</string>
+    </property>
+    <property name="currentIndex">
+     <number>3</number>
+    </property>
+    <item>
+     <property name="text">
+      <string>FULL_STRETCHING</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>EQUALIZATION</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CENTRALIZED</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FIXED_TEMP_RANGE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FIXED_TEMP_LIMITS</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QComboBox" name="mapCode">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>110</y>
+      <width>151</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="currentText">
+     <string>CIELUV</string>
+    </property>
+    <property name="currentIndex">
+     <number>7</number>
+    </property>
+    <item>
+     <property name="text">
+      <string>GRAYSCALE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CIECOMP</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BLACKBODY</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAINBOW</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>IRON</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BLUERED</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>JET</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CIELUV</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ICEIRON</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ICEFIRE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>REPEATED</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>HIGHLIGHTED</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QCheckBox" name="showExtremeColors">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>50</y>
+      <width>121</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>showExtremeColors</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="desiredDegreesPerGraylevel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>140</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

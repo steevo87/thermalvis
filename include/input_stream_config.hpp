@@ -11,6 +11,10 @@
 #define DETECTOR_MODE_RAD					3
 #define DETECTOR_MODE_TMP					4
 
+#define NO_FILTERING 						0
+#define GAUSSIAN_FILTERING 					1
+#define BILATERAL_FILTERING 				2
+
 #define USB_MODE_16							1
 #define USB_MODE_8							2
 
@@ -19,6 +23,9 @@
 #define DATATYPE_MM   						2
 #define DATATYPE_DEPTH						3
 
+#define NORM_MODE_FULL_STRETCHING 			0
+#define NORM_MODE_EQUALIZATION 				1
+#define NORM_MODE_CENTRALIZED				2
 #define NORM_MODE_FIXED_TEMP_RANGE			3
 #define NORM_MODE_FIXED_TEMP_LIMITS			4
 
@@ -37,8 +44,8 @@
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for streamer
 struct streamerSharedData {
-	bool output16bit, output8bit, outputColor, undistortImages, verboseMode, autoTemperature, debugMode;
-	int maxReadAttempts, normMode, maxNucInterval, mapCode, extremes, inputDatatype, detectorMode, usbMode, zeroDegreesOffset;
+	bool output16bit, output8bit, outputColor, undistortImages, verboseMode, autoTemperature, debugMode, showExtremeColors;
+	int maxReadAttempts, normMode, maxNucInterval, mapCode, inputDatatype, detectorMode, usbMode, zeroDegreesOffset;
 	double framerate, threshFactor, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, degreesPerGraylevel, desiredDegreesPerGraylevel;
 
 	streamerSharedData();

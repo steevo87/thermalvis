@@ -26,6 +26,24 @@ private slots:
 
     void on_verboseMode_toggled(bool checked);
 
+    void on_output8bit_toggled(bool checked);
+
+    void on_output16bit_toggled(bool checked);
+
+    void on_outputColor_toggled(bool checked);
+
+    void on_autoTemperature_toggled(bool checked);
+
+    void on_undistortImages_toggled(bool checked);
+
+    void on_normMode_currentIndexChanged(int index);
+
+    void on_mapCode_currentIndexChanged(int index);
+
+    void on_showExtremeColors_toggled(bool checked);
+
+    void on_desiredDegreesPerGraylevel_textChanged(const QString &arg1);
+
 private:
     Ui::MainWindow_streamer *ui;
 

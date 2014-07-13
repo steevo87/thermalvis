@@ -8,6 +8,7 @@
 #include "opencv2/opencv.hpp"
 
 #include "tools.hpp"
+#include "input_stream_config.hpp"
 
 /// \brief		ID for custom mapping
 namespace tv {
@@ -67,14 +68,6 @@ namespace tv {
 	#define REPEATED_ALT_4	940
 	#define REPEATED_ALT_5	950
 	#define REPEATED_ALT_6	960
-
-	#define NORM_MODE_FULL_STRETCHING 		0
-	#define NORM_MODE_EQUALIZATION 			1
-	#define NORM_MODE_CENTRALIZED			2	
-
-	#define NO_FILTERING 					0
-	#define GAUSSIAN_FILTERING 				1
-	#define BILATERAL_FILTERING 			2
 
 	#define MIN_PROP_THRESHOLD 0.002
 
