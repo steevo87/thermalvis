@@ -13,6 +13,7 @@
 #include "program.hpp"
 #include "improc.hpp"
 #include "radiometric.hpp"
+#include "camera.hpp"
 
 #ifdef _USE_BOOST_
 #include "boost/filesystem.hpp"  
@@ -23,6 +24,8 @@
 #endif
 
 #endif
+
+#include "input_stream_config.hpp"
 
 #define _16BIT_MEDIAN_BUFFER_SIZE				256
 
@@ -69,40 +72,10 @@
 #define DEFAULT_MIN_TEMP			25.0
 #define DEFAULT_MAX_TEMP			35.0
 
-#define NORM_MODE_FIXED_TEMP_RANGE	3
-#define NORM_MODE_FIXED_TEMP_LIMITS	4
-
-#define CONFIG_MAP_CODE_GRAYSCALE		0
-#define CONFIG_MAP_CODE_CIECOMP			1
-#define CONFIG_MAP_CODE_BLACKBODY		2
-#define CONFIG_MAP_CODE_RAINBOW			3
-#define CONFIG_MAP_CODE_IRON			4
-#define CONFIG_MAP_CODE_BLUERED			5
-#define CONFIG_MAP_CODE_JET				6
-#define CONFIG_MAP_CODE_CIELUV			7
-#define CONFIG_MAP_CODE_ICEIRON			8
-#define CONFIG_MAP_CODE_ICEFIRE			9
-#define CONFIG_MAP_CODE_REPEATED		10
-#define CONFIG_MAP_CODE_HIGHLIGHTED		11
-
-#define DETECTOR_MODE_RAW					0
-#define DETECTOR_MODE_LUM					1
-#define DETECTOR_MODE_INS					2
-#define DETECTOR_MODE_RAD					3
-#define DETECTOR_MODE_TMP					4
-
 #define IMAGE_FILTER_NONE					0
 #define IMAGE_FILTER_GAUSSIAN				1
 #define IMAGE_FILTER_BILATERAL				2
 #define IMAGE_FILTER_ADAPTIVE_BILATERAL		3
-
-#define USB_MODE_16							1
-#define USB_MODE_8							2
-
-#define DATATYPE_8BIT 	0
-#define DATATYPE_RAW  	1
-#define DATATYPE_MM   	2
-#define DATATYPE_DEPTH  3
 
 #define OUTPUT_TYPE_CV_8UC1		0
 #define OUTPUT_TYPE_CV_8UC3		1
@@ -115,15 +88,15 @@
 //int getMapIndex(string mapping);
 void getMapping(int mapCode, int& fullMapCode);
 
-/// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for streamer
-struct streamerSharedData {
-	bool output16bit, output8bit, outputColor, undistortImages, verboseMode, autoTemperature, debugMode;
-	int maxReadAttempts, normMode, maxNucInterval, mapCode, extremes, inputDatatype, detectorMode, usbMode, zeroDegreesOffset;
-	double framerate, threshFactor, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, degreesPerGraylevel, desiredDegreesPerGraylevel;
+#ifndef _BUILD_FOR_ROS_
+/// \brief		Substitute for ROS live configuration adjustments
+class streamerConfig : public streamerRealtimeData {
+public:
+	streamerConfig() { }
+	bool assignStartingData(streamerData& startupData);
 
-	streamerSharedData();
 };
-
+#endif
 
 /// \brief		Stores configuration information for the streamer/image-processing routine
 class streamerData : public streamerSharedData, public commonData {
@@ -164,21 +137,6 @@ public:
 	#endif
 
 };
-
-#ifndef _BUILD_FOR_ROS_
-/// \brief		Substitute for ROS live configuration adjustments
-class streamerConfig : public streamerSharedData {
-	friend class streamerNode;
-
-protected:
-    // ...
-
-public:
-	streamerConfig() { }
-	bool assignStartingData(streamerData& startupData);
-
-};
-#endif
 
 /// \brief		Stores some basic camera information in OpenCV format
 struct camData_ {

@@ -13,8 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow_streamer.cpp
+        mainwindow_streamer.cpp \
+    ../../src/input_stream_config.cpp
 
-HEADERS  += mainwindow_streamer.h
+HEADERS  += mainwindow_streamer.h \
+    ../../include/input_stream_config.hpp
 
 FORMS    += mainwindow_streamer.ui

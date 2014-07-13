@@ -7,6 +7,14 @@
 
 #include "opencv_resources.hpp"
 
+struct cameraInfoStruct {
+	double K[9], D[8];
+	int width, height;
+	std::string distortion_model;
+
+	cameraInfoStruct();
+};
+
 /// \brief		Stores camera calibration information in OpenCV format
 struct cameraParameters {
 	

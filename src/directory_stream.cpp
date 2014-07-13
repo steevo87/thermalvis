@@ -45,16 +45,12 @@ bool directoryManager::initializeInput(int argc, char* argv[]) {
 bool directoryManager::initialize() {
 	
 	// Get list of files in directory!
-
 	std::string full_dir = string(input_directory) + "/";
 
+#ifdef _USING_BOOST_
 	fs::path someDir(full_dir);
-		
 	if ( fs::exists(someDir) && fs::is_directory(someDir)) {
-
-		fs::directory_iterator end_iter;
-
-				
+		fs::directory_iterator end_iter;	
 		for( fs::directory_iterator dir_iter(someDir) ; dir_iter != end_iter ; ++dir_iter) {
 			if (fs::is_regular_file(dir_iter->status()) ) {
 
@@ -63,34 +59,23 @@ bool directoryManager::initialize() {
 				string name;
 
 				name = temp.str();
-
-				
-
 				boost::replace_all(name, "\"", "");
 
-				if ((name == ".") || (name == "..") || (name[0] == '.') || (name.size() < 5)) {
-					continue;
-				}
+				if ((name == ".") || (name == "..") || (name[0] == '.') || (name.size() < 5)) continue;
 
 				if (name.size() > 5) {
-					if ((name[name.size()-4] != '.') && (name[name.size()-5] != '.')) {
-						continue;
-					}
+					if ((name[name.size()-4] != '.') && (name[name.size()-5] != '.')) continue;
 				} else {
-					if (name[name.size()-4] != '.') {
-						continue;
-					}
+					if (name[name.size()-4] != '.') continue;
 				}
-
 				file_list.push_back(name);
-				
 			}
 		}
 		
 
-	} else {
-		return false;
-	}
-
+	} else return false;
 	return true;
+#else
+	return false;
+#endif
 }

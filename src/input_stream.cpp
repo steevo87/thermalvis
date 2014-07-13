@@ -1,296 +1,5 @@
 #include "input_stream.hpp"
 
-streamerSharedData::streamerSharedData() : 
-	detectorMode(DETECTOR_MODE_INS),
-	usbMode(USB_MODE_16),
-	inputDatatype(DATATYPE_RAW),
-	maxReadAttempts(0), 
-	framerate(-1.0),
-	normMode(NORM_MODE_FIXED_TEMP_RANGE),
-	normFactor(0.2),
-	threshFactor(0.0), 
-	output16bit(false), 
-	output8bit(true),
-	outputColor(false),
-	mapCode(CONFIG_MAP_CODE_CIELUV),
-	extremes(true),
-	undistortImages(false), 
-	fusionFactor(0.6),  
-	serialPollingRate(25.0),
-	maxNucInterval(45),
-	maxNucThreshold(0.2),
-	verboseMode(false), 
-	autoTemperature(false),
-	minTemperature(25.0), 
-	maxTemperature(35.0),
-	degreesPerGraylevel(0.01),
-	desiredDegreesPerGraylevel(0.05), 
-	zeroDegreesOffset(0),
-	debugMode(false)
-{ }
-	
-streamerData::streamerData() : 
-	filterMode(IMAGE_FILTER_NONE), 
-	filterParam(2.0),
-	outputType(OUTPUT_TYPE_CV_16UC1),
-	syncMode(SYNCMODE_HARD), 
-	camera_number(0), 
-	desiredRows(-1), 
-	desiredCols(-1), 
-	temporalMemory(10), 
-	outputFormatString("png"),
-	radiometryFile("radiometryFile"), 
-	externalNucManagement(""), 
-	portAddress("/dev/ttyUSB0"), 
-	source("dev"), 
-	filename("file"), 
-	capture_device( "/dev/video0"), 
-	folder("folder"), 
-	intrinsics("intrinsics"), 
-	extrinsics("extrinsics"), 
-	addExtrinsics(false),
-	imageDimensionsSpecified(false),
-	topicname("/thermalvis/streamer/image_raw"), 
-	intrinsicsProvided(false), 
-	timeStampsAddress(""), 
-	republishTopic("specifyTopic/image_raw"), 
-	frameID(""), 
-	outputTimeFile(""), 
-	outputVideo("outputVideo"), 
-	videoType("videoType"), 
-	outputTypeString(""), 
-	radiometricCorrection(true), 
-	radiometricRaw(false), 
-	serialFeedback(false), 
-	useCurrentRosTime(false), 
-	alreadyCorrected(true), 
-	markDuplicates(false), 
-	outputDuplicates(false), 
-	smoothThermistor(false), 
-	radiometricInterpolation(true), 
-	displayThermistor(false), 
-	serialComms(false), 
-	readThermistor(true), 
-	forceInputGray(false), 
-	fixDudPixels(true), 
-	disableSkimming(true), 
-	readMode(false), 
-	loadMode(false), 
-	captureMode(false), 
-	pollMode(false), 
-	subscribeMode(false), 
-	resampleMode(false), 
-	loopMode(false), 
-	resizeImages(false), 
-	dumpTimestamps(false), 
-	removeDuplicates(false), 
-	temporalSmoothing(true), 
-	pauseMode(false),  
-	stepChangeTempScale(false), 
-	rectifyImages(false), 
-	writeImages(false), 
-	keepOriginalNames(false), 
-	writeVideo(false), 
-	republishNewTimeStamp(false), 
-	drawReticle(false), 
-	autoAlpha(true), 
-	radiometricBias(0), 
-	calibrationMode(CALIBMODE_OFF), 
-	alternatePeriod(5), 
-	inputWidth(0), 
-	inputHeight(0), 
-	serialCommsConfigurationCode(SERIAL_COMMS_CONFIG_DEFAULT), 
-	serialWriteAttempts(1), 
-	republishSource(NO_REPUBLISH_CODE), 
-	thermistorWindow(5.0), 
-	syncDiff(0.005), 
-	writeQuality(1.0), 
-	maxThermistorDiff(0.5),
-	maxIntensityChange(1), 
-	alpha(0.00),
-	dataValid(true)
-{ }
-
-#ifdef _USE_BOOST_
-bool streamerData::assignFromXml(xmlParameters& xP) {
-
-	int countOfNodes = 0;
-
-	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) {
-		if (v.first.compare("node")) continue; // only progresses if its a "node" tag
-		if (!v.second.get_child("<xmlattr>.type").data().compare("streamer")) countOfNodes++;
-	}
-
-	if (countOfNodes == 0) {
-		ROS_ERROR("No streamer nodes found in XML config!");
-		return false;
-	}
-
-	if (countOfNodes > 1) {
-		ROS_ERROR("More than 1 node of same type found in XML config! This functionality is not supported in Windows..");
-		return false;
-	}
-
-	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
-		if (v.first.compare("node")) continue;
-		if (v.second.get_child("<xmlattr>.type").data().compare("streamer")) continue;
-
-		BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
-			if (v2.first.compare("param")) continue;
-
-			// From <streamerSharedData>
-			// Debugging variables
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			// Camera settings
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputDatatype")) inputDatatype = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("detectorMode")) detectorMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("usbMode")) usbMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			// Input settings
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("framerate")) framerate = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxReadAttempts")) maxReadAttempts = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			// Serial comms
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucInterval")) maxNucInterval = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialPollingRate")) serialPollingRate = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucThreshold")) maxNucThreshold = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			// Image processing
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("undistortImages")) undistortImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoTemperature")) autoTemperature = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("normMode")) normMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("normFactor")) normFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("threshFactor")) threshFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("fusionFactor")) fusionFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("minTemperature")) minTemperature = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxTemperature")) maxTemperature = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("degreesPerGraylevel")) degreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredDegreesPerGraylevel")) desiredDegreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("zeroDegreesOffset")) zeroDegreesOffset = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-
-			// Output settings
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("output16bit")) output16bit = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("output8bit")) output8bit = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputColor")) outputColor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			
-			// From <streamerData>
-
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("syncMode")) syncMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("camera_number")) camera_number = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredRows")) desiredRows = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredCols")) desiredCols = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("mapCode")) mapCode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("temporalMemory")) temporalMemory = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputType")) outputType = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometryFile")) radiometryFile = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("externalNucManagement")) externalNucManagement = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("portAddress")) portAddress = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("read_addr")) read_addr = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("source")) source = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("filename")) filename = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("folder")) folder = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("directory")) folder = v2.second.get_child("<xmlattr>.value").data();
-
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("capture_device")) capture_device = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("intrinsics")) intrinsics = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("extrinsics")) extrinsics = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("topicname")) topicname = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("timeStampsAddress")) timeStampsAddress = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("republishTopic")) republishTopic = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFolder")) outputFolder = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("frameID")) frameID = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFormatString")) outputFormatString = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTimeFile")) outputTimeFile = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputVideo")) outputVideo = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("videoType")) videoType = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTypeString")) outputTypeString = v2.second.get_child("<xmlattr>.value").data();
-			
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricCorrection")) radiometricCorrection = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricRaw")) radiometricRaw = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialFeedback")) serialFeedback = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("useCurrentRosTime")) useCurrentRosTime = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("alreadyCorrected")) alreadyCorrected = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("markDuplicates")) markDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputDuplicates")) outputDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("smoothThermistor")) smoothThermistor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricInterpolation")) radiometricInterpolation = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("displayThermistor")) displayThermistor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialComms")) serialComms = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("readThermistor")) readThermistor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("forceInputGray")) forceInputGray = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("fixDudPixels")) fixDudPixels = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("disableSkimming")) disableSkimming = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("captureMode")) captureMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("readMode")) readMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("loadMode")) loadMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("subscribeMode")) subscribeMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("resampleMode")) resampleMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("pollMode")) pollMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("loopMode")) loopMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("resizeImages")) resizeImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("dumpTimestamps")) dumpTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("removeDuplicates")) removeDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("temporalSmoothing")) temporalSmoothing = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("extremes")) extremes = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("stepChangeTempScale")) stepChangeTempScale = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("rectifyImages")) rectifyImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeImages")) writeImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("keepOriginalNames")) keepOriginalNames = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeVideo")) writeVideo = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("republishNewTimeStamp")) republishNewTimeStamp = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("drawReticle")) drawReticle = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoAlpha")) autoAlpha = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("filterMode")) filterMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricBias")) radiometricBias = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("calibrationMode")) calibrationMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("alternatePeriod")) alternatePeriod = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputWidth")) inputWidth = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputHeight")) inputHeight = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialCommsConfigurationCode")) serialCommsConfigurationCode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucInterval")) maxNucInterval = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialWriteAttempts")) serialWriteAttempts = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("republishSource")) republishSource = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("device_num")) device_num = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxIntensityChange")) maxIntensityChange = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("soft_diff_limit")) soft_diff_limit = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("filterParam")) filterParam = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("thermistorWindow")) thermistorWindow = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("syncDiff")) syncDiff = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeQuality")) writeQuality = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxThermistorDiff")) maxThermistorDiff = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-			
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("alpha")) alpha = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-        }
-
-#ifdef _WIN32
-		// Substitute tildes if in Windows
-		if (folder.size() > 0) {
-			if (folder[0] == '~') {
-				folder.erase(folder.begin());
-				folder = std::getenv("USERPROFILE") + folder;
-			}
-		}
-
-		if (outputFolder.size() > 0) {
-			if (outputFolder[0] == '~') {
-				outputFolder.erase(outputFolder.begin());
-				outputFolder = std::getenv("USERPROFILE") + outputFolder;
-			}
-		}
-#endif
-
-	}
-
-	return dataValid;
-
-}
-#endif
-
 #ifndef _BUILD_FOR_ROS_
 bool streamerConfig::assignStartingData(streamerData& startupData) {
 
@@ -554,6 +263,268 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	if (verboseMode) { ROS_INFO("Checkpoint (%d) reached.", 2); }
 
 	return startupData.dataValid;
+
+}
+#endif
+
+streamerData::streamerData() : 
+	filterMode(IMAGE_FILTER_NONE), 
+	filterParam(2.0),
+	outputType(OUTPUT_TYPE_CV_16UC1),
+	syncMode(SYNCMODE_HARD), 
+	camera_number(0), 
+	desiredRows(-1), 
+	desiredCols(-1), 
+	temporalMemory(10), 
+	outputFormatString("png"),
+	radiometryFile("radiometryFile"), 
+	externalNucManagement(""), 
+	portAddress("/dev/ttyUSB0"), 
+	source("dev"), 
+	filename("file"), 
+	capture_device( "/dev/video0"), 
+	folder("folder"), 
+	intrinsics("intrinsics"), 
+	extrinsics("extrinsics"), 
+	addExtrinsics(false),
+	imageDimensionsSpecified(false),
+	topicname("/thermalvis/streamer/image_raw"), 
+	intrinsicsProvided(false), 
+	timeStampsAddress(""), 
+	republishTopic("specifyTopic/image_raw"), 
+	frameID(""), 
+	outputTimeFile(""), 
+	outputVideo("outputVideo"), 
+	videoType("videoType"), 
+	outputTypeString(""), 
+	radiometricCorrection(true), 
+	radiometricRaw(false), 
+	serialFeedback(false), 
+	useCurrentRosTime(false), 
+	alreadyCorrected(true), 
+	markDuplicates(false), 
+	outputDuplicates(false), 
+	smoothThermistor(false), 
+	radiometricInterpolation(true), 
+	displayThermistor(false), 
+	serialComms(false), 
+	readThermistor(true), 
+	forceInputGray(false), 
+	fixDudPixels(true), 
+	disableSkimming(true), 
+	readMode(false), 
+	loadMode(false), 
+	captureMode(false), 
+	pollMode(false), 
+	subscribeMode(false), 
+	resampleMode(false), 
+	loopMode(false), 
+	resizeImages(false), 
+	dumpTimestamps(false), 
+	removeDuplicates(false), 
+	temporalSmoothing(true), 
+	pauseMode(false),  
+	stepChangeTempScale(false), 
+	rectifyImages(false), 
+	writeImages(false), 
+	keepOriginalNames(false), 
+	writeVideo(false), 
+	republishNewTimeStamp(false), 
+	drawReticle(false), 
+	autoAlpha(true), 
+	radiometricBias(0), 
+	calibrationMode(CALIBMODE_OFF), 
+	alternatePeriod(5), 
+	inputWidth(0), 
+	inputHeight(0), 
+	serialCommsConfigurationCode(SERIAL_COMMS_CONFIG_DEFAULT), 
+	serialWriteAttempts(1), 
+	republishSource(NO_REPUBLISH_CODE), 
+	thermistorWindow(5.0), 
+	syncDiff(0.005), 
+	writeQuality(1.0), 
+	maxThermistorDiff(0.5),
+	maxIntensityChange(1), 
+	alpha(0.00),
+	dataValid(true)
+{ }
+
+#ifdef _USE_BOOST_
+bool streamerData::assignFromXml(xmlParameters& xP) {
+
+	int countOfNodes = 0;
+
+	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) {
+		if (v.first.compare("node")) continue; // only progresses if its a "node" tag
+		if (!v.second.get_child("<xmlattr>.type").data().compare("streamer")) countOfNodes++;
+	}
+
+	if (countOfNodes == 0) {
+		ROS_ERROR("No streamer nodes found in XML config!");
+		return false;
+	}
+
+	if (countOfNodes > 1) {
+		ROS_ERROR("More than 1 node of same type found in XML config! This functionality is not supported in Windows..");
+		return false;
+	}
+
+	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
+		if (v.first.compare("node")) continue;
+		if (v.second.get_child("<xmlattr>.type").data().compare("streamer")) continue;
+
+		BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
+			if (v2.first.compare("param")) continue;
+
+			// From <streamerSharedData>
+			// Debugging variables
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			// Camera settings
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputDatatype")) inputDatatype = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("detectorMode")) detectorMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("usbMode")) usbMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			// Input settings
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("framerate")) framerate = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxReadAttempts")) maxReadAttempts = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			// Serial comms
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucInterval")) maxNucInterval = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialPollingRate")) serialPollingRate = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucThreshold")) maxNucThreshold = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			// Image processing
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("undistortImages")) undistortImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoTemperature")) autoTemperature = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("normMode")) normMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("normFactor")) normFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("threshFactor")) threshFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("fusionFactor")) fusionFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("minTemperature")) minTemperature = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxTemperature")) maxTemperature = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("degreesPerGraylevel")) degreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredDegreesPerGraylevel")) desiredDegreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("zeroDegreesOffset")) zeroDegreesOffset = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+			// Output settings
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("output16bit")) output16bit = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("output8bit")) output8bit = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputColor")) outputColor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			
+			// From <streamerData>
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("syncMode")) syncMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("camera_number")) camera_number = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredRows")) desiredRows = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredCols")) desiredCols = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("mapCode")) mapCode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("temporalMemory")) temporalMemory = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputType")) outputType = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometryFile")) radiometryFile = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("externalNucManagement")) externalNucManagement = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("portAddress")) portAddress = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("read_addr")) read_addr = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("source")) source = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("filename")) filename = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("folder")) folder = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("directory")) folder = v2.second.get_child("<xmlattr>.value").data();
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("capture_device")) capture_device = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("intrinsics")) intrinsics = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("extrinsics")) extrinsics = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("topicname")) topicname = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("timeStampsAddress")) timeStampsAddress = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("republishTopic")) republishTopic = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFolder")) outputFolder = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("frameID")) frameID = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFormatString")) outputFormatString = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTimeFile")) outputTimeFile = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputVideo")) outputVideo = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("videoType")) videoType = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTypeString")) outputTypeString = v2.second.get_child("<xmlattr>.value").data();
+			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricCorrection")) radiometricCorrection = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricRaw")) radiometricRaw = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialFeedback")) serialFeedback = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("useCurrentRosTime")) useCurrentRosTime = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("alreadyCorrected")) alreadyCorrected = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("markDuplicates")) markDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputDuplicates")) outputDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("smoothThermistor")) smoothThermistor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricInterpolation")) radiometricInterpolation = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("displayThermistor")) displayThermistor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialComms")) serialComms = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("readThermistor")) readThermistor = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("forceInputGray")) forceInputGray = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("fixDudPixels")) fixDudPixels = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("disableSkimming")) disableSkimming = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("captureMode")) captureMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("readMode")) readMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("loadMode")) loadMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("subscribeMode")) subscribeMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("resampleMode")) resampleMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("pollMode")) pollMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("loopMode")) loopMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("resizeImages")) resizeImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("dumpTimestamps")) dumpTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("removeDuplicates")) removeDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("temporalSmoothing")) temporalSmoothing = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("extremes")) extremes = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("stepChangeTempScale")) stepChangeTempScale = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("rectifyImages")) rectifyImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeImages")) writeImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("keepOriginalNames")) keepOriginalNames = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeVideo")) writeVideo = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("republishNewTimeStamp")) republishNewTimeStamp = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("drawReticle")) drawReticle = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoAlpha")) autoAlpha = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("filterMode")) filterMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricBias")) radiometricBias = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("calibrationMode")) calibrationMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("alternatePeriod")) alternatePeriod = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputWidth")) inputWidth = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputHeight")) inputHeight = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialCommsConfigurationCode")) serialCommsConfigurationCode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucInterval")) maxNucInterval = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialWriteAttempts")) serialWriteAttempts = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("republishSource")) republishSource = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("device_num")) device_num = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxIntensityChange")) maxIntensityChange = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("soft_diff_limit")) soft_diff_limit = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("filterParam")) filterParam = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("thermistorWindow")) thermistorWindow = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("syncDiff")) syncDiff = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeQuality")) writeQuality = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxThermistorDiff")) maxThermistorDiff = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("alpha")) alpha = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+        }
+
+#ifdef _WIN32
+		// Substitute tildes if in Windows
+		if (folder.size() > 0) {
+			if (folder[0] == '~') {
+				folder.erase(folder.begin());
+				folder = std::getenv("USERPROFILE") + folder;
+			}
+		}
+
+		if (outputFolder.size() > 0) {
+			if (outputFolder[0] == '~') {
+				outputFolder.erase(outputFolder.begin());
+				outputFolder = std::getenv("USERPROFILE") + outputFolder;
+			}
+		}
+#endif
+
+	}
+
+	return dataValid;
 
 }
 #endif

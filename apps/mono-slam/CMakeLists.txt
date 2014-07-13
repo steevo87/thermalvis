@@ -15,6 +15,8 @@ ENDIF()
  
 project(mono-slam)
 
+ADD_DEFINITIONS( -D_INCLUDE_INTERFACING_ )
+
 set (ADDITIONAL_LIBS "")
 
 FILE(GLOB LOCAL_HEADERS include/*.h*)

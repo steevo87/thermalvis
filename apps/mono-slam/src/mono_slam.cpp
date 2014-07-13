@@ -25,13 +25,15 @@ class ProcessingThread : public QThread {
 class ProcessingThread {
 #endif
 public:
-	ProcessingThread() : isLinked(false), wantsToOutput(false), writeMode(false), output_directory(NULL), xmlAddress(NULL) { }
+	ProcessingThread() : isLinked(false), wantsToOutput(false), writeMode(false), output_directory(NULL), xmlAddress(NULL) { 
+		scData = new streamerConfig;
+		streamerStartupData = new streamerData;
+	}
 	bool initialize(int argc, char* argv[]);
 	void run();
 #ifndef _USE_QT_
 	void start() { run(); }
 #else
-	void updateDataFromGUI();
 	void establishLink(MainWindow_streamer *gui);
 #endif
 private:
@@ -41,17 +43,13 @@ private:
 	xmlParameters xP;
 	cameraInfoStruct camInfo;
 
-	streamerConfig scData;
-	streamerData streamerStartupData;
+	streamerConfig *scData;
+	streamerData *streamerStartupData;
 	streamerNode *sM;
 
 	trackerData trackerStartupData;
 	flowConfig fcData;
 	featureTrackerNode *fM;
-
-#ifdef _USE_QT_
-	MainWindow_streamer *linkToGUI;
-#endif
 };
 
 int main(int argc, char* argv[]) {
@@ -84,7 +82,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef _USE_QT_
 void ProcessingThread::establishLink(MainWindow_streamer *gui) {
-	linkToGUI = gui;
+	gui->linkRealtimeVariables(scData);
 	isLinked = true;
 }
 #endif
@@ -95,10 +93,7 @@ void ProcessingThread::run() {
 	cv::Mat workingFrame;
 
 	while (sM->wantsToRun()) {
-#ifdef _USE_QT_
-		if (isLinked) updateDataFromGUI();
-#endif
-		sM->serverCallback(scData);
+		sM->serverCallback(*scData);
 		if (!sM->retrieveRawFrame()) continue;
 		sM->imageLoop();
 		if (!sM->get8bitImage(workingFrame)) continue;
@@ -154,12 +149,12 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	// === STREAMER NODE === //
 	// Preliminary settings
-	if (!streamerStartupData.assignFromXml(xP)) return false;
+	if (!streamerStartupData->assignFromXml(xP)) return false;
 
 	// Real-time changeable variables
-	if (!scData.assignStartingData(streamerStartupData)) return false;
+	if (!scData->assignStartingData(*streamerStartupData)) return false;
 
-	sM = new streamerNode(streamerStartupData);
+	sM = new streamerNode(*streamerStartupData);
 	sM->initializeOutput(output_directory);
 
 	// === FLOW NODE === //
@@ -181,10 +176,3 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	return true;
 }
-
-#ifdef _USE_QT_
-void ProcessingThread::updateDataFromGUI() {
-	scData.debugMode = linkToGUI->getDebugMode();
-	scData.verboseMode = linkToGUI->getVerboseMode();
-}
-#endif

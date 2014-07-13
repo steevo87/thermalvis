@@ -89,14 +89,6 @@ struct flowSharedData {
 	flowSharedData();
 };
 
-struct cameraInfoStruct {
-	double K[9], D[8];
-	int width, height;
-	std::string distortion_model;
-
-	cameraInfoStruct();
-};
-
 /// \brief		Stores configuration information for the sparse optical flow routine
 class trackerData : public flowSharedData, public commonData {
 	friend class xmlParameters;
