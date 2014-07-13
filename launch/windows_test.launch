@@ -2,6 +2,8 @@
 
 	<node name="streamer" pkg="thermalvis" type="streamer">
 	
+		<param name="debugMode" value="false" />
+	
 		<param name="source" value="directory" />
 		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" />
 		
@@ -17,6 +19,8 @@
 		
 		<param name="loopMode" value="true" />
 		
+		<param name="outputColor" value="false" />
+
 	</node>
 
 	<node name="flow" pkg="thermalvis" type="flow" output="screen">

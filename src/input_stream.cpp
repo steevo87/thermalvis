@@ -1836,18 +1836,13 @@ void streamerNode::updateMap() {
             updateCameraInfoExtrinsics();
 #endif
             if (configData.rectifyImages){
-                if (configData.camera_number == 0){
+                if (configData.camera_number == 0) {
                     cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R0, globalExtrinsicsData.P0, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
-                }else if (configData.camera_number == 1){
+                } else if (configData.camera_number == 1) {
                     cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R1, globalExtrinsicsData.P1, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
                 }
-            }else{
-                cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
-            }
-
-        }else{
-            cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat() , globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
-        }
+            } else cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
+        } else cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat() , globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
 
 	alphaChanged = false;
 	
@@ -2204,6 +2199,14 @@ bool streamerNode::imageLoop() {
 	return true;
 }
 
+void streamerNode::displayFrame(cv::Mat& frame, cv::string name) {
+	if (frame.rows != 0) {
+		!pauseMode ? cv::imshow(name, frame) : 0;
+		char key = cv::waitKey(1);
+		if (key == 'q') isValid = false;
+	}
+}
+
 void streamerNode::publishTopics() {
 
 #ifdef _BUILD_FOR_ROS_
@@ -2223,21 +2226,23 @@ void streamerNode::publishTopics() {
 			remap(scaled16Mat, _16bitMat_pub, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT, 0);
 		} else _16bitMat_pub = cv::Mat(scaled16Mat);
 
-#ifdef _BUILD_FOR_ROS_		
-			if (configData.output16bit) {
-				std::copy(&(_16bitMat_pub.at<char>(0,0)), &(_16bitMat_pub.at<char>(0,0))+(_16bitMat_pub.cols*_16bitMat_pub.rows*2), msg_16bit.data.begin());
-				if (!cameraPublished) {
-					pub_16bit.publish(msg_16bit, camera_info);
-					cameraPublished = true;
-				} else pub_16bit_im.publish(msg_16bit);
+	
+		if (configData.output16bit) {
+#ifdef _BUILD_FOR_ROS_	
+			std::copy(&(_16bitMat_pub.at<char>(0,0)), &(_16bitMat_pub.at<char>(0,0))+(_16bitMat_pub.cols*_16bitMat_pub.rows*2), msg_16bit.data.begin());
+			if (!cameraPublished) {
+				pub_16bit.publish(msg_16bit, camera_info);
+				cameraPublished = true;
+			} else pub_16bit_im.publish(msg_16bit);
 
-				//HGH
-				if (configData.republishSource==REPUBLISH_CODE_16BIT) {
-					(configData.republishNewTimeStamp) ? pub_republish.publish(msg_16bit, camera_info, ros::Time::now()) : pub_republish.publish(msg_16bit, camera_info);
-				}
+			//HGH
+			if (configData.republishSource==REPUBLISH_CODE_16BIT) {
+				(configData.republishNewTimeStamp) ? pub_republish.publish(msg_16bit, camera_info, ros::Time::now()) : pub_republish.publish(msg_16bit, camera_info);
 			}
-#endif	
-
+#else
+			displayFrame(_16bitMat_pub, "streamer_16bit");
+#endif
+		}
 	}
 
 	if ((configData.output8bit) || (configData.writeImages &&  (configData.outputType == OUTPUT_TYPE_CV_8UC1))) {
@@ -2249,7 +2254,6 @@ void streamerNode::publishTopics() {
 			_8bitMat_pub = cv::Mat(_8bitMat);
 		}
 
-#ifdef _BUILD_FOR_ROS_	
 		if (configData.output8bit) {
 
 			//HGH
@@ -2258,6 +2262,7 @@ void streamerNode::publishTopics() {
 				line(_8bitMat_pub, cv::Point(_8bitMat_pub.cols/2,0), cv::Point(_8bitMat_pub.cols/2, _8bitMat_pub.rows), cv::Scalar(0),1,8);
 			}
 
+#ifdef _BUILD_FOR_ROS_	
 			std::copy(&(_8bitMat_pub.at<unsigned char>(0,0)), &(_8bitMat_pub.at<unsigned char>(0,0))+(_8bitMat_pub.cols*_8bitMat_pub.rows), msg_8bit.data.begin());
 
 			if (!cameraPublished) {
@@ -2273,11 +2278,10 @@ void streamerNode::publishTopics() {
 					pub_republish.publish(msg_8bit, camera_info, ros::Time::now());
 				} else pub_republish.publish(msg_8bit, camera_info);
 			}
-
-		}
-
+#else
+			displayFrame(_8bitMat_pub, "streamer_8bit");
 #endif
-	
+		}
 	}
 
 	if ((configData.outputColor) || (configData.writeImages &&  (configData.outputType == OUTPUT_TYPE_CV_8UC3))) {
@@ -2289,13 +2293,14 @@ void streamerNode::publishTopics() {
 				remap(colourMat, colourMat_pub, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT, 0);
 			} else colourMat_pub = cv::Mat(colourMat);
 
-#ifdef _BUILD_FOR_ROS_	
+
 			if (configData.outputColor) {
 				if (configData.drawReticle){
 					line(colourMat_pub, cv::Point(0,colourMat_pub.rows/2), cv::Point(colourMat_pub.cols, colourMat_pub.rows/2), cv::Scalar(0,255,0),1,8);
 					line(colourMat_pub, cv::Point(colourMat_pub.cols/2,0), cv::Point(colourMat_pub.cols/2, colourMat_pub.rows), cv::Scalar(0,255,0),1,8);         
 				}
 
+#ifdef _BUILD_FOR_ROS_	
 				std::copy(&(colourMat_pub.at<cv::Vec3b>(0,0)[0]), &(colourMat_pub.at<cv::Vec3b>(0,0)[0])+(colourMat_pub.cols*colourMat_pub.rows*3), msg_color.data.begin());
 
 				if (!cameraPublished) {
@@ -2307,8 +2312,11 @@ void streamerNode::publishTopics() {
 				if (configData.republishSource == REPUBLISH_CODE_8BIT_COL){
 					(configData.republishNewTimeStamp) ? pub_republish.publish(msg_color, camera_info, ros::Time::now()) : pub_republish.publish(msg_color, camera_info);
 				}
-			}
+#else
+				displayFrame(colourMat_pub, "streamer_color");
 #endif
+			}
+
 		}
 	}
 

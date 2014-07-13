@@ -25,7 +25,14 @@ class ProcessingThread : public QThread {
 class ProcessingThread {
 #endif
 public:
-	ProcessingThread() : isLinked(false), wantsToOutput(false), writeMode(false), output_directory(NULL), xmlAddress(NULL) { 
+	ProcessingThread() : 
+		isLinked(false), 
+		wantsToOutput(false), 
+		writeMode(false), 
+		output_directory(NULL), 
+		xmlAddress(NULL), 
+		wantsFlow(true) 
+	{ 
 		scData = new streamerConfig;
 		streamerStartupData = new streamerData;
 	}
@@ -37,7 +44,7 @@ public:
 	void establishLink(MainWindow_streamer *gui);
 #endif
 private:
-	bool isLinked, wantsToOutput, writeMode;
+	bool isLinked, wantsToOutput, writeMode, wantsFlow;
 	char *output_directory;
 	char *xmlAddress;
 	xmlParameters xP;
@@ -96,22 +103,25 @@ void ProcessingThread::run() {
 		sM->serverCallback(*scData);
 		if (!sM->retrieveRawFrame()) continue;
 		sM->imageLoop();
-		if (!sM->get8bitImage(workingFrame)) continue;
-			
-		if (!calibrationDataProcessed) {
-			trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;
-			trackerStartupData.cameraData.cameraSize.height = workingFrame.rows;
-			trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 0) = trackerStartupData.cameraData.cameraSize.width;
-			trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 1) = trackerStartupData.cameraData.cameraSize.height;
-			trackerStartupData.cameraData.updateCameraParameters();
-			calibrationDataProcessed = true;
-			fM = new featureTrackerNode(trackerStartupData);
-			fM->initializeOutput(output_directory);
-			fM->setWriteMode(writeMode);
+		
+		if (wantsFlow) {
+			if (!sM->get8bitImage(workingFrame)) continue;
+			if (!calibrationDataProcessed) {
+				trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;
+				trackerStartupData.cameraData.cameraSize.height = workingFrame.rows;
+				trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 0) = trackerStartupData.cameraData.cameraSize.width;
+				trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 1) = trackerStartupData.cameraData.cameraSize.height;
+				trackerStartupData.cameraData.updateCameraParameters();
+				calibrationDataProcessed = true;
+				fM = new featureTrackerNode(trackerStartupData);
+				fM->initializeOutput(output_directory);
+				fM->setWriteMode(writeMode);
+			}
+			fM->serverCallback(fcData);
+			fM->handle_camera(workingFrame, &camInfo);
+			fM->features_loop();
 		}
-		fM->serverCallback(fcData);
-		fM->handle_camera(workingFrame, &camInfo);
-		fM->features_loop();
+		
 	}
 }
 
@@ -159,20 +169,21 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	// === FLOW NODE === //
 	// Preliminary settings
-	if (!trackerStartupData.assignFromXml(xP)) return false;
+	wantsFlow = trackerStartupData.assignFromXml(xP);
 
-	// Real-time changeable variables
-	fcData.assignStartingData(trackerStartupData);
+	if (wantsFlow) {
+		// Real-time changeable variables
+		fcData.assignStartingData(trackerStartupData);
 
-	#ifdef _DEBUG
-	if (
-		((fcData.getDetector1() != DETECTOR_FAST) && (fcData.getDetector1() != DETECTOR_OFF)) || 
-		((fcData.getDetector2() != DETECTOR_FAST) && (fcData.getDetector2() != DETECTOR_OFF)) || 
-		((fcData.getDetector3() != DETECTOR_FAST) && (fcData.getDetector3() != DETECTOR_OFF))
-	) {
-		ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
+		#ifdef _DEBUG
+		if (
+			((fcData.getDetector1() != DETECTOR_FAST) && (fcData.getDetector1() != DETECTOR_OFF)) || 
+			((fcData.getDetector2() != DETECTOR_FAST) && (fcData.getDetector2() != DETECTOR_OFF)) || 
+			((fcData.getDetector3() != DETECTOR_FAST) && (fcData.getDetector3() != DETECTOR_OFF))
+		) {
+			ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
+		}
+		#endif
 	}
-	#endif
-
 	return true;
 }
