@@ -42,7 +42,37 @@ private slots:
 
     void on_showExtremeColors_toggled(bool checked);
 
-    void on_desiredDegreesPerGraylevel_textChanged(const QString &arg1);
+    void on_inputDatatype_currentIndexChanged(int index);
+
+    void on_detectorMode_currentIndexChanged(int index);
+
+    void on_usbMode_currentIndexChanged(int index);
+
+    void on_maxReadAttempts_returnPressed();
+
+    void on_desiredDegreesPerGraylevel_returnPressed();
+
+    void on_maxNucInterval_returnPressed();
+
+    void on_zeroDegreesOffset_returnPressed();
+
+    void on_degreesPerGraylevel_returnPressed();
+
+    void on_framerate_returnPressed();
+
+    void on_threshFactor_returnPressed();
+
+    void on_normFactor_returnPressed();
+
+    void on_fusionFactor_returnPressed();
+
+    void on_serialPollingRate_returnPressed();
+
+    void on_maxNucThreshold_returnPressed();
+
+    void on_minTemp_returnPressed();
+
+    void on_maxTemp_returnPressed();
 
 private:
     Ui::MainWindow_streamer *ui;

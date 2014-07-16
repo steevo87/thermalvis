@@ -123,13 +123,146 @@ void MainWindow_streamer::on_mapCode_currentIndexChanged(int index)
 #endif
 }
 
-
-
-void MainWindow_streamer::on_desiredDegreesPerGraylevel_textChanged(const QString &arg1)
+void MainWindow_streamer::on_inputDatatype_currentIndexChanged(int index)
 {
 #ifdef _INCLUDE_INTERFACING_
-    realtimeParameters->desiredDegreesPerGraylevel = arg1.toDouble();
+    realtimeParameters->inputDatatype = index;
 #else
-    (void)arg1;
+    (void)index;
+#endif
+}
+
+void MainWindow_streamer::on_detectorMode_currentIndexChanged(int index)
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->detectorMode = index;
+#else
+    (void)index;
+#endif
+}
+
+void MainWindow_streamer::on_usbMode_currentIndexChanged(int index)
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->usbMode = index;
+#else
+    (void)index;
+#endif
+}
+
+void MainWindow_streamer::on_maxReadAttempts_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->maxReadAttempts = ui->maxReadAttempts->text().toInt();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_desiredDegreesPerGraylevel_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->desiredDegreesPerGraylevel = ui->desiredDegreesPerGraylevel->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_maxNucInterval_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->maxNucInterval = ui->maxNucInterval->text().toInt();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_zeroDegreesOffset_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->zeroDegreesOffset = ui->zeroDegreesOffset->text().toInt();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_degreesPerGraylevel_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->degreesPerGraylevel = ui->degreesPerGraylevel->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_framerate_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->framerate = ui->framerate->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_threshFactor_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->threshFactor = ui->threshFactor->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_normFactor_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->normFactor = ui->normFactor->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_fusionFactor_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->fusionFactor = ui->fusionFactor->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_serialPollingRate_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->serialPollingRate = ui->serialPollingRate->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_maxNucThreshold_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->maxNucThreshold = ui->maxNucThreshold->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_minTemp_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->minTemperature = ui->minTemp->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
+void MainWindow_streamer::on_maxTemp_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->maxTemperature = ui->maxTemp->text().toDouble();
+#else
+    (void)0;
 #endif
 }
