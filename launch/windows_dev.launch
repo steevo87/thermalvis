@@ -1,0 +1,47 @@
+<launch>
+
+	<node name="streamer" pkg="thermalvis" type="streamer">
+	
+		<param name="debugMode" value="true" />
+	
+		<param name="source" value="directory" />
+		<param name="directory" value="~\Documents\Data\optris\low-snr" />
+		
+		<param name="filterMode" value="0" /> <!-- 0 for no filter, 1 for gaussian, 2 for bilateral, 3 for adaptive bilateral -->
+		<param name="filterParam" value="2.0" />
+		
+		<!-- <param name="degreesPerGraylevel" value="0.025" /> --> <!-- value of 0.025 works OK for miricle sequences.. -->
+		<!-- <param name="desiredDegreesPerGraylevel" value="0.05" /> --> <!-- can adjust this to enhance contrast -->
+		
+		<param name="outputType" value="0" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
+		<param name="writeImages" value="false" />
+		<param name="outputFolder" value="~\Documents\Data\optris\output" />
+		
+		<param name="loopMode" value="true" />
+		
+		<param name="outputColor" value="false" />
+		<param name="output8bit" value="true" />
+
+	</node>
+	
+	<node name="flow" pkg="thermalvis" type="flow" output="screen">
+		
+		<param name="debugMode" value="true" />
+		<param name="detectEveryFrame" value="true" />
+		<param name="attemptHistoricalRecovery" value="false" />
+		
+		<param name="outputDebugImages" value="false" />
+		<param name="outputTrackedFeatures" value="false" />
+		<param name="outputDetectedFeatures" value="true" />
+		<param name="showTrackHistory" value="true" />
+		<param name="autoTrackManagement" value="false" />
+		<!-- <param name="verboseMode" value="true" /> -->
+		
+		<param name="detector_1" value="HARRIS" /> <!-- options: FAST, GFTT and HARRIS -->
+		<!-- <param name="minFeatures" value="100" /> -->
+		<param name="sensitivity_1" value="3" /> <!-- default is 0.1 -->
+		<param name="flowThreshold" value="0.0002" /> <!-- default is 0.0002 -->
+		
+	</node>
+	
+</launch>

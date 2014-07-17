@@ -6,7 +6,7 @@
 #include "directory_stream.hpp"
 #include "sparse_flow.hpp"
 
-#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_test.launch"
+#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_demo.launch"
 
 #ifdef _USE_QT_
 #include "mainwindow_streamer.h"

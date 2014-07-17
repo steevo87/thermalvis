@@ -1427,11 +1427,8 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::
 }
 
 void sortKeyPoints(vector<cv::KeyPoint>& KeyPoints, unsigned int maxKeyPoints) {
-    vector<cv::KeyPoint> sortedKeyPoints;
-
-    if (KeyPoints.size() <= 1) {
-        return;
-    }
+    if (KeyPoints.size() <= 1) return;
+	vector<cv::KeyPoint> sortedKeyPoints;
 
     // Add the first one
     sortedKeyPoints.push_back(KeyPoints.at(0));

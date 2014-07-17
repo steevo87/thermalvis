@@ -922,6 +922,7 @@ void featureTrackerNode::detectNewFeatures() {
 			
 			currPoints.clear();
 			keypointDetector[jjj] -> detect(grayImageBuffer[readyFrame % 2], currPoints);
+			sortKeyPoints(currPoints);
 
 			if (configData.outputDetectedFeatures) {
 				char detectedFeaturesFile[256];
@@ -948,7 +949,6 @@ void featureTrackerNode::detectNewFeatures() {
 			
 			if (currPoints.size() != 0) {
 				
-				sortKeyPoints(currPoints);
 				testTime = timeElapsedMS(test_timer, false);				
 				vector<cv::Point2f> candidates;
 				reduceEdgyFeatures(currPoints, configData.cameraData);
