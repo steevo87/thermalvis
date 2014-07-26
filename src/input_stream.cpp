@@ -374,13 +374,14 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
 		if (v.first.compare("node")) continue;
 		if (v.second.get_child("<xmlattr>.type").data().compare("streamer")) {
-			if (v.second.get_child("<xmlattr>.type").data().compare("image_view")) {
-				continue;
-			} else {
+			if (!v.second.get_child("<xmlattr>.type").data().compare("image_view")) {
 				BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
 					if (v2.first.compare("remap")) continue;
 					if (!v2.second.get_child("<xmlattr>.from").data().compare("image")) images_to_display.push_back(v2.second.get_child("<xmlattr>.to").data());
 				}
+			} else if (!v.second.get_child("<xmlattr>.type").data().compare("reconfigure_gui")) {
+				if (!v.second.get_child("<xmlattr>.args").data().compare("streamer")) displayGUI = true;
+				if (!v.second.get_child("<xmlattr>.args").data().compare("/streamer")) displayGUI = true;
 			}
 			continue;
 		}
@@ -551,11 +552,11 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 		}
 
 		 if (foundStreamer) {
-			if (images_to_display.at(iii).compare("image_col") == 0) {
+			if (!images_to_display.at(iii).compare("image_col")) {
 				displayColour = true;
-			} else if (images_to_display.at(iii).compare("image_mono") == 0) {
+			} else if (!images_to_display.at(iii).compare("image_mono")) {
 				display8bit = true;
-			} else if (images_to_display.at(iii).compare("image_raw") == 0) {
+			} else if (!images_to_display.at(iii).compare("image_raw")) {
 				display16bit = true;
 			}
 		 } 

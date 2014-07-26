@@ -42,6 +42,7 @@ public:
 	void start() { run(); }
 #else
 	void establishLink(MainWindow_streamer *gui);
+	bool wantsGUI() { return streamerStartupData->displayGUI; }
 #endif
 private:
 	bool isLinked, wantsToOutput, writeMode, wantsFlow;
@@ -77,14 +78,16 @@ int main(int argc, char* argv[]) {
 	mainThread.start();
 	
 #ifdef _USE_QT_
-	MainWindow_streamer w;
-	mainThread.establishLink(&w);
-	w.show();
+	MainWindow_streamer* w;
+	if (mainThread.wantsGUI()) {
+		w = new MainWindow_streamer;
+		mainThread.establishLink(w);
+		w->show();
+	}
 	return a.exec();
-#else
-	return S_OK;
 #endif
 
+	return S_OK;
 }
 
 #ifdef _USE_QT_

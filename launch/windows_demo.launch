@@ -24,6 +24,8 @@
 
 	</node>
 	
+	<node name="reconfigure_streamer" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/streamer"/>
+	
 	<node name="flow" pkg="thermalvis" type="flow" output="screen">
 		
 		<param name="debugMode" value="true" />

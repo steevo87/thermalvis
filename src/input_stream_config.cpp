@@ -38,6 +38,7 @@ streamerLaunchOnlyData::streamerLaunchOnlyData() :
 	display8bit(false), 
 	display16bit(false), 
 	displayColour(false),
+	displayGUI(false),
 #endif
 	specialMode(false)
 { }

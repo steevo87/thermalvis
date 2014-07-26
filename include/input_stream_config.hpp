@@ -62,7 +62,7 @@ struct streamerRealtimeOnlyData {
 struct streamerLaunchOnlyData {
 	bool specialMode;
 #ifndef _BUILD_FOR_ROS_
-	bool display8bit, display16bit, displayColour;
+	bool display8bit, display16bit, displayColour, displayGUI;
 #endif
 	streamerLaunchOnlyData();
 };
