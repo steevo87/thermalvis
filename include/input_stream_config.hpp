@@ -61,7 +61,9 @@ struct streamerRealtimeOnlyData {
 /// \brief		Parameters that are only changeable from launch interface
 struct streamerLaunchOnlyData {
 	bool specialMode;
-
+#ifndef _BUILD_FOR_ROS_
+	bool display8bit, display16bit, displayColour;
+#endif
 	streamerLaunchOnlyData();
 };
 

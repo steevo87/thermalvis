@@ -34,5 +34,10 @@ streamerRealtimeOnlyData::streamerRealtimeOnlyData() :
 { }
 
 streamerLaunchOnlyData::streamerLaunchOnlyData() :
+#ifndef _BUILD_FOR_ROS_
+	display8bit(false), 
+	display16bit(false), 
+	displayColour(false),
+#endif
 	specialMode(false)
 { }

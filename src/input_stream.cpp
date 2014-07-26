@@ -369,9 +369,21 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 		return false;
 	}
 
+	vector<std::string> images_to_display;
+
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
 		if (v.first.compare("node")) continue;
-		if (v.second.get_child("<xmlattr>.type").data().compare("streamer")) continue;
+		if (v.second.get_child("<xmlattr>.type").data().compare("streamer")) {
+			if (v.second.get_child("<xmlattr>.type").data().compare("image_view")) {
+				continue;
+			} else {
+				BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
+					if (v2.first.compare("remap")) continue;
+					if (!v2.second.get_child("<xmlattr>.from").data().compare("image")) images_to_display.push_back(v2.second.get_child("<xmlattr>.to").data());
+				}
+			}
+			continue;
+		}
 
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
 			if (v2.first.compare("param")) continue;
@@ -521,6 +533,32 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			}
 		}
 #endif
+
+	}
+
+	std::string delimiter = "/";
+	for (unsigned int iii = 0; iii < images_to_display.size(); iii++) {
+
+		size_t pos = 0;
+		std::string token;
+		bool foundStreamer = false;
+		while ((pos = images_to_display.at(iii).find(delimiter)) != std::string::npos) {
+			token = images_to_display.at(iii).substr(0, pos);
+			images_to_display.at(iii).erase(0, pos + delimiter.length());
+			if (token.compare("streamer") == 0) {
+				foundStreamer = true;
+			}
+		}
+
+		 if (foundStreamer) {
+			if (images_to_display.at(iii).compare("image_col") == 0) {
+				displayColour = true;
+			} else if (images_to_display.at(iii).compare("image_mono") == 0) {
+				display8bit = true;
+			} else if (images_to_display.at(iii).compare("image_raw") == 0) {
+				display16bit = true;
+			}
+		 } 
 
 	}
 
@@ -2233,7 +2271,7 @@ void streamerNode::publishTopics() {
 				(configData.republishNewTimeStamp) ? pub_republish.publish(msg_16bit, camera_info, ros::Time::now()) : pub_republish.publish(msg_16bit, camera_info);
 			}
 #else
-			displayFrame(_16bitMat_pub, "streamer_16bit");
+			if (configData.display16bit) displayFrame(_16bitMat_pub, "streamer_16bit");
 #endif
 		}
 	}
@@ -2272,7 +2310,7 @@ void streamerNode::publishTopics() {
 				} else pub_republish.publish(msg_8bit, camera_info);
 			}
 #else
-			displayFrame(_8bitMat_pub, "streamer_8bit");
+			if (configData.display8bit) displayFrame(_8bitMat_pub, "streamer_8bit");
 #endif
 		}
 	}
@@ -2306,7 +2344,7 @@ void streamerNode::publishTopics() {
 					(configData.republishNewTimeStamp) ? pub_republish.publish(msg_color, camera_info, ros::Time::now()) : pub_republish.publish(msg_color, camera_info);
 				}
 #else
-				displayFrame(colourMat_pub, "streamer_color");
+				if (configData.displayColour) displayFrame(colourMat_pub, "streamer_color");
 #endif
 			}
 

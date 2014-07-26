@@ -99,7 +99,7 @@ public:
 #endif
 
 /// \brief		Stores configuration information for the streamer/image-processing routine
-class streamerData : public streamerSharedData, public commonData {
+class streamerData : public streamerSharedData, public commonData, public streamerLaunchOnlyData {
 	friend class xmlParameters;
 	friend class streamerNode;
 #ifndef _BUILD_FOR_ROS_
@@ -132,9 +132,9 @@ public:
 
 	bool assignFromXml(xmlParameters& xP);
 
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	bool obtainStartingData(ros::NodeHandle& nh);   
-	#endif
+#endif
 
 };
 
