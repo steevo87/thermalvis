@@ -252,7 +252,7 @@
    <widget class="QLineEdit" name="maxFrac">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>300</x>
       <y>80</y>
       <width>61</width>
       <height>20</height>
@@ -265,7 +265,7 @@
    <widget class="QLabel" name="maxFrac_label">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>200</x>
       <y>80</y>
       <width>91</width>
       <height>16</height>
@@ -313,7 +313,7 @@
    <widget class="QLabel" name="maxVelocity_label">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>200</x>
       <y>110</y>
       <width>91</width>
       <height>16</height>
@@ -329,7 +329,7 @@
    <widget class="QLineEdit" name="maxVelocity">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>300</x>
       <y>110</y>
       <width>61</width>
       <height>20</height>

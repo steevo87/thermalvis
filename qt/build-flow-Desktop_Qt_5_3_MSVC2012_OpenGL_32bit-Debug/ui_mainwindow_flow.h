@@ -137,10 +137,10 @@ public:
         matchingMode->setGeometry(QRect(370, 10, 91, 22));
         maxFrac = new QLineEdit(centralWidget);
         maxFrac->setObjectName(QStringLiteral("maxFrac"));
-        maxFrac->setGeometry(QRect(250, 80, 61, 20));
+        maxFrac->setGeometry(QRect(300, 80, 61, 20));
         maxFrac_label = new QLabel(centralWidget);
         maxFrac_label->setObjectName(QStringLiteral("maxFrac_label"));
-        maxFrac_label->setGeometry(QRect(150, 80, 91, 16));
+        maxFrac_label->setGeometry(QRect(200, 80, 91, 16));
         maxFrac_label->setFrameShape(QFrame::NoFrame);
         maxFrac_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         minSeparation = new QLineEdit(centralWidget);
@@ -152,11 +152,11 @@ public:
         minSeparation_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         maxVelocity_label = new QLabel(centralWidget);
         maxVelocity_label->setObjectName(QStringLiteral("maxVelocity_label"));
-        maxVelocity_label->setGeometry(QRect(150, 110, 91, 16));
+        maxVelocity_label->setGeometry(QRect(200, 110, 91, 16));
         maxVelocity_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         maxVelocity = new QLineEdit(centralWidget);
         maxVelocity->setObjectName(QStringLiteral("maxVelocity"));
-        maxVelocity->setGeometry(QRect(250, 110, 61, 20));
+        maxVelocity->setGeometry(QRect(300, 110, 61, 20));
         newFeaturesPeriod = new QLineEdit(centralWidget);
         newFeaturesPeriod->setObjectName(QStringLiteral("newFeaturesPeriod"));
         newFeaturesPeriod->setGeometry(QRect(570, 100, 51, 20));
