@@ -21,28 +21,6 @@ cameraInfoStruct::cameraInfoStruct() : width(384), height(288), distortion_model
 	for (int iii = 0; iii < 8; iii++) D[iii] = 0.0;
 }
 
-flowSharedData::flowSharedData() : 
-	maxFeatures(300), 
-	minFeatures(30),
-	flowThreshold(0.0002),
-	minSeparation(3.0),
-	maxVelocity(200.0), 
-	maxFrac(0.05),
-	verboseMode(false),
-	debugMode(false),
-	adaptiveWindow(true), 
-	velocityPrediction(true),  
-	attemptHistoricalRecovery(true),
-	autoTrackManagement(true),
-	attemptMatching(false),
-	showTrackHistory(false), 
-	detectEveryFrame(false),
-	newFeaturesPeriod(0.5), 
-	delayTimeout(0.0),
-	drawingHistory(25),
-    matchingMode(MATCHING_MODE_LDA)
-{ }
-
 #ifndef _BUILD_FOR_ROS_
 flowConfig::flowConfig() : 
 	sensitivity_1(DEFAULT_SENSITIVITY), 

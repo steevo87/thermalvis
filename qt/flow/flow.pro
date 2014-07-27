@@ -8,13 +8,13 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = streamer
+TARGET = flow
 TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow_streamer.cpp
+        mainwindow_flow.cpp
 
-HEADERS  += mainwindow_streamer.h
+HEADERS  += mainwindow_flow.h
 
-FORMS    += mainwindow_streamer.ui
+FORMS    += mainwindow_flow.ui

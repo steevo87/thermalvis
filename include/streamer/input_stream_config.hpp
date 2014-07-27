@@ -2,7 +2,7 @@
  *  \brief	Declarations for video input configuration.
 */
 
-#include "improc.hpp"
+#include "streamer_defines.hpp"
 
 #ifndef _THERMALVIS_INPUT_STREAM_CONFIG_H_
 #define _THERMALVIS_INPUT_STREAM_CONFIG_H_
