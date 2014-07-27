@@ -29,6 +29,8 @@ INCLUDE_DIRECTORIES(../../include/flow)
 IF(BUILD_GUI)
 	INCLUDE_DIRECTORIES("${QTSTREAMER_BUILD_PATH}")
 	INCLUDE_DIRECTORIES("../../qt/streamer")
+	INCLUDE_DIRECTORIES("${QTFLOW_BUILD_PATH}")
+	INCLUDE_DIRECTORIES("../../qt/flow")
 	LIST(APPEND ADDITIONAL_LIBS Qt5::Widgets)
 ENDIF()
 
@@ -45,11 +47,18 @@ IF(BUILD_GUI)
 	IF(NOT EXISTS "${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h")
 		MESSAGE(FATAL_ERROR "<ui_mainwindow_streamer.h> could not be found in <${QTSTREAMER_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")
 	ENDIF()
+	
+	IF(NOT EXISTS "${QTFLOW_BUILD_PATH}/ui_mainwindow_flow.h")
+		MESSAGE(FATAL_ERROR "<ui_mainwindow_flow.h> could not be found in <${QTFLOW_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")
+	ENDIF()
 
 	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} 
 	../../qt/streamer/mainwindow_streamer.cpp 
 	../../qt/streamer/mainwindow_streamer.h 
-	${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h)
+	${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h
+	../../qt/flow/mainwindow_flow.cpp 
+	../../qt/flow/mainwindow_flow.h 
+	${QTFLOW_BUILD_PATH}/ui_mainwindow_flow.h)
 ELSE()
 	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} )
 ENDIF()

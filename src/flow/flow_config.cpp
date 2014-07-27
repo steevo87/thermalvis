@@ -19,7 +19,15 @@ flowSharedData::flowSharedData() :
 	newFeaturesPeriod(0.5), 
 	delayTimeout(0.0),
 	drawingHistory(25),
-    matchingMode(MATCHING_MODE_LDA)
+    matchingMode(MATCHING_MODE_LDA),
+	sensitivity_1(DEFAULT_SENSITIVITY), 
+	sensitivity_2(DEFAULT_SENSITIVITY), 
+	sensitivity_3(DEFAULT_SENSITIVITY), 
+	detector_1(DETECTOR_FAST), 
+	detector_2(DETECTOR_OFF), 
+	detector_3(DETECTOR_OFF), 
+	multiplier_1(DEFAULT_MULTIPLIER_1), 
+	multiplier_2(DEFAULT_MULTIPLIER_2)
 { }
 
 flowRealtimeOnlyData::flowRealtimeOnlyData() :

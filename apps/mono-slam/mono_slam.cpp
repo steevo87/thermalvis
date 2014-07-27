@@ -10,6 +10,7 @@
 
 #ifdef _USE_QT_
 #include "mainwindow_streamer.h"
+#include "mainwindow_flow.h"
 
 #include <QApplication>
 #include <QThread>
@@ -26,7 +27,8 @@ class ProcessingThread {
 #endif
 public:
 	ProcessingThread() : 
-		isLinked(false), 
+		streamerIsLinked(false),
+		flowIsLinked(false),
 		wantsToOutput(false), 
 		writeMode(false), 
 		output_directory(NULL), 
@@ -35,28 +37,34 @@ public:
 	{ 
 		scData = new streamerConfig;
 		streamerStartupData = new streamerData;
+		fcData = new flowConfig;
+		trackerStartupData = new trackerData;
 	}
 	bool initialize(int argc, char* argv[]);
 	void run();
 #ifndef _USE_QT_
 	void start() { run(); }
 #else
-	void establishLink(MainWindow_streamer *gui);
-	bool wantsGUI() { return streamerStartupData->displayGUI; }
+	void establishStreamerLink(MainWindow_streamer *gui);
+	bool wantsStreamerGUI() { return streamerStartupData->displayGUI; }
+	void establishFlowLink(MainWindow_flow *gui);
+	bool wantsFlowGUI() { return trackerStartupData->displayGUI; }
 #endif
 private:
-	bool isLinked, wantsToOutput, writeMode, wantsFlow;
+	bool wantsToOutput, writeMode, wantsFlow;
 	char *output_directory;
 	char *xmlAddress;
 	xmlParameters xP;
 	cameraInfoStruct camInfo;
 
+	bool streamerIsLinked;
 	streamerConfig *scData;
 	streamerData *streamerStartupData;
 	streamerNode *sM;
 
-	trackerData trackerStartupData;
-	flowConfig fcData;
+	bool flowIsLinked;
+	flowConfig *fcData;
+	trackerData *trackerStartupData;
 	featureTrackerNode *fM;
 };
 
@@ -78,11 +86,18 @@ int main(int argc, char* argv[]) {
 	mainThread.start();
 	
 #ifdef _USE_QT_
-	MainWindow_streamer* w;
-	if (mainThread.wantsGUI()) {
-		w = new MainWindow_streamer;
-		mainThread.establishLink(w);
-		w->show();
+	MainWindow_streamer* w_streamer;
+	if (mainThread.wantsStreamerGUI()) {
+		w_streamer = new MainWindow_streamer;
+		mainThread.establishStreamerLink(w_streamer);
+		w_streamer->show();
+	}
+
+	MainWindow_flow* w_tracker;
+	if (mainThread.wantsFlowGUI()) {
+		w_tracker = new MainWindow_flow;
+		mainThread.establishFlowLink(w_tracker);
+		w_tracker->show();
 	}
 	return a.exec();
 #endif
@@ -91,9 +106,13 @@ int main(int argc, char* argv[]) {
 }
 
 #ifdef _USE_QT_
-void ProcessingThread::establishLink(MainWindow_streamer *gui) {
+void ProcessingThread::establishStreamerLink(MainWindow_streamer *gui) {
 	gui->linkRealtimeVariables(scData);
-	isLinked = true;
+	streamerIsLinked = true;
+}
+void ProcessingThread::establishFlowLink(MainWindow_flow *gui) {
+	gui->linkRealtimeVariables(fcData);
+	flowIsLinked = true;
 }
 #endif
 
@@ -110,17 +129,17 @@ void ProcessingThread::run() {
 		if (wantsFlow) {
 			if (!sM->get8bitImage(workingFrame)) continue;
 			if (!calibrationDataProcessed) {
-				trackerStartupData.cameraData.cameraSize.width = workingFrame.cols;
-				trackerStartupData.cameraData.cameraSize.height = workingFrame.rows;
-				trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 0) = trackerStartupData.cameraData.cameraSize.width;
-				trackerStartupData.cameraData.imageSize.at<unsigned short>(0, 1) = trackerStartupData.cameraData.cameraSize.height;
-				trackerStartupData.cameraData.updateCameraParameters();
+				trackerStartupData->cameraData.cameraSize.width = workingFrame.cols;
+				trackerStartupData->cameraData.cameraSize.height = workingFrame.rows;
+				trackerStartupData->cameraData.imageSize.at<unsigned short>(0, 0) = trackerStartupData->cameraData.cameraSize.width;
+				trackerStartupData->cameraData.imageSize.at<unsigned short>(0, 1) = trackerStartupData->cameraData.cameraSize.height;
+				trackerStartupData->cameraData.updateCameraParameters();
 				calibrationDataProcessed = true;
-				fM = new featureTrackerNode(trackerStartupData);
+				fM = new featureTrackerNode(*trackerStartupData);
 				fM->initializeOutput(output_directory);
 				fM->setWriteMode(writeMode);
 			}
-			fM->serverCallback(fcData);
+			fM->serverCallback(*fcData);
 			fM->handle_camera(workingFrame, &camInfo);
 			fM->features_loop();
 		}
@@ -172,21 +191,25 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	// === FLOW NODE === //
 	// Preliminary settings
-	wantsFlow = trackerStartupData.assignFromXml(xP);
+	wantsFlow = trackerStartupData->assignFromXml(xP);
 
 	if (wantsFlow) {
 		// Real-time changeable variables
-		fcData.assignStartingData(trackerStartupData);
+		fcData->assignStartingData(*trackerStartupData);
 
 		#ifdef _DEBUG
 		if (
-			((fcData.getDetector1() != DETECTOR_FAST) && (fcData.getDetector1() != DETECTOR_OFF)) || 
-			((fcData.getDetector2() != DETECTOR_FAST) && (fcData.getDetector2() != DETECTOR_OFF)) || 
-			((fcData.getDetector3() != DETECTOR_FAST) && (fcData.getDetector3() != DETECTOR_OFF))
+			((fcData->getDetector1() != DETECTOR_FAST) && (fcData->getDetector1() != DETECTOR_OFF)) || 
+			((fcData->getDetector2() != DETECTOR_FAST) && (fcData->getDetector2() != DETECTOR_OFF)) || 
+			((fcData->getDetector3() != DETECTOR_FAST) && (fcData->getDetector3() != DETECTOR_OFF))
 		) {
 			ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
 		}
 		#endif
 	}
+
+	fM = new featureTrackerNode(*trackerStartupData);
+	fM->initializeOutput(output_directory);
+
 	return true;
 }

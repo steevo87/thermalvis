@@ -26,6 +26,20 @@ private slots:
 
     void on_verboseMode_toggled(bool checked);
 
+    void on_showTrackHistory_toggled(bool checked);
+
+    void on_adaptiveWindow_toggled(bool checked);
+
+    void on_velocityPrediction_toggled(bool checked);
+
+    void on_attemptHistoricalRecovery_toggled(bool checked);
+
+    void on_autoTrackManagement_toggled(bool checked);
+
+    void on_attemptMatching_toggled(bool checked);
+
+    void on_detectEveryFrame_toggled(bool checked);
+
 private:
     Ui::MainWindow_flow *ui;
 

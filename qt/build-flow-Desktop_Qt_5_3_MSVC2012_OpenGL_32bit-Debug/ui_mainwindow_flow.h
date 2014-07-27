@@ -29,6 +29,13 @@ public:
     QWidget *centralWidget;
     QCheckBox *debugMode;
     QCheckBox *verboseMode;
+    QCheckBox *showTrackHistory;
+    QCheckBox *adaptiveWindow;
+    QCheckBox *velocityPrediction;
+    QCheckBox *attemptHistoricalRecovery;
+    QCheckBox *autoTrackManagement;
+    QCheckBox *attemptMatching;
+    QCheckBox *detectEveryFrame;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -46,6 +53,27 @@ public:
         verboseMode = new QCheckBox(centralWidget);
         verboseMode->setObjectName(QStringLiteral("verboseMode"));
         verboseMode->setGeometry(QRect(10, 30, 91, 17));
+        showTrackHistory = new QCheckBox(centralWidget);
+        showTrackHistory->setObjectName(QStringLiteral("showTrackHistory"));
+        showTrackHistory->setGeometry(QRect(10, 50, 111, 17));
+        adaptiveWindow = new QCheckBox(centralWidget);
+        adaptiveWindow->setObjectName(QStringLiteral("adaptiveWindow"));
+        adaptiveWindow->setGeometry(QRect(140, 10, 111, 17));
+        velocityPrediction = new QCheckBox(centralWidget);
+        velocityPrediction->setObjectName(QStringLiteral("velocityPrediction"));
+        velocityPrediction->setGeometry(QRect(140, 30, 111, 17));
+        attemptHistoricalRecovery = new QCheckBox(centralWidget);
+        attemptHistoricalRecovery->setObjectName(QStringLiteral("attemptHistoricalRecovery"));
+        attemptHistoricalRecovery->setGeometry(QRect(140, 50, 151, 17));
+        autoTrackManagement = new QCheckBox(centralWidget);
+        autoTrackManagement->setObjectName(QStringLiteral("autoTrackManagement"));
+        autoTrackManagement->setGeometry(QRect(310, 10, 131, 17));
+        attemptMatching = new QCheckBox(centralWidget);
+        attemptMatching->setObjectName(QStringLiteral("attemptMatching"));
+        attemptMatching->setGeometry(QRect(310, 30, 111, 17));
+        detectEveryFrame = new QCheckBox(centralWidget);
+        detectEveryFrame->setObjectName(QStringLiteral("detectEveryFrame"));
+        detectEveryFrame->setGeometry(QRect(310, 50, 111, 17));
         MainWindow_flow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow_flow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -68,6 +96,13 @@ public:
         MainWindow_flow->setWindowTitle(QApplication::translate("MainWindow_flow", "MainWindow_flow", 0));
         debugMode->setText(QApplication::translate("MainWindow_flow", "debugMode", 0));
         verboseMode->setText(QApplication::translate("MainWindow_flow", "verboseMode", 0));
+        showTrackHistory->setText(QApplication::translate("MainWindow_flow", "showTrackHistory", 0));
+        adaptiveWindow->setText(QApplication::translate("MainWindow_flow", "adaptiveWindow", 0));
+        velocityPrediction->setText(QApplication::translate("MainWindow_flow", "velocityPrediction", 0));
+        attemptHistoricalRecovery->setText(QApplication::translate("MainWindow_flow", "attemptHistoricalRecovery", 0));
+        autoTrackManagement->setText(QApplication::translate("MainWindow_flow", "autoTrackManagement", 0));
+        attemptMatching->setText(QApplication::translate("MainWindow_flow", "attemptMatching", 0));
+        detectEveryFrame->setText(QApplication::translate("MainWindow_flow", "detectEveryFrame", 0));
     } // retranslateUi
 
 };

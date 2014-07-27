@@ -59,6 +59,9 @@ struct flowSharedData {
 	double  maxFrac, flowThreshold, minSeparation, maxVelocity, newFeaturesPeriod, delayTimeout;
 	bool verboseMode, debugMode, showTrackHistory;
 	bool adaptiveWindow, velocityPrediction, attemptHistoricalRecovery, autoTrackManagement, attemptMatching, detectEveryFrame;
+	double sensitivity_1, sensitivity_2, sensitivity_3;
+	int detector_1, detector_2, detector_3;
+	int multiplier_1, multiplier_2;
 
 	flowSharedData();
 };
@@ -66,6 +69,7 @@ struct flowSharedData {
 /// \brief		Parameters that are only changeable from real-time interface
 struct flowRealtimeOnlyData {
 	bool pauseMode;
+
 
 	flowRealtimeOnlyData();
 };

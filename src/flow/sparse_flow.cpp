@@ -22,18 +22,7 @@ cameraInfoStruct::cameraInfoStruct() : width(384), height(288), distortion_model
 }
 
 #ifndef _BUILD_FOR_ROS_
-flowConfig::flowConfig() : 
-	sensitivity_1(DEFAULT_SENSITIVITY), 
-	sensitivity_2(DEFAULT_SENSITIVITY), 
-	sensitivity_3(DEFAULT_SENSITIVITY), 
-	detector_1(DETECTOR_FAST), 
-	detector_2(DETECTOR_OFF), 
-	detector_3(DETECTOR_OFF), 
-	multiplier_1(DEFAULT_MULTIPLIER_1), 
-	multiplier_2(DEFAULT_MULTIPLIER_2)	 
-{ }
-
-void flowConfig::assignStartingData(trackerData& startupData) {
+bool flowConfig::assignStartingData(trackerData& startupData) {
 
 	maxFeatures = startupData.maxFeatures;
 	minFeatures = startupData.minFeatures;
@@ -71,6 +60,7 @@ void flowConfig::assignStartingData(trackerData& startupData) {
 	} else {
 		ROS_ERROR("Could not identify provided detector..");
 		detector_1 = DETECTOR_FAST;
+		return false;
 	}
 
 	if ((!startupData.detector[1].compare("FAST")) || (!startupData.detector[1].compare("fast"))) {
@@ -93,6 +83,7 @@ void flowConfig::assignStartingData(trackerData& startupData) {
 		detector_3 = DETECTOR_OFF;
 	}
 	
+	return true;
 }
 #endif
 
@@ -131,9 +122,22 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 		return false;
 	}
 
+	vector<std::string> images_to_display;
+
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
 		if (v.first.compare("node")) continue;
-		if (v.second.get_child("<xmlattr>.type").data().compare("flow")) continue;
+		if (v.second.get_child("<xmlattr>.type").data().compare("flow")) {
+			if (!v.second.get_child("<xmlattr>.type").data().compare("image_view")) {
+				BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
+					if (v2.first.compare("remap")) continue;
+					if (!v2.second.get_child("<xmlattr>.from").data().compare("image")) images_to_display.push_back(v2.second.get_child("<xmlattr>.to").data());
+				}
+			} else if (!v.second.get_child("<xmlattr>.type").data().compare("reconfigure_gui")) {
+				if (!v.second.get_child("<xmlattr>.args").data().compare("flow")) displayGUI = true;
+				if (!v.second.get_child("<xmlattr>.args").data().compare("/flow")) displayGUI = true;
+			}
+			continue;
+		}
 
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
 			if (v2.first.compare("param")) continue;
@@ -192,6 +196,28 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 			}
 		}
 #endif
+
+	}
+
+	std::string delimiter = "/";
+	for (unsigned int iii = 0; iii < images_to_display.size(); iii++) {
+
+		size_t pos = 0;
+		std::string token;
+		bool foundStreamer = false;
+		while ((pos = images_to_display.at(iii).find(delimiter)) != std::string::npos) {
+			token = images_to_display.at(iii).substr(0, pos);
+			images_to_display.at(iii).erase(0, pos + delimiter.length());
+			if (token.compare("flow") == 0) {
+				foundStreamer = true;
+			}
+		}
+
+		 if (foundStreamer) {
+			if (!images_to_display.at(iii).compare("image_col")) {
+				displayDebug = true;
+			}
+		 } 
 
 	}
 
@@ -577,7 +603,7 @@ void featureTrackerNode::publishRoutine() {
 		std::copy(&(drawImage_resized.at<cv::Vec3b>(0,0)[0]), &(drawImage_resized.at<cv::Vec3b>(0,0)[0])+(drawImage_resized.cols*drawImage_resized.rows*drawImage_resized.channels()), msg_debug.data.begin());
 		debug_pub.publish(msg_debug, debug_camera_info);
 		#else
-		displayFrame();
+		if (configData.displayDebug) { displayFrame(); }
 		#endif
 
 		if (configData.outputDebugImages) {

@@ -30,7 +30,7 @@
 #include "flow_config.hpp"
 
 /// \brief		Stores configuration information for the sparse optical flow routine
-class trackerData : public flowSharedData, public commonData {
+class trackerData : public flowSharedData, public commonData, public flowLaunchOnlyData {
 	friend class xmlParameters;
 	friend class featureTrackerNode;
 #ifndef _BUILD_FOR_ROS_
@@ -73,18 +73,11 @@ public:
 
 #ifndef _BUILD_FOR_ROS_
 /// \brief		Substitute for ROS live configuration adjustments
-class flowConfig : public flowSharedData {
-	friend class featureTrackerNode;
-
-protected:
-    double sensitivity_1, sensitivity_2, sensitivity_3;
-	int detector_1, detector_2, detector_3;
-	int multiplier_1, multiplier_2;
-
+class flowConfig : public flowRealtimeData {
 public:
-	flowConfig();
-	void assignStartingData(trackerData& startupData);
-	
+	flowConfig() { }
+	bool assignStartingData(trackerData& startupData);
+
 	void setDetector1(int detector_1 = DETECTOR_FAST) {};
 	void setDetector2(int detector_2 = DETECTOR_FAST) {};
 	void setDetector3(int detector_3 = DETECTOR_FAST) {};

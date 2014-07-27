@@ -40,6 +40,97 @@
      <string>verboseMode</string>
     </property>
    </widget>
+   <widget class="QCheckBox" name="showTrackHistory">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>showTrackHistory</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="adaptiveWindow">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>10</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>adaptiveWindow</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="velocityPrediction">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>30</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>velocityPrediction</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="attemptHistoricalRecovery">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>50</y>
+      <width>151</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>attemptHistoricalRecovery</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="autoTrackManagement">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>10</y>
+      <width>131</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>autoTrackManagement</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="attemptMatching">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>30</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>attemptMatching</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="detectEveryFrame">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>50</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>detectEveryFrame</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
