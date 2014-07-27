@@ -5,6 +5,8 @@
 #ifndef THERMALVIS_LAUNCH_H
 #define THERMALVIS_LAUNCH_H
 
+#include <iostream>
+
 #ifdef _USE_BOOST_
 
 #include <boost/property_tree/ptree.hpp>

@@ -245,7 +245,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0.05</string>
+     <string/>
     </property>
    </widget>
    <widget class="QComboBox" name="inputDatatype">
@@ -361,7 +361,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLineEdit" name="maxNucInterval">
@@ -374,7 +374,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>45</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLineEdit" name="zeroDegreesOffset">
@@ -387,7 +387,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLineEdit" name="degreesPerGraylevel">
@@ -400,7 +400,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0.01</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="maxReadAttempts_label">
@@ -493,7 +493,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>-1.0</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="framerate_label">
@@ -522,7 +522,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0.0</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="threshFactor_label">
@@ -551,7 +551,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0.2</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="normFactor_label">
@@ -580,7 +580,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0.6</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="fusionFactor_label">
@@ -609,7 +609,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>25.0</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="serialPollingRate_label">
@@ -638,7 +638,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0.2</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="maxNucThreshold_label">
@@ -667,7 +667,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>25.0</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="minTemp_label">
@@ -696,7 +696,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>35.0</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="maxTemp_label">

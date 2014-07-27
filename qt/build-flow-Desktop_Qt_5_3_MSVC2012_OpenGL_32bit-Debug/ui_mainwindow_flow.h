@@ -14,7 +14,10 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QStatusBar>
@@ -36,6 +39,36 @@ public:
     QCheckBox *autoTrackManagement;
     QCheckBox *attemptMatching;
     QCheckBox *detectEveryFrame;
+    QLabel *maxFeatures_label;
+    QLineEdit *maxFeatures;
+    QLabel *minFeaturesLabel;
+    QLineEdit *minFeatures;
+    QLineEdit *drawingHistory;
+    QLabel *drawingHistory_label;
+    QComboBox *matchingMode;
+    QLineEdit *maxFrac;
+    QLabel *maxFrac_label;
+    QLineEdit *minSeparation;
+    QLabel *minSeparation_label;
+    QLabel *maxVelocity_label;
+    QLineEdit *maxVelocity;
+    QLineEdit *newFeaturesPeriod;
+    QLabel *newFeaturesPeriod_label;
+    QLineEdit *delayTimeout;
+    QLabel *delayTimeout_label;
+    QLineEdit *sensitivity_1;
+    QLineEdit *sensitivity_2;
+    QLineEdit *sensitivity_3;
+    QLabel *sensitivity_1_label;
+    QLabel *sensitivity_2_label;
+    QLabel *sensitivity_3_label;
+    QLineEdit *multiplier_1;
+    QLabel *multiplier_1_label;
+    QLabel *multiplier_2_label;
+    QLineEdit *multiplier_2;
+    QComboBox *detector_1;
+    QComboBox *detector_2;
+    QComboBox *detector_3;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -74,6 +107,115 @@ public:
         detectEveryFrame = new QCheckBox(centralWidget);
         detectEveryFrame->setObjectName(QStringLiteral("detectEveryFrame"));
         detectEveryFrame->setGeometry(QRect(310, 50, 111, 17));
+        maxFeatures_label = new QLabel(centralWidget);
+        maxFeatures_label->setObjectName(QStringLiteral("maxFeatures_label"));
+        maxFeatures_label->setGeometry(QRect(170, 110, 91, 16));
+        maxFeatures_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        maxFeatures = new QLineEdit(centralWidget);
+        maxFeatures->setObjectName(QStringLiteral("maxFeatures"));
+        maxFeatures->setGeometry(QRect(270, 110, 113, 20));
+        minFeaturesLabel = new QLabel(centralWidget);
+        minFeaturesLabel->setObjectName(QStringLiteral("minFeaturesLabel"));
+        minFeaturesLabel->setGeometry(QRect(170, 80, 91, 16));
+        minFeaturesLabel->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        minFeatures = new QLineEdit(centralWidget);
+        minFeatures->setObjectName(QStringLiteral("minFeatures"));
+        minFeatures->setGeometry(QRect(270, 80, 113, 20));
+        drawingHistory = new QLineEdit(centralWidget);
+        drawingHistory->setObjectName(QStringLiteral("drawingHistory"));
+        drawingHistory->setGeometry(QRect(270, 140, 113, 20));
+        drawingHistory_label = new QLabel(centralWidget);
+        drawingHistory_label->setObjectName(QStringLiteral("drawingHistory_label"));
+        drawingHistory_label->setGeometry(QRect(170, 140, 91, 16));
+        drawingHistory_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        matchingMode = new QComboBox(centralWidget);
+        matchingMode->setObjectName(QStringLiteral("matchingMode"));
+        matchingMode->setGeometry(QRect(20, 80, 151, 22));
+        maxFrac = new QLineEdit(centralWidget);
+        maxFrac->setObjectName(QStringLiteral("maxFrac"));
+        maxFrac->setGeometry(QRect(520, 80, 113, 20));
+        maxFrac_label = new QLabel(centralWidget);
+        maxFrac_label->setObjectName(QStringLiteral("maxFrac_label"));
+        maxFrac_label->setGeometry(QRect(420, 80, 91, 16));
+        maxFrac_label->setFrameShape(QFrame::NoFrame);
+        maxFrac_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        minSeparation = new QLineEdit(centralWidget);
+        minSeparation->setObjectName(QStringLiteral("minSeparation"));
+        minSeparation->setGeometry(QRect(270, 170, 113, 20));
+        minSeparation_label = new QLabel(centralWidget);
+        minSeparation_label->setObjectName(QStringLiteral("minSeparation_label"));
+        minSeparation_label->setGeometry(QRect(170, 170, 91, 16));
+        minSeparation_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        maxVelocity_label = new QLabel(centralWidget);
+        maxVelocity_label->setObjectName(QStringLiteral("maxVelocity_label"));
+        maxVelocity_label->setGeometry(QRect(170, 200, 91, 16));
+        maxVelocity_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        maxVelocity = new QLineEdit(centralWidget);
+        maxVelocity->setObjectName(QStringLiteral("maxVelocity"));
+        maxVelocity->setGeometry(QRect(270, 200, 113, 20));
+        newFeaturesPeriod = new QLineEdit(centralWidget);
+        newFeaturesPeriod->setObjectName(QStringLiteral("newFeaturesPeriod"));
+        newFeaturesPeriod->setGeometry(QRect(270, 230, 113, 20));
+        newFeaturesPeriod_label = new QLabel(centralWidget);
+        newFeaturesPeriod_label->setObjectName(QStringLiteral("newFeaturesPeriod_label"));
+        newFeaturesPeriod_label->setGeometry(QRect(150, 230, 111, 20));
+        newFeaturesPeriod_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        delayTimeout = new QLineEdit(centralWidget);
+        delayTimeout->setObjectName(QStringLiteral("delayTimeout"));
+        delayTimeout->setGeometry(QRect(520, 230, 113, 20));
+        delayTimeout_label = new QLabel(centralWidget);
+        delayTimeout_label->setObjectName(QStringLiteral("delayTimeout_label"));
+        delayTimeout_label->setGeometry(QRect(400, 230, 111, 20));
+        delayTimeout_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        sensitivity_1 = new QLineEdit(centralWidget);
+        sensitivity_1->setObjectName(QStringLiteral("sensitivity_1"));
+        sensitivity_1->setGeometry(QRect(520, 120, 113, 20));
+        sensitivity_2 = new QLineEdit(centralWidget);
+        sensitivity_2->setObjectName(QStringLiteral("sensitivity_2"));
+        sensitivity_2->setGeometry(QRect(520, 150, 113, 20));
+        sensitivity_3 = new QLineEdit(centralWidget);
+        sensitivity_3->setObjectName(QStringLiteral("sensitivity_3"));
+        sensitivity_3->setGeometry(QRect(520, 180, 113, 20));
+        sensitivity_1_label = new QLabel(centralWidget);
+        sensitivity_1_label->setObjectName(QStringLiteral("sensitivity_1_label"));
+        sensitivity_1_label->setGeometry(QRect(420, 120, 91, 16));
+        sensitivity_1_label->setFrameShape(QFrame::NoFrame);
+        sensitivity_1_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        sensitivity_2_label = new QLabel(centralWidget);
+        sensitivity_2_label->setObjectName(QStringLiteral("sensitivity_2_label"));
+        sensitivity_2_label->setGeometry(QRect(420, 150, 91, 16));
+        sensitivity_2_label->setFrameShape(QFrame::NoFrame);
+        sensitivity_2_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        sensitivity_3_label = new QLabel(centralWidget);
+        sensitivity_3_label->setObjectName(QStringLiteral("sensitivity_3_label"));
+        sensitivity_3_label->setGeometry(QRect(420, 180, 91, 16));
+        sensitivity_3_label->setFrameShape(QFrame::NoFrame);
+        sensitivity_3_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        multiplier_1 = new QLineEdit(centralWidget);
+        multiplier_1->setObjectName(QStringLiteral("multiplier_1"));
+        multiplier_1->setGeometry(QRect(520, 10, 113, 20));
+        multiplier_1_label = new QLabel(centralWidget);
+        multiplier_1_label->setObjectName(QStringLiteral("multiplier_1_label"));
+        multiplier_1_label->setGeometry(QRect(420, 10, 91, 16));
+        multiplier_1_label->setFrameShape(QFrame::NoFrame);
+        multiplier_1_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        multiplier_2_label = new QLabel(centralWidget);
+        multiplier_2_label->setObjectName(QStringLiteral("multiplier_2_label"));
+        multiplier_2_label->setGeometry(QRect(420, 40, 91, 16));
+        multiplier_2_label->setFrameShape(QFrame::NoFrame);
+        multiplier_2_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        multiplier_2 = new QLineEdit(centralWidget);
+        multiplier_2->setObjectName(QStringLiteral("multiplier_2"));
+        multiplier_2->setGeometry(QRect(520, 40, 113, 20));
+        detector_1 = new QComboBox(centralWidget);
+        detector_1->setObjectName(QStringLiteral("detector_1"));
+        detector_1->setGeometry(QRect(20, 120, 151, 22));
+        detector_2 = new QComboBox(centralWidget);
+        detector_2->setObjectName(QStringLiteral("detector_2"));
+        detector_2->setGeometry(QRect(20, 150, 151, 22));
+        detector_3 = new QComboBox(centralWidget);
+        detector_3->setObjectName(QStringLiteral("detector_3"));
+        detector_3->setGeometry(QRect(20, 180, 151, 22));
         MainWindow_flow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow_flow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -87,6 +229,12 @@ public:
         MainWindow_flow->setStatusBar(statusBar);
 
         retranslateUi(MainWindow_flow);
+
+        matchingMode->setCurrentIndex(2);
+        detector_1->setCurrentIndex(2);
+        detector_2->setCurrentIndex(0);
+        detector_3->setCurrentIndex(0);
+
 
         QMetaObject::connectSlotsByName(MainWindow_flow);
     } // setupUi
@@ -103,6 +251,63 @@ public:
         autoTrackManagement->setText(QApplication::translate("MainWindow_flow", "autoTrackManagement", 0));
         attemptMatching->setText(QApplication::translate("MainWindow_flow", "attemptMatching", 0));
         detectEveryFrame->setText(QApplication::translate("MainWindow_flow", "detectEveryFrame", 0));
+        maxFeatures_label->setText(QApplication::translate("MainWindow_flow", "maxFeatures", 0));
+        maxFeatures->setText(QString());
+        minFeaturesLabel->setText(QApplication::translate("MainWindow_flow", "minFeatures", 0));
+        minFeatures->setText(QString());
+        drawingHistory->setText(QString());
+        drawingHistory_label->setText(QApplication::translate("MainWindow_flow", "drawingHistory", 0));
+        matchingMode->clear();
+        matchingMode->insertItems(0, QStringList()
+         << QApplication::translate("MainWindow_flow", "NEAREST NEIGHBOUR", 0)
+         << QApplication::translate("MainWindow_flow", "NN DISTANCE RATIO", 0)
+         << QApplication::translate("MainWindow_flow", "NN/NNDR LDA", 0)
+        );
+        matchingMode->setCurrentText(QApplication::translate("MainWindow_flow", "NN/NNDR LDA", 0));
+        maxFrac->setText(QString());
+        maxFrac_label->setText(QApplication::translate("MainWindow_flow", "maxFrac", 0));
+        minSeparation->setText(QString());
+        minSeparation_label->setText(QApplication::translate("MainWindow_flow", "minSeparation", 0));
+        maxVelocity_label->setText(QApplication::translate("MainWindow_flow", "maxVelocity", 0));
+        maxVelocity->setText(QString());
+        newFeaturesPeriod->setText(QString());
+        newFeaturesPeriod_label->setText(QApplication::translate("MainWindow_flow", "newFeaturesPeriod", 0));
+        delayTimeout->setText(QString());
+        delayTimeout_label->setText(QApplication::translate("MainWindow_flow", "delayTimeout", 0));
+        sensitivity_1->setText(QString());
+        sensitivity_2->setText(QString());
+        sensitivity_3->setText(QString());
+        sensitivity_1_label->setText(QApplication::translate("MainWindow_flow", "sensitivity_1", 0));
+        sensitivity_2_label->setText(QApplication::translate("MainWindow_flow", "sensitivity_2", 0));
+        sensitivity_3_label->setText(QApplication::translate("MainWindow_flow", "sensitivity_3", 0));
+        multiplier_1->setText(QString());
+        multiplier_1_label->setText(QApplication::translate("MainWindow_flow", "multiplier_1", 0));
+        multiplier_2_label->setText(QApplication::translate("MainWindow_flow", "multiplier_2", 0));
+        multiplier_2->setText(QString());
+        detector_1->clear();
+        detector_1->insertItems(0, QStringList()
+         << QApplication::translate("MainWindow_flow", "OFF", 0)
+         << QApplication::translate("MainWindow_flow", "GFTT", 0)
+         << QApplication::translate("MainWindow_flow", "FAST", 0)
+         << QApplication::translate("MainWindow_flow", "HARRIS", 0)
+        );
+        detector_1->setCurrentText(QApplication::translate("MainWindow_flow", "FAST", 0));
+        detector_2->clear();
+        detector_2->insertItems(0, QStringList()
+         << QApplication::translate("MainWindow_flow", "OFF", 0)
+         << QApplication::translate("MainWindow_flow", "GFTT", 0)
+         << QApplication::translate("MainWindow_flow", "FAST", 0)
+         << QApplication::translate("MainWindow_flow", "HARRIS", 0)
+        );
+        detector_2->setCurrentText(QApplication::translate("MainWindow_flow", "OFF", 0));
+        detector_3->clear();
+        detector_3->insertItems(0, QStringList()
+         << QApplication::translate("MainWindow_flow", "OFF", 0)
+         << QApplication::translate("MainWindow_flow", "GFTT", 0)
+         << QApplication::translate("MainWindow_flow", "FAST", 0)
+         << QApplication::translate("MainWindow_flow", "HARRIS", 0)
+        );
+        detector_3->setCurrentText(QApplication::translate("MainWindow_flow", "OFF", 0));
     } // retranslateUi
 
 };

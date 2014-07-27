@@ -28,8 +28,24 @@ void MainWindow_streamer::linkRealtimeVariables(streamerRealtimeData* sourceData
 
     ui->normMode->setCurrentIndex(realtimeParameters->normMode);
     ui->mapCode->setCurrentIndex(realtimeParameters->mapCode);
+    ui->inputDatatype->setCurrentIndex(realtimeParameters->inputDatatype);
+    ui->detectorMode->setCurrentIndex(realtimeParameters->detectorMode);
+    ui->usbMode->setCurrentIndex(realtimeParameters->usbMode);
 
+    ui->maxReadAttempts->setText(QString::number(realtimeParameters->maxReadAttempts));
     ui->desiredDegreesPerGraylevel->setText(QString::number(realtimeParameters->desiredDegreesPerGraylevel));
+    ui->maxNucInterval->setText(QString::number(realtimeParameters->maxNucInterval));
+    ui->zeroDegreesOffset->setText(QString::number(realtimeParameters->zeroDegreesOffset));
+    ui->degreesPerGraylevel->setText(QString::number(realtimeParameters->degreesPerGraylevel));
+    ui->framerate->setText(QString::number(realtimeParameters->framerate));
+    ui->threshFactor->setText(QString::number(realtimeParameters->threshFactor));
+    ui->normFactor->setText(QString::number(realtimeParameters->normFactor));
+    ui->fusionFactor->setText(QString::number(realtimeParameters->fusionFactor));
+    ui->serialPollingRate->setText(QString::number(realtimeParameters->serialPollingRate));
+    ui->maxNucThreshold->setText(QString::number(realtimeParameters->maxNucThreshold));
+    ui->minTemp->setText(QString::number(realtimeParameters->minTemperature));
+    ui->maxTemp->setText(QString::number(realtimeParameters->maxTemperature));
+
 };
 #endif
 

@@ -270,7 +270,7 @@ public:
         );
         mapCode->setCurrentText(QApplication::translate("MainWindow_streamer", "CIELUV", 0));
         showExtremeColors->setText(QApplication::translate("MainWindow_streamer", "showExtremeColors", 0));
-        desiredDegreesPerGraylevel->setText(QApplication::translate("MainWindow_streamer", "0.05", 0));
+        desiredDegreesPerGraylevel->setText(QString());
         inputDatatype->clear();
         inputDatatype->insertItems(0, QStringList()
          << QApplication::translate("MainWindow_streamer", "8BIT", 0)
@@ -294,30 +294,30 @@ public:
          << QApplication::translate("MainWindow_streamer", "USB_8", 0)
         );
         usbMode->setCurrentText(QApplication::translate("MainWindow_streamer", "USB_16", 0));
-        maxReadAttempts->setText(QApplication::translate("MainWindow_streamer", "0", 0));
-        maxNucInterval->setText(QApplication::translate("MainWindow_streamer", "45", 0));
-        zeroDegreesOffset->setText(QApplication::translate("MainWindow_streamer", "0", 0));
-        degreesPerGraylevel->setText(QApplication::translate("MainWindow_streamer", "0.01", 0));
+        maxReadAttempts->setText(QString());
+        maxNucInterval->setText(QString());
+        zeroDegreesOffset->setText(QString());
+        degreesPerGraylevel->setText(QString());
         maxReadAttempts_label->setText(QApplication::translate("MainWindow_streamer", "maxReadAttempts", 0));
         zeroDegreesOffset_label->setText(QApplication::translate("MainWindow_streamer", "zeroDegreesOffset", 0));
         maxNucInterval_label->setText(QApplication::translate("MainWindow_streamer", "maxNucInterval", 0));
         degreesPerGraylevel_label->setText(QApplication::translate("MainWindow_streamer", "degreesPerGraylevel", 0));
         desiredDegreesPerGraylevel_label->setText(QApplication::translate("MainWindow_streamer", "desiredDegreesPerGraylevel", 0));
-        framerate->setText(QApplication::translate("MainWindow_streamer", "-1.0", 0));
+        framerate->setText(QString());
         framerate_label->setText(QApplication::translate("MainWindow_streamer", "framerate", 0));
-        threshFactor->setText(QApplication::translate("MainWindow_streamer", "0.0", 0));
+        threshFactor->setText(QString());
         threshFactor_label->setText(QApplication::translate("MainWindow_streamer", "threshFactor", 0));
-        normFactor->setText(QApplication::translate("MainWindow_streamer", "0.2", 0));
+        normFactor->setText(QString());
         normFactor_label->setText(QApplication::translate("MainWindow_streamer", "normFactor", 0));
-        fusionFactor->setText(QApplication::translate("MainWindow_streamer", "0.6", 0));
+        fusionFactor->setText(QString());
         fusionFactor_label->setText(QApplication::translate("MainWindow_streamer", "fusionFactor", 0));
-        serialPollingRate->setText(QApplication::translate("MainWindow_streamer", "25.0", 0));
+        serialPollingRate->setText(QString());
         serialPollingRate_label->setText(QApplication::translate("MainWindow_streamer", "serialPollingRate", 0));
-        maxNucThreshold->setText(QApplication::translate("MainWindow_streamer", "0.2", 0));
+        maxNucThreshold->setText(QString());
         maxNucThreshold_label->setText(QApplication::translate("MainWindow_streamer", "maxNucThreshold", 0));
-        minTemp->setText(QApplication::translate("MainWindow_streamer", "25.0", 0));
+        minTemp->setText(QString());
         minTemp_label->setText(QApplication::translate("MainWindow_streamer", "minTemp", 0));
-        maxTemp->setText(QApplication::translate("MainWindow_streamer", "35.0", 0));
+        maxTemp->setText(QString());
         maxTemp_label->setText(QApplication::translate("MainWindow_streamer", "maxTemp", 0));
     } // retranslateUi
 
