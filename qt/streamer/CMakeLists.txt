@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 SET(EXECUTABLE_NAME "streamer_qt_test")
 
 INCLUDE_DIRECTORIES(../${Qt_STREAMER_BUILD_DIR})
-INCLUDE_DIRECTORIES(../../include)
+INCLUDE_DIRECTORIES(../../include/streamer)
 
 IF(NOT EXISTS "${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h")
 	MESSAGE(FATAL_ERROR "<ui_mainwindow_streamer.h> could not be found in <${QTSTREAMER_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")
@@ -18,10 +18,10 @@ ENDIF()
 add_executable(${EXECUTABLE_NAME} WIN32 
 	main.cpp 
 	mainwindow_streamer.cpp 
-	../../src/input_stream_config.cpp
+	../../src/streamer/input_stream_config.cpp
 	mainwindow_streamer.h 
 	${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h
-	../../include/input_stream_config.hpp
+	../../include/streamer/input_stream_config.hpp
 )
 
 # Use the Widgets module from Qt 5.

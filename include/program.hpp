@@ -7,6 +7,10 @@
 
 #include "opencv2/opencv.hpp"
 
+#ifdef _USE_BOOST_
+#include "boost/date_time/posix_time/posix_time.hpp"
+#endif
+
 #include "tools.hpp"
 #include "camera.hpp"
 

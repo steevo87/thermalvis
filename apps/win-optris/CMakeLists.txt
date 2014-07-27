@@ -16,10 +16,9 @@ INCLUDE_DIRECTORIES(${OptrisSDK})
 LINK_DIRECTORIES(${OptrisSDK})
 SET(ADDITIONAL_LIBS ${ADDITIONAL_LIBS} "ImagerIPC2.dll")
 
-FILE(GLOB WINOPTRIS_HEADERS include/*.h*)
-FILE(GLOB WINOPTRIS_SOURCES src/*.cpp)
+FILE(GLOB WINOPTRIS_HEADERS *.h*)
+FILE(GLOB WINOPTRIS_SOURCES *.cpp)
 
-INCLUDE_DIRECTORIES(include)
 INCLUDE_DIRECTORIES("../../include")
 INCLUDE_DIRECTORIES("${OptrisSDK}/Samples VC++ .net/Shared Files/")
 
@@ -28,7 +27,7 @@ IF (NOT ("${_OpenCV_LIB_PATH}" STREQUAL ""))
 ENDIF()
 
 add_executable (OptrisWinTest ${WINOPTRIS_SOURCES} ${WINOPTRIS_HEADERS} )
-target_link_libraries (OptrisWinTest ${ADDITIONAL_LIBS} thermalvis)
+target_link_libraries (OptrisWinTest ${ADDITIONAL_LIBS} thermalvis streamer)
 
 IF(EXISTS "${OpenCV_BIN_DIR_OPT}/opencv_core${OPENCV_VER}.dll")
 	ADD_CUSTOM_COMMAND(TARGET OptrisWinTest POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OpenCV_BIN_DIR_OPT}/opencv_core${OPENCV_VER}.dll" $<TARGET_FILE_DIR:OptrisWinTest>)

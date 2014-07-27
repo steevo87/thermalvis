@@ -11,7 +11,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 
-#include "sparse_flow.hpp"
+//#include "flow/sparse_flow.hpp"
 
 #define ATTR_SET ".<xmlattr>"
 

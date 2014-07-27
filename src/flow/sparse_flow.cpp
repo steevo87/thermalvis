@@ -2,7 +2,7 @@
  *  \brief	Definitions for sparse optical flow.
 */
 
-#include "sparse_flow.hpp"
+#include "flow/sparse_flow.hpp"
 
 cameraInfoStruct::cameraInfoStruct() : width(384), height(288), distortion_model("plumb bob") {
 

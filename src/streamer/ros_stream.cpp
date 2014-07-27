@@ -1,4 +1,4 @@
-#include "ros_stream.hpp"
+#include "streamer/ros_stream.hpp"
 
 #ifdef _BUILD_FOR_ROS_
 

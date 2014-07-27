@@ -1,4 +1,4 @@
-#include "directory_stream.hpp"
+#include "streamer/directory_stream.hpp"
 
 directoryManager::directoryManager() : loopMode(false) {
 	input_directory = new char[MAX_INPUT_ARG_LENGTH];

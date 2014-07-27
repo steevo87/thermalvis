@@ -4,7 +4,7 @@
 #include <QMainWindow>
 
 #ifdef _INCLUDE_INTERFACING_
-#include "../../include/input_stream_config.hpp"
+#include "../../include/streamer/input_stream_config.hpp"
 #endif
 namespace Ui {
 class MainWindow_streamer;

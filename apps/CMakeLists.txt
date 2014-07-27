@@ -21,6 +21,5 @@ IF(WIN32 OR win64)
 ENDIF()
 
 IF(Boost_FOUND)
-	ADD_SUBDIRECTORY(dir-reader)
 	ADD_SUBDIRECTORY(mono-slam)
 ENDIF()

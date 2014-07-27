@@ -3,8 +3,8 @@
 */
 
 #include "launch.hpp"
-#include "directory_stream.hpp"
-#include "sparse_flow.hpp"
+#include "streamer/directory_stream.hpp"
+#include "flow/sparse_flow.hpp"
 
 #define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_demo.launch"
 

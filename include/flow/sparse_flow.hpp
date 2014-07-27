@@ -25,10 +25,6 @@
 #ifdef _BUILD_FOR_ROS_
 #include "feature_tracks.h"
 #include "flowConfig.h"
-#else
-#ifdef _USE_BOOST_
-#include "boost/date_time/posix_time/posix_time.hpp"
-#endif
 #endif
 
 #define DEFAULT_SENSITIVITY 0.1

@@ -1,4 +1,4 @@
-#include "input_stream_config.hpp"
+#include "streamer/input_stream_config.hpp"
 
 streamerSharedData::streamerSharedData() : 
 	detectorMode(DETECTOR_MODE_INS),

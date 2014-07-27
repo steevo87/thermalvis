@@ -1,7 +1,7 @@
 #ifndef __OPTRIS_WINDOWS_H__
 #define __OPTRIS_WINDOWS_H__
 
-#include "input_stream.hpp"
+#include "streamer/input_stream.hpp"
 
 #include <iostream>
 #include <windows.h>

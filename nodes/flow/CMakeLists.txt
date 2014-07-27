@@ -16,10 +16,9 @@ project(flow)
 
 set (ADDITIONAL_LIBS thermalvis)
 
-FILE(GLOB FLOW_HEADERS include/*.h*)
-FILE(GLOB FLOW_SOURCES src/*.cpp)
+FILE(GLOB FLOW_HEADERS *.h*)
+FILE(GLOB FLOW_SOURCES *.cpp)
 
-INCLUDE_DIRECTORIES(include)
 INCLUDE_DIRECTORIES("../../include")
 
 IF (NOT ("${_OpenCV_LIB_PATH}" STREQUAL ""))

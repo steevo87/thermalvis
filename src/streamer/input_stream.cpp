@@ -1,4 +1,4 @@
-#include "input_stream.hpp"
+#include "streamer/input_stream.hpp"
 
 #ifndef _BUILD_FOR_ROS_
 bool streamerConfig::assignStartingData(streamerData& startupData) {
