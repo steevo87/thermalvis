@@ -150,6 +150,8 @@ private:
 	
 	cv::Size ksize;
 	double blurSigma, factor, minResponse, featuresVelocity, averageTrackLength;
+
+	
 	
 	cv::Mat H12, dispMat;	
 	cv::Mat normalizedMat, blownImage, displayImage2, subscribedImage, drawImage2;
@@ -169,8 +171,8 @@ private:
 	std::vector<std::string> predetectedFeatureFiles;
 	
 	cv::Ptr<cv::FeatureDetector> homographyDetector, keypointDetector[MAX_DETECTORS];
-    
-    vector<cv::KeyPoint> homogPoints[2];
+    vector<cv::KeyPoint> homogPoints[2], currPoints[MAX_DETECTORS];
+	vector<cv::Point2f> candidates[MAX_DETECTORS];
     cv::Ptr<cv::DescriptorExtractor> homographyExtractor, descriptorExtractor;
     cv::Mat homogDescriptors[2];
 
@@ -258,6 +260,9 @@ public:
 
 	///brief	Attempts to detect new features on current frame.
 	void detectNewFeatures();
+
+	///brief	Uses new detection and matching results to update the feature vectors.
+	void updateTrackingVectors();
 
 	///brief	Publishes all data relating to a completely processed frame, including for debugging.
 	void publishRoutine();

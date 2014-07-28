@@ -12,7 +12,7 @@
 #include "streamer/streamer_defines.hpp"
 //#include "input_stream_config.hpp"
 
-#define MIN_ROWS_FOR_DISPLAY 400
+#define MIN_PIXELS_PER_AXIS_FOR_DISPLAY 400
 
 /// \brief		ID for custom mapping
 namespace tv {

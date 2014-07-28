@@ -461,13 +461,8 @@ void reduceProximalCandidates(vector<cv::Point2f>& existing, vector<cv::Point2f>
 
 void concatenateWithExistingPoints(vector<cv::Point2f>& pts, vector<cv::Point2f>& kps, int size, double min_sep, bool debug) {
 
-	// Or reverse order?
 	for (unsigned int iii = 0; iii < kps.size(); iii++) {
-
-		if (int(pts.size()) >= size) {
-			break;
-		}
-		
+		if (int(pts.size()) >= size) break;
 		bool isValid = checkRoomForFeature(pts, kps.at(iii), min_sep);
 
 		if (!isValid) {
@@ -477,11 +472,7 @@ void concatenateWithExistingPoints(vector<cv::Point2f>& pts, vector<cv::Point2f>
 			if (debug) { printf("%s << a valid point!!!!!!!\n", __FUNCTION__); }
 			pts.push_back(kps.at(iii));
 		}
-
-		
-
 	}
-
 }
 
 void initializeDrawingColors(cv::Scalar* kColors, cv::Scalar* tColors, int num) {
@@ -1701,66 +1692,16 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 }
 
 double calcDistance(double dist, double ratio, double *coeffs) {
-    double retVal = 0.0;
-
-    retVal = abs(coeffs[0] * dist - ratio + coeffs[2]) / sqrt(pow(coeffs[0], 2) + 1);
-
-    return retVal;
+	return abs(coeffs[0] * dist - ratio + coeffs[2]) / sqrt(pow(coeffs[0], 2) + 1);
 }
 
 double reweightDistanceWithLinearSVM(double dist, double ratio, double gradient) {
-    double retVal = 0.0;    // ratio
-
-    retVal = dist - (1.0 / gradient) * ratio;
-
-    return retVal;
-//
-//    double LineNeg1[3], LineZero[3], LinePos1[3];
-//
-//    LineNeg1[0] = LineZero[0] = LinePos1[0] = gradient;
-//    LineNeg1[1] = LineZero[1] = LinePos1[1] = -1;
-//    LineNeg1[2] = shift[0];
-//    LineZero[2] = shift[1];
-//    LinePos1[2] = shift[2];
-//
-//    // Find distance between lines
-//    //double negSeg = calcLinePerpDistance(LineNeg1, LineZero);
-//    //double posSeg = calcLinePerpDistance(LinePos1, LineZero);
-//
-//    //printf("%s << Distances between lines = (%f, %f)\n", __FUNCTION__, negSeg, posSeg);
-//
-//    // Find distance from point to negative line
-//    double negDist = calcDistance(dist, ratio, LineNeg1);
-//
-//    // Find distance from point to neutral line
-//    double zeroDist = calcDistance(dist, ratio, LineZero);
-//
-//    // Find distance from point to positive line
-//    double posDist = calcDistance(dist, ratio, LinePos1);
-//
-//    //printf("%s << distances = (%f, %f, %f)\n", __FUNCTION__, negDist, zeroDist, posDist);
-//    //cin.get();
-//
-//    if (posDist < negDist) {
-//        retVal = -1.0 * zeroDist;
-//    } else {
-//        retVal = +1.0 * zeroDist;
-//    }
-//
-//    retVal = pow(2.0, retVal);
-//
-//    // Assign total score
-//    //printf("%s << dist/ratio = (%f, %f), retVal = %f\n", __FUNCTION__, dist, ratio, retVal);
-//    //cin.get();
-//
-//
-//    return retVal;
+    return dist - (1.0 / gradient) * ratio;
 }
 
 void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const cv::Mat& desc2) {
 
     vector<vector<cv::DMatch> > matches1to2, matches2to1;
-
 	cv::Ptr<cv::DescriptorMatcher> dMatcher;
 
 	if (desc1.type() == CV_8UC1) {
@@ -1770,9 +1711,6 @@ void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const c
 	} else {
 		printf("%s << ERROR! desc1.type() (%d) unrecognized.\n", __FUNCTION__, desc1.type());
 	}
-
-
-	//printf("%s << desc1.rows = %d; desc2.rows = %d\n", __FUNCTION__, desc1.rows, desc2.rows);
 
 	dMatcher->knnMatch( desc1, desc2, matches1to2, desc1.rows );
 	dMatcher->knnMatch( desc2, desc1, matches2to1, desc2.rows );
@@ -1797,13 +1735,13 @@ void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const c
         }
     }
 
+	/*
 	cv::Mat matMatDisp = normForDisplay(matchingMatrix);
-    cv::imshow("testWin", matMatDisp);
+    cv::imshow("matchingMatrix", matMatDisp);
     cv::waitKey();
 
-    /*
     Mat matMatDisp = normForDisplay(countMat);
-    imshow("testWin", matMatDisp);
+    imshow("countMat", matMatDisp);
     cv::waitKey();
     */
 

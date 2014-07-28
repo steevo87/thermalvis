@@ -979,12 +979,48 @@ void featureTrackerNode::loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec) {
 	ifs.close();
 }
 
+void featureTrackerNode::updateTrackingVectors() {
+
+	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {	
+		if (candidates[jjj].size() > 0) {
+					
+			testTime = timeElapsedMS(test_timer, false);
+					
+			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector before adding projections on frame (%d) = (%d)", bufferIndices[readyFrame % 2], featureTrackVector.size()); }
+					
+			if (featureTrackVector.size() > 0) {
+				if (featureTrackVector.at(featureTrackVector.size()-1).locations.size() > 0) {
+					if (configData.verboseMode) { ROS_INFO("Latest index in vector = (%d)", featureTrackVector.at(featureTrackVector.size()-1).locations.at(featureTrackVector.at(featureTrackVector.size()-1).locations.size()-1).imageIndex); }
+				}
+			}
+					
+			int before = lastAllocatedTrackIndex;
+			addProjectionsToVector(featureTrackVector, bufferIndices[readyFrame % 2], candidates[jjj], lastAllocatedTrackIndex, configData.minSeparation);
+					
+			clearDangerFeatures(featureTrackVector, lastAllocatedTrackIndex);
+					
+			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector after adding projections = (%d)", featureTrackVector.size()); }
+			if (configData.verboseMode) { ROS_ERROR("About to concatenate with (%d) + (%d) / (%d) points and minsep of (%f)", globalFinishingPoints.size(), candidates[jjj].size(), configData.maxFeatures, configData.minSeparation); }
+					
+			concatenateWithExistingPoints(globalFinishingPoints, candidates[jjj], configData.maxFeatures, configData.minSeparation);
+					
+			if (configData.verboseMode) { ROS_INFO("Size of finishing points / candidates after concatenation = (%d / %d)", globalFinishingPoints.size(), candidates[jjj].size()); }
+				
+			testTime = timeElapsedMS(test_timer, false);
+		}
+	}
+	
+
+}
+
 void featureTrackerNode::detectNewFeatures() {
-	vector<cv::KeyPoint> currPoints;
+	
 	
 	if (configData.verboseMode) { ROS_INFO("Entered (%s) : Currently have (%d) points", __FUNCTION__, globalFinishingPoints.size()); }
 	
 	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {	
+		candidates[jjj].clear();
+		currPoints[jjj].clear();
 		if (configData.verboseMode) { ROS_INFO("Considering application of detector (%u), with (%d) pts", jjj, globalFinishingPoints.size()); }
 		
 		testTime = timeElapsedMS(test_timer, false);
@@ -996,12 +1032,12 @@ void featureTrackerNode::detectNewFeatures() {
 		
 		if (wantNewDetection) {
 			
-			currPoints.clear();
+			
 			if (keypointDetector[jjj] != NULL) {
-				keypointDetector[jjj] -> detect(grayImageBuffer[readyFrame % 2], currPoints);
-			} else loadKeypointsFromFile(currPoints);
+				keypointDetector[jjj] -> detect(grayImageBuffer[readyFrame % 2], currPoints[jjj]);
+			} else loadKeypointsFromFile(currPoints[jjj]);
 
-			sortKeyPoints(currPoints);
+			sortKeyPoints(currPoints[jjj]);
 
 			if (configData.outputDetectedFeatures) {
 				char detectedFeaturesFile[256];
@@ -1013,84 +1049,58 @@ void featureTrackerNode::detectNewFeatures() {
 				char timeString[256];
 				sprintf(timeString, "%010u.%09u", original_time.time_of_day().total_seconds(), original_time.time_of_day().total_microseconds());
 				detectedFeaturesStream << "currentTime:" << timeString << endl;
-				detectedFeaturesStream << "count:" << currPoints.size() << endl;
+				detectedFeaturesStream << "count:" << currPoints[jjj].size() << endl;
 				detectedFeaturesStream << "x y response" << endl;
 
-				for (unsigned int iii = 0; iii < currPoints.size(); iii++) detectedFeaturesStream << currPoints.at(iii).pt.x << " " << currPoints.at(iii).pt.y << " " << currPoints.at(iii).response << endl;
+				for (unsigned int iii = 0; iii < currPoints[jjj].size(); iii++) detectedFeaturesStream << currPoints[jjj].at(iii).pt.x << " " << currPoints[jjj].at(iii).pt.y << " " << currPoints[jjj].at(iii).response << endl;
 				detectedFeaturesStream.close();
 			}
 			
-			if (configData.verboseMode) ROS_INFO("Detector (%u) found (%d) points.", jjj, currPoints.size());
+			if (configData.verboseMode) ROS_INFO("Detector (%u) found (%d) points.", jjj, currPoints[jjj].size());
 			
-			discardedNewFeatures += int(currPoints.size());
+			discardedNewFeatures += int(currPoints[jjj].size());
 
 			testTime = timeElapsedMS(test_timer, false);
 			
-			if (currPoints.size() != 0) {
+			if (currPoints[jjj].size() != 0) {
 				
 				testTime = timeElapsedMS(test_timer, false);				
-				vector<cv::Point2f> candidates;
-				reduceEdgyFeatures(currPoints, configData.cameraData);
+				
+				reduceEdgyFeatures(currPoints[jjj], configData.cameraData);
 				testTime = timeElapsedMS(test_timer, false);
 
-				for (unsigned int zzz = 0; zzz < currPoints.size(); zzz++) {
+				for (unsigned int zzz = 0; zzz < currPoints[jjj].size(); zzz++) {
 					// if distance between [ currPoints[jjj].at(zzz) ] and all points in globalFinishingPoints[jjj]
 					// is greater than [ configData.minSeparation ] , delete and decrement index
 					
 					bool violatesProximity = false;
 					
 					for (unsigned int yyy = 0; yyy < globalFinishingPoints.size(); yyy++) {
-						if (distBetweenPts2f(currPoints.at(zzz).pt, globalFinishingPoints.at(yyy)) < configData.minSeparation) {
+						if (distBetweenPts2f(currPoints[jjj].at(zzz).pt, globalFinishingPoints.at(yyy)) < configData.minSeparation) {
 							violatesProximity = true;
 							break;
 						}
 					}
 					
 					if (violatesProximity) {
-						currPoints.erase(currPoints.begin() + zzz);
+						currPoints[jjj].erase(currPoints[jjj].begin() + zzz);
 						zzz--;
 					}
 				}
 				
-				if (configData.verboseMode) { ROS_INFO("Reduced to (%d) candidate points based on proximity.", currPoints.size()); }
-				if (int(currPoints.size() + globalFinishingPoints.size()) > configData.maxFeatures) currPoints.erase(currPoints.begin() + (configData.maxFeatures - globalFinishingPoints.size()), currPoints.end());
+				if (configData.verboseMode) { ROS_INFO("Reduced to (%d) candidate points based on proximity.", currPoints[jjj].size()); }
+				if (int(currPoints[jjj].size() + globalFinishingPoints.size()) > configData.maxFeatures) currPoints[jjj].erase(currPoints[jjj].begin() + (configData.maxFeatures - globalFinishingPoints.size()), currPoints[jjj].end());
 				
-				if (configData.verboseMode) { ROS_INFO("Further reduced to (%d) candidate points based on maxFeatures limit.", currPoints.size()); }
+				if (configData.verboseMode) { ROS_INFO("Further reduced to (%d) candidate points based on maxFeatures limit.", currPoints[jjj].size()); }
 				
-				newlyDetectedFeatures += int(currPoints.size());
-				discardedNewFeatures -= int(currPoints.size());
+				newlyDetectedFeatures += int(currPoints[jjj].size());
+				discardedNewFeatures -= int(currPoints[jjj].size());
 				
-				cv::KeyPoint::convert(currPoints, candidates);
+				cv::KeyPoint::convert(currPoints[jjj], candidates[jjj]);
+
+				if (configData.verboseMode) { ROS_WARN("Adding (%d) new features", candidates[jjj].size()); }
+				if (candidates[jjj].size() > 0) newlySensedFeatures.insert(newlySensedFeatures.end(), candidates[jjj].begin(), candidates[jjj].end());
 				
-				if (candidates.size() > 0) {
-					
-					testTime = timeElapsedMS(test_timer, false);
-					
-					if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector before adding projections on frame (%d) = (%d)", bufferIndices[readyFrame % 2], featureTrackVector.size()); }
-					
-					if (featureTrackVector.size() > 0) {
-						if (featureTrackVector.at(featureTrackVector.size()-1).locations.size() > 0) {
-							if (configData.verboseMode) { ROS_INFO("Latest index in vector = (%d)", featureTrackVector.at(featureTrackVector.size()-1).locations.at(featureTrackVector.at(featureTrackVector.size()-1).locations.size()-1).imageIndex); }
-						}
-					}
-					
-					int before = lastAllocatedTrackIndex;
-					addProjectionsToVector(featureTrackVector, bufferIndices[readyFrame % 2], candidates, lastAllocatedTrackIndex, configData.minSeparation);
-					
-					clearDangerFeatures(featureTrackVector, lastAllocatedTrackIndex);
-					
-					if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector after adding projections = (%d)", featureTrackVector.size()); }
-					if (configData.verboseMode) { ROS_ERROR("About to concatenate with (%d) + (%d) / (%d) points and minsep of (%f)", globalFinishingPoints.size(), candidates.size(), configData.maxFeatures, configData.minSeparation); }
-					
-					concatenateWithExistingPoints(globalFinishingPoints, candidates, configData.maxFeatures, configData.minSeparation);
-					
-					if (configData.verboseMode) { ROS_INFO("Size of finishing points / candidates after concatenation = (%d / %d)", globalFinishingPoints.size(), candidates.size()); }
-					if (configData.verboseMode) { ROS_WARN("Adding (%d) new features", candidates.size()); }
-					
-					newlySensedFeatures.insert(newlySensedFeatures.end(), candidates.begin(), candidates.end());
-					
-					testTime = timeElapsedMS(test_timer, false);
-				}
 			}
 		}
 	}
@@ -1167,6 +1177,9 @@ void featureTrackerNode::features_loop() {
 	
 	if (configData.attemptMatching && (readyFrame > 0) && (newlySensedFeatures.size() > 0)) matchWithExistingTracks();
 
+	// Still to verify whether moving this after matching will work..
+	updateTrackingVectors();
+
 	for (unsigned int ppp = 0; ppp < MAX_HISTORY_FRAMES; ppp++) {
 		
 		if ((configData.multiplier[ppp] == 0.0) || !configData.attemptHistoricalRecovery) continue;
@@ -1226,6 +1239,8 @@ void featureTrackerNode::features_loop() {
 	readyFrame++;
 
 }
+
+
 
 int featureTrackerNode::calculateFeatureMotion(unsigned int idx, double& mx, double &my) {
 	

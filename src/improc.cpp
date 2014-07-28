@@ -3500,7 +3500,7 @@ cv::Mat normForDisplay(cv::Mat origMat) {
 	displayMat.copyTo(largerMat);
 
 	int scale_factor = 2;
-	while (largerMat.rows < MIN_ROWS_FOR_DISPLAY) {
+	while ((largerMat.rows < MIN_PIXELS_PER_AXIS_FOR_DISPLAY) && (largerMat.cols < MIN_PIXELS_PER_AXIS_FOR_DISPLAY)) {
 		resize(displayMat, largerMat, cv::Size(origMat.cols*scale_factor, origMat.rows*scale_factor), 0, 0, cv::INTER_NEAREST);
 		scale_factor++;
 	}
