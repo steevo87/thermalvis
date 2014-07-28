@@ -300,8 +300,6 @@ void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVe
 
 void addProjectionsToVector(vector<featureTrack>& featureTrackVector, unsigned int index, vector<cv::Point2f>& points, long int &starting_track_index, double minSeparation) {
 
-	
-
 	for (unsigned int jjj = 1; jjj < points.size(); jjj++) {
 					
 		// Check violation:
@@ -316,19 +314,9 @@ void addProjectionsToVector(vector<featureTrack>& featureTrackVector, unsigned i
 				break;
 			}
 		}
-		
 	}
 	
-	//printf("%s << Adding (%d) points with index (%d)...\n", __FUNCTION__, points.size(), index);
-	
-	
-	for (unsigned int mmm = 0; mmm < points.size(); mmm++) {
-		
-		addProjectionToVector(featureTrackVector, index, points.at(mmm), starting_track_index);
-		
-	}
-	
-	
+	for (unsigned int mmm = 0; mmm < points.size(); mmm++) addProjectionToVector(featureTrackVector, index, points.at(mmm), starting_track_index);
 }
 
 void addMatchesToVector(vector<featureTrack>& featureTrackVector, unsigned int index1, vector<cv::Point2f>& points1, unsigned int index2, vector<cv::Point2f>& points2, long int &starting_track_index, double minSeparation, bool debug) {	
@@ -486,10 +474,7 @@ void addProjectionToVector(vector<featureTrack>& featureTrackVector, unsigned in
 			
 		}
 		
-		if (foundFeature) {
-			break;
-		}
-		
+		if (foundFeature) break;
 	}
 	
 	if (!foundFeature) {

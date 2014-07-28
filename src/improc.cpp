@@ -3483,17 +3483,8 @@ cv::Mat normForDisplay(cv::Mat origMat) {
 
     for (int iii = 0; iii < origMat.rows; iii++) {
         for (int jjj = 0; jjj < origMat.cols; jjj++) {
-
-            // printf("%s << origMat.val = %f\n", __FUNCTION__, origMat.at<double>(iii,jjj));
-
-
-            if (origMat.at<double>(iii,jjj) > maxVal) {
-                maxVal = origMat.at<double>(iii,jjj);
-            }
-
-            if (origMat.at<double>(iii,jjj) < minVal) {
-                minVal = origMat.at<double>(iii,jjj);
-            }
+            if (origMat.at<double>(iii,jjj) > maxVal)  maxVal = origMat.at<double>(iii,jjj);
+            if (origMat.at<double>(iii,jjj) < minVal) minVal = origMat.at<double>(iii,jjj);
         }
     }
 
@@ -3506,8 +3497,13 @@ cv::Mat normForDisplay(cv::Mat origMat) {
     }
 
     cv::Mat largerMat;
+	displayMat.copyTo(largerMat);
 
-    resize(displayMat, largerMat, cv::Size(origMat.rows*1, origMat.cols*1), 0, 0, cv::INTER_NEAREST);
+	int scale_factor = 2;
+	while (largerMat.rows < MIN_ROWS_FOR_DISPLAY) {
+		resize(displayMat, largerMat, cv::Size(origMat.cols*scale_factor, origMat.rows*scale_factor), 0, 0, cv::INTER_NEAREST);
+		scale_factor++;
+	}
 
     return largerMat;
 }

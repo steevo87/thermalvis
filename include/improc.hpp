@@ -12,6 +12,8 @@
 #include "streamer/streamer_defines.hpp"
 //#include "input_stream_config.hpp"
 
+#define MIN_ROWS_FOR_DISPLAY 400
+
 /// \brief		ID for custom mapping
 namespace tv {
 	#define MAP_LENGTH		1024

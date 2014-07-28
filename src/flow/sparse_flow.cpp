@@ -792,7 +792,7 @@ void featureTrackerNode::matchWithExistingTracks() {
 	
 	for (unsigned int ppp = 0; ppp <= MAX_HISTORY_FRAMES; ppp++) {
 		if (configData.verboseMode) ROS_INFO("(%s) : Looping for ppp = (%d)", __FUNCTION__, ppp);
-		if (ppp != MAX_HISTORY_FRAMES) { if ((configData.multiplier[ppp] == 0.0) || !configData.attemptHistoricalRecovery) continue; }
+		if (ppp < MAX_HISTORY_FRAMES) { if ((configData.multiplier[ppp] == 0) || !configData.attemptHistoricalRecovery) continue; }
 		
 		if (configData.verboseMode) { ROS_INFO("(%s) : Passed initial tests..", __FUNCTION__); }
 		
@@ -822,6 +822,10 @@ void featureTrackerNode::matchWithExistingTracks() {
 					}	
 				}
 			}
+		}
+
+		if (featuresFromPts[0].at(0).pt.x != featuresFromPts[1].at(0).pt.x) {
+			int a = 1; // temp for debug
 		}
 		
 		// Create descriptors for untracked features

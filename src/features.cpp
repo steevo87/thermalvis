@@ -1777,13 +1777,6 @@ void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const c
 	dMatcher->knnMatch( desc1, desc2, matches1to2, desc1.rows );
 	dMatcher->knnMatch( desc2, desc1, matches2to1, desc2.rows );
 
-    /*
-    Mat matMatDisp;
-    matMatDisp = normForDisplay(matchingMatrix);
-    imshow("testWin", matMatDisp);
-    cv::waitKey();
-    */
-
     matchingMatrix = cv::Mat::zeros(int(matches1to2.size()), int(matches2to1.size()), CV_64FC1);
 
     cv::Mat countMat = cv::Mat::zeros(int(matches1to2.size()), int(matches2to1.size()), CV_64FC1);
@@ -1803,6 +1796,10 @@ void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const c
             countMat.at<double>(matches2to1.at(iii).at(jjj).trainIdx, iii) += 1.0;
         }
     }
+
+	cv::Mat matMatDisp = normForDisplay(matchingMatrix);
+    cv::imshow("testWin", matMatDisp);
+    cv::waitKey();
 
     /*
     Mat matMatDisp = normForDisplay(countMat);
