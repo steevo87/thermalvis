@@ -39,5 +39,6 @@ flowLaunchOnlyData::flowLaunchOnlyData() :
 	displayDebug(false),
 	displayGUI(false),
 #endif
-	specialMode(false)
+	specialMode(false),
+	predetectedFeatures("")
 { }

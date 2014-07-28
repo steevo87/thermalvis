@@ -592,6 +592,11 @@
       <string>HARRIS</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>FILE</string>
+     </property>
+    </item>
    </widget>
    <widget class="QComboBox" name="detector_2">
     <property name="geometry">
@@ -628,6 +633,11 @@
       <string>HARRIS</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>FILE</string>
+     </property>
+    </item>
    </widget>
    <widget class="QComboBox" name="detector_3">
     <property name="geometry">
@@ -662,6 +672,11 @@
     <item>
      <property name="text">
       <string>HARRIS</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILE</string>
      </property>
     </item>
    </widget>

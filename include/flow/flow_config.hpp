@@ -5,6 +5,8 @@
 #ifndef THERMALVIS_FLOW_CONFIG_H_
 #define THERMALVIS_FLOW_CONFIG_H_
 
+#include <string>
+
 #define DEFAULT_SENSITIVITY 0.1
 
 #define DEFAULT_MULTIPLIER_1 3
@@ -52,6 +54,7 @@
 #define DETECTOR_GFTT	1
 #define DETECTOR_FAST	2
 #define DETECTOR_HARRIS 3
+#define DETECTOR_FILE	4
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for flow
 struct flowSharedData {
@@ -77,6 +80,7 @@ struct flowRealtimeOnlyData {
 /// \brief		Parameters that are only changeable from launch interface
 struct flowLaunchOnlyData {
 	bool specialMode;
+	std::string predetectedFeatures;
 #ifndef _BUILD_FOR_ROS_
 	bool displayDebug, displayGUI;
 #endif

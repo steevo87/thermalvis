@@ -57,6 +57,8 @@ bool flowConfig::assignStartingData(trackerData& startupData) {
 		detector_1 = DETECTOR_GFTT;
 	} else if ((!startupData.detector[0].compare("HARRIS")) || (!startupData.detector[0].compare("harris"))) {
 		detector_1 = DETECTOR_HARRIS;
+	} else if ((!startupData.detector[0].compare("FILE")) || (!startupData.detector[0].compare("file"))) {
+		detector_1 = DETECTOR_FILE;
 	} else {
 		ROS_ERROR("Could not identify provided detector..");
 		detector_1 = DETECTOR_FAST;
@@ -69,6 +71,8 @@ bool flowConfig::assignStartingData(trackerData& startupData) {
 		detector_2 = DETECTOR_GFTT;
 	} else if ((!startupData.detector[1].compare("HARRIS")) || (!startupData.detector[1].compare("harris"))) {
 		detector_2 = DETECTOR_HARRIS;
+	} else if ((!startupData.detector[1].compare("FILE")) || (!startupData.detector[1].compare("file"))) {
+		detector_2 = DETECTOR_FILE;
 	} else {
 		detector_2 = DETECTOR_OFF;
 	}
@@ -79,6 +83,8 @@ bool flowConfig::assignStartingData(trackerData& startupData) {
 		detector_3 = DETECTOR_GFTT;
 	} else if ((!startupData.detector[2].compare("HARRIS")) || (!startupData.detector[2].compare("harris"))) {
 		detector_3 = DETECTOR_HARRIS;
+	} else if ((!startupData.detector[2].compare("FILE")) || (!startupData.detector[2].compare("file"))) {
+		detector_3 = DETECTOR_FILE;
 	} else {
 		detector_3 = DETECTOR_OFF;
 	}
@@ -141,6 +147,8 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
 			if (v2.first.compare("param")) continue;
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("predetectedFeatures")) predetectedFeatures = v2.second.get_child("<xmlattr>.value").data();
 
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -907,6 +915,66 @@ void featureTrackerNode::matchWithExistingTracks() {
 	if (configData.verboseMode) { ROS_INFO("(%s) : Exiting function", __FUNCTION__); }
 }
 
+void featureTrackerNode::prepareKeypointFilelist() {
+
+	boost::filesystem::path featuresDir(configData.predetectedFeatures);
+	boost::filesystem::directory_iterator end_iter;
+
+	if ( boost::filesystem::exists(featuresDir) && boost::filesystem::is_directory(featuresDir)) {
+		for( boost::filesystem::directory_iterator dir_iter(featuresDir) ; dir_iter != end_iter ; ++dir_iter) {
+			if (boost::filesystem::is_regular_file(dir_iter->status()))	{
+
+				std::stringstream temp;
+				temp << dir_iter->path().filename();
+				string name;
+				name = temp.str();
+				boost::replace_all(name, "\"", "");
+
+				if ((name == ".") || (name == "..") || (name[0] == '.') || (name.size() < 5)) continue;
+
+				if (name.size() > 5) {
+					if ((name[name.size()-4] != '.') && (name[name.size()-5] != '.')) continue;
+				} else if (name[name.size()-4] != '.') {
+					continue;
+				}
+
+				predetectedFeatureFiles.push_back(name);
+
+			}
+		}
+	}
+}
+
+void featureTrackerNode::loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec) {
+	
+	if (currentIndex >= int(predetectedFeatureFiles.size())) return;
+
+	std::string currentFileAddress = configData.predetectedFeatures + "/" + predetectedFeatureFiles.at(currentIndex);
+	std::ifstream ifs;
+	ifs.open(currentFileAddress);
+
+	char buffer[512];
+	int idx;
+	cv::KeyPoint kp;
+	while (true) {
+		ifs.getline(buffer, 512);
+		
+		if ((buffer[0] == '#') || (buffer[0] == 'c')) {
+			continue;
+		}
+
+		stringstream ss;
+		ss << buffer;
+		ss >> idx >> kp.response >> kp.pt.x >> kp.pt.y;
+
+		pts_vec.push_back(kp);
+
+		if (ifs.eof()) break;
+	}
+
+	ifs.close();
+}
+
 void featureTrackerNode::detectNewFeatures() {
 	vector<cv::KeyPoint> currPoints;
 	
@@ -925,7 +993,10 @@ void featureTrackerNode::detectNewFeatures() {
 		if (wantNewDetection) {
 			
 			currPoints.clear();
-			keypointDetector[jjj] -> detect(grayImageBuffer[readyFrame % 2], currPoints);
+			if (keypointDetector[jjj] != NULL) {
+				keypointDetector[jjj] -> detect(grayImageBuffer[readyFrame % 2], currPoints);
+			} else loadKeypointsFromFile(currPoints);
+
 			sortKeyPoints(currPoints);
 
 			if (configData.outputDetectedFeatures) {
@@ -1451,6 +1522,9 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	for (unsigned int ppp = 0; ppp < MAX_HISTORY_FRAMES; ppp++) configData.multiplier[ppp] = 0;
 	
 	configData.initializeDetectors(keypointDetector, &homographyDetector);
+
+	if (configData.predetectedFeatures != "") prepareKeypointFilelist();
+
 	configData.initializeDescriptors(&descriptorExtractor, &homographyExtractor);
 	
 	#ifdef _BUILD_FOR_ROS_
@@ -1592,6 +1666,8 @@ bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr
 			det[iii] = new cv::OrbFeatureDetector( maxFeatures );
 		} else if ((detector[iii] == "HARRIS") || (detector[iii] == "harris")) {
 			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii] * HARRIS_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, true );
+		} else if ((detector[iii] == "FILE") || (detector[iii] == "file")) {
+			det[iii] = NULL;
 		} else {
 			ROS_ERROR("Shouldn't have got here!");
 			return false;

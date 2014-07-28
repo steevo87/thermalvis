@@ -165,6 +165,8 @@ private:
 	unsigned int numHistoryFrames, bufferIndices[2], olderIndices[MAX_HISTORY_FRAMES];
 	
 	std::vector<featureTrack> displayTracks, featureTrackVector;
+
+	std::vector<std::string> predetectedFeatureFiles;
 	
 	cv::Ptr<cv::FeatureDetector> homographyDetector, keypointDetector[MAX_DETECTORS];
     
@@ -229,6 +231,12 @@ public:
 
 	///brief	Calculates the average motion of all features successfully tracked from the previous frame.
 	int calculateFeatureMotion(unsigned int idx, double& mx, double &my);
+
+	///brief	Loads predetected keypoints from a file as an alternative to detecting them from the image
+	void prepareKeypointFilelist();
+
+	///brief	Loads predetected keypoints from a file as an alternative to detecting them from the image
+	void loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec);
 	
 	///brief	Handles the situation where a duplicate frame is received (implying a NUC interruption).
 	void handle_delay();

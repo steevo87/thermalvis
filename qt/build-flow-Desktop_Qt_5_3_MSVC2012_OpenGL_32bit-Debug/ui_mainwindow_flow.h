@@ -314,6 +314,7 @@ public:
          << QApplication::translate("MainWindow_flow", "GFTT", 0)
          << QApplication::translate("MainWindow_flow", "FAST", 0)
          << QApplication::translate("MainWindow_flow", "HARRIS", 0)
+         << QApplication::translate("MainWindow_flow", "FILE", 0)
         );
         detector_1->setCurrentText(QApplication::translate("MainWindow_flow", "FAST", 0));
         detector_2->clear();
@@ -322,6 +323,7 @@ public:
          << QApplication::translate("MainWindow_flow", "GFTT", 0)
          << QApplication::translate("MainWindow_flow", "FAST", 0)
          << QApplication::translate("MainWindow_flow", "HARRIS", 0)
+         << QApplication::translate("MainWindow_flow", "FILE", 0)
         );
         detector_2->setCurrentText(QApplication::translate("MainWindow_flow", "OFF", 0));
         detector_3->clear();
@@ -330,6 +332,7 @@ public:
          << QApplication::translate("MainWindow_flow", "GFTT", 0)
          << QApplication::translate("MainWindow_flow", "FAST", 0)
          << QApplication::translate("MainWindow_flow", "HARRIS", 0)
+         << QApplication::translate("MainWindow_flow", "FILE", 0)
         );
         detector_3->setCurrentText(QApplication::translate("MainWindow_flow", "OFF", 0));
         detector_1_label->setText(QApplication::translate("MainWindow_flow", "detector_1", 0));
