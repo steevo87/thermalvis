@@ -41,9 +41,9 @@
 		<param name="predetectedFeatures" value="C:\Users\Stephen\Documents\GitHub\BUILDS\thermalvis\apps\mono-slam\data\0000034552.192722240" />
 		<param name="detector_1" value="FAST" /> <!-- options: FILE, FAST, GFTT and HARRIS -->
 		<!-- <param name="minFeatures" value="100" /> -->
-		<param name="maxFeatures" value="50" />
+		<param name="maxFeatures" value="150" />
 		<param name="sensitivity_1" value="0.1" /> <!-- default is 0.1 -->
-		<param name="flowThreshold" value="0.2" /> <!-- default is 0.0002 -->
+		<param name="flowThreshold" value="20.0002" /> <!-- default is 0.0002 -->
 		
 	</node>
 	

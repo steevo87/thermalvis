@@ -766,7 +766,7 @@ void featureTrackerNode::matchWithExistingTracks() {
 	
 	cv::Point2f ptToAdd;
 	cv::KeyPoint kpToAdd;
-	kpToAdd.size = 3.0;
+	kpToAdd.size = DEFAULT_DESCRIPTOR_AREA;
 	kpToAdd.angle = -1.0;
 	kpToAdd.response = 1.0;
 	kpToAdd.octave = 0;
@@ -779,7 +779,6 @@ void featureTrackerNode::matchWithExistingTracks() {
 	// Then get all brand new points:
 	for (unsigned int iii = 0; iii < newlySensedFeatures.size(); iii++) {
 		kpToAdd.pt = newlySensedFeatures.at(iii);
-		kpToAdd.size = 3.0;
 		featuresFromPts[1].push_back(kpToAdd);
 	}
 	
@@ -791,10 +790,7 @@ void featureTrackerNode::matchWithExistingTracks() {
 	preservedRecoveredPoints.clear();
 	
 	for (unsigned int ppp = 0; ppp <= MAX_HISTORY_FRAMES; ppp++) {
-		if (configData.verboseMode) ROS_INFO("(%s) : Looping for ppp = (%d)", __FUNCTION__, ppp);
 		if (ppp < MAX_HISTORY_FRAMES) { if ((configData.multiplier[ppp] == 0) || !configData.attemptHistoricalRecovery) continue; }
-		
-		if (configData.verboseMode) { ROS_INFO("(%s) : Passed initial tests..", __FUNCTION__); }
 		
 		featuresFromPts[0].clear();
 		unsigned int aimedIndex;
@@ -822,10 +818,6 @@ void featureTrackerNode::matchWithExistingTracks() {
 					}	
 				}
 			}
-		}
-
-		if (featuresFromPts[0].at(0).pt.x != featuresFromPts[1].at(0).pt.x) {
-			int a = 1; // temp for debug
 		}
 		
 		// Create descriptors for untracked features
@@ -860,24 +852,19 @@ void featureTrackerNode::matchWithExistingTracks() {
 				boost::posix_time::time_duration diff = original_time - previous_time;
 				assignEstimatesBasedOnVelocities(featureTrackVector, tempPts, estimatedFinalLocs, bufferIndices[(readyFrame-1) % 2], 0.0, diff.total_milliseconds()/1000.0);
 				#endif
-			} else {
-				cv::KeyPoint::convert(featuresFromPts[0], estimatedFinalLocs);
-			}
+			} else cv::KeyPoint::convert(featuresFromPts[0], estimatedFinalLocs);
 			
 			double matchingConstraint;
-		
-			if (ppp == MAX_HISTORY_FRAMES) { // THis is the exception of the loop, where you look at the previous frame
-				matchingConstraint = distanceConstraint;
-			} else {
-				matchingConstraint = TIGHT_DISTANCE_CONSTRAINT;
-			}
+			// This is the exception of the loop, where you look at the previous frame
+			(ppp == MAX_HISTORY_FRAMES) ? matchingConstraint = distanceConstraint : matchingConstraint = TIGHT_DISTANCE_CONSTRAINT;
 			
 			cv::Point2f p1, p2;
 			for (size_t i = 0; i < matches.size(); i++) {
-				// Get rid of matches that have moved too far...
+				// Get rid of matches that have moved too far or have a poor average rank
 				p1 = estimatedFinalLocs.at(matches[i][0].queryIdx);
 				p2 = featuresFromPts[1].at(matches[i][0].trainIdx).pt;
-				if (pow(pow(p1.x - p2.x, 2.0) + pow(p1.y - p2.y, 2.0), 0.5) > matchingConstraint) {
+				if ((pow(pow(p1.x - p2.x, 2.0) + pow(p1.y - p2.y, 2.0), 0.5) > matchingConstraint) ||
+						(matches[i][0].distance > MINIMUM_MATCHING_RANK)) {
 					matches.erase(matches.begin() + i);
 					i--;
 				}
@@ -1226,12 +1213,12 @@ void featureTrackerNode::features_loop() {
 		if ((featuresVelocity == 0.0) && (activeTrackCount > 0)) { 
 			ROS_WARN("featuresVelocity = (%f) : Are you forgetting to mark duplicate images using <streamer>?", featuresVelocity); 
 		} else if (configData.verboseMode) {
-			#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 			ROS_INFO("featuresVelocity = (%f) over (%f) seconds", featuresVelocity, (original_time.toSec()-previous_time.toSec()));
-			#else
+#else
 			boost::posix_time::time_duration diff = original_time - previous_time;
-			ROS_INFO("featuresVelocity = (%f) over (%f) seconds", __FUNCTION__, featuresVelocity, diff.total_milliseconds()/1000.0);
-			#endif
+			if (diff.total_milliseconds() != 0.0) ROS_INFO("featuresVelocity = (%f) over (%f) seconds", __FUNCTION__, featuresVelocity, diff.total_milliseconds()/1000.0);
+#endif
 		}
 	}
 	

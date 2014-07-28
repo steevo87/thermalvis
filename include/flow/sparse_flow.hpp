@@ -5,6 +5,9 @@
 #ifndef _THERMALVIS_SPARSE_FLOW_H_
 #define _THERMALVIS_SPARSE_FLOW_H_
 
+#define MINIMUM_MATCHING_RANK	10
+#define DEFAULT_DESCRIPTOR_AREA	3.0
+
 #include "program.hpp"
 
 #include "general_resources.hpp"

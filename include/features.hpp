@@ -21,6 +21,8 @@
 #define MATCHING_MODE_NNDR			1
 #define MATCHING_MODE_SVM			2
 
+#define DEFAULT_SVM_GRADIENT		-1.42
+
 void fadeImage(const cv::Mat& src, cv::Mat& dst);
 
 void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::Mat& dst);

@@ -1588,9 +1588,6 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 	bool rowsStillRemain = false;
 	int remainingRows = 0;
 
-	//printf("%s << Entered function.\n", __FUNCTION__);
-
-
 	for (int iii = 0; iii < matchingMatrix.rows; iii++) {
 		bool anyInThisRow = false;
 		for (int jjj = 0; jjj < matchingMatrix.cols; jjj++) {
@@ -1600,13 +1597,8 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 			}
 		}
 
-		if (anyInThisRow) {
-			remainingRows++;
-		}
-
+		if (anyInThisRow) remainingRows++;
 	}
-
-	//printf("%s << remainingRows = %d\n", __FUNCTION__, remainingRows);
 
 	while (rowsStillRemain) {
 
@@ -1629,7 +1621,6 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 		}
 
 		matchingMatrix.at<double>(bestRow,bestCol) = -1.0;
-		//matchingMatrixCpy.at<double>(bestRow,bestCol) = -1.0;
 
 		cv::DMatch currentMatch;
 		vector<cv::DMatch> currentMatchVector;
@@ -1638,13 +1629,10 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 		currentMatch.trainIdx = bestCol;
 
 		double secondScore = 9e99;
-		//int secondRow = -1, secondCol = -1;
 
 		for (int iii = 0; iii < matchingMatrix.rows; iii++) {
 			if ((matchingMatrix.at<double>(iii,bestCol) <= secondScore) && (matchingMatrix.at<double>(iii,bestCol) >= 0)) {
 				secondScore = matchingMatrix.at<double>(iii,bestCol);
-				//secondRow = iii;
-				//secondCol = bestCol;
 			}
 			matchingMatrix.at<double>(iii,bestCol) = -1;
 		}
@@ -1652,43 +1640,31 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 		for (int iii = 0; iii < matchingMatrix.cols; iii++) {
 			if ((matchingMatrix.at<double>(bestRow,iii) <= secondScore) && (matchingMatrix.at<double>(bestRow,iii) >= 0)) {
 				secondScore = matchingMatrix.at<double>(bestRow,iii);
-				//secondRow = bestRow;
-				//secondCol = iii;
 			}
 			matchingMatrix.at<double>(bestRow,iii) = -1;
 		}
 
 		// If it is literally the last match available, it won't have a second best score...
-		if (secondScore == 9e99) {
-			secondScore = bestScore;
-		}
+		if (secondScore == 9e99) secondScore = bestScore;
 
 		// Then normalize the "distance" based on this ratio, or can just use the ratio...
-		//currentMatch.distance = bestScore;
-		
-		if (mode == MATCHING_MODE_NN) {
+		switch (mode) {
+		case MATCHING_MODE_NN:
 			currentMatch.distance = float(bestScore);
-		} else if (mode == MATCHING_MODE_NNDR) {
+			break;
+		case MATCHING_MODE_NNDR:
 			currentMatch.distance = float(bestScore / secondScore);
-		} else if (mode == MATCHING_MODE_SVM) {
-			double gradient = -1.42;
-			currentMatch.distance = float(reweightDistanceWithLinearSVM(bestScore, (bestScore/secondScore), gradient));
-		} else {
+			break;
+		case MATCHING_MODE_SVM:
+			currentMatch.distance = float(reweightDistanceWithLinearSVM(bestScore, (bestScore/secondScore), DEFAULT_SVM_GRADIENT));
+			break;
+		default:
 			currentMatch.distance = float(bestScore);
 		}
 		
-		
-		
-
 		currentMatchVector.push_back(currentMatch);
 		bestMatches.push_back(currentMatchVector);
-
-
 	}
-
-	//printf("%s << bestMatches.size() = %d\n", __FUNCTION__, bestMatches.size());
-	//cin.get();
-
 }
 
 double calcDistance(double dist, double ratio, double *coeffs) {
