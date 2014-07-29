@@ -37,33 +37,16 @@ struct featureTrack {
 	double velocityWeighting;
 	double velocity_x, velocity_y;
 	
-	featureTrack();
+	featureTrack() : isTriangulated(false) { }
 	
 	/// \brief		Only sets 3d location if it hasn't already been set
 	void set3dLoc(const cv::Point3d& loc);
 	
 	/// \brief		Sets 3d location whether it has been set or not
 	void reset3dLoc(const cv::Point3d& loc);
-	cv::Point3d get3dLoc();
+	cv::Point3d get3dLoc() { return xyzEstimate; }
 	
-	void addFeature(indexedFeature& feat) {
-		
-		if (locations.size() == 0) { 
-			locations.push_back(feat);
-			return;
-		}
-		
-		unsigned int pos = 0;
-				
-		while (locations.at(pos).imageIndex < feat.imageIndex) {
-			pos++;
-			if (pos >= locations.size()) {
-				break;
-			}
-		}
-		
-		locations.insert(locations.begin()+pos, feat);
-	}
+	void addFeature(indexedFeature& feat);
 	
 	cv::Point2f getCoord(unsigned int cam_idx);
 	bool occursInSequence(const vector<unsigned int>& indices);

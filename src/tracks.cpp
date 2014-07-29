@@ -4,20 +4,11 @@
 
 #include "tracks.hpp"
 
-featureTrack::featureTrack() {
-	isTriangulated = false;
-}
-
 void featureTrack::set3dLoc(const cv::Point3d& loc) {
-	
 	if (!isTriangulated) {
-		xyzEstimate.x = loc.x;
-		xyzEstimate.y = loc.y;
-		xyzEstimate.z = loc.z;
-	
+		xyzEstimate = loc;
 		isTriangulated = true;
 	}
-	
 }
 
 void featureTrack::reset3dLoc(const cv::Point3d& loc) {
@@ -30,53 +21,52 @@ void featureTrack::reset3dLoc(const cv::Point3d& loc) {
 	
 }
 
+void featureTrack::addFeature(indexedFeature& feat) {
+		
+	if (locations.size() == 0) { 
+		locations.push_back(feat);
+		return;
+	}
+		
+	unsigned int pos = 0;
+				
+	while (locations.at(pos).imageIndex < feat.imageIndex) {
+		pos++;
+		if (pos >= locations.size()) break;
+	}
+	locations.insert(locations.begin()+pos, feat);
+}
+
 unsigned int getActiveTrackCount(const vector<featureTrack>& featureTrackVector, unsigned int previousIndex, unsigned int latestIndex) {
 	
 	unsigned int trackCount = 0;
-	
 	for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
-		
-		if (featureTrackVector.at(iii).locations.size() < 2) {
-			continue;
-		}
-		
+		if (featureTrackVector.at(iii).locations.size() < 2) continue;
 		if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).imageIndex == latestIndex) {
 			if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-2).imageIndex == previousIndex) {
 				trackCount++;
 			}
 		}
-		
 	}
-	
 	return trackCount;
-		
 }
 
 double obtainFeatureSpeeds(const vector<featureTrack>& featureTrackVector, unsigned int idx1, double time1, unsigned int idx2, double time2) {
 	
-	
 	double cumulativeVelocity = 0.0;
 	unsigned int cumulativeCount = 0;
 	
-	//printf("%s << Entered with (%d, %d)\n", __FUNCTION__, idx1, idx2);
-	
-	if ((time1 == time2) || (time1 == 0.0) || (time2 == 0.0)) {
-		return -1.0;
-	}
+	if ((time1 == time2) || (time1 == 0.0) || (time2 == 0.0)) return -1.0;
 	
 	for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
 		
-		if (featureTrackVector.at(iii).locations.size() < 2) {
-			continue;
-		}
+		if (featureTrackVector.at(iii).locations.size() < 2) continue;
 		
 		// If the last two features match the frame indices you're interested in...
-		
 		if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).imageIndex == idx2) {
 			
 			if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-2).imageIndex == idx1) {
 				
-				//printf("%s << Found match at (%d)\n", __FUNCTION__, iii);
 				cumulativeCount++;
 				cv::Point2f p1, p2, v;
 				
@@ -87,23 +77,13 @@ double obtainFeatureSpeeds(const vector<featureTrack>& featureTrackVector, unsig
 				v.y = float((p2.y - p1.y) / (time2 - time1));
 				
 				cumulativeVelocity += pow(pow(v.x, 2.0)+pow(v.y, 2.0), 0.5);
-				
 			}
-			
 		}
-		
-		
 	}
 	
 	
-	if (cumulativeCount > 0) {
-		cumulativeVelocity /= double(cumulativeCount);
-	} else {
-		cumulativeVelocity = 0.0;
-	}
-	
+	(cumulativeCount > 0) ? cumulativeVelocity /= double(cumulativeCount) : cumulativeVelocity = 0.0;
 	return cumulativeVelocity;
-
 }
 
 double updateFeatureSpeeds(vector<featureTrack>& featureTrackVector, unsigned int idx1, double time1, unsigned int idx2, double time2, double maxVelocity) {
@@ -185,10 +165,7 @@ void removeObsoleteElements(vector<featureTrack>& featureTrackVector, const vect
 
 int findTrackPosition(const vector<featureTrack>& featureTrackVector, long int index) {
 	
-	if (featureTrackVector.size() == 0) {
-		return -1;
-	}
-	
+	if (featureTrackVector.size() == 0) return -1;
 	int retVal = -1;
 	
 	for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
@@ -198,55 +175,31 @@ int findTrackPosition(const vector<featureTrack>& featureTrackVector, long int i
 			break;
 		}
 	}
-	
 	return retVal;
-	
 }
 
 bool featureTrack::occursInSequence(const vector<unsigned int>& indices) {
 	
 	for (unsigned int iii = 0; iii < locations.size(); iii++) {
-		for (unsigned int jjj = 0; jjj < indices.size(); jjj++) {
-			
-			if (locations.at(iii).imageIndex == indices.at(jjj)) {
-				return true;
-			}
-			
+		for (unsigned int jjj = 0; jjj < indices.size(); jjj++) {	
+			if (locations.at(iii).imageIndex == indices.at(jjj)) return true;
 		}
 	}
-	
 	return false;
 }
 
 cv::Point2f featureTrack::getCoord(unsigned int cam_idx) {
 	
 	cv::Point2f blankPt(-1.0, -1.0);
-	
 	for (unsigned int iii = 0; iii < locations.size(); iii++) {
 		
 		if (((unsigned int) locations.at(iii).imageIndex) == cam_idx) {
 			blankPt.x = locations.at(iii).featureCoord.x;
 			blankPt.y = locations.at(iii).featureCoord.y;
-			
 			return blankPt;
 		}
-		
-		
 	}
-	
 	return blankPt;
-	
-}
-
-cv::Point3d featureTrack::get3dLoc() {
-	
-	cv::Point3d loc;
-	
-	loc.x = xyzEstimate.x;
-	loc.y = xyzEstimate.y;
-	loc.z = xyzEstimate.z;
-	
-	return loc;
 }
 
 void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVector, const vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, unsigned int idx, double time1, double time2) {
@@ -288,12 +241,8 @@ void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVe
 			newLoc.y = float(pts1.at(iii).y + (time2-time1)*velocity.y);
 			
 			pts2.push_back(newLoc);
-		} else {
-			pts2.push_back(pts1.at(iii));
-		}
-		
-		
-		
+		} else pts2.push_back(pts1.at(iii));
+
 		//printf("%s << Predicted location of (%f, %f) is (%f, %f)\n", __FUNCTION__, pts1.at(iii).x, pts1.at(iii).y, pts2.at(iii).x, pts2.at(iii).y);
 	}
 }
@@ -347,75 +296,16 @@ void addMatchesToVector(vector<featureTrack>& featureTrackVector, unsigned int i
 				break;
 			}
 		}
-		
-		/*
-		for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
-			
-			
-			if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).imageIndex == index1) {
-				if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).featureCoord.x == points1.at(jjj).x) {
-					if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).featureCoord.y == points1.at(jjj).y) {
-						//printf("%s << Found feature (%d):(%f,%f) in position (%d) of vector.\n", __FUNCTION__, jjj, points1.at(jjj).x, points1.at(jjj).y, iii);
-						
-						
-						
-					}
-				}
-			}
-			
-		}
-		*/
 	}
 	
 	if (debug) { printf("%s << Points to add after proximity trimming = (%d)\n", __FUNCTION__, points2.size()); }
 	
-	// Determine priority order based on age...
-	
-	/*
-	vector<mypair> pointFirstOccurrences;
-	
-	// featureTrackVector tracks are already in order from oldest to newest!!!
-	
-	for (unsigned int jjj = 0; jjj < points1.size(); jjj++) {
-		for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
-			
-			if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).imageIndex == index1) {
-				if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).featureCoord.x == points1.at(jjj).x) {
-					if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).featureCoord.y == points1.at(jjj).y) {
-						printf("%s << Found feature (%d):(%f,%f) in position (%d) of vector.\n", __FUNCTION__, jjj, points1.at(jjj).x, points1.at(jjj).y, iii);
-						
-						mypair pair;
-						pair.first = iii;
-						pair.second = jjj;
-						pointFirstOccurrences.push_back(pair);
-						
-					}
-				}
-			}
-		}
-	}
-	
-	std::sort (pointFirstOccurrences.begin(), pointFirstOccurrences.end(), comparator);
-	
-	for (unsigned int iii = 0; iii < pointFirstOccurrences.size(); iii++) {
-		
-		
-		printf("%s << sorted(%d) = (%d, %d)\n", __FUNCTION__, iii, pointFirstOccurrences.at(iii).first, pointFirstOccurrences.at(iii).second);
-		
-	}
-	*/
-	
 	for (unsigned int mmm = 0; mmm < points1.size(); mmm++) {
-		
 		if (debug) { printf("%s << Adding match from index (%d) to (%d)..\n", __FUNCTION__, index1, index2); }
-		
 		addMatchToVector(featureTrackVector, index1, points1.at(mmm), index2, points2.at(mmm), starting_track_index);
-		
 	}
 	
 	if (debug) { printf("%s << Loop completed.\n", __FUNCTION__); }
-	
-	
 }
 
 void clearDangerFeatures(vector<featureTrack>& featureTrackVector, long int index) {
@@ -424,20 +314,10 @@ void clearDangerFeatures(vector<featureTrack>& featureTrackVector, long int inde
 	
 	long int buffer = 10000000;
 	
-	long int bottom_index;
-	if (index < buffer) {
-		bottom_index = 0;
-	} else {
-		bottom_index = index - buffer;
-	}
-	
-	long int top_index;
-	if ((2147483647 - index) < buffer) {
-		top_index = 2147483647;
-	} else {
-		top_index = index + buffer;
-	}
-	
+	long int bottom_index, top_index;
+	(index < buffer) ? bottom_index = 0 : bottom_index = index - buffer;
+	((2147483647 - index) < buffer) ? top_index = 2147483647 : top_index = index + buffer;
+
 	//printf("%s << (%d) < (%d) < (%d)\n", __FUNCTION__, bottom_index, index, top_index);
 	
 	for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
@@ -508,27 +388,19 @@ int addMatchToVector(vector<featureTrack>& featureTrackVector, unsigned int inde
 		bool foundImage1 = false, foundImage2 = false;
 		
 		// int foundIndex1 = -1, foundIndex2 = -1;
-		
-		
-		
+
 		// For each existing feature in the track
 		for (unsigned int jjj = 0; jjj < featureTrackVector.at(iii).locations.size(); jjj++) {
 			
 			// If you've found a feature from the correct image
 			if (featureTrackVector.at(iii).locations.at(jjj).imageIndex == index1) {
 				foundImage1 = true;
-				if (featureTrackVector.at(iii).locations.at(jjj).featureCoord == point1) {
-					foundFeature1 = true;
-					//foundIndex1 = jjj;
-				}
+				if (featureTrackVector.at(iii).locations.at(jjj).featureCoord == point1) foundFeature1 = true;
 			}
 			
 			if (featureTrackVector.at(iii).locations.at(jjj).imageIndex == index2) {
 				foundImage2 = true;
-				if (featureTrackVector.at(iii).locations.at(jjj).featureCoord == point2) {
-					foundFeature2 = true;
-					//foundIndex2 = jjj;
-				}
+				if (featureTrackVector.at(iii).locations.at(jjj).featureCoord == point2) foundFeature2 = true;
 			}
 			
 		}
@@ -594,9 +466,7 @@ void drawFeatureTracks(cv::Mat& src, cv::Mat& dst, vector<featureTrack>& tracks,
 		
 		//printf("%s << DEBUG [%d] : %d\n", __FUNCTION__, iii, 0);
 		
-		if (tracks.at(iii).locations.size() < 1) {
-			continue;
-		}
+		if (tracks.at(iii).locations.size() < 1) continue;
 		
 		if (tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).imageIndex == index) {
 			p1 = cv::Point(int(tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).featureCoord.x * 16.0), int(tracks.at(iii).locations.at(tracks.at(iii).locations.size()-1).featureCoord.y * 16.0));
@@ -607,39 +477,28 @@ void drawFeatureTracks(cv::Mat& src, cv::Mat& dst, vector<featureTrack>& tracks,
 			circle(dst, p1, 16, kColor, -1, CV_AA, 4);
 			#endif
 
-		} else {
-			continue;
-		}
+		} else continue;
 		
-		if (tracks.at(iii).locations.size() < 2) {
-			continue;
-		}
-		
+		if (tracks.at(iii).locations.size() < 2) continue;
 		
 		for (int jjj = ((int)tracks.at(iii).locations.size())-2; jjj >= 0; jjj--) {
 			
-			#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-				if (((int)tracks.at(iii).locations.at(((unsigned int) jjj)).imageIndex) < max(((int)index)-((int) history), 0)) {
-					break;
-				}
-			#else
-				if (((int)tracks.at(iii).locations.at(((unsigned int) jjj)).imageIndex) < std::max(((int)index)-((int) history), 0)) {
-					break;
-				}
-			#endif
-			
-			
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+			if (((int)tracks.at(iii).locations.at(((unsigned int) jjj)).imageIndex) < max(((int)index)-((int) history), 0)) break;
+#else
+			if (((int)tracks.at(iii).locations.at(((unsigned int) jjj)).imageIndex) < std::max(((int)index)-((int) history), 0)) break;
+#endif
 			
 			//printf("%s << DEBUG [%d][%d] : [%d][%d]\n", __FUNCTION__, iii, jjj, tracks.at(iii).locations.at(((unsigned int) jjj)).imageIndex, index);
 			
 			p1 = cv::Point(int(tracks.at(iii).locations.at(((unsigned int) jjj)+1).featureCoord.x * 16.0), int(tracks.at(iii).locations.at(((unsigned int) jjj)+1).featureCoord.y * 16.0));
 			p2 = cv::Point(int(tracks.at(iii).locations.at(((unsigned int) jjj)).featureCoord.x * 16.0), int(tracks.at(iii).locations.at(((unsigned int) jjj)).featureCoord.y * 16.0));
 	
-			#ifdef _OPENCV_VERSION_3_PLUS_
+#ifdef _OPENCV_VERSION_3_PLUS_
 			cv::line(dst, p1, p2, tColor, 1, cv::LINE_AA, 4);
-			#else
+#else
 			cv::line(dst, p1, p2, tColor, 1, CV_AA, 4);
-			#endif
+#endif
 		}
 		
 	}
@@ -654,43 +513,38 @@ void redistortTracks(const vector<featureTrack>& src, vector<featureTrack>& dst,
 	
 	vector<cv::Point2f> tempPoints, newPoints;
 	
-	
 	for (unsigned int iii = 0; iii < src.size(); iii++) {
 		
-		if (src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex != ((int) latest)) {
-			continue;
-		}
+		if (src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex != ((int) latest)) continue;
 		
 		//printf("%s << continuing...\n", __FUNCTION__);
 		
 		newPoints.clear();
 		tempPoints.clear();
 		
-		#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
-				tempPoints.push_back(src.at(iii).locations.at(jjj).featureCoord);
-			}
-		#else
-			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) std::max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
-				tempPoints.push_back(src.at(iii).locations.at(jjj).featureCoord);
-			}
-		#endif
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
+			tempPoints.push_back(src.at(iii).locations.at(jjj).featureCoord);
+		}
+#else
+		for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) std::max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
+			tempPoints.push_back(src.at(iii).locations.at(jjj).featureCoord);
+		}
+#endif
 
 		redistortPoints(tempPoints, newPoints, cameraMatrix, distCoeffs, newCamMat);
 		
 		unsigned int currIndex = 0;
 
-		#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
-				dst.at(iii).locations.at(jjj).featureCoord = newPoints.at(currIndex);
-				currIndex++;
-			}
-		#else
-			for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) std::max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
-				dst.at(iii).locations.at(jjj).featureCoord = newPoints.at(currIndex);
-				currIndex++;
-			}
-		#endif
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
+			dst.at(iii).locations.at(jjj).featureCoord = newPoints.at(currIndex++);
+		}
+#else
+		for (int jjj = int(src.at(iii).locations.size())-1; jjj >= ((int) std::max((int(src.at(iii).locations.size())) - ((int) history), ((int) 0))); jjj--) {
+			dst.at(iii).locations.at(jjj).featureCoord = newPoints.at(currIndex++);
+		}
+#endif
 
 	}
 }
@@ -722,7 +576,6 @@ bool createTrackMatrix(const vector<featureTrack>& src, cv::Mat& dst, int latest
 				}
 				
 				if ( (earliest == -1) || ((int) src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex) < earliest) {
-					
 					earliest = src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex;
 				}
 			}
@@ -756,15 +609,11 @@ bool createTrackMatrix(const vector<featureTrack>& src, cv::Mat& dst, int latest
 				tmp.at<cv::Vec3b>(iii,column)[1] = 0;
 				tmp.at<cv::Vec3b>(iii,column)[2] = 0;				
 			}
-
 		}
-		
 	}
 
 	resize(tmp, dst, cv::Size(4*tmp.cols, 4*tmp.rows), 0.0, 0.0, cv::INTER_NEAREST);
-	
 	return true;
-
 }
 
 void assignHistoricalPoints(const vector<featureTrack>& src, unsigned int idx_1, unsigned int idx_2, vector<cv::Point2f>& dst) {
@@ -773,18 +622,13 @@ void assignHistoricalPoints(const vector<featureTrack>& src, unsigned int idx_1,
 	
 	for (unsigned int iii = 0; iii < src.size(); iii++) {
 		
-		if (src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex == idx_2) {
-			continue;
-		}
+		if (src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex == idx_2) continue;
 		
 		for (unsigned int jjj = 0; jjj < src.at(iii).locations.size(); jjj++) {
 			
 			//printf("%s << (%d : %d) vs (%d : %d)\n", __FUNCTION__, src.at(iii).locations.at(jjj).imageIndex, idx_1, src.at(iii).locations.at(src.at(iii).locations.size()-1).imageIndex, idx_2);
 			
-			if (src.at(iii).locations.at(jjj).imageIndex == idx_1) {
-				dst.push_back(src.at(iii).locations.at(jjj).featureCoord);
-			}
+			if (src.at(iii).locations.at(jjj).imageIndex == idx_1) dst.push_back(src.at(iii).locations.at(jjj).featureCoord);
 		}
 	}
-	
 }
