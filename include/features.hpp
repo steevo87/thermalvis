@@ -25,8 +25,15 @@
 
 void fadeImage(const cv::Mat& src, cv::Mat& dst);
 
+bool KeyPoint_comparison(cv::KeyPoint i, cv::KeyPoint j);
+
+/// \brief		Draws KeyPoints to scale with coloring proportional to feature strength
 void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::Mat& dst);
-void filterKeyPoints(std::vector<cv::KeyPoint>& kpts, unsigned int maxSize = 0, unsigned int maxFeatures = 0);
+
+void draw_circle(cv::Mat& img, cv::Point center, int radius, const cv::Scalar& color, int thickness, int shift);
+
+int getOpticalFlowFlags();
+
 
 /// \brief		Calculates velocities of features
 double calculateFeatureSpeeds(const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2, vector<cv::Point2f>& velocities, double time1, double time2);
@@ -42,14 +49,14 @@ double generateVirtualPointset(const vector<cv::Point2f>& pts1, const vector<cv:
 /// \brief		Transforms points using homography
 void transformPoints(vector<cv::Point2f>& pts1, cv::Mat& H);
 
+/// \brief		Remove features beyond a desired quantity. Removes by strength, but if many of equal strength, randomness is introduced.
+void reduceFeaturesToMaximum(vector<cv::KeyPoint>& keypoints, int maximumToKeep);
+
 /// \brief      Implement optical flow algorithm and filtering
 void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int distanceConstraint, double thresh, vector<unsigned int>& lostIndices, cv::Mat H12 = cv::Mat(), cameraParameters camData = cameraParameters());
 
 /// \brief      Implement optical flow algorithm and filtering for calibrating stereo cameras
 void trackPoints2(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int distanceConstraint, double thresh, vector<unsigned int>& lostIndices, const cv::Size patternSize,  double& errorThreshold);
-
-/// \brief      Sorts features in descending order of strength, and culls beyond a certain quantity
-void sortKeyPoints(vector<cv::KeyPoint>& KeyPoints, unsigned int maxKeyPoints = -1);
 
 void checkDistances(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector<uchar>& statusVec, double distanceConstraint);
 
@@ -107,9 +114,6 @@ double distanceBetweenPoints(const cv::Point2f& pt1, const cv::Point2f& pt2);
 /// \brief		Sets flags to zero for tracked features that have too high an error
 void filterTrackedPoints(vector<uchar>& statusVec, vector<float>& err, double maxError);
 
-
-void randomlyReducePoints(vector<cv::Point2f>& pts, int maxFeatures);
-
 void markStationaryPoints(vector<cv::Point2f>&pts1, vector<cv::Point2f>&pts2, vector<uchar>&statusVec);
 
 void markAbsentPoints(vector<cv::Point2f>&pts1, vector<cv::Point2f>&pts2, vector<uchar>&statusVec, cv::Size imSize);
@@ -122,9 +126,10 @@ bool checkRoomForFeature(vector<cv::Point2f>& pts, cv::Point2f& candidate, doubl
 
 void reduceProximalCandidates(vector<cv::Point2f>& existing, vector<cv::Point2f>& candidates);
 
-void reduceEdgyCandidates(vector<cv::Point2f>& candidates, cameraParameters& camData);
-
 void reduceEdgyFeatures(vector<cv::KeyPoint>& KeyPoints, cameraParameters& camData);
+
+/// \brief Removes any keypoint that is too close to any of the provided point locations
+void proximityViolationFilter(vector<cv::KeyPoint>& kps, vector<cv::Point2f>& pts, double minSep);
 
 void markBlandTracks(cv::Mat& img, vector<cv::Point2f>& pts, vector<uchar>& statusVec, double thresh = 3.0);
 

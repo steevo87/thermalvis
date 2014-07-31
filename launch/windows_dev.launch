@@ -5,7 +5,12 @@
 		<param name="debugMode" value="true" />
 	
 		<param name="source" value="directory" />
-		<param name="directory" value="~\Documents\Data\optris\low-snr" />
+		<!-- <param name="directory" value="~\Documents\Data\optris\test_seq_001" /> -->
+		<!-- <param name="directory" value="C:\Users\Stephen\Documents\Data\optris\Denoised sequence\Non-local method\low_snr" /> -->
+		<param name="directory" value="C:\Users\Stephen\Documents\Data\optris\Denoised sequence\Transform-Domain Collaborative Filtering\low_snr" />
+		
+		<param name="inputDatatype" value="0" /> <!-- 0 for 8-bit, 1 for raw (14-bit), 2 for multi-modality (2 channel), 3 for depth (16-bit) -->
+		
 		<param name="filterMode" value="0" /> <!-- 0 for no filter, 1 for gaussian, 2 for bilateral, 3 for adaptive bilateral -->
 		<param name="filterParam" value="2.0" />
 		
@@ -32,18 +37,17 @@
 		
 		<param name="outputDebugImages" value="false" />
 		<param name="outputTrackedFeatures" value="false" />
-		<param name="outputDetectedFeatures" value="true" />
-		<param name="showTrackHistory" value="true" />
-		<param name="autoTrackManagement" value="false" />
-		<!-- <param name="verboseMode" value="true" /> -->
+		<param name="outputDetectedFeatures" value="false" />
+		<param name="showTrackHistory" value="false" />
+		<param name="autoTrackManagement" value="true" />
 		
-		<param name="attemptMatching" value="true" />
+		<param name="attemptMatching" value="false" />
 		<param name="predetectedFeatures" value="C:\Users\Stephen\Documents\GitHub\BUILDS\thermalvis\apps\mono-slam\data\0000034552.192722240" />
 		<param name="detector_1" value="FAST" /> <!-- options: FILE, FAST, GFTT and HARRIS -->
 		<!-- <param name="minFeatures" value="100" /> -->
 		<param name="maxFeatures" value="150" />
 		<param name="sensitivity_1" value="0.1" /> <!-- default is 0.1 -->
-		<param name="flowThreshold" value="20.0002" /> <!-- default is 0.0002 -->
+		<param name="flowThreshold" value="0.000002" /> <!-- default is 0.0002 -->
 		
 	</node>
 	

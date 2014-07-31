@@ -28,18 +28,11 @@
 
 #define SKIP_WARNING_TIME_PERIOD 10.0
 
-// DEBUG:
-// Red: 	Successfully tracked points
-// Green:	Recovered points
-// Purple:	Detected, unmatched points
-// Yellow:	Detected and matched points
-// Blue:	
-
 #define COLOR_TRACKED_POINTS 		CV_RGB(255, 0, 0)		// Red
 #define COLOR_TRACKED_PATH	 		CV_RGB(255, 128, 127)	// Light Red
 #define COLOR_RECOVERED_POINTS 		CV_RGB(0, 255, 0)		// Green
-#define COLOR_UNMATCHED_POINTS 		CV_RGB(255, 0, 255)		// Purple	
-#define COLOR_MATCHED_POINTS 		CV_RGB(255, 255, 0)		// Yellow
+#define COLOR_UNMATCHED_POINTS 		CV_RGB(255, 255, 0)		// Yellow	
+#define COLOR_MATCHED_POINTS 		CV_RGB(255, 0, 255)		// Purple
 
 #define ADAPTIVE_WINDOW_CONTINGENCY_FACTOR 3.0
 

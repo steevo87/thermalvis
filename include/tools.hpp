@@ -62,9 +62,8 @@ void convertUcharToBinary(unsigned char val, int* binaryArray);
 
 
 
-
-
-
+/// \brief      Calls the relevant system function to ensure number pseudo-randomness
+void initializeRandomNums();
 
 /// \brief      Calculate the mean and standard deviation of a vector of doubles
 void calcParameters(const vector<double>& v, double& mean, double& stdev);

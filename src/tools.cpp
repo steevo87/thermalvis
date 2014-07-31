@@ -14,6 +14,14 @@ bool comparator ( const mypair& l, const mypair& r) {
 	return l.first < r.first; 
 }
 
+void initializeRandomNums() {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+	srand (GetTickCount());
+#else
+	srand (time(NULL));
+#endif
+}
+
 
 void displayMessage(string msg, int msg_code, string function_name) {
 	#ifdef _BUILD_FOR_ROS_

@@ -55,9 +55,6 @@ double generateVirtualPointset(const vector<cv::Point2f>& pts1, const vector<cv:
 	
 }
 
-/*
-draws KeyPoints to scale with coloring proportional to feature strength
-*/
 void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::Mat& dst) {
 	
 	cv::Mat grayFrame;
@@ -70,10 +67,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 
 	dst = cv::Mat::zeros(src.size(), src.type());
 	
-	
-	if (kpts.size() == 0) {
-		return;
-	}
+	if (kpts.size() == 0) return;
 	
 	std::vector<cv::KeyPoint> kpts_cpy, kpts_sorted;
 	
@@ -93,14 +87,8 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 				maxR = kpts_cpy.at(iii).response;
 				idx = iii;
 			}
-			
-			if (kpts_cpy.at(iii).response > maxResponse) {
-				maxResponse = kpts_cpy.at(iii).response;
-			}
-			
-			if (kpts_cpy.at(iii).response < minResponse) {
-				minResponse = kpts_cpy.at(iii).response;
-			}
+			if (kpts_cpy.at(iii).response > maxResponse) maxResponse = kpts_cpy.at(iii).response;
+			if (kpts_cpy.at(iii).response < minResponse) minResponse = kpts_cpy.at(iii).response;
 		}
 		
 		kpts_sorted.push_back(kpts_cpy.at(idx));
@@ -115,9 +103,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
 	int radius;
 	double normalizedScore;
 	
-	if (minResponse == maxResponse) {
-		colour = cv::Scalar(255, 0, 0);
-	}
+	if (minResponse == maxResponse) colour = cv::Scalar(255, 0, 0);
 	
 	for (int iii = int(kpts_sorted.size())-1; iii >= 0; iii--) {
 
@@ -134,14 +120,7 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
         
         radius = int(16.0 * (double(kpts_sorted.at(iii).size)/2.0));
         
-        if (radius > 0) {
-			#ifdef _OPENCV_VERSION_3_PLUS_
-			circle(dst, center, radius, colour, -1, cv::LINE_AA, 4);
-			#else
-			circle(dst, center, radius, colour, -1, CV_AA, 4);
-			#endif
-        }
-		
+        if (radius > 0) draw_circle(dst, center, radius, colour, -1, 4);
 	}
 	
 	fadeImage(src, dst);
@@ -162,18 +141,16 @@ void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::
         
         radius = int(16.0 * (double(kpts_sorted.at(iii).size)/2.0));
         
-        if (radius > 0) {
-            #ifdef _OPENCV_VERSION_3_PLUS_
-			circle(dst, center, radius, colour, thickness, cv::LINE_AA, 4);
-			#else
-			circle(dst, center, radius, colour, thickness, CV_AA, 4);
-			#endif
-        }
-		
+        if (radius > 0) draw_circle(dst, center, radius, colour, -1, 4);
 	}
-	
-	
-	
+}
+
+void draw_circle(cv::Mat& img, cv::Point center, int radius, const cv::Scalar& color, int thickness, int shift) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+	circle(img, center, radius, color, thickness, cv::LINE_AA, shift);
+#else
+	circle(img, center, radius, color, thickness, CV_AA, shift);
+#endif
 }
 
 void fadeImage(const cv::Mat& src, cv::Mat& dst) {
@@ -198,37 +175,8 @@ void fadeImage(const cv::Mat& src, cv::Mat& dst) {
 				dst.at<cv::Vec3b>(iii,jjj)[1] = src.at<cv::Vec3b>(iii,jjj)[1];
 				dst.at<cv::Vec3b>(iii,jjj)[2] = src.at<cv::Vec3b>(iii,jjj)[2];
 			}
-			
-			
 		}
 	}
-	
-	
-}
-
-/*
-Removes surplus features and those with invalid size
-*/
-void filterKeyPoints(std::vector<cv::KeyPoint>& kpts, unsigned int maxSize, unsigned int maxFeatures) {
-	
-	if (maxSize == 0) {
-		return;
-	}
-	
-	sortKeyPoints(kpts);
-	
-	for (unsigned int iii = 0; iii < kpts.size(); iii++) {
-		
-		if (kpts.at(iii).size > float(maxSize)) { 
-			kpts.erase(kpts.begin() + iii);
-			iii--;
-		}
-	}
-	
-	if ((maxFeatures != 0) && (kpts.size() > maxFeatures)) {
-        kpts.erase(kpts.begin()+maxFeatures, kpts.end());
-    }
-	
 }
 
 void showMatches(const cv::Mat& pim1, vector<cv::Point2f>& pts1, const cv::Mat& pim2, vector<cv::Point2f>& pts2, cv::Mat& drawImg) {
@@ -334,9 +282,26 @@ void crossCheckMatching( cv::Ptr<cv::DescriptorMatcher>& descriptorMatcher,
 
 }
 
-void filterTrackingsByRadialProportion(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, cv::Mat& K, cv::Mat& newCamMat, cv::Mat& distCoeffs, cv::Size& imSize, double prop) {
-	//cout << "filterTrackingsByRadialProportion: " << imSize.width << " " << imSize.height << endl;
+void proximityViolationFilter(vector<cv::KeyPoint>& kps, vector<cv::Point2f>& pts, double minSep) {
 	
+	int zzz = 0;
+	while (zzz < int(kps.size())) {
+		bool violatesProximity = false;
+					
+		for (unsigned int yyy = 0; yyy < pts.size(); yyy++) {
+			if (distBetweenPts2f(kps.at(zzz).pt, pts.at(yyy)) < minSep) {
+				violatesProximity = true;
+				break;
+			}
+		}		
+		if (violatesProximity) {
+			kps.erase(kps.begin() + zzz);
+		} else zzz++;
+	}
+}
+
+void filterTrackingsByRadialProportion(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, cv::Mat& K, cv::Mat& newCamMat, cv::Mat& distCoeffs, cv::Size& imSize, double prop) {
+
 	vector<cv::Point2f> newPts;
 	redistortPoints(pts2, newPts, K, distCoeffs, newCamMat);
 	
@@ -344,95 +309,45 @@ void filterTrackingsByRadialProportion(vector<cv::Point2f>& pts1, vector<cv::Poi
 	double maxDist = prop * double(imSize.width)/2.0;
 	
 	double dist;
-	
 	unsigned int iii = 0;
 	
 	while (iii < pts1.size()) {
 		
 		dist = distBetweenPts2f(pts2.at(iii), centrePt);
-		
 		if (dist > maxDist) {
-			
 			pts1.erase(pts1.begin() + iii);
 			pts2.erase(pts2.begin() + iii);
-			
-		} else {
-			iii++;
-		}
-		
+		} else iii++;
 	}
-
-	
 }
 
 void reduceEdgyFeatures(vector<cv::KeyPoint>& KeyPoints, cameraParameters& camData) {
 
-	vector<cv::Point2f> candidates;
-
+	float minBorderDist = 2.0;
+	vector<cv::Point2f> candidates, redistortedPoints;
 	cv::KeyPoint::convert(KeyPoints, candidates);
 
-	vector<cv::Point2f> redistortedPoints;
-	float minBorderDist = 2.0;
-
 	redistortPoints(candidates, redistortedPoints, camData.Kx, camData.distCoeffs, camData.expandedCamMat);
 
+	float xDist, yDist, dist;
 	for (int iii = int(candidates.size())-1; iii >= 0; iii--) {
-
-		float xDist = min(abs(((float) camData.expandedSize.width) - redistortedPoints.at(iii).x), abs(redistortedPoints.at(iii).x));
-		float yDist = min(abs(((float) camData.expandedSize.height) - redistortedPoints.at(iii).y), abs(redistortedPoints.at(iii).y));
-		float dist = min(xDist, yDist) - KeyPoints.at(iii).size;
-
-		if (dist < minBorderDist) {
-			KeyPoints.erase(KeyPoints.begin() + iii);
-		}
-
+		xDist = min(abs(((float) camData.expandedSize.width) - redistortedPoints.at(iii).x), abs(redistortedPoints.at(iii).x));
+		yDist = min(abs(((float) camData.expandedSize.height) - redistortedPoints.at(iii).y), abs(redistortedPoints.at(iii).y));
+		dist = min(xDist, yDist) - KeyPoints.at(iii).size;
+		if (dist < minBorderDist) KeyPoints.erase(KeyPoints.begin() + iii);
 	}
-
-}
-
-void reduceEdgyCandidates(vector<cv::Point2f>& candidates, cameraParameters& camData) {
-
-	vector<cv::Point2f> redistortedPoints;
-	float minBorderDist = 2.0;
-
-	redistortPoints(candidates, redistortedPoints, camData.Kx, camData.distCoeffs, camData.expandedCamMat);
-
-	for (int iii = int(candidates.size())-1; iii >= 0; iii--) {
-
-		float xDist = min(abs(((float) camData.expandedSize.width) - redistortedPoints.at(iii).x), abs(redistortedPoints.at(iii).x));
-		float yDist = min(abs(((float) camData.expandedSize.height) - redistortedPoints.at(iii).y), abs(redistortedPoints.at(iii).y));
-		float dist = min(xDist, yDist);
-		if (dist < minBorderDist) {
-			candidates.erase(candidates.begin() + iii);
-		}
-
-	}
-
 }
 
 bool checkRoomForFeature(vector<cv::Point2f>& pts, cv::Point2f& candidate, double dist) {
-
-	double distance;
-
 	for (unsigned int iii = 0; iii < pts.size(); iii++) {
-
-		distance = distanceBetweenPoints(pts.at(iii), candidate);
-
-		if (distance < dist) {
-			return false;
-		}
-
+		if (distanceBetweenPoints(pts.at(iii), candidate) < dist) return false;
 	}
-
 	return true;
-
 }
 
 void reduceUnrefinedCandidates(vector<cv::Point2f>& candidates) {
 
-	if (candidates.size() == 0) {
-		return;
-	}
+	if (candidates.size() == 0) return;
 
 	for (int iii = int(candidates.size())-1; iii >= 0; iii--) {
 
@@ -454,24 +369,15 @@ void reduceProximalCandidates(vector<cv::Point2f>& existing, vector<cv::Point2f>
 			candidates.erase(candidates.begin() + iii);
 			iii--;
 		}
-
 	}
-
 }
 
 void concatenateWithExistingPoints(vector<cv::Point2f>& pts, vector<cv::Point2f>& kps, int size, double min_sep, bool debug) {
 
-	for (unsigned int iii = 0; iii < kps.size(); iii++) {
+	for (int iii = int(kps.size())-1; iii >= 0; iii--) {
 		if (int(pts.size()) >= size) break;
 		bool isValid = checkRoomForFeature(pts, kps.at(iii), min_sep);
-
-		if (!isValid) {
-			kps.erase(kps.begin()+iii);
-			iii--;
-		} else {
-			if (debug) { printf("%s << a valid point!!!!!!!\n", __FUNCTION__); }
-			pts.push_back(kps.at(iii));
-		}
+		(!isValid) ? kps.erase(kps.begin()+iii) : pts.push_back(kps.at(iii));
 	}
 }
 
@@ -537,37 +443,28 @@ void transformPoints(vector<cv::Point2f>& pts1, cv::Mat& H) {
 
 void reduceWeakFeatures(cv::Mat& im, vector<cv::KeyPoint>& feats, double minResponse) {
 
-	// assignMinimumRadii(feats);
-
 	vector<float> responseLevels;
-
 	for (unsigned int iii = 0; iii < feats.size(); iii++) {
 
 		if (feats.at(iii).response == 0.0) {
 			feats.at(iii).response = float(estimateSalience(im, feats.at(iii).pt, ((double) feats.at(iii).size / 2.0)));
 			responseLevels.push_back(feats.at(iii).response);
 		}
-
-		//printf("%s << (%d) (%f, %f, %d)\n", __FUNCTION__, iii, feats.at(iii).size, feats.at(iii).response, feats.at(iii).octave);
-
 	}
 
 	sort(responseLevels.begin(), responseLevels.end());
 
-	//printf("%s << minResponse = %f; maxResponse = %f; medianResponse = %f\n", __FUNCTION__, responseLevels.at(0), responseLevels.at(responseLevels.size()-1), responseLevels.at(responseLevels.size()/2));
-
-	//cin.get();
-
 	for (int iii = int(feats.size())-1; iii >= 0; iii--) {
-
-		// responseLevels.at(responseLevels.size()-5)
-		if (feats.at(iii).response < minResponse) { // 80.0
-			feats.erase(feats.begin() + iii);
-		}
-
-
+		if (feats.at(iii).response < minResponse) feats.erase(feats.begin() + iii);
 	}
+}
 
+int getOpticalFlowFlags() {
+#ifdef _OPENCV_VERSION_3_PLUS_
+	return cv::OPTFLOW_LK_GET_MIN_EIGENVALS;
+#else
+	return CV_LKFLOW_GET_MIN_EIGENVALS;
+#endif
 }
 
 void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int distanceConstraint, double thresh, vector<unsigned int>& lostIndices, cv::Mat H12, cameraParameters camData) {
@@ -585,13 +482,9 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	//testTime = timeElapsedMS(test_timer, true);
 	//printf("%s << ENTERED.\n", __FUNCTION__);
 
-	if (pts1.size() == 0) {
-		return;
-	}
+	if (pts1.size() == 0) return;
 
-	if ((distanceConstraint % 2) == 0) {
-		distanceConstraint++;
-	}
+	if ((distanceConstraint % 2) == 0) distanceConstraint++;
 	
 	//testTime = timeElapsedMS(test_timer, false);
 	//printf("XDebug 0a: (%f)\n", testTime);
@@ -601,11 +494,7 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	cv::TermCriteria criteria = cv::TermCriteria( cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01);
 	//double derivLambda = 0.5;
 	
-	#ifdef _OPENCV_VERSION_3_PLUS_
-	int opticalFlowFlags = cv::OPTFLOW_LK_GET_MIN_EIGENVALS;
-	#else
-	int opticalFlowFlags = CV_LKFLOW_GET_MIN_EIGENVALS;
-	#endif
+	int opticalFlowFlags = getOpticalFlowFlags();
 
 	bool guiding = false;
 	bool warping = false;
@@ -934,37 +823,22 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	//printf("XDebug 6: (%f)\n", testTime);
 
 	for (unsigned int iii = 0; iii < statusVec.size(); iii++) {
-		if (statusVec.at(iii) == 0) {
-			lostIndices.push_back(iii);
-		}
+		if (statusVec.at(iii) == 0) lostIndices.push_back(iii);
 	}
 	
 	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 9); }
-	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 7: (%f)\n", testTime);
-
 }
 
 //HGH
 void trackPoints2(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int distanceConstraint, double thresh, vector<unsigned int>& lostIndices, const cv::Size patternSize, double& errorThreshold) {
 
-
         unsigned int corners = patternSize.width * patternSize.height;
 
         bool debugFlag = false;
+        if (debugFlag) printf("%s << ENTERED!\n", __FUNCTION__);
+        if (pts1.size() == 0) return;
 
-        if (debugFlag) {
-                printf("%s << ENTERED!\n", __FUNCTION__);
-        }
-
-        if (pts1.size() == 0) {
-                return;
-        }
-
-        if ((distanceConstraint % 2) == 0) {
-                distanceConstraint++;
-        }
+        if ((distanceConstraint % 2) == 0) distanceConstraint++;
 
         cv::Size winSize = cv::Size(distanceConstraint, distanceConstraint);
         int maxLevel = 3;
@@ -1051,9 +925,7 @@ bool constructPatch(cv::Mat& img, cv::Mat& patch, cv::Point2f& center, double ra
 
 	patch.release();
 
-    if ((cells % 2) == 0) {
-        cells++;
-    }
+    if ((cells % 2) == 0) cells++;
 
     patch = cv::Mat::zeros(cells, cells, CV_64FC1);
 
@@ -1066,9 +938,7 @@ bool constructPatch(cv::Mat& img, cv::Mat& patch, cv::Point2f& center, double ra
 
 			//printf("%s << currPt = (%f, %f)\n", __FUNCTION__, currPt.x, currPt.y);
 
-			if ((currPt.x <= 0.0) || (currPt.x >= ((double) img.cols)) || (currPt.y >= ((double) img.rows)) || (currPt.y <= 0.0)) {
-				return false;
-			}
+			if ((currPt.x <= 0.0) || (currPt.x >= ((double) img.cols)) || (currPt.y >= ((double) img.rows)) || (currPt.y <= 0.0)) return false;
 
             //printf("%s << Extracting (%f, %f) of (%d, %d)\n", __FUNCTION__, currPt.x, currPt.y, img.cols, img.rows);
 			double val = getInterpolatedVal(img, currPt);
@@ -1176,84 +1046,41 @@ double getValueFromPatch(cv::Mat& patch) {
 
     minMaxLoc(eigenMat, &blankVal, &eigenValue);
 
-	/*
-    for (int iii = 0; iii < patch.rows; iii++) {
-		for (int jjj = 0; jjj < patch.cols; jjj++) {
-			//eigenValue += eigenMat.at<float>(iii,jjj) / ((float) (eigenMat.rows * eigenMat.cols));
-		}
-	}
-	*/
 	return eigenValue;
-
 }
 
 void markUnrefinedPoints(vector<cv::Point2f>& pts, vector<uchar>&statusVec) {
 
-	if (pts.size() == 0) {
-		return;
-	}
+	if (pts.size() == 0) return;
 
 	#pragma omp parallel for
 	for (unsigned int iii = 0; iii < statusVec.size(); iii++) {
-
 		if (statusVec.at(iii) != 0) {
-
-			if (((pts.at(iii).x - floor(pts.at(iii).x)) == 0.0) && ((pts.at(iii).y - floor(pts.at(iii).y)) == 0.0)) {
-				statusVec.at(iii) = 0;
-			}
-
+			if (((pts.at(iii).x - floor(pts.at(iii).x)) == 0.0) && ((pts.at(iii).y - floor(pts.at(iii).y)) == 0.0)) statusVec.at(iii) = 0;
 		}
 	}
-
 }
 
 
 void markBlandTracks(cv::Mat& img, vector<cv::Point2f>& pts, vector<uchar>& statusVec, double thresh) {
 
-	if (pts.size() == 0) {
-		return;
-	}
-
+	if (pts.size() == 0) return;
 	cv::Mat patch;
-	
 	for (unsigned int iii = 0; iii < statusVec.size(); iii++) {
-
 		if (statusVec.at(iii) != 0) {
-
 			constructPatch(img, patch, pts.at(iii), 1.5);
-			//cout << patch << endl;
-
 			double salience = getValueFromPatch(patch);
-
-			//printf("%s << pts.at(%d).response = %f (%f)\n", __FUNCTION__, iii, pts.at(iii).response, thresh);
-
-			if (salience < thresh) {
-				statusVec.at(iii) = 0;
-			}
-
-
+			if (salience < thresh) statusVec.at(iii) = 0;
 		}
 	}
-
-
 }
 
 void filterBlandKeyPoints(cv::Mat& img, vector<cv::KeyPoint>& pts, double thresh) {
 
-	if (pts.size() == 0) {
-		return;
-	}
-
+	if (pts.size() == 0) return;
 	for (int iii = int(pts.size())-1; iii >= 0; iii--) {
-
-		//printf("%s << pts.at(%d).response = %f (%f)\n", __FUNCTION__, iii, pts.at(iii).response, thresh);
-
-		if (pts.at(iii).response < thresh) {
-			pts.erase(pts.begin() + iii);
-		}
-
+		if (pts.at(iii).response < thresh) pts.erase(pts.begin() + iii);
 	}
-
 }
 
 void markStationaryPoints(vector<cv::Point2f>&pts1, vector<cv::Point2f>&pts2, vector<uchar>&statusVec) {
@@ -1281,33 +1108,14 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::KeyPoint>& KeyPoint
     bool randomColours = (color == cv::Scalar::all(-1));
 
     cv::Scalar newColour;
-
-    if (!randomColours) {
-        newColour = color;
-    }
-
+    if (!randomColours) newColour = color;
     image.copyTo(outImg);
-
-    //printf("%s << DEBUG %d\n", __FUNCTION__, 0);
-
-	/*
-    if (image.channels() < 3) {
-        cvtColor(image, outImg, CV_GRAY2RGB);
-    } else {
-        image.copyTo(outImg);
-    }
-
-    */
-
-    //printf("%s << DEBUG %d\n", __FUNCTION__, 1);
 
     cv::Point centerPt;
 
     int radius, crossLength; //, aimedSize;
 
-    if (thickness == 0) {
-        thickness = 1;
-    }
+    if (thickness == 0) thickness = 1;
 
     // New method:
 	for (unsigned int i = 0; i < KeyPoints.size(); i++) {
@@ -1371,17 +1179,13 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::
 
     cv::Scalar newColour;
 
-    if (!randomColours) {
-        newColour = color;
-    }
+    if (!randomColours)  newColour = color;
 
     image.copyTo(outImg);
 
     cv::Point centerPt;
 
-    if (thickness == 0) {
-        thickness = 1;
-    }
+    if (thickness == 0) thickness = 1;
 
     int crossLength; //, aimedSize;
 
@@ -1417,53 +1221,14 @@ void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::
 
 }
 
-void sortKeyPoints(vector<cv::KeyPoint>& KeyPoints, unsigned int maxKeyPoints) {
-    if (KeyPoints.size() <= 1) return;
-	vector<cv::KeyPoint> sortedKeyPoints;
-
-    // Add the first one
-    sortedKeyPoints.push_back(KeyPoints.at(0));
-
-    for (unsigned int i = 1; i < KeyPoints.size(); i++) {
-
-        unsigned int j = 0;
-        bool hasBeenAdded = false;
-
-        while ((j < sortedKeyPoints.size()) && (!hasBeenAdded)) {
-
-            if (abs(KeyPoints.at(i).response) > abs(sortedKeyPoints.at(j).response)) {
-                sortedKeyPoints.insert(sortedKeyPoints.begin() + j, KeyPoints.at(i));
-
-                hasBeenAdded = true;
-            }
-
-            j++;
-        }
-
-        if (!hasBeenAdded) {
-            sortedKeyPoints.push_back(KeyPoints.at(i));
-        }
-
-    }
-
-
-
-    KeyPoints.swap(sortedKeyPoints);
-
-    if (maxKeyPoints < KeyPoints.size()) {
-        KeyPoints.erase(KeyPoints.begin()+maxKeyPoints, KeyPoints.end());
-    }
-
-    return;
-
+bool KeyPoint_comparison(cv::KeyPoint i, cv::KeyPoint j) { 
+	return (i.response < j.response); 
 }
 
 void sortMatches(vector<vector<cv::DMatch> >& matches1to2) {
 	vector<vector<cv::DMatch> > matchesCpy, newMatches;
 
-	if (matches1to2.size() <= 1) {
-		return;
-	}
+	if (matches1to2.size() <= 1) return;
 
 	matchesCpy.assign(matches1to2.begin(), matches1to2.end());
 
@@ -1488,9 +1253,7 @@ void sortMatches(vector<vector<cv::DMatch> >& matches1to2) {
 
 void filterMatches(vector<vector<cv::DMatch> >& matches1to2, double threshold) {
 
-	if (matches1to2.size() == 0) {
-		return;
-	}
+	if (matches1to2.size() == 0) return;
 
 	int currIndex = int(matches1to2.size()) - 1;
 
@@ -1503,71 +1266,33 @@ void filterMatches(vector<vector<cv::DMatch> >& matches1to2, double threshold) {
 		}
 	}
 
-	if (currIndex < ((int) matches1to2.size() - 1)) {
-			matches1to2.erase(matches1to2.begin() + currIndex + 1, matches1to2.end());
-	}
-
-
+	if (currIndex < ((int) matches1to2.size() - 1)) matches1to2.erase(matches1to2.begin() + currIndex + 1, matches1to2.end());
 }
 
 double distanceBetweenPoints(const cv::Point2f& pt1, const cv::Point2f& pt2) {
-	double retVal;
-
-	retVal = pow(pow(pt1.x - pt2.x, 2.0) + pow(pt1.y - pt2.y, 2.0), 0.5);
-
-	return retVal;
-
+	return pow(pow(pt1.x - pt2.x, 2.0) + pow(pt1.y - pt2.y, 2.0), 0.5);
 }
 
 double distanceBetweenPoints(const cv::KeyPoint& pt1, const cv::KeyPoint& pt2) {
-	double retVal; //, a, b, c, d;
-
-	/*
-	a = pow(pt1.pt.x - pt2.pt.x, 2.0);
-	b = pow(pt1.pt.y - pt2.pt.y, 2.0);
-	c = pt1.pt.x - pt2.pt.x;
-	d = pt1.pt.y - pt2.pt.y;
-	*/
-
-	//printf("%s << %f %f %f %f %f\n", __FUNCTION__, retVal, a, b, c, d);
-
-	retVal = pow(pow(pt1.pt.x - pt2.pt.x, 2.0) + pow(pt1.pt.y - pt2.pt.y, 2.0), 0.5);
-
-	return retVal;
+	return pow(pow(pt1.pt.x - pt2.pt.x, 2.0) + pow(pt1.pt.y - pt2.pt.y, 2.0), 0.5);
 }
 
 void constrainMatchingMatrix(cv::Mat& matchingMatrix, vector<cv::KeyPoint>& kp1, vector<cv::KeyPoint>& kp2, int distanceConstraint, double sizeConstraint) {
-
-	
 
 	#pragma omp parallel for
 	for (unsigned int iii = 0; iii < kp1.size(); iii++) {
 		for (unsigned int jjj = 0; jjj < kp2.size(); jjj++) {
 			// Check distance constraint
 			
-			int distanceBetween;
+			int distanceBetween = (int) distanceBetweenPoints(kp1.at(iii), kp2.at(jjj));
 
-			distanceBetween = (int) distanceBetweenPoints(kp1.at(iii), kp2.at(jjj));
-			//printf("%s << distance (%d, %d) = %d (%f) vs %d\n", __FUNCTION__, iii, jjj, distanceBetween, distanceBetweenPoints(kp1.at(iii), kp2.at(jjj)), distanceConstraint);
-
-			if (distanceBetween > distanceConstraint) {
-				matchingMatrix.at<double>(iii,jjj) = -1;
-			}
-
-			//printf("%s << diameter = %f vs %f\n", __FUNCTION__, kp1.at(iii).size, kp2.at(jjj).size);
+			if (distanceBetween > distanceConstraint) matchingMatrix.at<double>(iii,jjj) = -1;
 
 			if (sizeConstraint != 0.0) {
-				if (max(kp1.at(iii).size/kp2.at(jjj).size, kp2.at(jjj).size/kp1.at(iii).size) > (1.00 + sizeConstraint)) {
-					matchingMatrix.at<double>(iii,jjj) = -1;
-				}
+				if (max(kp1.at(iii).size/kp2.at(jjj).size, kp2.at(jjj).size/kp1.at(iii).size) > (1.00 + sizeConstraint)) matchingMatrix.at<double>(iii,jjj) = -1;
 			}
-			//cin.get();
 		}
-
-		//cin.get();
 	}
-
-
 }
 
 void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >& bestMatches, int mode) {
@@ -1675,6 +1400,34 @@ double reweightDistanceWithLinearSVM(double dist, double ratio, double gradient)
     return dist - (1.0 / gradient) * ratio;
 }
 
+void reduceFeaturesToMaximum(vector<cv::KeyPoint>& keypoints, int maximumToKeep) {
+
+	if (int(keypoints.size()) <= maximumToKeep) return;
+
+	// Determine number of points at lowest error
+	while (int(keypoints.size()) > maximumToKeep) {
+		float weakestScore = keypoints.at(0).response;
+		int weakestCount = 0;
+		for (int iii = 0; iii < int(keypoints.size()); iii++) {
+			if (keypoints.at(iii).response == weakestScore) { 
+				weakestCount++; 
+			} else break;
+		}
+
+		if ((int(keypoints.size()) - weakestCount) > maximumToKeep) {
+			keypoints.erase(keypoints.begin(), keypoints.begin() + weakestCount);
+		} else {
+			initializeRandomNums();
+			while (int(keypoints.size()) > maximumToKeep) {
+				int randIndex = rand() % (keypoints.size() - maximumToKeep);
+				keypoints.erase(keypoints.begin() + randIndex);
+			}
+		}
+
+	}
+	
+}
+
 void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const cv::Mat& desc2) {
 
     vector<vector<cv::DMatch> > matches1to2, matches2to1;
@@ -1726,34 +1479,9 @@ void createMatchingMatrix(cv::Mat& matchingMatrix, const cv::Mat& desc1, const c
 }
 
 void filterTrackedPoints(vector<uchar>& statusVec, vector<float>& err, double maxError) {
-
 	for (unsigned int iii = 0; iii < statusVec.size(); iii++) {
-		if (err.at(iii) > maxError) {
-			statusVec.at(iii) = 0;
-		}
+		if (err.at(iii) > maxError) statusVec.at(iii) = 0;
 	}
-
-}
-
-void randomlyReducePoints(vector<cv::Point2f>& pts, int maxFeatures) {
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-	srand (GetTickCount());
-#else
-	srand (time(NULL));
-#endif
-	
-	if (((int) pts.size()) <= maxFeatures) {
-		return;
-	}
-
-	int randIndex;
-
-	while (((int) pts.size()) > maxFeatures) {
-		randIndex = rand() % pts.size();
-		pts.erase(pts.begin() + randIndex);
-	}
-
 }
 
 void checkDistances(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector<uchar>& statusVec, double distanceConstraint) {
@@ -1765,11 +1493,8 @@ void checkDistances(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector
 		yDist = pts1.at(iii).y - pts2.at(iii).y;
 		totalDist = pow((pow((xDist), 2.0) + pow((yDist), 2.0)), 0.5);
 
-		if (totalDist > distanceConstraint) {
-			statusVec.at(iii) = 0;
-		}
+		if (totalDist > distanceConstraint) statusVec.at(iii) = 0;
 	}
-	
 }
 
 void filterVectors(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector<uchar>& statusVec, double distanceConstraint, bool epipolarCheck) {
@@ -1794,9 +1519,6 @@ void filterVectors(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector<
 			//printf("%s << totalDist (%f) ([%f, %f]) vs distanceConstraint (%f)\n", __FUNCTION__, totalDist, xDist, yDist, distanceConstraint);
 
 			if (totalDist > distanceConstraint) {
-
-
-
 				pts1.erase(pts1.begin() + iii);
 				pts2.erase(pts2.begin() + iii);
 			}
@@ -1827,11 +1549,7 @@ void filterVectors(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector<
 			pts1.clear();
 			pts2.clear();
 		}
-
-		//printf("%s << sizes3 = (%d, %d)\n", __FUNCTION__, pts1.size(), pts2.size());
 	}
-
-
 }
 
 bool checkSufficientFeatureSpread(vector<cv::Point2f>& pts, cv::Size matSize, int minFeaturesInImage) {
@@ -1862,12 +1580,8 @@ bool checkSufficientFeatureSpread(vector<cv::Point2f>& pts, cv::Size matSize, in
 
 	//printf("%s << badSegments = %d\n", __FUNCTION__, badSegments);
 
-	if (badSegments > (horizontalDivisions * verticalDivisions / 2)) {
-		return false;
-	}
-
+	if (badSegments > (horizontalDivisions * verticalDivisions / 2)) return false;
 	return true;
-
 }
 
 void drawMatchPaths(cv::Mat& src, cv::Mat& dst, vector<cv::Point2f>& kp1, vector<cv::Point2f>& kp2, const cv::Scalar& color) {
@@ -1921,8 +1635,6 @@ void markEdgyTracks(vector<cv::Point2f>& pts, vector<uchar>& statusVec, cameraPa
 	vector<cv::Point2f> rpts;
 
 	float minBorderDist = 15.0;
-
-
 	redistortPoints(pts, rpts, camData.Kx, camData.distCoeffs, camData.expandedCamMat);
 
 	cv::Mat tmpDisp;
@@ -1944,9 +1656,7 @@ void markEdgyTracks(vector<cv::Point2f>& pts, vector<uchar>& statusVec, cameraPa
 
 		if (dist < minBorderDist) {
 
-			if (statusVec.at(iii) != 0) {
-				edgyMarks++;
-			}
+			if (statusVec.at(iii) != 0) edgyMarks++;
 			statusVec.at(iii) = 0;
 			rpts.erase(rpts.begin() + iii);
 		}
@@ -1955,21 +1665,12 @@ void markEdgyTracks(vector<cv::Point2f>& pts, vector<uchar>& statusVec, cameraPa
 
 	displayKeyPoints(tmpDisp, rpts, tmpDisp, cv::Scalar(0,0,255), 0);
 
-	//imshow("tmpDisp", tmpDisp);
-	//cv::waitKey(1);
-
-	//printf("%s << edgyMarks = %d / %d\n", __FUNCTION__, edgyMarks, pts.size());
-	//cout << "camData.Kx = " << camData.Kx << endl;
-
 }
 
 double estimateStability(cv::Mat& img, cv::Point2f& center, double radius) {
     double stability = 0.0;
 
-    if (((center.x - radius) < 0) || ((center.y - radius) < 0) || ((center.x + radius) >= img.cols) || ((center.y + radius) >= img.rows)) {
-		//printf("%s << Returning, error.\n", __FUNCTION__);
-		return stability;
-	}
+    if (((center.x - radius) < 0) || ((center.y - radius) < 0) || ((center.x + radius) >= img.cols) || ((center.y + radius) >= img.rows)) return stability;
 
     cv::Mat patch;
 	constructPatch(img, patch, center, radius, 15);
@@ -1977,24 +1678,7 @@ double estimateStability(cv::Mat& img, cv::Point2f& center, double radius) {
     double minVal, maxVal;
     minMaxLoc(patch, &minVal, &maxVal);
 
-	double variance = getPatchVariance(patch);
-
-    cv::Mat largerMat;
-    //patch /= maxVal;
-    //resize(patch, largerMat, Size(patch.rows*4, patch.cols*4), 0, 0, INTER_NEAREST);
-
-    // largerMat /=
-
-
-	//imshow("patch", largerMat);
-	//cv::waitKey();
-
-	//printf("%s << variance = %f\n", __FUNCTION__, variance);
-
-	stability = 1 / variance;
-
-	return stability;
-
+	return (1.0 / getPatchVariance(patch));
 }
 
 double getPatchVariance(const cv::Mat& patch) {

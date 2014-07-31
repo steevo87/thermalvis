@@ -245,7 +245,8 @@ void keyframeStore::findStrongConnections(int idx, vector<unsigned int>& cIndice
 
 void keyframe::detectKeypoints(cv::Ptr<cv::FeatureDetector>& detector) {
 	detector -> detect(im, keypoints);
-	sortKeyPoints(keypoints, MAXIMUM_FEATURES_PER_FRAME);
+	sort(keypoints.begin(), keypoints.end(), KeyPoint_comparison);
+	reduceFeaturesToMaximum(keypoints, MAXIMUM_FEATURES_PER_FRAME);
 }
 
 void keyframe::extractDescriptors(cv::Ptr<cv::DescriptorExtractor>& extractor) {

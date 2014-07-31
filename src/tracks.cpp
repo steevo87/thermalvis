@@ -249,22 +249,18 @@ void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVe
 
 void addProjectionsToVector(vector<featureTrack>& featureTrackVector, unsigned int index, vector<cv::Point2f>& points, long int &starting_track_index, double minSeparation) {
 
-	for (unsigned int jjj = 1; jjj < points.size(); jjj++) {
-					
-		// Check violation:
-		for (unsigned int kkk = 0; kkk < jjj; kkk++) {
-			
-			// Distance between this point and higher-ranked ones
-			double dist = pow(pow(points.at(kkk).x - points.at(jjj).x, 2.0)+pow(points.at(kkk).x - points.at(jjj).x, 2.0),0.5);
-			
+	for (int iii = 0; iii < int(points.size()-1); iii++) {
+		for (int jjj = iii+1; jjj < int(points.size()); jjj++) {
+			double dist = pow(pow(points.at(iii).x - points.at(jjj).x, 2.0)+pow(points.at(iii).x - points.at(jjj).x, 2.0),0.5);
 			if (dist < minSeparation) {
-				points.erase(points.begin()+jjj);
-				jjj--;
+				points.erase(points.begin()+iii);
+				iii--;
 				break;
 			}
+
 		}
 	}
-	
+
 	for (unsigned int mmm = 0; mmm < points.size(); mmm++) addProjectionToVector(featureTrackVector, index, points.at(mmm), starting_track_index);
 }
 

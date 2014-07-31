@@ -250,7 +250,7 @@ void featureTrackerNode::act_on_image() {
 	#endif
 
 	if ((newImage.type() == CV_16UC3) || (newImage.type() == CV_16UC1)) {
-		ROS_ERROR("This node should only receive 8-bit images..");
+		ROS_ERROR("This node has been told it will only receive 8-bit images!");
 		return;
 	} else if (newImage.type() == CV_8UC3) cvtColor(newImage, grayImage, CV_RGB2GRAY); 
 	else if (newImage.type() == CV_8UC1) grayImage = newImage;
@@ -987,7 +987,7 @@ void featureTrackerNode::updateTrackingVectors() {
 			clearDangerFeatures(featureTrackVector, lastAllocatedTrackIndex);
 					
 			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector after adding projections = (%d)", featureTrackVector.size()); }
-			if (configData.verboseMode) { ROS_ERROR("About to concatenate with (%d) + (%d) / (%d) points and minsep of (%f)", globalFinishingPoints.size(), candidates[jjj].size(), configData.maxFeatures, configData.minSeparation); }
+			if (configData.verboseMode) { ROS_INFO("About to concatenate with (%d) + (%d) / (%d) points and minsep of (%f)", globalFinishingPoints.size(), candidates[jjj].size(), configData.maxFeatures, configData.minSeparation); }
 					
 			concatenateWithExistingPoints(globalFinishingPoints, candidates[jjj], configData.maxFeatures, configData.minSeparation);
 					
@@ -1024,7 +1024,7 @@ void featureTrackerNode::detectNewFeatures() {
 				keypointDetector[jjj] -> detect(grayImageBuffer[readyFrame % 2], currPoints[jjj]);
 			} else loadKeypointsFromFile(currPoints[jjj]);
 
-			sortKeyPoints(currPoints[jjj]);
+			sort(currPoints[jjj].begin(), currPoints[jjj].end(), KeyPoint_comparison);
 
 			if (configData.outputDetectedFeatures) {
 				char detectedFeaturesFile[256];
@@ -1039,7 +1039,7 @@ void featureTrackerNode::detectNewFeatures() {
 				detectedFeaturesStream << "count:" << currPoints[jjj].size() << endl;
 				detectedFeaturesStream << "x y response" << endl;
 
-				for (unsigned int iii = 0; iii < currPoints[jjj].size(); iii++) detectedFeaturesStream << currPoints[jjj].at(iii).pt.x << " " << currPoints[jjj].at(iii).pt.y << " " << currPoints[jjj].at(iii).response << endl;
+				for (int iii = currPoints[jjj].size()-1; iii >= 0; iii--) detectedFeaturesStream << currPoints[jjj].at(iii).pt.x << " " << currPoints[jjj].at(iii).pt.y << " " << currPoints[jjj].at(iii).response << endl;
 				detectedFeaturesStream.close();
 			}
 			
@@ -1056,27 +1056,10 @@ void featureTrackerNode::detectNewFeatures() {
 				reduceEdgyFeatures(currPoints[jjj], configData.cameraData);
 				testTime = timeElapsedMS(test_timer, false);
 
-				for (unsigned int zzz = 0; zzz < currPoints[jjj].size(); zzz++) {
-					// if distance between [ currPoints[jjj].at(zzz) ] and all points in globalFinishingPoints[jjj]
-					// is greater than [ configData.minSeparation ] , delete and decrement index
-					
-					bool violatesProximity = false;
-					
-					for (unsigned int yyy = 0; yyy < globalFinishingPoints.size(); yyy++) {
-						if (distBetweenPts2f(currPoints[jjj].at(zzz).pt, globalFinishingPoints.at(yyy)) < configData.minSeparation) {
-							violatesProximity = true;
-							break;
-						}
-					}
-					
-					if (violatesProximity) {
-						currPoints[jjj].erase(currPoints[jjj].begin() + zzz);
-						zzz--;
-					}
-				}
-				
+				proximityViolationFilter(currPoints[jjj], globalFinishingPoints, configData.minSeparation);
+
 				if (configData.verboseMode) { ROS_INFO("Reduced to (%d) candidate points based on proximity.", currPoints[jjj].size()); }
-				if (int(currPoints[jjj].size() + globalFinishingPoints.size()) > configData.maxFeatures) currPoints[jjj].erase(currPoints[jjj].begin() + (configData.maxFeatures - globalFinishingPoints.size()), currPoints[jjj].end());
+				if (int(currPoints[jjj].size() + globalFinishingPoints.size()) > configData.maxFeatures) reduceFeaturesToMaximum(currPoints[jjj], configData.maxFeatures - globalFinishingPoints.size());
 				
 				if (configData.verboseMode) { ROS_INFO("Further reduced to (%d) candidate points based on maxFeatures limit.", currPoints[jjj].size()); }
 				
@@ -1425,7 +1408,8 @@ void featureTrackerNode::handle_delay() {
 	if (homogPoints[0].size() < 4) {
 		ROS_ERROR("Insufficient points detected (%d) in first frame for calculating homography..", homogPoints[0].size());
 	} else {
-		sortKeyPoints(homogPoints[0], 200);
+		sort(homogPoints[0].begin(), homogPoints[0].end(), KeyPoint_comparison);
+		reduceFeaturesToMaximum(homogPoints[0], 200);
 		homographyExtractor -> compute(grayImageBuffer[current_idx % 2], homogPoints[0], homogDescriptors[0]);
 	}
 	undergoingDelay = true;
