@@ -96,7 +96,7 @@ public:
 class featureTrackerNode : public GenericOptions {
 private:
 	
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 
 	ros::NodeHandle private_node_handle;
 	
@@ -117,20 +117,14 @@ private:
 	cv_bridge::CvImagePtr cv_ptr;
 
 	ros::Timer timer, features_timer;
+	
+#else
+	const cv::Mat *bridgeReplacement;
+#endif
+
 	ros::Time lastCycleFrameTime;
 	ros::Time olderTimes[MAX_HISTORY_FRAMES];
 	ros::Time info_time, image_time, previous_time, original_time, dodgeTime;
-
-	#else
-
-	const cv::Mat *bridgeReplacement;
-
-	// TODO: non-ROS timers not implemented
-	boost::posix_time::ptime lastCycleFrameTime;
-	boost::posix_time::ptime olderTimes[MAX_HISTORY_FRAMES];
-	boost::posix_time::ptime info_time, image_time, previous_time, original_time, dodgeTime;
-
-	#endif
 
 	trackerData configData;
 
@@ -217,14 +211,14 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void process_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void process_info(const cameraInfoStruct *info_msg);
+	void process_info(ros::sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Initial receipt of an image. 
 #ifdef _BUILD_FOR_ROS_
 	void handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void handle_camera(const cv::Mat& inputImage, const cameraInfoStruct *info_msg);
+	void handle_camera(cv::Mat& inputImage, ros::sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Broadcasts tracking information. 

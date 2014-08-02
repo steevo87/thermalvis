@@ -7,13 +7,43 @@
 
 #include "opencv_resources.hpp"
 
-struct cameraInfoStruct {
-	double K[9], D[8];
+#include "boost/date_time/posix_time/posix_time.hpp"
+
+namespace ros {
+
+struct Time {
+	int sec;
+	int nsec;
+
+	double toSec();
+	double toNSec();
+	Time();
+	Time(double input);
+	static Time now();
+};
+
+struct Header {
+	int seq;
+	std::string frame_id;
+	Time stamp;
+	Header();
+};
+
+namespace sensor_msgs {
+
+struct CameraInfo {
+	Header header;
+	double K[9], R[9], P[12];
+	std::vector<double> D;
 	int width, height;
+	int binning_x, binning_y;
 	std::string distortion_model;
 
-	cameraInfoStruct();
+	CameraInfo();
 };
+
+}
+}
 
 /// \brief		Stores camera calibration information in OpenCV format
 struct cameraParameters {

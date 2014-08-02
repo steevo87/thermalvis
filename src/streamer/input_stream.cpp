@@ -12,6 +12,8 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 
 	undistortImages = startupData.undistortImages;
 	autoTemperature = startupData.autoTemperature;
+	wantsToUndistort = startupData.wantsToUndistort;
+	wantsToDumpTimestamps = startupData.wantsToDumpTimestamps;
 	
 	inputDatatype = startupData.inputDatatype;
 	detectorMode = startupData.detectorMode;
@@ -407,6 +409,8 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			// Image processing
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("undistortImages")) undistortImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoTemperature")) autoTemperature = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("wantsToUndistort")) wantsToUndistort = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("wantsToDumpTimestamps")) wantsToDumpTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("normMode")) normMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("normFactor")) normFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("threshFactor")) threshFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
@@ -709,14 +713,12 @@ streamerNode::streamerNode(streamerData startupData) :
 	
 	configData = startupData;
 
-	#ifndef _BUILD_FOR_ROS_
+#ifndef _BUILD_FOR_ROS_
 	bridgeReplacement = new cv::Mat();
-	#endif
+#endif
 	
-#ifdef _BUILD_FOR_ROS_
 	dodgeTime.sec = 0;
 	dodgeTime.nsec = 0;
-#endif
 
 	if (configData.addExtrinsics) {
 		getRectification();
@@ -726,11 +728,11 @@ streamerNode::streamerNode(streamerData startupData) :
 #endif
 	}
 	
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	sprintf(nodeName, "%s", ros::this_node::getName().substr(1).c_str());
-	#else
+#else
 	sprintf(nodeName, "/%s", "THERMALVIS_STREAMER");
-	#endif
+#endif
 
 	if (configData.verboseMode) { ROS_INFO("Initializing node (%s)", nodeName); }
 	
@@ -891,8 +893,6 @@ streamerNode::streamerNode(streamerData startupData) :
 		
 	}
 
-	if (configData.verboseMode) { ROS_INFO("Debug (%d)", 321); }
-
 	if (configData.addExtrinsics) {
 		if (configData.verboseMode) { ROS_INFO("Reading in extrinsics..."); }
 
@@ -940,10 +940,8 @@ streamerNode::streamerNode(streamerData startupData) :
 		globalCameraInfo.T = cv::Mat::zeros(3, 1, CV_64FC1);
 	}
 
-#ifdef _BUILD_FOR_ROS_
 	if (configData.verboseMode) { ROS_INFO("calling assignCameraInfo() from streamerNode()..."); }
 	assignCameraInfo();
-#endif
 
 	if (configData.verboseMode) { ROS_INFO("Initializing video source..."); }
 
@@ -964,17 +962,13 @@ streamerNode::streamerNode(streamerData startupData) :
 	ros::ServiceServer set_camera_info = nh.advertiseService(cameraInfoName, &streamerNode::setCameraInfo, this);
 #endif
 
+	(configData.framerate > 0.0) ? configData.pauseMode = false : configData.pauseMode = true;
+
+#ifdef _BUILD_FOR_ROS_
 	if (configData.framerate > 0.0) {
-		configData.pauseMode = false;
-#ifdef _BUILD_FOR_ROS_
 		timer = nh.createTimer(ros::Duration(1.0 / ((double) configData.framerate)), &streamerNode::timerCallback, this);
+	} else timer = nh.createTimer(ros::Duration(1.0 / 1.0), &streamerNode::timerCallback, this);
 #endif
-	} else {
-		configData.pauseMode = true;
-#ifdef _BUILD_FOR_ROS_
-		timer = nh.createTimer(ros::Duration(1.0 / 1.0), &streamerNode::timerCallback, this);
-#endif
-	}
 	
 	// Configure log files
 	callLogFile = configData.read_addr + "/nodes/streamer/log/call_log.txt";
@@ -1006,11 +1000,7 @@ streamerNode::streamerNode(streamerData startupData) :
 	
 	if (configData.externalNucManagement != "") {
 		
-#ifdef _BUILD_FOR_ROS_
 		lastFlagReceived = ros::Time::now();
-#else
-		lastFlagReceived = boost::posix_time::microsec_clock::local_time();
-#endif
 
 #ifdef _BUILD_FOR_ROS_
 		ROS_INFO("Subscribing to external nuc management flag (%s)", configData.externalNucManagement.c_str());
@@ -1034,6 +1024,122 @@ streamerNode::streamerNode(streamerData startupData) :
 		if (configData.verboseMode) { ROS_INFO("Outputting duplicates to (%s)", duplicatesLogFile.c_str()); }
 		ofs_duplicates_log.open(duplicatesLogFile.c_str());
 	}
+}
+
+void streamerNode::assignCameraInfo() {
+	
+	if (configData.verboseMode) { ROS_INFO("Entered assignCameraInfo()..."); }
+	
+	char frame_id[256];
+	sprintf(frame_id, "%s_%s_%s", "thermalvis", nodeName, "optical_frame");
+	camera_info.header.frame_id = string(frame_id);
+
+#ifdef _BUILD_FOR_ROS_
+	msg_color.header.frame_id = string(frame_id);
+	msg_16bit.header.frame_id = string(frame_id);
+	msg_8bit.header.frame_id = string(frame_id);
+#endif
+	camera_info.height = globalCameraInfo.imageSize.at<unsigned short>(0, 1); // DEFAULT_IMAGE_HEIGHT
+	camera_info.width = globalCameraInfo.imageSize.at<unsigned short>(0, 0); // DEFAULT_IMAGE_WIDTH
+
+
+	// /* use data from intrinsics file
+	if (globalCameraInfo.distCoeffs.cols != 5) { //*/
+
+		camera_info.distortion_model = "rational_polynomial";
+		if (configData.verboseMode) { ROS_INFO("Camera model : RATIONAL POLYNOMIAL - (%d) coeffs", globalCameraInfo.distCoeffs.cols); }
+	} else {
+		camera_info.distortion_model = "plumb_bob";
+		if (configData.verboseMode) { ROS_INFO("Camera model : PLUMB BOB - (%d) coeffs", globalCameraInfo.distCoeffs.cols); }
+	}
+
+	camera_info.D.clear();
+
+	for (int iii = 0; iii < globalCameraInfo.distCoeffs.cols; iii++) { //orig
+		camera_info.D.push_back(globalCameraInfo.distCoeffs.at<double>(0, iii)); //orig
+	}
+
+	// Assign camera info from intrinsics file
+	if (globalCameraInfo.cameraMatrix.rows == 3) {
+		for (unsigned int iii = 0; iii < 3; iii++) {
+			for (unsigned int jjj = 0; jjj < 3; jjj++) {
+				if (configData.wantsToUndistort) {
+					camera_info.K[iii*3 + jjj] = globalCameraInfo.newCamMat.at<double>(iii,jjj); //orig
+				} else camera_info.K[iii*3 + jjj] = globalCameraInfo.cameraMatrix.at<double>(iii,jjj);
+			}
+		}		
+	}
+	
+	
+
+        //HGH
+        if (configData.wantsToAddExtrinsics){
+            if (configData.camera_number == 0){
+                for (unsigned int iii = 0; iii < 3; iii++) {
+                    for (unsigned int jjj = 0; jjj < 3; jjj++) {
+                        camera_info.R[iii*3 + jjj] = globalExtrinsicsData.R0.at<double>(iii,jjj);
+                    }
+                }
+                for (unsigned int iii = 0; iii < 3; iii++) {
+                    for (unsigned int jjj = 0; jjj < 4; jjj++) {
+                        camera_info.P[iii*4 + jjj] = globalExtrinsicsData.P0.at<double>(iii,jjj);
+                    }
+                }
+            }else if (configData.camera_number == 1){
+                for (unsigned int iii = 0; iii < 3; iii++) {
+                    for (unsigned int jjj = 0; jjj < 3; jjj++) {
+                        camera_info.R[iii*3 + jjj] = globalExtrinsicsData.R1.at<double>(iii,jjj);
+                    }
+                }
+                for (unsigned int iii = 0; iii < 3; iii++) {
+                    for (unsigned int jjj = 0; jjj < 4; jjj++) {
+                        camera_info.P[iii*4 + jjj] = globalExtrinsicsData.P1.at<double>(iii,jjj);
+                    }
+                }
+            }
+
+        } else {
+                if (globalCameraInfo.R.rows == 3) {
+                        for (unsigned int iii = 0; iii < 3; iii++) {
+                                for (unsigned int jjj = 0; jjj < 3; jjj++) {
+                                        camera_info.R[iii*3 + jjj] = globalCameraInfo.R.at<double>(iii,jjj);
+                                }
+                        }
+                }
+
+                if (globalCameraInfo.newCamMat.rows == 3) {
+                        for (unsigned int iii = 0; iii < 3; iii++) {
+                                for (unsigned int jjj = 0; jjj < 3; jjj++) {
+                                            camera_info.P[iii*4 + jjj] = globalCameraInfo.newCamMat.at<double>(iii,jjj);
+                                }
+                        }
+                }
+        }
+
+
+        if (configData.wantsToUndistort) {
+                if ((globalCameraInfo.cameraMatrix.rows == 3) && (globalCameraInfo.distCoeffs.cols > 0) && (globalCameraInfo.newCamMat.rows == 3)) {
+                    //HGH initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalCameraInfo.R, globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
+                    //HGH
+                    if (configData.wantsToAddExtrinsics){
+                        if (configData.wantsToRectify){
+                            if (configData.camera_number == 0){
+                                cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R0, globalExtrinsicsData.P0, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
+                            }else if (configData.camera_number == 1){
+                                cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R1, globalExtrinsicsData.P1, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
+                            }
+                        }else{
+                            cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
+                        }
+                    }else{
+                        cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
+                    }
+
+                }
+        }
+	
+	if (configData.verboseMode) { ROS_INFO("Camera info assigned."); }
+	
 }
 
 void streamerNode::prepareForTermination() {
@@ -1467,9 +1573,9 @@ void streamerNode::releaseDevice() {
 		getVideoCapture()->release();
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
 		
-		#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 		getMainVideoSource()->close_video_capture();
-		#endif
+#endif
 	}
 	
 	deviceCreated = false;
@@ -1489,6 +1595,8 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	configData.degreesPerGraylevel = config.degreesPerGraylevel;
 	configData.desiredDegreesPerGraylevel = config.desiredDegreesPerGraylevel;
 	configData.zeroDegreesOffset = config.zeroDegreesOffset;
+	configData.wantsToUndistort = config.wantsToUndistort;
+	configData.wantsToDumpTimestamps = config.wantsToDumpTimestamps;
 	
 	if (configData.autoTemperature != config.autoTemperature) {
 		lastMinDisplayTemp = -9e99, lastMaxDisplayTemp = 9e99;
@@ -1497,28 +1605,16 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	
 	
 	if (configData.detectorMode != config.detectorMode) {
-		
 		configData.detectorMode = config.detectorMode;
-		
-		if (!configData.serialComms) {
-			ROS_WARN("Selecting a detector mode has no effect unless serial comms are enabled.");
-		} else {
-			updateDetectorMode = true;
-		}
-		
-		
+		(configData.serialComms) ? updateDetectorMode = true : ROS_WARN("Selecting a detector mode has no effect unless serial comms are enabled.");
 	}
-	
 	
 	configData.usbMode = config.usbMode;
 	if (!configData.serialComms) {
-		if (configData.usbMode != config.usbMode) {
-			ROS_WARN("Selecting a USB mode has no effect unless serial comms are enabled.");
-		}
+		if (configData.usbMode != config.usbMode) ROS_WARN("Selecting a USB mode has no effect unless serial comms are enabled.");
 	} else {
 		
 		updateUSBMode = true;
-		
 		if (configData.usbMode == USB_MODE_16) {
 			if (configData.verboseMode) { ROS_INFO("changing <configData.inputDatatype> to DATATYPE_RAW"); }
 			config.inputDatatype = DATATYPE_RAW;
@@ -1527,8 +1623,6 @@ void streamerNode::serverCallback(streamerConfig &config) {
 			config.inputDatatype = DATATYPE_8BIT;
 			if (strcmp(configData.outputTypeString.c_str(), "CV_8UC3")) { configData.outputTypeString = "CV_8UC1"; }
 		}
-	
-		
 	}
 	
 	if (configData.serialPollingRate != config.serialPollingRate) {
@@ -1538,78 +1632,51 @@ void streamerNode::serverCallback(streamerConfig &config) {
 #ifdef _BUILD_FOR_ROS_
 		if (configData.serialPollingRate > 0.1) {
 			serial_timer.setPeriod(ros::Duration(1.0 / configData.serialPollingRate));
-		} else {
-			serial_timer.setPeriod(ros::Duration(1.0 / 1.0));
-		}
-	
+		} else serial_timer.setPeriod(ros::Duration(1.0 / 1.0));
 #endif
 	}
 
 	if (configData.maxNucInterval != config.maxNucInterval) {
-		
 		configData.maxNucInterval = config.maxNucInterval;
 		ROS_WARN("NUC interval changed by config...");
 		updateNucInterval = true;
 	}
 	
 	if (configData.maxNucThreshold != config.maxNucThreshold) {
-		
 		configData.maxNucThreshold = config.maxNucThreshold;
 		updateNucInterval = true;
 	}
 	
-	
-	if (!configData.temporalSmoothing) {
-		lastMedian = -1.0;
-	}
+	if (!configData.temporalSmoothing) lastMedian = -1.0;
 	
 	configData.verboseMode = config.verboseMode;
-	
 	configData.normFactor = config.normFactor;
 	configData.threshFactor = config.threshFactor;
 	
-
-	if (config.framerate != 0.0) {
-		configData.pauseMode = false;
-	}
-		
+	if (config.framerate != 0.0) configData.pauseMode = false;
 	
-	if (alphaChanged) {
-		if (configData.verboseMode) { ROS_INFO("Updating map..."); }
-		updateMap();
-		if (configData.verboseMode) { ROS_INFO("Map updated."); }
-	}
+	if (alphaChanged) updateMap();
 	
 	fusionFactor = config.fusionFactor;
-	
-	//ROS_WARN("Progressing...");
-            
+	      
 	if (config.framerate < 0.0) {
 		
 		if (configData.pollMode) {
-		
 			ROS_WARN("Invalid framerate (%f) so switching to capture mode.", config.framerate);
 			configData.framerate = DEFAULT_READ_RATE;
 			configData.pollMode = false;
 			configData.captureMode = true;
-			
 		} else if (configData.readMode) {
-			
 			ROS_WARN("Invalid framerate (%f) so defaulting to (%f).", config.framerate, DEFAULT_READ_RATE);
 			configData.framerate = DEFAULT_READ_RATE;
-
 		} else if (configData.loadMode) {
-			
 			ROS_WARN("Invalid framerate (%f) so defaulting to (%f).", config.framerate, DEFAULT_READ_RATE);
 			configData.framerate = DEFAULT_READ_RATE;
-			
 		} else if (configData.resampleMode) {
-			
 			ROS_WARN("Invalid framerate (%f) so switching to subscribe mode.", config.framerate);
 			configData.framerate = DEFAULT_READ_RATE;
 			configData.resampleMode = false;
 			configData.subscribeMode = true;
-			
 		}
 
 #ifdef _BUILD_FOR_ROS_
@@ -1618,33 +1685,21 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	} else {
 		
 		if (configData.captureMode) {
-		
 			ROS_INFO("Specified framerate (%f) so switching to poll mode.", config.framerate);
 			configData.framerate = config.framerate;
 			configData.captureMode = false;
 			configData.pollMode = true;
-			
 		} else if (configData.subscribeMode) {
-			
 			ROS_INFO("Specified framerate (%f) so switching to resample mode.", config.framerate);
 			configData.framerate = config.framerate;
 			configData.subscribeMode = false;
 			configData.resampleMode = true;
-			
 		}
 		
-		if (config.framerate > 0.0) {
 #ifdef _BUILD_FOR_ROS_
-			timer.setPeriod(ros::Duration(1.0 / config.framerate));
+		(config.framerate > 0.0) ? timer.setPeriod(ros::Duration(1.0 / config.framerate)) : timer.setPeriod(ros::Duration(1.0 / 1.0));
 #endif
-		} else {
-			configData.pauseMode = true;
-#ifdef _BUILD_FOR_ROS_
-			timer.setPeriod(ros::Duration(1.0 / 1.0));
-#endif
-		}
-		
-		
+		if (!(config.framerate > 0.0)) configData.pauseMode = true;
 	}
 	
 	if (config.inputDatatype != configData.inputDatatype) {
@@ -1666,9 +1721,7 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	
 	//configData.filterMode = config.filterMode;
 	//configData.filterParam = config.filterParam;
-	
 	//configData.maxReadAttempts = config.maxReadAttempts;
-	
 	configData.normMode = config.normMode;
 	
 	bool wantsToRefreshCameras = false;
@@ -1692,7 +1745,6 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	colourMap.load_standard(fullMapCode, !configData.showExtremeColors);
     
 	if (configData.outputFolder == "outputFolder") {
-		
 		ROS_WARN("No valid output folder specified...");
 		configData.writeImages = false;
 		configData.dumpTimestamps = false;
@@ -1804,7 +1856,7 @@ bool streamerNode::setupDevice() {
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
 		if (configData.verboseMode) { ROS_INFO("Setting up device in 16-bit mode..."); }
 		
-		#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 		int deviceWidth, deviceHeight;
 		getMainVideoSource()->setup_video_capture(configData.capture_device.c_str(), deviceWidth, deviceHeight, configData.verboseMode);
 		
@@ -1827,7 +1879,7 @@ bool streamerNode::setupDevice() {
 			}
 			
 		}
-		#endif
+#endif
 	}
 	
 	if (configData.verboseMode) { ROS_INFO("Device set up!"); }
@@ -1883,11 +1935,12 @@ void streamerNode::updateMap() {
 
 void streamerNode::act_on_image() {
 	
-#ifdef _BUILD_FOR_ROS_
 	updateCameraInfo();
+
+#ifdef _BUILD_FOR_ROS_
 	newImage = cv::Mat(cv_ptr->image);
 #else
-	cv::Mat newImage(*bridgeReplacement);
+	newImage = cv::Mat(*bridgeReplacement);
 #endif
 
 	cv::Mat grayImage;
@@ -1901,9 +1954,7 @@ void streamerNode::act_on_image() {
 	if (!configData.resampleMode) {
 		if (processImage()) {
 			if (readyToPublish) {
-#ifdef _BUILD_FOR_ROS_
 				updateCameraInfo();
-#endif
 				publishTopics();
 				writeData();
 			}
@@ -1925,21 +1976,23 @@ bool streamerNode::retrieveRawFrame() {
 		}
 
 		std::string full_path = std::string(configData.folder) + "/" + inputList.at(frameCounter);
+		camera_info.header.seq = frameCounter;
 
-		#ifdef _OPENCV_VERSION_3_PLUS_
+#ifdef _OPENCV_VERSION_3_PLUS_
 		frame = cv::imread(full_path, cv::IMREAD_ANYDEPTH);
-		#else
+#else
 		frame = cv::imread(full_path, CV_LOAD_IMAGE_ANYDEPTH);
-		#endif
+#endif
 
 		return true;
 	}
 	return false;
 }
 
-bool streamerNode::get8bitImage(cv::Mat& img) { 
+bool streamerNode::get8bitImage(cv::Mat& img, ros::sensor_msgs::CameraInfo& info) { 
 	if (_8bitMat.rows == 0) return false;
-	img = _8bitMat; 
+	img = _8bitMat;
+	info = camera_info;
 	return true;
 }
 
@@ -1966,10 +2019,8 @@ bool streamerNode::processImage() {
 	if (configData.removeDuplicates || configData.markDuplicates || configData.outputDuplicates) {
 		if (matricesAreEqual(frame, lastFrame)) {
 			
-			#ifdef _BUILD_FOR_ROS_
 			lastNucPerformed_at_the_earliest = ros::Time::now();		
-			#endif
-
+			
 			if (configData.markDuplicates) lastIsDuplicate = true;
 			
 			if (configData.outputDuplicates) ofs_duplicates_log << "1" << endl;
@@ -2226,6 +2277,7 @@ bool streamerNode::processImage() {
 
 bool streamerNode::imageLoop() {
 	if (!processImage()) return false;
+	updateCameraInfo();
 	publishTopics();
 	writeData();
 	return true;
@@ -2247,9 +2299,7 @@ void streamerNode::publishTopics() {
 
 	bool cameraPublished = false;
 
-#ifdef _BUILD_FOR_ROS_
 	if (configData.wantsToDumpTimestamps) ofs << camera_info.header.stamp.toNSec() << endl;
-#endif
 
 	if ((configData.output16bit) || (configData.writeImages &&  (configData.outputType == OUTPUT_TYPE_CV_16UC1))) {
 
@@ -2368,24 +2418,16 @@ bool streamerNode::runDevice() {
 	
 	while (isVideoValid()) {
 		
-		
-
 		if (configData.verboseMode){ ROS_INFO("Starting loop.."); }
 		if (configData.captureMode) {
 			
-			#ifdef _BUILD_FOR_ROS_
-			if (configData.verboseMode){ ROS_INFO("About to spin"); }
+#ifdef _BUILD_FOR_ROS_
 			ros::spinOnce();
-			if (configData.verboseMode){ ROS_INFO("Spun"); }
-			#endif
+#endif
 			
 			if (streamCallback()) {
 				
-				
-				
 				if (configData.verboseMode){ ROS_INFO("About to process"); }
-				
-				
 				if (processImage()) {
 				
 					if (configData.verboseMode){ ROS_INFO("Processed image."); }
@@ -2400,15 +2442,13 @@ bool streamerNode::runDevice() {
 				}
 			}
 			
-			
-			
 		} else if (configData.pollMode) {
 			
 			// Want to keep on calling streamCallback until the time is right to capture the frame
 			streamCallback(false);
-			#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 			ros::spinOnce();
-			#endif
+#endif
 		}
 		
 		if (configData.verboseMode){ ROS_INFO("Ending loop."); }
@@ -2440,9 +2480,9 @@ bool streamerNode::runLoad() {
 		setValidity(true);
 		
 		while (isVideoValid()) {
-			#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 			ros::spinOnce();		
-			#endif
+#endif
 		}
 		
 	} while (configData.loopMode && !wantsToShutdown());
@@ -2455,21 +2495,18 @@ bool streamerNode::streamCallback(bool capture) {
 	
 	int currAttempts = 0;
 	
-	#ifdef _BUILD_FOR_ROS_
 	if (configData.verboseMode) { 
 		ros::Time callbackTime = ros::Time::now();
 		ROS_INFO("Entered <streamCallback> at (%f)", callbackTime.toSec());
 	}
-	#endif
 
 	if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
 		
-		#ifdef _BUILD_FOR_ROS_
 		if (configData.verboseMode){ ROS_INFO("Updating camera info..."); }
 		updateCameraInfo();
 		if (configData.verboseMode){ ROS_INFO("Camera info updated."); }
+
 		ofs_call_log << ros::Time::now().toNSec() << endl;
-		#endif
 
 		if (configData.verboseMode){ ROS_INFO("Capturing frame (8-bit/MM)..."); }
 		cap >> frame;
@@ -2481,17 +2518,13 @@ bool streamerNode::streamCallback(bool capture) {
 		}
 		
 		if (configData.verboseMode){ ROS_INFO("Frame captured."); }
-		#ifdef _BUILD_FOR_ROS_
 		ofs_retrieve_log << ros::Time::now().toNSec() << endl;
-		#endif
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
 		
-		#ifdef _BUILD_FOR_ROS_
 		ros::Time callTime, retrieveTime;
 		
 		callTime = ros::Time::now();
 		if (configData.verboseMode) { ROS_INFO("Capturing frame (16-bit)... (%f)", callTime.toSec()); }
-		#endif
 
 		//bool frameRead = false;
 		while ((configData.maxReadAttempts == 0) || (currAttempts < configData.maxReadAttempts)) {
@@ -2499,25 +2532,27 @@ bool streamerNode::streamCallback(bool capture) {
 			
 			if (configData.verboseMode){ ROS_INFO("Attempting to capture frame..."); }
 			
-			#ifndef _WIN32
+#ifndef _WIN32
 			if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->oPacket)) != 0) {
 				if (configData.verboseMode){ ROS_WARN("av_read_frame() failed."); }
 				currAttempts++;
 				continue;
 			}
-			#endif
+#endif
 			
 			if (configData.verboseMode){ ROS_INFO("Frame captured successfully."); }
 			
-			#ifdef _BUILD_FOR_ROS_
 			retrieveTime = ros::Time::now();
-			firmwareTime = mainVideoSource->oPacket.pts;
-			
-
+#ifdef _BUILD_FOR_ROS_
+			firmwareTime = mainVideoSource->oPacket.pts;	
+#endif
 			if (configData.verboseMode){ ROS_INFO("Updating camera info..."); }
 			updateCameraInfo();
 			if (configData.verboseMode){ ROS_INFO("Camera info updated."); }
+
 			
+#ifdef _BUILD_FOR_ROS_
+
 			if (mainVideoSource->bRet < 0) {
 				if (configData.verboseMode) { ROS_WARN("(mainVideoSource->bRet < 0) failed."); }
 				currAttempts++;
@@ -2569,7 +2604,7 @@ bool streamerNode::streamCallback(bool capture) {
 				}
 				
 			}
-			#endif
+#endif
 
 			// Want to exit loop if it actually worked
 			if (configData.verboseMode){ ROS_INFO("Frame read."); }
@@ -2589,11 +2624,7 @@ bool streamerNode::streamCallback(bool capture) {
 		}
 	}
 	
-	// processImage();
-	
-	//ROS_INFO("Exiting callback.");
-	if (configData.verboseMode){ ROS_INFO("Exiting callback..."); }
-	
+	if (configData.verboseMode) { ROS_INFO("Exiting callback..."); }
 	return true;
 }
 
@@ -2776,17 +2807,17 @@ bool streamerNode::runRead() {
 		if (configData.verboseMode) { ROS_INFO("Source configured."); }
 		
 		while (isVideoValid()) {
-			#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 			ros::spinOnce();
-			#endif
+#endif
 		}
 		
 		if (configData.verboseMode) { ROS_INFO("Video complete."); }
 		
 		if (configData.inputDatatype == DATATYPE_RAW) {
-			#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 			getMainVideoSource()->close_video_file(configData.filename);
-			#endif
+#endif
 		} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
 			getVideoCapture()->release();
 		}
@@ -2803,31 +2834,74 @@ bool streamerNode::runRead() {
 #ifdef _BUILD_FOR_ROS_
 	void streamerNode::handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-	void streamerNode::handle_camera(const cv::Mat& inputImage, const cameraInfoStruct *info_msg) {
+	void streamerNode::handle_camera(const cv::Mat& inputImage, const ros::sensor_msgs::CameraInfo *info_msg) {
 #endif
 
 	if (configData.syncMode != SYNCMODE_HARD) return;
-	
 	if ((!configData.subscribeMode) && (!configData.resampleMode)) return;
-	
 	if (configData.verboseMode) { ROS_INFO("Copying camera info over..."); }
 	
-#ifdef _BUILD_FOR_ROS_
 	original_camera_info = *info_msg;
 	if (configData.verboseMode) { ROS_INFO("original_camera_info.header.seq = (%d)", original_camera_info.header.seq); }
 	original_time = info_msg->header.stamp;
 	memcpy(&lastThermistorReading, &info_msg->binning_x, sizeof(float));
 
-	
-	if (configData.inputDatatype == DATATYPE_DEPTH) {
-		cv_ptr = cv_bridge::toCvCopy(msg_ptr, "16UC1");
-	} else {
-		cv_ptr = cv_bridge::toCvCopy(msg_ptr, enc::BGR8);					// For some reason it reads as BGR, not gray
-	}
+#ifdef _BUILD_FOR_ROS_
+	// For some reason it reads as BGR, not gray
+	(configData.inputDatatype == DATATYPE_DEPTH) ? cv_ptr = cv_bridge::toCvCopy(msg_ptr, "16UC1") : cv_ptr = cv_bridge::toCvCopy(msg_ptr, enc::BGR8);
 #else
 	bridgeReplacement = &inputImage;
 #endif
 	
 	act_on_image();
+}
+
+void streamerNode::markCurrentFrameAsDuplicate() {
+	//camera_info.binning_x = 1; // this one is used for thermistor
+	camera_info.binning_y = 1; // this one is to be used for duplicates
+}
+
+void streamerNode::updateCameraInfo() {
+	if ((configData.subscribeMode) || (configData.resampleMode)) {
+		if (configData.syncMode == SYNCMODE_IMAGEONLY) {
+			if (configData.useCurrentRosTime) {
+				ros::Time currTime = ros::Time::now();
+				camera_info.header.stamp = currTime;
+			} else camera_info.header.stamp = original_time;
+		} else camera_info = original_camera_info;
+
+		memcpy(&newThermistorReading, &camera_info.binning_x, sizeof(float)); // monkey, lastThermistorReading
+
+	} else {
+		ros::Time currTime = ros::Time::now();
+		camera_info.header.stamp = currTime;
+		
+		if ((configData.captureMode || configData.pollMode) && configData.readThermistor) {
+			memcpy(&camera_info.binning_x, &lastThermistorReading, sizeof(float));
+			//ROS_WARN("Thermistor value = (%f, %d)", lastThermistorReading, camera_info.binning_x);
+		}
+
+		// Internal time..
+		memcpy(&camera_info.R[0], &firmwareTime, sizeof(float));
+	}
 	
+	if (configData.markDuplicates && lastIsDuplicate) {
+		camera_info.binning_y = 1;
+	} else if (configData.markDuplicates) camera_info.binning_y = 0;
+	
+	if ((globalCameraInfo.cameraMatrix.rows == 3) && (configData.wantsToUndistort)) {
+		for (unsigned int iii = 0; iii < 3; iii++) {
+			for (unsigned int jjj = 0; jjj < 3; jjj++) {
+				camera_info.K[iii*3 + jjj] = globalCameraInfo.newCamMat.at<double>(iii,jjj);
+			}
+		}	
+		
+		for (unsigned int iii = 0; iii < camera_info.D.size(); iii++) camera_info.D.at(iii) = 0.0;
+	}
+	
+#ifdef _BUILD_FOR_ROS_
+	msg_color.header = camera_info.header;
+	msg_16bit.header = camera_info.header;
+	msg_8bit.header = camera_info.header;
+#endif
 }

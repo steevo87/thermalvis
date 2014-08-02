@@ -4,6 +4,61 @@
 
 #include "camera.hpp"
 
+namespace ros {
+
+Time::Time() : sec(-1), nsec(-1) { }
+
+Time::Time(double input) {
+	sec = int(input);
+	nsec = int(input - (double(sec)*1000000000));
+}
+
+double Time::toSec() { return (double(sec) + (double(nsec)/1000000000.0)); }
+
+double Time::toNSec() { return (double(sec)*1000000000.0 + double(nsec)); }
+
+Time Time::now() {
+	Time retVal;
+	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::local_time();
+	retVal.sec = int(currentTime.time_of_day().total_seconds());
+	retVal.nsec = int(currentTime.time_of_day().total_microseconds()*1000);
+	return retVal;
+}
+
+Header::Header() : seq(-1), frame_id("") { }
+
+namespace sensor_msgs {
+
+CameraInfo::CameraInfo() : 
+	width(384), 
+	height(288), 
+	distortion_model("plumb bob"), 
+	binning_x(0),
+	binning_y(0)
+{
+
+	K[0] = 500.0;
+	K[1] = 0.0;
+	K[2] = 191.5;
+
+	K[3] = 0.0;
+	K[4] = 500.0;
+	K[5] = 143.5;
+
+	K[6] = 0.0;
+	K[7] = 0.0;
+	K[8] = 1.0;
+	
+	for (int iii = 0; iii < 12; iii++) {
+		P[iii] = 0.0;
+		if (iii < 9) R[iii] = 0.0;
+	}
+}
+
+}
+
+}
+
 cameraParameters::cameraParameters() {
 
 	imageSize = cv::Mat(1, 2, CV_16UC1);
@@ -30,16 +85,11 @@ bool cameraParameters::updateCameraParameters() {
 	newCamMat.copyTo(K);
 	K_inv = K.inv();
 	
-	if (K.rows == 0) {
-		return false;
-	}
-	
+	if (K.rows == 0) return false;
 	return true;
 }
 
 bool cameraParameters::getCameraParameters(std::string intrinsics) {
-	
-	//printf("%s << Entered (%s).\n", __FUNCTION__, intrinsics.c_str());
 	
 	double alpha = 0.00;
 	bool centerPrincipalPoint = true;
@@ -55,20 +105,9 @@ bool cameraParameters::getCameraParameters(std::string intrinsics) {
 	cameraSize = cv::Size(imageSize.at<unsigned short>(0, 0), imageSize.at<unsigned short>(0, 1));
 	
 	newCamMat = getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, cameraSize, alpha, cameraSize, validPixROI, centerPrincipalPoint);
-	
 	newCamMat.copyTo(K);
-	//newCamMat.copyTo(K);	// or some other kind of matrix...?
 	K_inv = K.inv();
 	
-	//printf("%s << Image size = (%d, %d)\n", __FUNCTION__, cameraSize.width, cameraSize.height);
-	
-	//cout << __FUNCTION__ << " << K = " << endl;
-	//cout << K << endl;
-	
-	if (K.rows == 0) {
-		return false;
-	}
-	
+	if (K.rows == 0) return false;
 	return true;
-	
 }

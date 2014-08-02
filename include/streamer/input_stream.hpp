@@ -159,7 +159,7 @@ struct camExtrinsicsData_ {
 class streamerNode : public GenericOptions {
 private:
 
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	image_transport::ImageTransport *it;
 	image_transport::Subscriber image_sub;
 	image_transport::CameraSubscriber camera_sub;
@@ -170,7 +170,6 @@ private:
 	
 	
 	sensor_msgs::Image msg_color, msg_16bit, msg_8bit;
-	sensor_msgs::CameraInfo original_camera_info, camera_info;
 
 	ros::Timer timer, serial_timer;
 	
@@ -178,15 +177,14 @@ private:
 	
 	dynamic_reconfigure::Server<thermalvis::streamerConfig> server;
 	dynamic_reconfigure::Server<thermalvis::streamerConfig>::CallbackType f;
-	#endif
+#endif
+
+	ros::Time info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
+	ros::sensor_msgs::CameraInfo original_camera_info, camera_info;
 
 #ifdef _BUILD_FOR_ROS_
-	ros::Time info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
 	cv_bridge::CvImagePtr cv_ptr;
 #else
-#ifdef _USE_BOOST_
-	boost::posix_time::ptime info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
-#endif
 	const cv::Mat *bridgeReplacement;
 #endif
 
@@ -221,13 +219,12 @@ private:
 	
 	unsigned long original_bx, original_by, internal_time;
 	
-	#ifdef _WIN32
+#ifdef _WIN32
 	signed long long int firmwareTime;
-	#else
+#else
 	int64_t firmwareTime;
-	#endif
+#endif
 	
-
 	bool firstServerCallbackProcessed, centerPrincipalPoint, firstFrame;
 	
 	double fusionFactor, lastMedian, newMedian, lastLowerLimit, lastUpperLimit, oldMaxDiff, minVal, maxVal;
@@ -280,14 +277,11 @@ public:
 	streamerNode(streamerData startupData);
 #endif
 
-	#ifdef _BUILD_FOR_ROS_
-	#endif
-
 	///brief	Initial receipt of an image. 
 #ifdef _BUILD_FOR_ROS_
 	void handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void handle_camera(const cv::Mat& inputImage, const cameraInfoStruct *info_msg);
+	void handle_camera(const cv::Mat& inputImage, const ros::sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Initial receipt of an image WITHOUT camera info. 
@@ -301,7 +295,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void handle_info(const cameraInfoStruct *info_msg);
+	void handle_info(const ros::sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Handles a command to perform a NUC. 
@@ -332,15 +326,15 @@ public:
 	void timerCallback();
 #endif
 
-#ifdef _BUILD_FOR_ROS_
 	void updateCameraInfo();
 	void assignCameraInfo();
-	
+
+#ifdef _BUILD_FOR_ROS_
 	void updateCameraInfoExtrinsics();
 	void refreshCameraAdvertisements();
 #else
 	bool retrieveRawFrame();
-	bool get8bitImage(cv::Mat& img);
+	bool get8bitImage(cv::Mat& img, ros::sensor_msgs::CameraInfo& info);
 #endif
 
 	void assignDefaultCameraInfo();
@@ -377,9 +371,6 @@ public:
 
 	bool sendSerialCommand(char *command, int max_attempts = 1);
 	
-	
-	
-	
 	void act_on_image();
 	
 	bool run();
@@ -413,7 +404,7 @@ public:
     void getRectification();
 
 #ifndef _BUILD_FOR_ROS_
-	bool streamerNode::wantsToShutdown() { return false; }
+	bool wantsToShutdown() { return false; }
 #endif
 	
 };

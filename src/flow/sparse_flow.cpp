@@ -4,23 +4,6 @@
 
 #include "flow/sparse_flow.hpp"
 
-cameraInfoStruct::cameraInfoStruct() : width(384), height(288), distortion_model("plumb bob") {
-
-	K[0] = 500.0;
-	K[1] = 0.0;
-	K[2] = 191.5;
-
-	K[3] = 0.0;
-	K[4] = 500.0;
-	K[5] = 143.5;
-
-	K[6] = 0.0;
-	K[7] = 0.0;
-	K[8] = 1.0;
-	
-	for (int iii = 0; iii < 8; iii++) D[iii] = 0.0;
-}
-
 #ifndef _BUILD_FOR_ROS_
 bool flowConfig::assignStartingData(trackerData& startupData) {
 
@@ -433,12 +416,7 @@ void featureTrackerNode::attemptTracking() {
 		if (configData.verboseMode) { ROS_INFO("About to attempt tracking of (%d) points (no homography for guidance)..", ((int)startingPoints.size())); }
 		
 		if (configData.velocityPrediction && previousTimeInitialized) {
-			#ifdef _BUILD_FOR_ROS_
 			assignEstimatesBasedOnVelocities(featureTrackVector, startingPoints, finishingPoints, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), original_time.toSec());
-			#else
-			boost::posix_time::time_duration diff = original_time - previous_time;
-			assignEstimatesBasedOnVelocities(featureTrackVector, startingPoints, finishingPoints, bufferIndices[(readyFrame-1) % 2], 0.0, diff.total_milliseconds()/1000.0);
-			#endif
 			originalFinishingPoints.insert(originalFinishingPoints.end(), finishingPoints.begin(), finishingPoints.end());
 		} else {
 			finishingPoints.insert(finishingPoints.end(), startingPoints.begin(), startingPoints.end());
@@ -449,7 +427,7 @@ void featureTrackerNode::attemptTracking() {
 	}
 	
 	if (configData.verboseMode) { ROS_INFO("trackPoints returned (%d) points.", ((int)finishingPoints.size())); }
-	
+
 	testTime = timeElapsedMS(test_timer, false);
 	successfullyTrackedFeatures += int(globalFinishingPoints.size());
 	lostTrackCount += int(lostTrackIndices.size());
@@ -473,14 +451,7 @@ void featureTrackerNode::updateDistanceConstraint() {
 	distanceConstraint = int(double(minDim) * configData.maxFrac);
 	distanceConstraint += (distanceConstraint + 1) % 2;
 	
-	#ifdef _BUILD_FOR_ROS_
 	if (configData.verboseMode) { ROS_INFO("Time diff = (%f)", original_time.toSec() - previous_time.toSec()); }
-	#else
-	if (configData.verboseMode) { 
-		boost::posix_time::time_duration diff = original_time - previous_time;
-		printf("%s << Time diff = (%f)\n", __FUNCTION__, (diff.total_milliseconds()/1000.0)); 
-	}
-	#endif
 
 	if (configData.verboseMode) { ROS_INFO("Non-adaptive initial distance constraint = (%d)", distanceConstraint); }
 		
@@ -492,12 +463,7 @@ void featureTrackerNode::updateDistanceConstraint() {
 		double predictedDisplacement;
 		
 		if (configData.velocityPrediction && previousTimeInitialized && (featuresVelocity >= 0.0)) {
-			#ifdef _BUILD_FOR_ROS_
 			predictedDisplacement = featuresVelocity * (original_time.toSec() - previous_time.toSec());
-			#else
-			boost::posix_time::time_duration diff = original_time - previous_time;
-			predictedDisplacement = featuresVelocity * (diff.total_milliseconds()/1000.0);
-			#endif
 		} else predictedDisplacement = distanceConstraint;
 		
 		int predictedRequirement = int(ceil(predictedDisplacement));
@@ -530,7 +496,7 @@ void featureTrackerNode::updateDistanceConstraint() {
 #ifdef _BUILD_FOR_ROS_
 void featureTrackerNode::process_info(const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-void featureTrackerNode::process_info(const cameraInfoStruct *info_msg) {
+void featureTrackerNode::process_info(ros::sensor_msgs::CameraInfo *info_msg) {
 #endif
 
 	try	{
@@ -552,28 +518,39 @@ void featureTrackerNode::process_info(const cameraInfoStruct *info_msg) {
 		
 		configData.cameraData.distCoeffs = cv::Mat::zeros(1, maxDistortionIndex, CV_64FC1);
 		
+#ifndef _BUILD_FOR_ROS_
+		info_msg->D.resize(maxDistortionIndex);
+#endif
 		for (unsigned int iii = 0; iii < maxDistortionIndex; iii++) configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg->D[iii];
 
 		std::cout << configData.cameraData.distCoeffs << endl;
 		
-		configData.cameraData.newCamMat = cv::Mat::zeros(3, 3, CV_64FC1);
+		configData.cameraData.newCamMat = cv::Mat::eye(3, 3, CV_64FC1);
 		cv::Rect validPixROI;
 		bool centerPrincipalPoint = true;
 		configData.cameraData.newCamMat = getOptimalNewCameraMatrix(configData.cameraData.K, configData.cameraData.distCoeffs, configData.cameraData.cameraSize, DEFAULT_ALPHA, configData.cameraData.cameraSize, &validPixROI, centerPrincipalPoint);
-		
-		double expansionFactor = std::min(((double) validPixROI.width) / ((double) configData.cameraData.cameraSize.width), ((double) validPixROI.height) / ((double) configData.cameraData.cameraSize.height));
-		
-		configData.cameraData.expandedSize = cv::Size(int(((double) configData.cameraData.cameraSize.width) / expansionFactor), int(((double) configData.cameraData.cameraSize.height) / expansionFactor));
-		
+
 		configData.cameraData.K.copyTo(configData.cameraData.Kx);
-		configData.cameraData.Kx.at<double>(0,0) /= expansionFactor;
-		configData.cameraData.Kx.at<double>(0,2) /= expansionFactor;
-		configData.cameraData.Kx.at<double>(1,1) /= expansionFactor;
-		configData.cameraData.Kx.at<double>(1,2) /= expansionFactor;
+
+		if ((validPixROI.width != 0) && (validPixROI.width != 0)) {
+			double expansionFactor = std::min(((double) validPixROI.width) / ((double) configData.cameraData.cameraSize.width), ((double) validPixROI.height) / ((double) configData.cameraData.cameraSize.height));
+			
+			configData.cameraData.expandedSize = cv::Size(int(((double) configData.cameraData.cameraSize.width) / expansionFactor), int(((double) configData.cameraData.cameraSize.height) / expansionFactor));
 		
-		configData.cameraData.expandedCamMat = getOptimalNewCameraMatrix(configData.cameraData.Kx, configData.cameraData.distCoeffs, configData.cameraData.expandedSize, DEFAULT_ALPHA, configData.cameraData.expandedSize, &validPixROI, centerPrincipalPoint);
+			configData.cameraData.Kx.at<double>(0,0) /= expansionFactor;
+			configData.cameraData.Kx.at<double>(0,2) /= expansionFactor;
+			configData.cameraData.Kx.at<double>(1,1) /= expansionFactor;
+			configData.cameraData.Kx.at<double>(1,2) /= expansionFactor;
 		
-		#ifdef _BUILD_FOR_ROS_
+			configData.cameraData.expandedCamMat = getOptimalNewCameraMatrix(configData.cameraData.Kx, configData.cameraData.distCoeffs, configData.cameraData.expandedSize, DEFAULT_ALPHA, configData.cameraData.expandedSize, &validPixROI, centerPrincipalPoint);
+		
+		} else {
+			configData.cameraData.newCamMat = cv::Mat::eye(3, 3, CV_64FC1);
+			configData.cameraData.expandedSize = configData.cameraData.cameraSize;
+			configData.cameraData.expandedCamMat = configData.cameraData.newCamMat;
+		}
+		
+#ifdef _BUILD_FOR_ROS_
 		msg_debug.width = configData.cameraData.cameraSize.width; 
 		msg_debug.height = configData.cameraData.cameraSize.height;
 		msg_debug.encoding = "bgr8";
@@ -582,7 +559,7 @@ void featureTrackerNode::process_info(const cameraInfoStruct *info_msg) {
 		msg_debug.data.resize(configData.cameraData.cameraSize.width*configData.cameraData.cameraSize.height*3);
 		ROS_INFO("Optical frame = (%s)", info_msg->header.frame_id.c_str());
 		optical_frame = info_msg->header.frame_id;
-		#endif
+#endif
 
 		infoProcessed = true;
 		ROS_INFO("Image info processed.");
@@ -622,11 +599,11 @@ void featureTrackerNode::publishRoutine() {
 		}
 	}
 	
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	int publishedTrackCount = publish_tracks(&tracks_pub, currentIndex);
-	#else
+#else
 	int publishedTrackCount = publish_tracks(currentIndex);
-	#endif
+#endif
 
 	if (configData.outputTrackCount) {
 		trackCountStream << readyFrame << " ";
@@ -644,7 +621,7 @@ void featureTrackerNode::publishRoutine() {
 		int tracked = calculateFeatureMotion(bufferIndices[readyFrame % 2], motion_x, motion_y);
 		
 		if (tracked >= MIN_FEATURES_FOR_FEATURE_MOTION) {
-			featureMotionStream << original_time << " ";
+			featureMotionStream << original_time.toSec() << " ";
 			featureMotionStream << currentIndex << " ";
 			featureMotionStream << motion_x << " ";
 			featureMotionStream << motion_y << " ";
@@ -713,7 +690,7 @@ int featureTrackerNode::publish_tracks(
 		trackedFeaturesStream << "currentIndex:" << currentIndex << endl;
 
 		char timeString[256];
-		sprintf(timeString, "%010u.%09u", original_time.time_of_day().total_seconds(), original_time.time_of_day().total_microseconds());
+		sprintf(timeString, "%f", original_time.toSec());
 		trackedFeaturesStream << "currentTime:" << timeString << endl;
 
 		trackedFeaturesStream << "track_index image_index x y" << endl;
@@ -846,12 +823,7 @@ void featureTrackerNode::matchWithExistingTracks() {
 			} else if ((configData.velocityPrediction) && (ppp == MAX_HISTORY_FRAMES) && previousTimeInitialized) {
 				vector<cv::Point2f> tempPts;
 				cv::KeyPoint::convert(featuresFromPts[0], tempPts);
-				#ifdef _BUILD_FOR_ROS_
 				assignEstimatesBasedOnVelocities(featureTrackVector, tempPts, estimatedFinalLocs, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), original_time.toSec());
-				#else
-				boost::posix_time::time_duration diff = original_time - previous_time;
-				assignEstimatesBasedOnVelocities(featureTrackVector, tempPts, estimatedFinalLocs, bufferIndices[(readyFrame-1) % 2], 0.0, diff.total_milliseconds()/1000.0);
-				#endif
 			} else cv::KeyPoint::convert(featuresFromPts[0], estimatedFinalLocs);
 			
 			double matchingConstraint;
@@ -1034,7 +1006,7 @@ void featureTrackerNode::detectNewFeatures() {
 				detectedFeaturesStream << "readyFrame:" << readyFrame << endl;
 
 				char timeString[256];
-				sprintf(timeString, "%010u.%09u", original_time.time_of_day().total_seconds(), original_time.time_of_day().total_microseconds());
+				sprintf(timeString, "%f", original_time.toSec());
 				detectedFeaturesStream << "currentTime:" << timeString << endl;
 				detectedFeaturesStream << "count:" << currPoints[jjj].size() << endl;
 				detectedFeaturesStream << "x y response" << endl;
@@ -1118,12 +1090,7 @@ void featureTrackerNode::features_loop() {
 	attemptTracking();
 	if (configData.verboseMode) { ROS_INFO("Tracking completed."); }
 	
-	#ifdef _BUILD_FOR_ROS_
 	double prelimVelocity = obtainFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), bufferIndices[(readyFrame) % 2], original_time.toSec());
-	#else
-	boost::posix_time::time_duration diff = original_time - previous_time;
-	double prelimVelocity = obtainFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], 0.0, bufferIndices[(readyFrame) % 2], diff.total_milliseconds()/1000.0);
-	#endif
 
 	previousTimeInitialized ? featuresVelocity = max(prelimVelocity, featuresVelocity) : featuresVelocity = -1.0;
 
@@ -1176,12 +1143,7 @@ void featureTrackerNode::features_loop() {
 			ROS_WARN("Successfully tracked points (%d) is currently low...", globalFinishingPoints.size());
 		} else if ((globalFinishingPoints.size() > ((unsigned int) configData.minFeatures)) && lowPointsWarning) lowPointsWarning = false;
 		
-		#ifdef _BUILD_FOR_ROS_
 		featuresVelocity = updateFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), bufferIndices[(readyFrame) % 2], original_time.toSec(), configData.maxVelocity);
-		#else
-		boost::posix_time::time_duration diff = original_time - previous_time;
-		featuresVelocity = updateFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], 0.0, bufferIndices[(readyFrame) % 2], diff.total_milliseconds()/1000.0, configData.maxVelocity);
-		#endif
 	}
 
 	if (!previousTimeInitialized) featuresVelocity = -1.0;
@@ -1195,14 +1157,7 @@ void featureTrackerNode::features_loop() {
 		
 		if ((featuresVelocity == 0.0) && (activeTrackCount > 0)) { 
 			ROS_WARN("featuresVelocity = (%f) : Are you forgetting to mark duplicate images using <streamer>?", featuresVelocity); 
-		} else if (configData.verboseMode) {
-#ifdef _BUILD_FOR_ROS_
-			ROS_INFO("featuresVelocity = (%f) over (%f) seconds", featuresVelocity, (original_time.toSec()-previous_time.toSec()));
-#else
-			boost::posix_time::time_duration diff = original_time - previous_time;
-			if (diff.total_milliseconds() != 0.0) ROS_INFO("featuresVelocity = (%f) over (%f) seconds", __FUNCTION__, featuresVelocity, diff.total_milliseconds()/1000.0);
-#endif
-		}
+		} else if (configData.verboseMode) ROS_INFO("featuresVelocity = (%f) over (%f) seconds", featuresVelocity, (original_time.toSec()-previous_time.toSec()));
 	}
 	
 	if (configData.verboseMode) ROS_INFO("Completed features loop.");
@@ -1446,12 +1401,11 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	tracks_pub_name = new char[MAX_INPUT_ARG_LENGTH];
 	nodeName = new char[MAX_INPUT_ARG_LENGTH];
 
-	#ifdef _BUILD_FOR_ROS_
 	lastCycleFrameTime = ros::Time(0.0);
-	#else
-	lastCycleFrameTime = boost::posix_time::ptime(boost::posix_time::min_date_time);
+
+#ifndef _BUILD_FOR_ROS_
 	bridgeReplacement = new cv::Mat();
-	#endif
+#endif
 	
 	skipTime = timeElapsedMS(skip_timer);
 	
@@ -1569,42 +1523,24 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 #ifdef _BUILD_FOR_ROS_
 void featureTrackerNode::handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-void featureTrackerNode::handle_camera(const cv::Mat& inputImage, const cameraInfoStruct *info_msg) {
+void featureTrackerNode::handle_camera(cv::Mat& inputImage, ros::sensor_msgs::CameraInfo *info_msg) {
 #endif
 	while (!infoProcessed) process_info(info_msg);
 	if (readyFrame < frameCount) return;
 	
-	#ifdef _BUILD_FOR_ROS_
 	original_time = info_msg->header.stamp;
 	currentIndex = info_msg->header.seq;
-	#else
-	original_time = boost::posix_time::microsec_clock::local_time();
-	currentIndex++;
-	#endif
 
-	#ifdef _BUILD_FOR_ROS_
 	if (((original_time.toSec() - lastCycleFrameTime.toSec()) > configData.newFeaturesPeriod) && (configData.newFeaturesPeriod != 0.0) ) {
-	#else
-	boost::posix_time::time_duration diff = original_time - lastCycleFrameTime;
-	if (((diff.total_milliseconds()/1000.0) > configData.newFeaturesPeriod) && (configData.newFeaturesPeriod != 0.0) ) {
-	#endif
 		lastCycleFrameTime = original_time;
 		cycleCount++;
 		cycleFlag = true;
 	}
 
-	#ifdef _BUILD_FOR_ROS_
 	if (lastCycleFrameTime.toSec() > original_time.toSec()) lastCycleFrameTime = original_time;
-	#else
-	if (lastCycleFrameTime > original_time) lastCycleFrameTime = original_time;
-	#endif
 
 	if (currentIndex < previousIndex) {
-		#ifdef _BUILD_FOR_ROS_
 		ROS_WARN("Current received image index is lower than previous, assuming watching a looped video. (%d) vs (%d) : (%d)", previousIndex, currentIndex, frameCount);
-		#else
-		printf("%s << WARNING: Current received image index is lower than previous, assuming watching a looped video. (%d) vs (%d) : (%d)\n", __FUNCTION__, previousIndex, currentIndex, frameCount);
-		#endif
 		featuresVelocity = -1.0;
 		capturedFrameCount++;
 	} else if (currentIndex > (previousIndex+1)) {
@@ -1613,7 +1549,6 @@ void featureTrackerNode::handle_camera(const cv::Mat& inputImage, const cameraIn
 		featuresVelocity = -1.0;
 	} else capturedFrameCount++;
 	
-	#ifdef _BUILD_FOR_ROS_
 	if ((frameCount > 0) && (!undergoingDelay)) {
 		if (info_msg->binning_y == 1) {
 			ROS_WARN("Current frame is a duplicate, going into NUC-handling routine...");
@@ -1623,21 +1558,17 @@ void featureTrackerNode::handle_camera(const cv::Mat& inputImage, const cameraIn
 		}	
 	} 
 	
-	if (info_msg->binning_y == 1) {
-		return;
-	}
-	#else
-	// TODO: Not implemented
-	#endif
+	if (info_msg->binning_y == 1) return;
 
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	debug_camera_info = (*info_msg);
 	cv_ptr = cv_bridge::toCvCopy(msg_ptr, enc::BGR8); // For some reason it reads as BGR, not gray
 	msg_debug.header.stamp = info_msg->header.stamp;
 	msg_debug.header.seq = info_msg->header.seq;
-	#else
+#else
 	bridgeReplacement = &inputImage;
-	#endif
+#endif
+
 	act_on_image();
 }
 

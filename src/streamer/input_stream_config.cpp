@@ -26,7 +26,11 @@ streamerSharedData::streamerSharedData() :
 	degreesPerGraylevel(0.01),
 	desiredDegreesPerGraylevel(0.05), 
 	zeroDegreesOffset(0),
-	debugMode(false)
+	debugMode(false),
+	wantsToAddExtrinsics(false),
+	wantsToUndistort(false),
+	wantsToDumpTimestamps(false),
+	wantsToRectify(false)
 { }
 
 streamerRealtimeOnlyData::streamerRealtimeOnlyData() :

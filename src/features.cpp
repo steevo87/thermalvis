@@ -469,131 +469,51 @@ int getOpticalFlowFlags() {
 
 void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int distanceConstraint, double thresh, vector<unsigned int>& lostIndices, cv::Mat H12, cameraParameters camData) {
 
-	//struct timeval test_timer;
-	//double testTime;
-	
 	vector<cv::Point2f> originalGuides;
-	
-	
-	bool debugFlag = false;
+	bool debugFlag = false, guiding = false, warping = false;
 	
 	if (debugFlag) { printf("%s << ENTERED. im1 = (%u, %u); im2 = (%u, %u), pts1 = (%lu), pts2 = (%lu)\n", __FUNCTION__, im1.cols, im1.rows, im2.cols, im2.rows, (long unsigned int)(pts1.size()), (long unsigned int)(pts2.size())); }
 	
-	//testTime = timeElapsedMS(test_timer, true);
-	//printf("%s << ENTERED.\n", __FUNCTION__);
-
 	if (pts1.size() == 0) return;
-
 	if ((distanceConstraint % 2) == 0) distanceConstraint++;
 	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 0a: (%f)\n", testTime);
-
 	cv::Size winSize = cv::Size(distanceConstraint, distanceConstraint);
 	int maxLevel = 3;
 	cv::TermCriteria criteria = cv::TermCriteria( cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01);
-	//double derivLambda = 0.5;
 	
 	int opticalFlowFlags = getOpticalFlowFlags();
 
-	bool guiding = false;
-	bool warping = false;
-
-	cv::Mat im1b;
+	cv::Mat im1b, mask, blank;
 	vector<cv::Point2f> pts1b;
-
 	vector<uchar> statusVec;
 	vector<float> err;
 
-	cv::Mat mask, blank;
 	blank = cv::Mat::ones(im1.size(), CV_8UC1);
 	blank *= 255;
 	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 0b: (%f)\n", testTime);
-
-	//printf("%s << DEBUG A\n", __FUNCTION__);
-
-	/*
-	double orig_vals[4], new_vals[4];
-	findIntensityValues(orig_vals, im1, blank);
-	// findIntensityValues(orig_vals, im1b, mask);
-	findIntensityValues(new_vals, im2, blank);
-	*/
-	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 0c: (%f)\n", testTime);
-
-	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 4); }
-
-	//if (debugFlag) { printf("%s << Vals (%f, %f, %f) vs (%f, %f, %f)\n", __FUNCTION__, orig_vals[0], orig_vals[1], orig_vals[2], new_vals[0], new_vals[1], new_vals[2]); }
-
 	vector<cv::Point2f> originalPts, originalEstimates;
 	originalPts.insert(originalPts.end(), pts1.begin(), pts1.end());
 	originalEstimates.insert(originalEstimates.end(), pts2.begin(), pts2.end());
 	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 1: (%f)\n", testTime);
-	
 	if (pts2.size() == pts1.size()) {
 		if (debugFlag) { printf("%s << guiding is set to TRUE.\n", __FUNCTION__); }
 		guiding = true;
-		//debugFlag = true;
 		originalGuides.insert(originalGuides.end(), pts2.begin(), pts2.end());
 		opticalFlowFlags += cv::OPTFLOW_USE_INITIAL_FLOW;
-	} else {
-		if (debugFlag) { printf("%s << guiding is maintained as FALSE.\n", __FUNCTION__); }
-	}
+	} else if (debugFlag) printf("%s << guiding is maintained as FALSE.\n", __FUNCTION__);
 
 	if ((H12.rows != 0) && (pts2.size() == pts1.size())) {
-
-		// More aggressive shift for NUC handling
-		/*
-		double scale_shift = (new_vals[1] - new_vals[0]) / (orig_vals[1] - orig_vals[0]);
-		double vert_shift = new_vals[0] - orig_vals[0];
-		double down_shift = orig_vals[0];
-		*/
-		
 		warping = true;
-		
-		
-		//printf("%s << Using initial guesses... (distanceConstraint = %d)\n", __FUNCTION__, distanceConstraint);
-		
-
 		pts1b.insert(pts1b.end(), pts1.begin(), pts1.end());
 		transformPoints(pts1b, H12);
 		warpPerspective(im1, im1b, H12, im1.size());
-
-		//shiftIntensities(im1b, scale_shift, vert_shift, down_shift);
-
 		warpPerspective(blank, mask, H12, blank.size());
-
-		
 	} else {
-
-		/*
-		double scale_shift = 1.0;
-		double vert_shift = new_vals[3] - orig_vals[3];
-		double down_shift = 0.0;
-		*/
-		
 		im1b = cv::Mat(im1); // .copyTo(im1b);
-		// shiftIntensities(im1b, scale_shift, vert_shift, down_shift);
-
-		// Need to make sure that black border stays as black, and only valid pixels are sampled...
-
-		
-		
-		if (!guiding) {
-			if (debugFlag) { printf("%s << Clearing second points vector...\n", __FUNCTION__); }
-			pts2.clear();
-		}
+		if (!guiding) pts2.clear();
 	}
 	
 	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 5); }
-
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 2: (%f)\n", testTime);
 
 	if (warping) {
 		if (debugFlag) { printf("%s << (warped) Before. (%u, %u) (%u, %u) (%lu) (%u, %u)\n", __FUNCTION__, im1b.rows, im1b.cols, im2.rows, im2.cols, (long unsigned int)(pts1b.size()), winSize.height, winSize.width); }
@@ -604,56 +524,13 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	} else {
 		if (debugFlag) { printf("%s << (not-warped) Before. (%u, %u) (%u, %u) (%lu) (%u, %u)\n", __FUNCTION__, im1b.rows, im1b.cols, im2.rows, im2.cols, (long unsigned int)(pts1.size()), winSize.height, winSize.width); }
 		
-		/*
-		for (unsigned int xxx = 0; xxx < pts1.size(); xxx++) {
-			
-			cv::Point2f disp1;
-			
-			disp1.x = pts2.at(xxx).x - pts1.at(xxx).x;
-			disp1.y = pts2.at(xxx).y - pts1.at(xxx).y;
-			
-			double totalDisplacement = pow(pow(disp1.x,2.0)+pow(disp1.y,2.0),0.5);
-			
-			if (totalDisplacement > 100.0) {
-				printf("%s << Point (%d) predicted from (%f, %f) to (%f, %f)\n", __FUNCTION__, xxx, pts1.at(xxx).x, pts1.at(xxx).y, pts2.at(xxx).x, pts2.at(xxx).y);
-			}
-
-			
-		}
-		*/
-		
 		cv::calcOpticalFlowPyrLK(im1b, im2, pts1, pts2, statusVec, err, winSize, maxLevel, criteria, opticalFlowFlags, thresh);
 		checkDistances(originalEstimates, pts2, statusVec, (double) distanceConstraint);
 		if (debugFlag) { printf("%s << After.\n", __FUNCTION__); }
 
-		//printf("%s << (%d) vs (%d)\n", __FUNCTION__, originalEstimates.size(), pts2.size());
-		
-		/*
-		for (unsigned int xxx = 0; xxx < pts1.size(); xxx++) {
-			
-			
-			
-			cv::Point2f disp1;
-			
-			disp1.x = pts2.at(xxx).x - pts1.at(xxx).x;
-			disp1.y = pts2.at(xxx).y - pts1.at(xxx).y;
-			
-			double totalDisplacement = pow(pow(disp1.x,2.0)+pow(disp1.y,2.0),0.5);
-			
-			if (totalDisplacement > 100.0) {
-				printf("%s << Point displaced: (%f) : winSize = (%d, %d), (%d)\n", __FUNCTION__, totalDisplacement, winSize.width, winSize.height, guiding);
-				
-				printf("%s << Point (%d) from (%f, %f) to (%f, %f) -> (%f, %f) with (%d, %f)\n", __FUNCTION__, xxx, pts1.at(xxx).x, pts1.at(xxx).y, originalEstimates.at(xxx).x, originalEstimates.at(xxx).y, pts2.at(xxx).x, pts2.at(xxx).y, statusVec.at(xxx), err.at(xxx));
-			}
-
-			
-		}
-		*/
-		
 		if (debugFlag) {
 			
 			printf("%s << winSize = (%d, %d)\n", __FUNCTION__, winSize.width, winSize.height);
-			
 			cv::Mat a, b;
 			
 			displayKeyPoints(im2, pts1, a, cv::Scalar(255,0,0), 0);
@@ -668,79 +545,26 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 				
 				printf("%s << After flow: %d good out of / %lu\n", __FUNCTION__, cv::countNonZero(statusVec), (long unsigned int)(statusVec.size()));
 			}
-			
-			//for (unsigned int iii = 0; iii < pts1.size(); iii++) {
-				// printf("%s << pts1.at(%d) = [%f, %f]; pts2.at(%d) = [%f, %f]\n", __FUNCTION__, iii, pts1.at(iii).x, pts1.at(iii).y, iii, pts2.at(iii).x, pts2.at(iii).y);
-			//}
-			
-			
 		}
-		
-		//for (unsigned int iii = 0; iii < pts1.size(); iii++) {
-			//printf("%s << pt(%d) = (%f, %f) vs (%f, %f)\n", __FUNCTION__, iii, pts1.at(iii).x, pts1.at(iii).y, pts2.at(iii).x, pts2.at(iii).y);
-		//}
-		
-		//testTime = timeElapsedMS(test_timer, false);
-		//printf("XDebug 2b: (%f)\n", testTime);
-
-		//markStationaryPoints(pts1, pts2, statusVec);
-		
-		//printf("%s << After stationary: %d\n", __FUNCTION__, cv::countNonZero(statusVec));
-		
 		markAbsentPoints(pts1, pts2, statusVec, im1.size());
-		
-		if (debugFlag) {
-			printf("%s << After absent: %d\n", __FUNCTION__, cv::countNonZero(statusVec));
-		}
-		
-
+		if (debugFlag) printf("%s << After absent: %d\n", __FUNCTION__, cv::countNonZero(statusVec));
 	}
 	
 	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 6); }
 	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 3: (%f)\n", testTime);
-
 	
-	if (camData.Kx.rows != 0) {
-		markEdgyTracks(pts2, statusVec, camData);
-
-		//printf("%s << After edge filtering: %d\n", __FUNCTION__, cv::countNonZero(statusVec));
-	}
+	if (camData.Kx.rows != 0) markEdgyTracks(pts2, statusVec, camData);
 	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 4: (%f)\n", testTime);
-
-	//markBlandTracks(im2, pts2, statusVec, 1.0);
-
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 5: (%f)\n", testTime);
-
-	//printf("%s << After bland filtering: %d\n", __FUNCTION__, cv::countNonZero(statusVec));
-
-	//markUnrefinedPoints(pts2, statusVec);
-
-	//printf("%s << After unrefined filtering: %d\n", __FUNCTION__, cv::countNonZero(statusVec));
-
-	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 7); }
-
 	if (warping) {
 		if (debugFlag) { printf("%s << W: pts1.size() = %u [before filtering]\n", __FUNCTION__, pts1.size()); }
 		if (debugFlag) { printf("%s << Debug (%d.%d) : (%u, %u)\n", __FUNCTION__, 7, 1, pts1.size(), pts2.size()); }
 		
-		#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), true);
-		#else
-			filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), true);
-		#endif
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), true);
+#else
+		filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), true);
+#endif
 		
-
-		
-		
-		if (debugFlag) { printf("%s << Debug (%d.%d)\n", __FUNCTION__, 7, 2); }
-		
-		if (debugFlag) { printf("%s << Debug (%d.%d)\n", __FUNCTION__, 7, 2); }
-
 		if (0) {
 
 			cv::Mat im1x, im2x;
@@ -769,64 +593,41 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 		if (debugFlag) { printf("%s << Debug (%d.%d)\n", __FUNCTION__, 7, 3); }
 		
 		if (guiding) {
-			#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-				filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), true);
-			#else
-				filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), true);
-			#endif
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+			filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), true);
+#else
+			filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), true);
+#endif
 			
-		} else {
-			filterVectors(pts1, pts2, statusVec, ((double) distanceConstraint));
-		}
+		} else filterVectors(pts1, pts2, statusVec, ((double) distanceConstraint));
 		
-		if (debugFlag) { printf("%s << Debug (%d.%d)\n", __FUNCTION__, 7, 4); }
-		if (debugFlag) { printf("%s << pts1.size() = %d [after filtering]\n", __FUNCTION__, pts1.size()); }
-
-		if (debugFlag) { printf("%s << Debug (%d.%d)\n", __FUNCTION__, 7, 4); }
-
-		//printf("%s << After full filtering: %d\n", __FUNCTION__, pts2.size());
-
 		if (0) { // (pts2.size() < 5) {
 
 			cv::Mat im1x, im2x;
 			//warpPerspective(grayImageBuffer[(current_idx-1) % MAXIMUM_FRAMES_TO_STORE], im2, H12, grayImageBuffer[(current_idx-1) % MAXIMUM_FRAMES_TO_STORE].size());
 
-			#ifdef _OPENCV_VERSION_3_PLUS_
+#ifdef _OPENCV_VERSION_3_PLUS_
 			cvtColor(im1b, im1x, cv::COLOR_GRAY2RGB);
 			cvtColor(im2, im2x, cv::COLOR_GRAY2RGB);
-			#else
+#else
 			cvtColor(im1b, im1x, CV_GRAY2RGB);
 			cvtColor(im2, im2x, CV_GRAY2RGB);
-			#endif
+#endif
 			
-
 			displayKeyPoints(im1x, originalPts, im1x, cv::Scalar(255,0,0), 0);
 			displayKeyPoints(im2x, pts2, im2x, cv::Scalar(255,0,0), 0);
 
-			//warpPerspective(im1, im1b, H12, im1.size());
-
 			while (1) {
-
 				imshow("temp_disp", im1b);	// Previous image with features
 				cv::waitKey(1500);
 				imshow("temp_disp", im2x);	// Current image
 				cv::waitKey(500);
-
 			}
 		}
 
 	}
-	
-	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 8); }
-	
-	//testTime = timeElapsedMS(test_timer, false);
-	//printf("XDebug 6: (%f)\n", testTime);
 
-	for (unsigned int iii = 0; iii < statusVec.size(); iii++) {
-		if (statusVec.at(iii) == 0) lostIndices.push_back(iii);
-	}
-	
-	if (debugFlag) { printf("%s << Debug (%d)\n", __FUNCTION__, 9); }
+	for (unsigned int iii = 0; iii < statusVec.size(); iii++) if (statusVec.at(iii) == 0) lostIndices.push_back(iii);
 }
 
 //HGH

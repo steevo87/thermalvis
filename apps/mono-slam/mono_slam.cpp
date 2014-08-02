@@ -55,7 +55,8 @@ private:
 	char *output_directory;
 	char *xmlAddress;
 	xmlParameters xP;
-	cameraInfoStruct camInfo;
+	ros::sensor_msgs::CameraInfo camInfo;
+	cv::Mat workingFrame;
 
 	bool streamerIsLinked;
 	streamerConfig *scData;
@@ -119,7 +120,7 @@ void ProcessingThread::establishFlowLink(MainWindow_flow *gui) {
 void ProcessingThread::run() {
 
 	bool calibrationDataProcessed = false;
-	cv::Mat workingFrame;
+	
 
 	while (sM->wantsToRun()) {
 		sM->serverCallback(*scData);
@@ -127,7 +128,8 @@ void ProcessingThread::run() {
 		sM->imageLoop();
 		
 		if (wantsFlow) {
-			if (!sM->get8bitImage(workingFrame)) continue;
+			if (!sM->get8bitImage(workingFrame, camInfo)) continue;
+			printf("%s << Is duplicate? (%d)\n", __FUNCTION__, camInfo.binning_y);
 			if (!calibrationDataProcessed) {
 				trackerStartupData->cameraData.cameraSize.width = workingFrame.cols;
 				trackerStartupData->cameraData.cameraSize.height = workingFrame.rows;
