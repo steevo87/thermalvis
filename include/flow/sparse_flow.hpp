@@ -255,6 +255,9 @@ public:
 	///brief	Attempts to track features from preceding frame.
 	void attemptTracking();
 
+	///brief	Attempts to track features from historically recorded frames.
+	void attemptHistoricalTracking();
+
 	///brief	Attempts to detect new features on current frame.
 	void detectNewFeatures();
 

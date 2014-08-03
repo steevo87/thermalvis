@@ -384,6 +384,48 @@ void featureTrackerNode::trimDisplayTrackVectors() {
 	removeObsoleteElements(displayTracks, activeFrameIndices);
 }
 
+void featureTrackerNode::attemptHistoricalTracking() {
+
+	if (previousIndex < 0) return;
+
+	for (unsigned int ppp = 0; ppp < MAX_HISTORY_FRAMES; ppp++) {
+		if (configData.multiplier[ppp] == 0) continue;
+
+		cv::vector<cv::Point2f> startingPoints, originalFinishingPoints, finishingPoints;
+
+		for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
+			if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).imageIndex == bufferIndices[(readyFrame) % 2]) continue;
+			for (unsigned int jjj = 0; jjj < featureTrackVector.at(iii).locations.size(); jjj++) {
+				if (featureTrackVector.at(iii).locations.at(jjj).imageIndex == olderIndices[ppp]) {
+					startingPoints.push_back(featureTrackVector.at(iii).locations.at(jjj).featureCoord);
+					continue;
+				}	
+			}
+		}
+		
+		lostTrackIndices.clear();
+		cv::Mat H_;
+		
+		if (configData.verboseMode) { ROS_INFO("About to attempt tracking of (%d) points from historical frame (%d) to current frame (%d)", ((int)startingPoints.size()), olderIndices[ppp], bufferIndices[(readyFrame) % 2]); }
+		
+		finishingPoints.insert(finishingPoints.end(), startingPoints.begin(), startingPoints.end());
+		originalFinishingPoints.insert(originalFinishingPoints.end(), finishingPoints.begin(), finishingPoints.end());
+		
+		trackPoints(olderImages[ppp], grayImageBuffer[readyFrame % 2], startingPoints, finishingPoints, distanceConstraint, configData.flowThreshold, lostTrackIndices, H_, configData.cameraData);
+		if (configData.verboseMode) { ROS_INFO("trackPoints returned (%d) points.", ((int)finishingPoints.size())); }
+
+		testTime = timeElapsedMS(test_timer, false);
+		successfullyTrackedFeatures += int(globalFinishingPoints.size());
+							
+		if (configData.verboseMode) { ROS_INFO("About to add historically tracked features from (%d) to (%d): (%d, %d)", olderIndices[ppp], currentIndex, ((int)startingPoints.size()), ((int)finishingPoints.size())); }
+		addMatchesToVector(featureTrackVector, olderIndices[ppp], startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation, false);
+		if (configData.debugMode) addMatchesToVector(displayTracks, olderIndices[ppp], startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation);
+	
+		globalStartingPoints.insert(globalStartingPoints.end(), startingPoints.begin(), startingPoints.end());
+		globalFinishingPoints.insert(globalFinishingPoints.end(), finishingPoints.begin(), finishingPoints.end());
+	}
+}
+
 void featureTrackerNode::attemptTracking() {
 	
 	if (previousIndex < 0) return;
@@ -1089,6 +1131,8 @@ void featureTrackerNode::features_loop() {
 	if (configData.verboseMode) { ROS_INFO("About to attempt tracking..."); }
 	attemptTracking();
 	if (configData.verboseMode) { ROS_INFO("Tracking completed."); }
+
+	if (configData.attemptHistoricalRecovery) attemptHistoricalTracking();
 	
 	double prelimVelocity = obtainFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), bufferIndices[(readyFrame) % 2], original_time.toSec());
 

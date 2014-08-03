@@ -195,6 +195,9 @@ HRESULT optrisManager::OnNewFrameEx(void * pBuffer, FrameMetadata *pMetadata) {
 }
 
 HRESULT optrisManager::NewFrame(short *ImgBuf, int frameCounter) {
+
+	opStream->camera_info.header.stamp = ros::Time::now();
+
 	System::DateTime time = System::DateTime::Now;
 	System::TimeSpan ts = time - LastFrameTime;
 	LastFrameTime = time;

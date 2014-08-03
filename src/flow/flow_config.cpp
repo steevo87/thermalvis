@@ -10,7 +10,7 @@ flowSharedData::flowSharedData() :
 	verboseMode(false),
 	debugMode(false),
 	adaptiveWindow(true), 
-	velocityPrediction(false),  
+	velocityPrediction(true),  
 	attemptHistoricalRecovery(true),
 	autoTrackManagement(true),
 	attemptMatching(false),

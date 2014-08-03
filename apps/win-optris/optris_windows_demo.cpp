@@ -15,14 +15,14 @@ int main(int argc, char* argv[]) {
 	char output_directory[256];
 	bool wantsToOutput = false;
 
-	if (argc >= 3) {
-		printf("%s << Using data output directory of <%s>.\n", __FUNCTION__, argv[2]);
+	if (argc >= 2) {
+		printf("%s << Using data output directory of <%s>.\n", __FUNCTION__, argv[1]);
 		wantsToOutput = true;
-		sprintf(output_directory, "%s", argv[2]);
+		sprintf(output_directory, "%s", argv[1]);
 	}
 
 	oM->opStream->initializeOutput(output_directory);
-	oM->opStream->setWriteMode(!(argc >= 4)); 
+	oM->opStream->setWriteMode(!(argc >= 3)); 
 
 	System::Windows::Forms::Application::Run(oM);
 	oM->ReleaseIPC();

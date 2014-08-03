@@ -59,13 +59,9 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	if (verboseMode) { ROS_INFO("outputFolder = (%s)", startupData.outputFolder.c_str()); }
 
 	if ((startupData.writeImages) && (startupData.outputFolder.size() > 0)) {
-		// Create necessary folders
 		char folderCommand[256];
 		sprintf(folderCommand, "mkdir -p %s", startupData.outputFolder.c_str());
-		
-		int res = system(folderCommand);
-		
-		if (res == 0) ROS_WARN("system() call returned 0...");
+		if (system(folderCommand) == 0) ROS_WARN("system() call returned 0...");
 	}
 
 	ROS_INFO("calibrationMode = (%d)", startupData.calibrationMode);
@@ -74,10 +70,7 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 		if ((startupData.desiredRows < 1) || (startupData.desiredRows > MAX_ROWS) || (startupData.desiredCols < 1) || (startupData.desiredCols > MAX_COLS)) {
 			ROS_ERROR("Resizing values (%d, %d) invalid.", startupData.desiredCols, startupData.desiredRows);
 			startupData.dataValid = false;
-			
-		} else {
-			ROS_INFO("Resizing to (%d x %d)", startupData.desiredCols, startupData.desiredRows);
-		}
+		} else ROS_INFO("Resizing to (%d x %d)", startupData.desiredCols, startupData.desiredRows);
 	}
 
 	if (startupData.undistortImages) { ROS_INFO("Undistorting images..."); }
@@ -325,6 +318,7 @@ streamerData::streamerData() :
 	dumpTimestamps(false), 
 	removeDuplicates(false), 
 	temporalSmoothing(true), 
+	readTimestamps(false),
 	pauseMode(false),  
 	stepChangeTempScale(false), 
 	rectifyImages(false), 
@@ -459,6 +453,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("videoType")) videoType = v2.second.get_child("<xmlattr>.value").data();
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputTypeString")) outputTypeString = v2.second.get_child("<xmlattr>.value").data();
 			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("readTimestamps")) readTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricCorrection")) radiometricCorrection = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricRaw")) radiometricRaw = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialFeedback")) serialFeedback = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -646,6 +641,7 @@ bool inputStream::writeImageToDisk() {
 			cv::imwrite(imageFilename, *rawImage);
 		}
 
+		timestamps_stream << camera_info.header.stamp.sec << "." << setfill('0') << setw(9) << camera_info.header.stamp.nsec << std::endl;
 		return true;
 	}
 	return false;
@@ -807,30 +803,23 @@ streamerNode::streamerNode(streamerData startupData) :
 	
 	if (configData.outputFolder.size() == 0) {
 		configData.outputFolder = configData.read_addr + configData.outputFolder;
-	} else if (configData.outputFolder[0] != '/') {
-		configData.outputFolder = configData.read_addr + configData.outputFolder;
-	}
+	} else if (configData.outputFolder[0] != '/') configData.outputFolder = configData.read_addr + configData.outputFolder;
 	
 	configData.outputTimeFile = configData.outputFolder + "-timestamps.txt";
 	
-	if (configData.dumpTimestamps) {
-		ofs.open(configData.outputTimeFile.c_str());
-	}
+	if (configData.dumpTimestamps) ofs.open(configData.outputTimeFile.c_str());
 	
 	if (configData.intrinsicsProvided) {
 		
 		if (configData.verboseMode) { ROS_INFO("Reading in calibration data"); }
 		
-		if (configData.intrinsics[0] != '/') {
-			configData.intrinsics = configData.read_addr + configData.intrinsics;
-		}
+		if (configData.intrinsics[0] != '/') configData.intrinsics = configData.read_addr + configData.intrinsics;
 		
 		if (configData.verboseMode) { ROS_INFO("intrinsics = %s", configData.intrinsics.c_str()); }
 		
 		// http://www.mathpirate.net/log/2009/11/26/when-in-doubt-link-debug/
 		cv::Mat dummyImage(300, 300, CV_8UC1);
 		GaussianBlur(dummyImage, dummyImage, cv::Size(5, 5), 1.5);
-		
 		
 		cv::FileStorage fs(configData.intrinsics, cv::FileStorage::READ);
 		fs["imageSize"] >> globalCameraInfo.imageSize;
@@ -841,22 +830,14 @@ streamerNode::streamerNode(streamerData startupData) :
 		
 		if (configData.verboseMode) { ROS_INFO("Calibration data read."); }
 
-			//HGH
-			if (globalCameraInfo.cameraMatrix.empty()){
-				ROS_ERROR("Intrinsics file %s invalid! Please check path and filecontent...\n", configData.intrinsics.c_str());
-			}
+		if (globalCameraInfo.cameraMatrix.empty()) ROS_ERROR("Intrinsics file %s invalid! Please check path and filecontent...\n", configData.intrinsics.c_str());
 		
 		if (configData.verboseMode) { ROS_INFO("Establishing size (%d, %d).", globalCameraInfo.imageSize.at<unsigned short>(0, 0), globalCameraInfo.imageSize.at<unsigned short>(0, 1)); }
 		
 		globalCameraInfo.cameraSize = cv::Size(globalCameraInfo.imageSize.at<unsigned short>(0, 0), globalCameraInfo.imageSize.at<unsigned short>(0, 1));
 		if (configData.verboseMode) { ROS_INFO("globalCameraInfo.cameraSize = (%d, %d)", globalCameraInfo.cameraSize.width, globalCameraInfo.cameraSize.height); }
-		
-		//globalCameraInfo.newCamMat = getOptimalNewCameraMatrix(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalCameraInfo.cameraSize, configData.alpha, globalCameraInfo.cameraSize, validPixROI, centerPrincipalPoint);
-		
-		
 		if (configData.verboseMode) { ROS_INFO("Global params determined."); }
-		
-		
+
 	} else if (configData.imageDimensionsSpecified) {
 		
 		if (configData.verboseMode) { ROS_INFO("Assigning default intrinsics but with specified image size"); }
@@ -870,14 +851,7 @@ streamerNode::streamerNode(streamerData startupData) :
 		
 		if (configData.verboseMode) { ROS_INFO("Assigned."); }
 		
-	} else {
-		if (configData.verboseMode) { ROS_INFO("Assigning default intrinsics..."); }
-
-		assignDefaultCameraInfo();
-
-		if (configData.verboseMode) { ROS_INFO("Default intrinsics assigned."); }
-	}
-	
+	} else assignDefaultCameraInfo();
 	
 	//HGH
 	if (configData.autoAlpha) {
@@ -887,10 +861,7 @@ streamerNode::streamerNode(streamerData startupData) :
 			configData.alpha = findBestAlpha(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalCameraInfo.cameraSize);
 			//HGH
 			if (configData.verboseMode) { ROS_INFO("Optimal alpha: (%f)", configData.alpha); }
-		} else {
-			ROS_WARN("Cannot estimate an appropriate alpha coefficient because no intrinsics were provided.");
-		}
-		
+		} else ROS_WARN("Cannot estimate an appropriate alpha coefficient because no intrinsics were provided.");
 	}
 
 	if (configData.addExtrinsics) {
@@ -921,11 +892,9 @@ streamerNode::streamerNode(streamerData startupData) :
 			fs["distCoeffs0"] >> globalExtrinsicsData.distCoeffs0;
 			fs["distCoeffs1"] >> globalExtrinsicsData.distCoeffs1;
 
-	fs.release();
+			fs.release();
 
-			if (globalExtrinsicsData.R.empty()){
-				ROS_ERROR("Extrinsics file %s invalid! Please check path and filecontent...\n", configData.extrinsics.c_str());
-			}
+			if (globalExtrinsicsData.R.empty()) ROS_ERROR("Extrinsics file %s invalid! Please check path and filecontent...\n", configData.extrinsics.c_str());
 
 			globalCameraInfo.cameraSize = cv::Size(globalCameraInfo.imageSize.at<unsigned short>(0, 0), globalCameraInfo.imageSize.at<unsigned short>(0, 1));
 			if (configData.verboseMode) { ROS_INFO("X: globalCameraInfo.cameraSize = (%d, %d)", globalCameraInfo.cameraSize.width, globalCameraInfo.cameraSize.height); }
@@ -1984,6 +1953,14 @@ bool streamerNode::retrieveRawFrame() {
 		frame = cv::imread(full_path, CV_LOAD_IMAGE_ANYDEPTH);
 #endif
 
+		if (configData.readTimestamps) {
+			if (prereadTimestamps.size() <= frameCounter) {
+				ROS_ERROR("Node has been instructed to use provided timestamps, but none were found!");
+				return false;
+			}
+			camera_info.header.stamp = ros::Time(prereadTimestamps.at(frameCounter));
+		}
+
 		return true;
 	}
 	return false;
@@ -2665,27 +2642,20 @@ bool streamerNode::processFolder() {
 
 				if (name.size() > 5) {
 					if ((name[name.size()-4] != '.') && (name[name.size()-5] != '.')) continue;
-				} else if (name[name.size()-4] != '.') {
-					continue;
-				}
+				} else if (name[name.size()-4] != '.') continue;
 
 				inputList.push_back(name);
-				
 			}
 		}
 		
 
-	} else {
-		return false;
-	}
+	} else return false;
 
-	return true;
-
-
-	return false;
 #endif
 	
 	sort(inputList.begin(), inputList.end());
+
+	fileCount = inputList.size();
 
 	if(fileCount == -1)	{
 		ROS_ERROR("File counting error.\n");
@@ -2697,6 +2667,29 @@ bool streamerNode::processFolder() {
 	if (fileCount == 0) {
 		ROS_ERROR("Returning, because no images are in folder.\n");
 		return false;
+	}
+
+	if (configData.readTimestamps) {
+		std::string timestampsFile = configData.folder + "-timestamps.txt";
+
+		ifstream timestamps_stream;
+		timestamps_stream.open(timestampsFile.c_str());
+
+		string str;
+		while (1) {
+			std::getline(timestamps_stream, str);
+			if (str.size() > 0) { 
+				prereadTimestamps.push_back(atof(str.c_str()));
+			} else {
+				break;
+			}
+		}
+		timestamps_stream.close();
+
+		if (prereadTimestamps.size() != fileCount) {
+			ROS_ERROR("Returning, no corresponding timestamps were found even though the user specified argument of <readTimestamps> .\n");
+			return false;
+		}
 	}
 	
 	return true;
@@ -2872,7 +2865,8 @@ void streamerNode::updateCameraInfo() {
 
 	} else {
 		ros::Time currTime = ros::Time::now();
-		camera_info.header.stamp = currTime;
+
+		if (!configData.readTimestamps) camera_info.header.stamp = currTime;
 		
 		if ((configData.captureMode || configData.pollMode) && configData.readThermistor) {
 			memcpy(&camera_info.binning_x, &lastThermistorReading, sizeof(float));

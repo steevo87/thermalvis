@@ -204,19 +204,11 @@ cv::Point2f featureTrack::getCoord(unsigned int cam_idx) {
 
 void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVector, const vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, unsigned int idx, double time1, double time2) {
 	
-	/*
-	for (unsigned int jjj = 0; jjj < featureTrackVector.size(); jjj++) {
-		printf("%s << Track (%d) velocity = (%f, %f)\n", __FUNCTION__, jjj, featureTrackVector.at(jjj).velocity_x, featureTrackVector.at(jjj).velocity_y); 
-	}
-	*/
-	
 	for (unsigned int iii = 0; iii < pts1.size(); iii++) {
-		
-		cv::Point2f velocity(0.0,0.0); // to find
+		cv::Point2f velocity(0.0,0.0);
 		
 		for (unsigned int jjj = 0; jjj < featureTrackVector.size(); jjj++) {
 			if (featureTrackVector.at(jjj).locations.at(featureTrackVector.at(jjj).locations.size()-1).imageIndex == idx) {
-				
 				if (featureTrackVector.at(jjj).locations.at(featureTrackVector.at(jjj).locations.size()-1).featureCoord.x == pts1.at(iii).x) {
 					if (featureTrackVector.at(jjj).locations.at(featureTrackVector.at(jjj).locations.size()-1).featureCoord.y == pts1.at(iii).y) {
 					
@@ -226,11 +218,8 @@ void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVe
 						//printf("%s << Found feature (%f, %f) (idx = %d) with velocity (%f, %f).\n", __FUNCTION__, pts1.at(iii).x, pts1.at(iii).y, idx, velocity.x, velocity.y);
 						// printf("%s << Found feature (%f, %f) (idx = %d) with velocity (%f, %f).\n", __FUNCTION__, pts1.at(iii).x, pts1.at(iii).y, idx, velocity.x, velocity.y);
 						break;
-					
 					}
 				}
-				
-				
 			}
 		}
 		
@@ -241,7 +230,9 @@ void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVe
 			newLoc.y = float(pts1.at(iii).y + (time2-time1)*velocity.y);
 			
 			pts2.push_back(newLoc);
-		} else pts2.push_back(pts1.at(iii));
+		} else {
+			pts2.push_back(pts1.at(iii));
+		}
 
 		//printf("%s << Predicted location of (%f, %f) is (%f, %f)\n", __FUNCTION__, pts1.at(iii).x, pts1.at(iii).y, pts2.at(iii).x, pts2.at(iii).y);
 	}

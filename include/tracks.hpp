@@ -12,7 +12,7 @@
 #include "improc.hpp"
 
 #define DEFAULT_MAX_VELOCITY 			10000.0
-#define MAX_TIME_DIFF_FOR_PREDICTION	99.0
+#define MAX_TIME_DIFF_FOR_PREDICTION	1.0
 
 /// \brief		Stores the spatial and temporal location of a single feature occurence in the video stream 
 struct indexedFeature {

@@ -6,11 +6,11 @@
 
 namespace ros {
 
-Time::Time() : sec(-1), nsec(-1) { }
+Time::Time() : sec(0), nsec(0) { }
 
 Time::Time(double input) {
-	sec = int(input);
-	nsec = int(input - (double(sec)*1000000000));
+	sec = (long int)(floor(input));
+	nsec = (long int)((input - (double(sec)))*1000000000.0);
 }
 
 double Time::toSec() { return (double(sec) + (double(nsec)/1000000000.0)); }
@@ -20,12 +20,12 @@ double Time::toNSec() { return (double(sec)*1000000000.0 + double(nsec)); }
 Time Time::now() {
 	Time retVal;
 	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::local_time();
-	retVal.sec = int(currentTime.time_of_day().total_seconds());
-	retVal.nsec = int(currentTime.time_of_day().total_microseconds()*1000);
+	retVal.sec = (long int)(currentTime.time_of_day().total_seconds());
+	retVal.nsec = (long int)(currentTime.time_of_day().total_nanoseconds()) - retVal.sec*1000000000;
 	return retVal;
 }
 
-Header::Header() : seq(-1), frame_id("") { }
+Header::Header() : seq(0), frame_id("") { }
 
 namespace sensor_msgs {
 

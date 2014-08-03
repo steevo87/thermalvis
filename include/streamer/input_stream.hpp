@@ -116,7 +116,7 @@ protected:
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
 	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;
 	bool captureMode, readMode, loadMode, subscribeMode, resampleMode, pollMode;
-	bool loopMode, resizeImages, dumpTimestamps, removeDuplicates, temporalSmoothing, pauseMode, stepChangeTempScale;
+	bool loopMode, resizeImages, dumpTimestamps, removeDuplicates, temporalSmoothing, pauseMode, stepChangeTempScale, readTimestamps;
 	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
 
 	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, inputWidth, inputHeight, serialCommsConfigurationCode, serialWriteAttempts;
@@ -204,6 +204,7 @@ private:
 	ofstream ofs;
 
 	int alternateCounter, pastMeanIndex, fullMapCode;
+	vector<double> prereadTimestamps;
 	
 	double pastMeans[256];
 	int past16bitMedians[_16BIT_MEDIAN_BUFFER_SIZE];
@@ -422,11 +423,13 @@ protected:
 	short FrameWidth, FrameHeight, FrameDepth;
 	double FrameRatio;
 	int FrameSize;
-
+	
 	cv::Mat *rawImage, *scaledImage, *_8bitImage;
 	cScheme *cMapping;
-	
+
 public:
+	ros::sensor_msgs::CameraInfo camera_info;
+
 	inputStream();
 	bool processFrame();
 	void colorizeFrame() { cMapping->falsify_image(*_8bitImage, *displayImage); }		// THIS IS SLOWING THINGS DOWN!!

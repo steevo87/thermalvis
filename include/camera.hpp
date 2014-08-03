@@ -8,12 +8,13 @@
 #include "opencv_resources.hpp"
 
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include <math.h>
 
 namespace ros {
 
 struct Time {
-	int sec;
-	int nsec;
+	unsigned long int sec;
+	unsigned long int nsec;
 
 	double toSec();
 	double toNSec();
@@ -23,7 +24,7 @@ struct Time {
 };
 
 struct Header {
-	int seq;
+	unsigned long int seq;
 	std::string frame_id;
 	Time stamp;
 	Header();

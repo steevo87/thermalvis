@@ -24,9 +24,11 @@ protected:
 	bool debugMode, wantsToOutput, writeInColor;
 	cv::Mat *displayImage;
 	char *output_directory;
+	std::ofstream timestamps_stream;
 
 public:
 	GenericOptions();
+	~GenericOptions();
 	bool wantsToRun();
 	bool setOutputDir(char* output_dir);
 	bool initializeOutput(char *output_dir);
