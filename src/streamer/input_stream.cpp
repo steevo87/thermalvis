@@ -42,10 +42,10 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	maxNucThreshold = startupData.maxNucThreshold;
 
 	if (inputDatatype == DATATYPE_8BIT) {
-		if ((normMode == NORM_MODE_FIXED_TEMP_RANGE) || (normMode == NORM_MODE_FIXED_TEMP_LIMITS)) {
-			ROS_WARN("Specified <normMode> is not compatible with 8-bit input. Resetting to <NORM_MODE_FULL_STRETCHING>");
-			normMode = NORM_MODE_FULL_STRETCHING;
-			startupData.normMode = NORM_MODE_FULL_STRETCHING;
+		if (normMode == NORM_MODE_FIXED_TEMP_LIMITS) {
+			ROS_WARN("Specified <normMode> of <NORM_MODE_FIXED_TEMP_LIMITS> is not compatible with 8-bit input. Resetting to <NORM_MODE_FIXED_TEMP_RANGE>");
+			normMode = NORM_MODE_FIXED_TEMP_RANGE;
+			startupData.normMode = NORM_MODE_FIXED_TEMP_RANGE;
 		}
 	}
 
@@ -2052,12 +2052,9 @@ bool streamerNode::processImage() {
 			double percentile_values[2];
 			findPercentiles(_16bitMat, percentile_values, percentile_levels, 2);
 			thresholdRawImage(_16bitMat, percentile_values);
-			
 		}
 
 		if ((configData.outputColor) || (configData.output8bit) || ((configData.writeImages) && ((configData.outputType == OUTPUT_TYPE_CV_8UC3) || (configData.outputType == OUTPUT_TYPE_CV_8UC1)) )) {
-			
-			if (configData.verboseMode) { ROS_INFO("Entering here x123..."); }
 
 			double perc[1], vals[1];
 			perc[0] = 0.5;
@@ -2190,8 +2187,9 @@ bool streamerNode::processImage() {
 				}
 			}
 
-			// Need to normalize if appropriate
-			process8bitImage(workingFrame, preFilteredMat, configData.normMode, configData.normFactor);
+			if (configData.normMode == NORM_MODE_FIXED_TEMP_RANGE) {
+				temperatureRangeBasedResample(workingFrame, preFilteredMat, configData.degreesPerGraylevel, configData.desiredDegreesPerGraylevel);
+			} else process8bitImage(workingFrame, preFilteredMat, configData.normMode, configData.normFactor);
 			
 		} else if (frame.channels() == 3) {
 			colourMat = cv::Mat(frame);

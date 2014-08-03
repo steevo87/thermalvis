@@ -212,6 +212,9 @@ void temperatureDownsample(const cv::Mat& src, cv::Mat& dst, double minVal, doub
 /// \brief 		Converts a 16-bit image encoding temperature into floating point format
 void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad = 10, int intercept = 1000);
 
+/// \brief 		Converts the DPG (Degrees Per Graylevel) of an 8-bit image but preserves the median value
+void temperatureRangeBasedResample(const cv::Mat& src, cv::Mat& dst, double degreesPerGraylevel, double desiredDegreesPerGraylevel);
+
 /// \brief 		Converts a 16-bit raw image into an 8-bit image based on desired temperature range and provided median value
 void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMedian = -1, double degreesPerGraylevel = 0.01, double desiredDegreesPerGraylevel = 0.05);
 

@@ -705,6 +705,22 @@ void convertToTemperatureMat(const cv::Mat& src, cv::Mat& dst, double grad, int 
 	}
 }
 
+void temperatureRangeBasedResample(const cv::Mat& src, cv::Mat& dst, double degreesPerGraylevel, double desiredDegreesPerGraylevel) {
+	if (dst.rows == 0) dst = cv::Mat::zeros(src.size(), CV_8UC1);
+	
+	double percentile_levels[1], percentile_values[1];
+	percentile_levels[0] = 0.5;
+	findPercentiles(src, percentile_values, percentile_levels, 1);
+	int median = int(percentile_values[0]);
+
+	for (int iii = 0; iii < src.rows; iii++) {
+		for (int jjj = 0; jjj < src.cols; jjj++) {
+			dst.at<unsigned char>(iii,jjj) = min(255, max(0, int(round((float(src.at<unsigned char>(iii,jjj)) - float(median))*(float(degreesPerGraylevel)/float(desiredDegreesPerGraylevel))  + float(median)))));
+		}
+	}
+
+}
+
 void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMedian, double degreesPerGraylevel, double desiredDegreesPerGraylevel) {
 
 	if (dst.rows == 0) dst = cv::Mat::zeros(src.size(), CV_8UC1);
@@ -712,14 +728,14 @@ void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMe
 	if (newMedian == -1) {
 		double percentile_levels[1], percentile_values[1];
 		percentile_levels[0] = 0.5;
-		findPercentiles(src, percentile_values, percentile_levels, 2);
+		findPercentiles(src, percentile_values, percentile_levels, 1);
 		newMedian = int(percentile_values[0]);
 	}
 
 	for (int iii = 0; iii < src.rows; iii++) {
 		for (int jjj = 0; jjj < src.cols; jjj++) {
 			dst.at<unsigned char>(iii,jjj) = min(255, max(0, int(round((float(src.at<unsigned short>(iii,jjj)) - float(newMedian))*(float(degreesPerGraylevel)/float(desiredDegreesPerGraylevel))  + 127.5))));
-			}
+		}
 	}
 }
 
