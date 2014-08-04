@@ -1954,7 +1954,7 @@ bool streamerNode::retrieveRawFrame() {
 #endif
 
 		if (configData.readTimestamps) {
-			if (prereadTimestamps.size() <= frameCounter) {
+			if (int(prereadTimestamps.size()) <= frameCounter) {
 				ROS_ERROR("Node has been instructed to use provided timestamps, but none were found!");
 				return false;
 			}
