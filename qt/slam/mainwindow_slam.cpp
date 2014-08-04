@@ -12,3 +12,13 @@ MainWindow_slam::~MainWindow_slam()
 {
     delete ui;
 }
+
+#ifdef _INCLUDE_INTERFACING_
+void MainWindow_slam::linkRealtimeVariables(slamRealtimeData* sourceData) {
+    realtimeParameters = sourceData;
+
+    //ui->debugMode->setChecked(realtimeParameters->debugMode);
+    //ui->verboseMode->setChecked(realtimeParameters->verboseMode);
+
+}
+#endif

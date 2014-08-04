@@ -25,12 +25,15 @@ FILE(GLOB LOCAL_SOURCES *.cpp)
 INCLUDE_DIRECTORIES("../../include")
 INCLUDE_DIRECTORIES(../../include/streamer)
 INCLUDE_DIRECTORIES(../../include/flow)
+INCLUDE_DIRECTORIES(../../include/slam)
 
 IF(BUILD_GUI)
 	INCLUDE_DIRECTORIES("${QTSTREAMER_BUILD_PATH}")
 	INCLUDE_DIRECTORIES("../../qt/streamer")
 	INCLUDE_DIRECTORIES("${QTFLOW_BUILD_PATH}")
 	INCLUDE_DIRECTORIES("../../qt/flow")
+	INCLUDE_DIRECTORIES("${QTSLAM_BUILD_PATH}")
+	INCLUDE_DIRECTORIES("../../qt/slam")
 	LIST(APPEND ADDITIONAL_LIBS Qt5::Widgets)
 ENDIF()
 
@@ -40,6 +43,7 @@ LIST(APPEND ADDITIONAL_LIBS ${Boost_LIBRARIES})
 LIST(APPEND ADDITIONAL_LIBS thermalvis)
 LIST(APPEND ADDITIONAL_LIBS streamer)
 LIST(APPEND ADDITIONAL_LIBS flow)
+LIST(APPEND ADDITIONAL_LIBS slam)
 
 SET(EXECUTABLE_NAME "MonocularSLAM")
 IF(BUILD_GUI)
@@ -51,6 +55,10 @@ IF(BUILD_GUI)
 	IF(NOT EXISTS "${QTFLOW_BUILD_PATH}/ui_mainwindow_flow.h")
 		MESSAGE(FATAL_ERROR "<ui_mainwindow_flow.h> could not be found in <${QTFLOW_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")
 	ENDIF()
+	
+	IF(NOT EXISTS "${QTSLAM_BUILD_PATH}/ui_mainwindow_slam.h")
+		MESSAGE(FATAL_ERROR "<ui_mainwindow_slam.h> could not be found in <${QTSLAM_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")
+	ENDIF()
 
 	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} 
 	../../qt/streamer/mainwindow_streamer.cpp 
@@ -58,7 +66,10 @@ IF(BUILD_GUI)
 	${QTSTREAMER_BUILD_PATH}/ui_mainwindow_streamer.h
 	../../qt/flow/mainwindow_flow.cpp 
 	../../qt/flow/mainwindow_flow.h 
-	${QTFLOW_BUILD_PATH}/ui_mainwindow_flow.h)
+	${QTFLOW_BUILD_PATH}/ui_mainwindow_flow.h
+	../../qt/slam/mainwindow_slam.cpp 
+	../../qt/slam/mainwindow_slam.h 
+	${QTSLAM_BUILD_PATH}/ui_mainwindow_slam.h)
 ELSE()
 	add_executable(${EXECUTABLE_NAME} ${LOCAL_SOURCES} ${LOCAL_HEADERS} )
 ENDIF()

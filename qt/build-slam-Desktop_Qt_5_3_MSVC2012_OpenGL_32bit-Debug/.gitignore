@@ -1,0 +1,6 @@
+# Ignore everything in the qt-build directory
+*
+
+# Except for the auto-generated header file
+!.gitignore
+!ui_mainwindow_slam.h

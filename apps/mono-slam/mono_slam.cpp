@@ -5,12 +5,14 @@
 #include "launch.hpp"
 #include "streamer/directory_stream.hpp"
 #include "flow/sparse_flow.hpp"
+#include "slam/monocular_slam.hpp"
 
 #define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_demo.launch"
 
 #ifdef _USE_QT_
 #include "mainwindow_streamer.h"
 #include "mainwindow_flow.h"
+#include "mainwindow_slam.h"
 
 #include <QApplication>
 #include <QThread>
@@ -33,12 +35,15 @@ public:
 		writeMode(false), 
 		output_directory(NULL), 
 		xmlAddress(NULL), 
-		wantsFlow(true) 
+		wantsFlow(true),
+		wantsSlam(true)
 	{ 
 		scData = new streamerConfig;
 		streamerStartupData = new streamerData;
 		fcData = new flowConfig;
 		trackerStartupData = new trackerData;
+		_slamData = new slamConfig;
+		slamStartupData = new slamData;
 	}
 	bool initialize(int argc, char* argv[]);
 	void run();
@@ -49,9 +54,11 @@ public:
 	bool wantsStreamerGUI() { return streamerStartupData->displayGUI; }
 	void establishFlowLink(MainWindow_flow *gui);
 	bool wantsFlowGUI() { return trackerStartupData->displayGUI; }
+	void establishSlamLink(MainWindow_slam *gui);
+	bool wantsSlamGUI() { return slamStartupData->displayGUI; }
 #endif
 private:
-	bool wantsToOutput, writeMode, wantsFlow;
+	bool wantsToOutput, writeMode, wantsFlow, wantsSlam;
 	char *output_directory;
 	char *xmlAddress;
 	xmlParameters xP;
@@ -67,6 +74,11 @@ private:
 	flowConfig *fcData;
 	trackerData *trackerStartupData;
 	featureTrackerNode *fM;
+
+	bool slamIsLinked;
+	slamConfig *_slamData;
+	slamData *slamStartupData;
+	slamNode *_slamNode;
 };
 
 int main(int argc, char* argv[]) {
@@ -100,6 +112,13 @@ int main(int argc, char* argv[]) {
 		mainThread.establishFlowLink(w_tracker);
 		w_tracker->show();
 	}
+
+	MainWindow_slam* w_slam;
+	if (mainThread.wantsSlamGUI()) {
+		w_slam = new MainWindow_slam;
+		mainThread.establishSlamLink(w_slam);
+		w_slam->show();
+	}
 	return a.exec();
 #endif
 
@@ -113,6 +132,10 @@ void ProcessingThread::establishStreamerLink(MainWindow_streamer *gui) {
 }
 void ProcessingThread::establishFlowLink(MainWindow_flow *gui) {
 	gui->linkRealtimeVariables(fcData);
+	flowIsLinked = true;
+}
+void ProcessingThread::establishSlamLink(MainWindow_slam *gui) {
+	gui->linkRealtimeVariables(_slamData);
 	flowIsLinked = true;
 }
 #endif
@@ -144,6 +167,10 @@ void ProcessingThread::run() {
 			fM->serverCallback(*fcData);
 			fM->handle_camera(workingFrame, &camInfo);
 			fM->features_loop();
+
+			if (wantsSlam) {
+				int a = 1;
+			}
 		}
 		
 	}
@@ -208,10 +235,22 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 			ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
 		}
 		#endif
+
+		fM = new featureTrackerNode(*trackerStartupData);
+		fM->initializeOutput(output_directory);
 	}
 
-	fM = new featureTrackerNode(*trackerStartupData);
-	fM->initializeOutput(output_directory);
+	// === SLAM NODE === //
+	// Preliminary settings
+	wantsSlam = slamStartupData->assignFromXml(xP);
+
+	if (wantsSlam) {
+		// Real-time changeable variables
+		if (!_slamData->assignStartingData(*slamStartupData)) return false;
+
+		_slamNode = new slamNode(*slamStartupData);
+		_slamNode->initializeOutput(output_directory);
+	}
 
 	return true;
 }
