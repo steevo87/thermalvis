@@ -543,6 +543,12 @@ void featureTrackerNode::process_info(ros::sensor_msgs::CameraInfo *info_msg) {
 
 	try	{
 
+		configData.cameraData.cameraSize.width = info_msg->width;
+		configData.cameraData.cameraSize.height = info_msg->height;
+		configData.cameraData.imageSize.at<unsigned short>(0, 0) = configData.cameraData.cameraSize.width;
+		configData.cameraData.imageSize.at<unsigned short>(0, 1) = configData.cameraData.cameraSize.height;
+		configData.cameraData.updateCameraParameters();
+
 		configData.cameraData.K = cv::Mat::eye(3, 3, CV_64FC1);
 		unsigned int maxDistortionIndex;
 		for (unsigned int mmm = 0; mmm < 3; mmm++) {
@@ -550,9 +556,6 @@ void featureTrackerNode::process_info(ros::sensor_msgs::CameraInfo *info_msg) {
 				configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
 			}
 		}
-		
-		configData.cameraData.cameraSize.width = info_msg->width;
-		configData.cameraData.cameraSize.height = info_msg->height;
 		
 		if (info_msg->distortion_model == "plumb_bob") maxDistortionIndex = 5; 
 		else if (info_msg->distortion_model == "rational_polynomial") maxDistortionIndex = 8;
@@ -964,13 +967,11 @@ void featureTrackerNode::loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec) {
 	while (true) {
 		ifs.getline(buffer, 512);
 		
-		if ((buffer[0] == '#') || (buffer[0] == 'c')) {
-			continue;
-		}
+		if ((buffer[0] == '#') || (buffer[0] == 'c') || (buffer[0] == 'x') || (buffer[0] == 'r')) continue;
 
 		stringstream ss;
 		ss << buffer;
-		ss >> idx >> kp.response >> kp.pt.x >> kp.pt.y;
+		ss >> kp.pt.x >> kp.pt.y >> kp.response;
 
 		pts_vec.push_back(kp);
 
@@ -1457,10 +1458,10 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		
 		char timeString[256];
 	
-		#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 		sprintf(timeString, "%010d.%09d", ros::Time::now().sec, ros::Time::now().nsec);
 		string defaultOutput = configData.read_addr + "nodes/flow/log/" + timeString;
-		#else
+#else
 		boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
 		sprintf(timeString, "%010u.%09u", pt.time_of_day().total_seconds(), pt.time_of_day().total_microseconds());
 
@@ -1469,7 +1470,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		while (!boost::filesystem::exists(defaultDir)) { }
 
 		string defaultOutput = defaultDir + "/" + timeString;
-		#endif
+#endif
 
 		ROS_WARN("No output folder specified, outputting by default to (%s)", defaultOutput.c_str());
 		configData.outputFolder = defaultOutput;
@@ -1498,11 +1499,11 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		while (!boost::filesystem::exists(detectedFeaturesFolder)) { }
 	}
 
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	sprintf(nodeName, "%s", ros::this_node::getName().c_str());
-	#else
+#else
 	sprintf(nodeName, "/%s", "THERMALVIS_FLOW");
-	#endif
+#endif
 	sprintf(debug_pub_name, "thermalvis%s/image_col", nodeName);
 	
 	
@@ -1515,53 +1516,53 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 
 	configData.initializeDescriptors(&descriptorExtractor, &homographyExtractor);
 	
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	std::string topic = nh.resolveName(configData.topic);
 	string topic_info = configData.topic.substr(0, configData.topic.find_last_of("/") + 1) + "camera_info";
 	it = new image_transport::ImageTransport(nh);
 	ROS_INFO("Subscribing to camera topic (%s)", topic.c_str());
 	camera_sub = it->subscribeCamera(topic, 1, &featureTrackerNode::handle_camera, this);
-	#endif
+#endif
 
 	if (configData.tracksOutputTopic == "tracksOutputTopic") {
 		string tmpString = configData.topicParent + "/tracks";
 		std::sprintf(tracks_pub_name, "%s", tmpString.c_str());
 	} else std::sprintf(tracks_pub_name, "%s", configData.tracksOutputTopic.c_str());
 	
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	ROS_INFO("Publishing tracks data at (%s)", tracks_pub_name);
 	ros::AdvertiseOptions op = ros::AdvertiseOptions::create<thermalvis::feature_tracks>(tracks_pub_name, 1, &connected, &disconnected, ros::VoidPtr(), NULL);
 	op.has_header = false;
 	tracks_pub = nh.advertise(op);
 	timer = nh.createTimer(ros::Duration(0.05), &featureTrackerNode::timed_loop, this);
 	features_timer = nh.createTimer(ros::Duration(0.01), &featureTrackerNode::features_loop, this);
-	#endif
+#endif
 	
 	if (configData.outputTrackCount) {
-		#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 		string outputTrackCountFile = configData.outputFolder + "/" + ros::this_node::getName().substr(1,ros::this_node::getName().size()-1) + "_trackcount.txt";
-		#else
+#else
 		string outputTrackCountFile = configData.outputFolder + "/" + "THERMALVIS_FLOW" + "_trackcount.txt";
-		#endif
+#endif
 		ROS_INFO("outputTrackCountFile = (%s)", outputTrackCountFile.c_str());
 		trackCountStream.open(outputTrackCountFile.c_str(), ios::out);
 	}
 	
 	if (configData.outputFeatureMotion) {
-		#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 		string outputFeatureMotionFile = configData.outputFolder + "/" + ros::this_node::getName().substr(1,ros::this_node::getName().size()-1) + "_motion.txt";
-		#else
+#else
 		string outputFeatureMotionFile = configData.outputFolder + "/" + "THERMALVIS_FLOW" + "_motion.txt";
-		#endif
+#endif
 		ROS_INFO("outputFeatureMotionFile = (%s)", outputFeatureMotionFile.c_str());
 		featureMotionStream.open(outputFeatureMotionFile.c_str(), ios::out);
 	}
 	
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	ROS_INFO("Establishing server callback...");
 	f = boost::bind (&featureTrackerNode::serverCallback, this, _1, _2);
     server.setCallback (f);
-	#endif
+#endif
 }
 
 #ifdef _BUILD_FOR_ROS_

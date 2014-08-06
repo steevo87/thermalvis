@@ -142,9 +142,6 @@ void ProcessingThread::establishSlamLink(MainWindow_slam *gui) {
 
 void ProcessingThread::run() {
 
-	bool calibrationDataProcessed = false;
-	
-
 	while (sM->wantsToRun()) {
 		sM->serverCallback(*scData);
 		if (!sM->retrieveRawFrame()) continue;
@@ -152,18 +149,7 @@ void ProcessingThread::run() {
 		
 		if (wantsFlow) {
 			if (!sM->get8bitImage(workingFrame, camInfo)) continue;
-			printf("%s << Is duplicate? (%d)\n", __FUNCTION__, camInfo.binning_y);
-			if (!calibrationDataProcessed) {
-				trackerStartupData->cameraData.cameraSize.width = workingFrame.cols;
-				trackerStartupData->cameraData.cameraSize.height = workingFrame.rows;
-				trackerStartupData->cameraData.imageSize.at<unsigned short>(0, 0) = trackerStartupData->cameraData.cameraSize.width;
-				trackerStartupData->cameraData.imageSize.at<unsigned short>(0, 1) = trackerStartupData->cameraData.cameraSize.height;
-				trackerStartupData->cameraData.updateCameraParameters();
-				calibrationDataProcessed = true;
-				fM = new featureTrackerNode(*trackerStartupData);
-				fM->initializeOutput(output_directory);
-				fM->setWriteMode(writeMode);
-			}
+			
 			fM->serverCallback(*fcData);
 			fM->handle_camera(workingFrame, &camInfo);
 			fM->features_loop();
@@ -238,6 +224,7 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 		fM = new featureTrackerNode(*trackerStartupData);
 		fM->initializeOutput(output_directory);
+		fM->setWriteMode(writeMode);
 	}
 
 	// === SLAM NODE === //
