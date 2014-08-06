@@ -1947,11 +1947,12 @@ bool streamerNode::retrieveRawFrame() {
 		std::string full_path = std::string(configData.folder) + "/" + inputList.at(frameCounter);
 		camera_info.header.seq = frameCounter;
 
-#ifdef _OPENCV_VERSION_3_PLUS_
-		frame = cv::imread(full_path, cv::IMREAD_ANYDEPTH);
-#else
-		frame = cv::imread(full_path, CV_LOAD_IMAGE_ANYDEPTH);
-#endif
+		frame = read_image_from_file(full_path);
+
+		if (determineFrameType(frame) != configData.inputDatatype) {
+			ROS_ERROR("The specified <inputDataType> does not match the actual image format!");
+			return false;
+		}	
 
 		if (configData.readTimestamps) {
 			if (int(prereadTimestamps.size()) <= frameCounter) {
@@ -1965,6 +1966,7 @@ bool streamerNode::retrieveRawFrame() {
 	}
 	return false;
 }
+
 
 bool streamerNode::get8bitImage(cv::Mat& img, ros::sensor_msgs::CameraInfo& info) { 
 	if (_8bitMat.rows == 0) return false;

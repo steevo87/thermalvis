@@ -218,6 +218,12 @@ void temperatureRangeBasedResample(const cv::Mat& src, cv::Mat& dst, double degr
 /// \brief 		Converts a 16-bit raw image into an 8-bit image based on desired temperature range and provided median value
 void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMedian = -1, double degreesPerGraylevel = 0.01, double desiredDegreesPerGraylevel = 0.05);
 
+/// \brief 		Reads an image from a specified path 
+cv::Mat read_image_from_file(std::string path);
+
+/// \brief 		Determine the type of frame based on the matrix
+int determineFrameType(cv::Mat& frame);
+
 /// \brief 		Downsamples a temperature matrix to a 16-bit image using Optris-like linear scaling
 void temperatureDownsample16(const cv::Mat& src, cv::Mat& dst);
 

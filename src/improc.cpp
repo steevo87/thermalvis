@@ -588,99 +588,17 @@ void applyFilter(const cv::Mat& src, cv::Mat& dst, int filter, double param) {
 		ksize = int(param);
 	}
 	
-	if ((int(ksize) % 2) == 0) {
-		ksize++;
-	}
-	
-	//double bilateralVal = param;
+	if ((int(ksize) % 2) == 0) ksize++;
 	
 	if (filter == GAUSSIAN_FILTERING) {
 		GaussianBlur(src, dst, cv::Size(ksize, ksize), sqrt(param));
 	} else if (filter == BILATERAL_FILTERING) {
-		bilateralFilter(src, dst, ksize, param * 2.0, param * 2.0); //, double sigmaColor, double sigmaSpace, int borderType=BORDER_DEFAULT );
+		bilateralFilter(src, dst, ksize, param * 2.0, param * 2.0);
 	} else {
 		src.copyTo(dst);
 	}
 	
 }
-
-/*
-void straightCLAHE(const cv::Mat& src, cv::Mat& dst, double factor) {
-	
-	int xdivs = 2;
-	int ydivs = 2;
-	int bins = 256;
-	//int limit_counter = 255.0 * factor;
-	
-	IplImage tmp_ipl(src);
-	
-	
-	IplImage* dst_ipl = cvCreateImage(cvSize(tmp_ipl.width,tmp_ipl.height), tmp_ipl.depth, 1);
-	dst_ipl->origin = tmp_ipl.origin;
-	  
-	//IplImage dst_ipl;
-	
-	#ifdef USE_CLAHE
-	cvCLAdaptEqualize(&tmp_ipl, dst_ipl, (unsigned int) xdivs, (unsigned int) ydivs, 
-					(unsigned int) bins, (1.0 + factor * 14.0), CV_CLAHE_RANGE_FULL);
-	// (float) limit_counter * 0.1
-	#endif
-	
-	
-	dst = cv::Mat(dst_ipl);
-	
-}
-*/
-
-/*
-void downsampleCLAHE(const cv::Mat& src, cv::Mat& dst, double factor) {
-	
-	cv::Mat tmp;
-	
-	if (factor == 0.0) {
-		
-		adaptiveDownsample(src, dst, NORMALIZATION_STANDARD, 0.001);
-	
-		return;
-	}
-	
-	// from: https://github.com/joshdoe/opencv-clahe
-
-	// ...
-	
-	//printf("%s << entered...\n", __FUNCTION__);
-	
-	cv::Mat tmp_2;
-	
-	adaptiveDownsample(src, tmp_2, NORMALIZATION_STANDARD, 0.001);
-	
-	straightCLAHE(tmp_2, dst, factor);
-	
-	
-	//int xdivs = 2;
-	//int ydivs = 2;
-	//int bins = 256;
-	////int limit_counter = 255.0 * factor;
-	
-	//IplImage tmp_ipl(tmp_2);
-	
-	
-	//IplImage* dst_ipl = cvCreateImage(cvSize(tmp_ipl.width,tmp_ipl.height), tmp_ipl.depth, 1);
-	//dst_ipl->origin = tmp_ipl.origin;
-	  
-	////IplImage dst_ipl;
-	
-	//cvCLAdaptEqualize(&tmp_ipl, dst_ipl, (unsigned int) xdivs, (unsigned int) ydivs, 
-					//(unsigned int) bins, (1.0 + factor * 14.0), CV_CLAHE_RANGE_FULL);
-	//// (float) limit_counter * 0.1
-	
-	
-	//dst = Mat(dst_ipl);
-	
-	////tmp.copyTo(dst);
-	
-}
-*/
 
 void temperatureDownsample(const cv::Mat& src, cv::Mat& dst, double minVal, double maxVal) {
 	
@@ -719,6 +637,31 @@ void temperatureRangeBasedResample(const cv::Mat& src, cv::Mat& dst, double degr
 		}
 	}
 
+}
+
+cv::Mat read_image_from_file(std::string path) {
+	cv::Mat frame;
+#ifdef _OPENCV_VERSION_3_PLUS_
+	frame = cv::imread(path, cv::IMREAD_ANYDEPTH);
+#else
+	frame = cv::imread(path, CV_LOAD_IMAGE_ANYDEPTH);
+#endif
+	return frame;
+}
+
+int determineFrameType(cv::Mat& frame) {
+	if (frame.channels() == 1) {
+		if (frame.depth() == CV_16U) {
+			return DATATYPE_RAW;
+		} else if (frame.depth() == CV_8U) {
+			return DATATYPE_8BIT;
+		} else {
+			return -1;
+		}
+	} else if (frame.channels() == 3) {
+		return DATATYPE_8BIT;
+	}
+	return -1;
 }
 
 void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMedian, double degreesPerGraylevel, double desiredDegreesPerGraylevel) {

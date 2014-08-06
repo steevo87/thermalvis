@@ -119,9 +119,13 @@ int main(int argc, char* argv[]) {
 		mainThread.establishSlamLink(w_slam);
 		w_slam->show();
 	}
-	return a.exec();
+
+	if (a.exec()) return 1;
+	std::cin.get();
+	return S_OK;
 #endif
 
+	std::cin.get();
 	return S_OK;
 }
 
@@ -144,7 +148,7 @@ void ProcessingThread::run() {
 
 	while (sM->wantsToRun()) {
 		sM->serverCallback(*scData);
-		if (!sM->retrieveRawFrame()) continue;
+		if (!sM->retrieveRawFrame()) return;
 		sM->imageLoop();
 		
 		if (wantsFlow) {
