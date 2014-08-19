@@ -235,7 +235,7 @@ void featureTrackerNode::act_on_image() {
 	if ((newImage.type() == CV_16UC3) || (newImage.type() == CV_16UC1)) {
 		ROS_ERROR("This node has been told it will only receive 8-bit images!");
 		return;
-	} else if (newImage.type() == CV_8UC3) cvtColor(newImage, grayImage, CV_RGB2GRAY); 
+	} else if (newImage.type() == CV_8UC3) cvtColor(newImage, grayImage, cv::COLOR_RGB2GRAY); 
 	else if (newImage.type() == CV_8UC1) grayImage = newImage;
 	
 	testTime = timeElapsedMS(test_timer, true);
@@ -262,7 +262,7 @@ void featureTrackerNode::act_on_image() {
 
 	if (configData.debugMode) {
 		displayImage = grayImageBuffer[frameCount % 2];
-		cvtColor(displayImage, drawImage, CV_GRAY2RGB);
+		cvtColor(displayImage, drawImage, cv::COLOR_GRAY2RGB);
 	}
 	
 	frameCount++;
@@ -391,7 +391,7 @@ void featureTrackerNode::attemptHistoricalTracking() {
 	for (unsigned int ppp = 0; ppp < MAX_HISTORY_FRAMES; ppp++) {
 		if (configData.multiplier[ppp] == 0) continue;
 
-		cv::vector<cv::Point2f> startingPoints, originalFinishingPoints, finishingPoints;
+		std::vector<cv::Point2f> startingPoints, originalFinishingPoints, finishingPoints;
 
 		for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
 			if (featureTrackVector.at(iii).locations.at(featureTrackVector.at(iii).locations.size()-1).imageIndex == bufferIndices[(readyFrame) % 2]) continue;
@@ -430,7 +430,7 @@ void featureTrackerNode::attemptTracking() {
 	
 	if (previousIndex < 0) return;
 	
-	cv::vector<cv::Point2f> startingPoints, originalFinishingPoints, finishingPoints;
+	std::vector<cv::Point2f> startingPoints, originalFinishingPoints, finishingPoints;
 	startingPoints.insert(startingPoints.end(), globalStartingPoints.begin(), globalStartingPoints.end());
 
 	lostTrackIndices.clear();
@@ -962,7 +962,6 @@ void featureTrackerNode::loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec) {
 	ifs.open(currentFileAddress);
 
 	char buffer[512];
-	int idx;
 	cv::KeyPoint kp;
 	while (true) {
 		ifs.getline(buffer, 512);
@@ -1054,7 +1053,7 @@ void featureTrackerNode::detectNewFeatures() {
 				detectedFeaturesStream << "count:" << currPoints[jjj].size() << endl;
 				detectedFeaturesStream << "x y response" << endl;
 
-				for (int iii = currPoints[jjj].size()-1; iii >= 0; iii--) detectedFeaturesStream << currPoints[jjj].at(iii).pt.x << " " << currPoints[jjj].at(iii).pt.y << " " << currPoints[jjj].at(iii).response << endl;
+				for (int iii = int(currPoints[jjj].size())-1; iii >= 0; iii--) detectedFeaturesStream << currPoints[jjj].at(iii).pt.x << " " << currPoints[jjj].at(iii).pt.y << " " << currPoints[jjj].at(iii).response << endl;
 				detectedFeaturesStream.close();
 			}
 			
@@ -1074,7 +1073,7 @@ void featureTrackerNode::detectNewFeatures() {
 				proximityViolationFilter(currPoints[jjj], globalFinishingPoints, configData.minSeparation);
 
 				if (configData.verboseMode) { ROS_INFO("Reduced to (%d) candidate points based on proximity.", currPoints[jjj].size()); }
-				if (int(currPoints[jjj].size() + globalFinishingPoints.size()) > configData.maxFeatures) reduceFeaturesToMaximum(currPoints[jjj], configData.maxFeatures - globalFinishingPoints.size());
+				if (int(currPoints[jjj].size() + globalFinishingPoints.size()) > configData.maxFeatures) reduceFeaturesToMaximum(currPoints[jjj], configData.maxFeatures - int(globalFinishingPoints.size()));
 				
 				if (configData.verboseMode) { ROS_INFO("Further reduced to (%d) candidate points based on maxFeatures limit.", currPoints[jjj].size()); }
 				
@@ -1379,7 +1378,7 @@ void featureTrackerNode::handle_very_new() {
 	}
 	
 	if (configData.verboseMode) { ROS_INFO("Attempting to find homography with (%d, %d) matched points..", points1.size(), points2.size()); }
-	H12 = cv::findHomography( cv::Mat(points1), cv::Mat(points2), validityMask, CV_RANSAC, 5.0 );
+	H12 = cv::findHomography( cv::Mat(points1), cv::Mat(points2), validityMask, RANSAC, 5.0 );
 		
 	unsigned int validPoints = 0;
 	
@@ -1617,29 +1616,66 @@ void featureTrackerNode::handle_camera(cv::Mat& inputImage, ros::sensor_msgs::Ca
 	act_on_image();
 }
 
+void trackerData::initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+	desc[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::BriefDescriptorExtractor());
+	hom[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::BriefDescriptorExtractor());
+#else
+	desc[0] = new cv::BriefDescriptorExtractor();
+	hom[0] = new cv::BriefDescriptorExtractor();
+#endif
+}
 
 bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom) {
 	for (int iii = 0; iii < numDetectors; iii++) {
 		if ((detector[iii] == "SURF") || (detector[iii] == "surf")) {
 			ROS_ERROR("SURF has been deactivated due to copyright protection!");
 		} else if ((detector[iii] == "FAST") || (detector[iii] == "fast")) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+			det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::FastFeatureDetector(int(sensitivity[iii] * FAST_DETECTOR_SENSITIVITY_SCALING)));
+#else
 			det[iii] = new cv::FastFeatureDetector( int(sensitivity[iii] * FAST_DETECTOR_SENSITIVITY_SCALING) );
+#endif
 		} else if ((detector[iii] == "GFTT") || (detector[iii] == "gftt")) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+			det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii] * GFTT_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, false ));
+#else
 			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii] * GFTT_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, false );
+#endif	
 		} else if ((detector[iii] == "STAR") || (detector[iii] == "star")) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+			det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::StarFeatureDetector( 16, int(sensitivity[iii]) ));
+#else
 			det[iii] = new cv::StarFeatureDetector( 16, int(sensitivity[iii]) );
+#endif	
 		} else if ((detector[iii] == "ORB") || (detector[iii] == "orb")) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+			det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::OrbFeatureDetector( maxFeatures ));
+#else
 			det[iii] = new cv::OrbFeatureDetector( maxFeatures );
+#endif
 		} else if ((detector[iii] == "HARRIS") || (detector[iii] == "harris")) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+			det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii] * HARRIS_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, true ));
+#else
 			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii] * HARRIS_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, true );
+#endif
 		} else if ((detector[iii] == "FILE") || (detector[iii] == "file")) {
+#ifdef _OPENCV_VERSION_3_PLUS_
+			det[iii] = cv::Ptr<cv::FeatureDetector>();
+#else
 			det[iii] = NULL;
+#endif
 		} else {
 			ROS_ERROR("Shouldn't have got here!");
 			return false;
 		}
 	}
+#ifdef _OPENCV_VERSION_3_PLUS_
+	hom[0] = cv::Ptr<cv::FeatureDetector>(new cv::FastFeatureDetector( int(FAST_DETECTOR_SENSITIVITY_SCALING*0.02) ));
+#else
 	hom[0] = new cv::FastFeatureDetector( int(FAST_DETECTOR_SENSITIVITY_SCALING*0.02) );
+#endif
 	return true;
 }
 

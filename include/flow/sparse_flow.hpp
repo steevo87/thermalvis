@@ -62,15 +62,12 @@ public:
 
 	bool assignFromXml(xmlParameters& xP);
 
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	bool obtainStartingData(ros::NodeHandle& nh);   
-	#endif
+#endif
 
     bool initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr<cv::FeatureDetector> *hom);
-    void initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom) {
-		desc[0] = new cv::BriefDescriptorExtractor();
-		hom[0] = new cv::BriefDescriptorExtractor();
-	}
+    void initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom);
 	
 };
 

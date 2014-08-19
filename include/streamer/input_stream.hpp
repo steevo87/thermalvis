@@ -354,7 +354,7 @@ public:
 
 	cv::VideoCapture * getVideoCapture() { return &cap; }
 
-	void displayFrame(cv::Mat& frame, cv::string name = "streamer_display");
+	void displayFrame(cv::Mat& frame, std::string name = "streamer_display");
 
 	bool streamCallback(bool capture = true);
 	void acceptImage(void *ptr);

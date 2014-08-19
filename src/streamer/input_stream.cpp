@@ -203,11 +203,11 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	startupData.outputFileParams.clear();
 	int val;
 	if (startupData.outputFormatString == "png") {
-		startupData.outputFileParams.push_back(CV_IMWRITE_PNG_COMPRESSION);
+		startupData.outputFileParams.push_back(PNG_COMPRESSION);
 		val = int((1.0-startupData.writeQuality) * 9.0);
 		startupData.outputFileParams.push_back(val);
 	} else if (startupData.outputFormatString == "jpg") {
-		startupData.outputFileParams.push_back(CV_IMWRITE_JPEG_QUALITY);
+		startupData.outputFileParams.push_back(JPEG_QUALITY);
 		val = int(startupData.writeQuality * 100.0);
 		startupData.outputFileParams.push_back(val);
 	}
@@ -1915,7 +1915,7 @@ void streamerNode::act_on_image() {
 	cv::Mat grayImage;
 	
 	if (newImage.type() == CV_16UC3) {
-		cv::cvtColor(newImage, frame, CV_RGB2GRAY);
+		cv::cvtColor(newImage, frame, RGB2GRAY);
 	} else frame = cv::Mat(newImage);
 	
 	readyToPublish = true;
@@ -2162,7 +2162,7 @@ bool streamerNode::processImage() {
 				workingFrame = cv::Mat(frame);
 			} else if (isActuallyGray) {
 				if (((configData.outputColor) || (configData.outputType == OUTPUT_TYPE_CV_8UC3)) || ((configData.output8bit) || (configData.outputType == OUTPUT_TYPE_CV_8UC1))) {
-					cvtColor(frame, workingFrame, CV_RGB2GRAY);
+					cvtColor(frame, workingFrame, RGB2GRAY);
 				}
 			}
 
@@ -2172,7 +2172,7 @@ bool streamerNode::processImage() {
 			
 		} else if (frame.channels() == 3) {
 			colourMat = cv::Mat(frame);
-			if ((configData.output8bit) || (configData.outputType == OUTPUT_TYPE_CV_8UC1)) cvtColor(colourMat, preFilteredMat, CV_RGB2GRAY);
+			if ((configData.output8bit) || (configData.outputType == OUTPUT_TYPE_CV_8UC1)) cvtColor(colourMat, preFilteredMat, RGB2GRAY);
 		}
 
 	} else if (configData.inputDatatype == DATATYPE_MM) {
@@ -2195,7 +2195,7 @@ bool streamerNode::processImage() {
 
 			colourMap.fuse_image(thermal, visible, colourMat, fusion_params);
 
-			if ((configData.output8bit) || (configData.outputType == OUTPUT_TYPE_CV_8UC1)) cvtColor(colourMat, preFilteredMat, CV_RGB2GRAY);
+			if ((configData.output8bit) || (configData.outputType == OUTPUT_TYPE_CV_8UC1)) cvtColor(colourMat, preFilteredMat, RGB2GRAY);
 		}
 	}
 	
@@ -2260,7 +2260,7 @@ bool streamerNode::imageLoop() {
 	return true;
 }
 
-void streamerNode::displayFrame(cv::Mat& frame, cv::string name) {
+void streamerNode::displayFrame(cv::Mat& frame, std::string name) {
 	if (frame.rows != 0) {
 		!pauseMode ? cv::imshow(name, frame) : 0;
 		char key = cv::waitKey(1);
@@ -2657,7 +2657,7 @@ bool streamerNode::processFolder() {
 	
 	sort(inputList.begin(), inputList.end());
 
-	fileCount = inputList.size();
+	fileCount = int(inputList.size());
 
 	if(fileCount == -1)	{
 		ROS_ERROR("File counting error.\n");
@@ -2751,11 +2751,23 @@ void streamerNode::writeData() {
 		if (!videoInitialized) {
 			if (configData.videoType == "CV_16UC1") {
 				// 0 writes uncompressed, 1 gives user option
-				vid_writer.open(configData.outputVideo, CV_FOURCC('P','I','M','1'), ((int) configData.framerate), scaled16Mat.size(), true);
+#ifdef _OPENCV_VERSION_3_PLUS_
+				vid_writer.open(configData.outputVideo, FOURCC("PIM1"), ((int) configData.framerate), scaled16Mat.size(), true);
+#else
+				vid_writer.open(configData.outputVideo, FOURCC('P','I','M','1'), ((int) configData.framerate), scaled16Mat.size(), true);
+#endif
 			} else if (configData.videoType == "CV_8UC3") {
-				vid_writer.open(configData.outputVideo, CV_FOURCC('P','I','M','1'), ((int) configData.framerate), colourMat.size()); // , true);
+#ifdef _OPENCV_VERSION_3_PLUS_
+				vid_writer.open(configData.outputVideo, FOURCC("PIM1"), ((int) configData.framerate), colourMat.size(), true);
+#else
+				vid_writer.open(configData.outputVideo, FOURCC('P','I','M','1'), ((int) configData.framerate), colourMat.size(), true);
+#endif
 			} else if (configData.videoType == "CV_8UC1") {
-				vid_writer.open(configData.outputVideo, CV_FOURCC('X', 'V', 'I', 'D'), ((int) configData.framerate), _8bitMat.size(), false);
+#ifdef _OPENCV_VERSION_3_PLUS_
+				vid_writer.open(configData.outputVideo, FOURCC("XVID"), ((int) configData.framerate), _8bitMat.size(), true);
+#else
+				vid_writer.open(configData.outputVideo, FOURCC('X', 'V', 'I', 'D'), ((int) configData.framerate), _8bitMat.size(), false);
+#endif
 			}
 			
 			videoInitialized = true;
