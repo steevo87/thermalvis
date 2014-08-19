@@ -5,15 +5,14 @@
 		<param name="debugMode" value="false" />
 	
 		<param name="source" value="directory" />
-		<param name="directory" value="~\Documents\Data\optris\low-snr" />
-		
+		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" />
 		<param name="filterMode" value="0" /> <!-- 0 for no filter, 1 for gaussian, 2 for bilateral, 3 for adaptive bilateral -->
 		<param name="filterParam" value="2.0" />
 		
 		<!-- <param name="degreesPerGraylevel" value="0.025" /> --> <!-- value of 0.025 works OK for miricle sequences.. -->
 		<!-- <param name="desiredDegreesPerGraylevel" value="0.05" /> --> <!-- can adjust this to enhance contrast -->
 		
-		<param name="outputType" value="0" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
+		<param name="outputType" value="2" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
 		<param name="writeImages" value="false" />
 		<param name="outputFolder" value="~\Documents\Data\optris\output" />
 		
@@ -32,8 +31,8 @@
 		<param name="outputDebugImages" value="false" />
 		<param name="outputTrackedFeatures" value="false" />
 		<param name="outputDetectedFeatures" value="false" />
-		<param name="showTrackHistory" value="true" />
-		<param name="autoTrackManagement" value="false" />
+		<param name="showTrackHistory" value="false" />
+		<param name="autoTrackManagement" value="true" />
 		<!-- <param name="verboseMode" value="true" /> -->
 		
 		<!-- <param name="predetectedFeatures" value="C:\Users\..." /> -->
@@ -42,6 +41,11 @@
 		<param name="sensitivity_1" value="0.1" /> <!-- default is 0.1 -->
 		<param name="flowThreshold" value="0.0002" /> <!-- default is 0.0002 -->
 		
+	</node>
+	
+	<node name="image_view" pkg="image_view" type="image_view" output="screen">
+		<remap from="image" to="/thermalvis/flow/image_col"/>
+		<param name="~/autosize" value="true" />
 	</node>
 	
 </launch>
