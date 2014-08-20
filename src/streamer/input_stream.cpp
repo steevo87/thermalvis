@@ -518,19 +518,28 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
         }
 
 #ifdef _WIN32
-		// Substitute tildes if in Windows
+		string substitutionString = std::getenv("USERPROFILE");
+#else
+		string substitutionString = std::getenv("HOME");
+#endif
+		// Substitute tildes
 		if (folder.size() > 0) {
 			if (folder[0] == '~') {
 				folder.erase(folder.begin());
-				folder = std::getenv("USERPROFILE") + folder;
+				folder = substitutionString + folder;
 			}
 		}
 
 		if (outputFolder.size() > 0) {
 			if (outputFolder[0] == '~') {
 				outputFolder.erase(outputFolder.begin());
-				outputFolder = std::getenv("USERPROFILE") + outputFolder;
+				substitutionString + outputFolder;
 			}
+		}
+		
+#ifndef _WIN32
+		for (int iii = 0; iii < folder.size(); iii++) {
+			if (folder.at(iii) == '\\') folder.at(iii) = '/';
 		}
 #endif
 

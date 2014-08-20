@@ -189,7 +189,7 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 #ifdef _WIN32
 		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
 #else
-		sprintf(xmlAddress, "~/%s", DEFAULT_LAUNCH_XML);
+		sprintf(xmlAddress, "%s/%s", std::getenv("HOME"), DEFAULT_LAUNCH_XML);
 #endif
 		ROS_INFO("No XML config file provided, therefore using default at (%s)", xmlAddress);
 	}
