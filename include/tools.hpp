@@ -100,26 +100,9 @@ void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsig
 #else
 #define __SHORTENED_FILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-void ROS_INFO(char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-}
-
-void ROS_WARN(char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-}
-
-void ROS_ERROR(char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-}
+void ROS_INFO(char *fmt, ...);
+void ROS_WARN(char *fmt, ...);
+void ROS_ERROR(char *fmt, ...);
 
 #endif
 

@@ -1127,7 +1127,86 @@ void streamerNode::prepareForTermination() {
 	releaseDevice();	
 }
 
+int streamerNode::open_port() {
+   int fd;                                   /* File descriptor for the port */
+
+
+   //fd = open(configData.portAddress.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+   //fd = open(configData.portAddress.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK); 
+   //fd = open(configData.portAddress.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+   fd = open(configData.portAddress.c_str(), O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK | O_SYNC);
+   
+   set_blocking (fd, 0);   // disable reads blocked when no input ready
+
+	char buf [10000];
+	int n;
+	do {
+			n = read (fd, buf, sizeof buf);
+	} while (n > 0);
+
+	//set_blocking (fd, 1);  // enable read blocking (if desired)
+   
+   usleep(200000);
+   tcflush(fd, TCIOFLUSH);
+
+   if (fd == -1) {                                              /* Could not open the port */
+     ROS_ERROR("open_port(): Unable to open (%s) (%s)", configData.portAddress.c_str(), strerror(errno));
+   } else {
+	   //ROS_ERROR("port (%s) opened", configData.portAddress.c_str());
+	   //fcntl(fd, F_SETFL, 0);
+	   
+   }
+   return (fd);
+}
+
 #ifndef _WIN32
+bool streamerNode::sendSerialCommand(char *command, int max_attempts) {
+	
+	int bytesToWrite = 0;
+	
+	// string(serialCommand).substr(0,bytesToWrite-1).c_str(), bytesToWrite
+
+	while (command[bytesToWrite] != '\0') {
+		
+		bytesToWrite++;
+	}
+	bytesToWrite++;
+	
+	char *ext_command;
+	ext_command = new char[bytesToWrite+1];
+	
+	for (int iii = 0; iii < bytesToWrite-1; iii++) {
+		ext_command[iii] = command[iii];
+	}
+	
+	ext_command[bytesToWrite-1] = '\r';
+	ext_command[bytesToWrite] = '\0';
+	
+	//printf("%s << sending (%s) ...\n", __FUNCTION__, ext_command);
+	
+	int attempts = 0, n = 0;
+	while ((max_attempts == 0) || (attempts < max_attempts)) {
+		
+		n = write(mainfd, ext_command, bytesToWrite);
+		
+		if (n == bytesToWrite) {
+			if (configData.serialFeedback) { ROS_INFO("Serial write of (%s) was successful.", command); }
+			return true;
+		}
+		attempts++;
+	}
+	
+	if ((n < 0) && (errno == EINTR)) {
+		ROS_WARN("write() failed 1");
+	} else if ( n < 0 ) {
+		ROS_WARN("write() failed 2");
+	} else {
+		ROS_WARN("write() failed 3");
+	}
+	
+	return false;
+}
+
 bool streamerNode::configureSerialComms() {
 	
 	

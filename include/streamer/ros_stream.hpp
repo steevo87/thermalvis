@@ -27,13 +27,7 @@
 #include "streamerConfig.h"
 #endif
 
-// SERIAL COMMS STUFF
 #include "serial_comms.hpp"
-
-
-
-// END SERIAL COMMS STUFF
-
 
 #ifdef _BUILD_FOR_ROS_
 typedef dynamic_reconfigure::Server < thermalvis::streamerConfig > Server;
@@ -41,11 +35,6 @@ typedef dynamic_reconfigure::Server < thermalvis::streamerConfig > Server;
 
 bool wantsToShutdown = false;
 void mySigintHandler(int sig);
-
-//HGH
-
-
-
 
 #endif
 #endif
