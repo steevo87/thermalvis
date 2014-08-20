@@ -218,7 +218,7 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 
 void featureTrackerNode::displayFrame() {
 	if (drawImage_resized.rows != 0) {
-		!pauseMode ? cv::imshow("display", drawImage_resized) : 0;
+		if (!pauseMode) cv::imshow("display", drawImage_resized);
 		char key = cv::waitKey(1);
 		if (key == 'q') isValid = false;
 	}
@@ -625,7 +625,9 @@ void featureTrackerNode::publishRoutine() {
 		if (newlySensedFeatures.size() > 0) displayKeyPoints(drawImage, newlySensedFeatures, drawImage, COLOR_UNMATCHED_POINTS, 0, true);
 		if (matchedFeatures.size() > 0) displayKeyPoints(drawImage, matchedFeatures, drawImage, COLOR_MATCHED_POINTS, 0, true);
 		
-		(drawImage.size() != configData.cameraData.cameraSize) ? resize(drawImage, drawImage_resized, configData.cameraData.cameraSize, 0, 0, cv::INTER_CUBIC) : drawImage_resized = drawImage;
+		if (drawImage.size() != configData.cameraData.cameraSize) {
+			resize(drawImage, drawImage_resized, configData.cameraData.cameraSize, 0, 0, cv::INTER_CUBIC);
+		} else drawImage_resized = drawImage;
 		
 		if (configData.verboseMode) { ROS_INFO("Copying image (%u, %u) to publisher...", drawImage_resized.rows, drawImage_resized.cols); }
 		
@@ -907,16 +909,16 @@ void featureTrackerNode::matchWithExistingTracks() {
 				if (configData.verboseMode) ROS_INFO("Still have (%d / %d) (%d/%d) (%d / %d) matches...", featuresFromPts[0].size(), featuresFromPts[1].size(), points1.size(), points2.size(), queryIdxs.size(), trainIdxs.size());
 
 				// Integrate matches into feature tracks structure
-				if (configData.verboseMode) ROS_WARN("About to add matches (%d, %d)", points1.size(), points2.size());
+				if (configData.verboseMode) ROS_WARN("About to add matches (%u, %u)", points1.size(), points2.size());
 				
 				addMatchesToVector(featureTrackVector, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedTrackIndex, configData.minSeparation, false);
 				
 				if (configData.debugMode) addMatchesToVector(displayTracks, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedTrackIndex, configData.minSeparation);
-				if (configData.verboseMode)  { ROS_INFO("Added (%d) (%d) matches to vector", ppp, points2.size()); }
+				if (configData.verboseMode)  { ROS_INFO("Added (%d) (%u) matches to vector", ppp, points2.size()); }
 				matchedFeatures.insert(matchedFeatures.end(), points2.begin(), points2.end());
 				
 				concatenateWithExistingPoints(globalFinishingPoints, points2, configData.maxFeatures, configData.minSeparation);
-				if (configData.verboseMode) { ROS_INFO("After (%d) concat, have (%d) points...", ppp, points2.size()); }
+				if (configData.verboseMode) { ROS_INFO("After (%d) concat, have (%u) points...", ppp, points2.size()); }
 			}
 		}
 	}
@@ -959,7 +961,7 @@ void featureTrackerNode::loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec) {
 
 	std::string currentFileAddress = configData.predetectedFeatures + "/" + predetectedFeatureFiles.at(currentIndex);
 	std::ifstream ifs;
-	ifs.open(currentFileAddress);
+	ifs.open(currentFileAddress.c_str());
 
 	char buffer[512];
 	cv::KeyPoint kp;
@@ -987,7 +989,7 @@ void featureTrackerNode::updateTrackingVectors() {
 					
 			testTime = timeElapsedMS(test_timer, false);
 					
-			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector before adding projections on frame (%d) = (%d)", bufferIndices[readyFrame % 2], featureTrackVector.size()); }
+			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector before adding projections on frame (%d) = (%d)", bufferIndices[readyFrame % 2], int(featureTrackVector.size())); }
 					
 			if (featureTrackVector.size() > 0) {
 				if (featureTrackVector.at(featureTrackVector.size()-1).locations.size() > 0) {
@@ -1000,12 +1002,12 @@ void featureTrackerNode::updateTrackingVectors() {
 					
 			clearDangerFeatures(featureTrackVector, lastAllocatedTrackIndex);
 					
-			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector after adding projections = (%d)", featureTrackVector.size()); }
-			if (configData.verboseMode) { ROS_INFO("About to concatenate with (%d) + (%d) / (%d) points and minsep of (%f)", globalFinishingPoints.size(), candidates[jjj].size(), configData.maxFeatures, configData.minSeparation); }
+			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector after adding projections = (%d)", int(featureTrackVector.size())); }
+			if (configData.verboseMode) { ROS_INFO("About to concatenate with (%d) + (%d) / (%d) points and minsep of (%f)", int(globalFinishingPoints.size()), int(candidates[jjj].size()), configData.maxFeatures, configData.minSeparation); }
 					
 			concatenateWithExistingPoints(globalFinishingPoints, candidates[jjj], configData.maxFeatures, configData.minSeparation);
 					
-			if (configData.verboseMode) { ROS_INFO("Size of finishing points / candidates after concatenation = (%d / %d)", globalFinishingPoints.size(), candidates[jjj].size()); }
+			if (configData.verboseMode) { ROS_INFO("Size of finishing points / candidates after concatenation = (%d / %d)", int(globalFinishingPoints.size()), int(candidates[jjj].size())); }
 				
 			testTime = timeElapsedMS(test_timer, false);
 		}
@@ -1017,12 +1019,12 @@ void featureTrackerNode::updateTrackingVectors() {
 void featureTrackerNode::detectNewFeatures() {
 	
 	
-	if (configData.verboseMode) { ROS_INFO("Entered (%s) : Currently have (%d) points", __FUNCTION__, globalFinishingPoints.size()); }
+	if (configData.verboseMode) { ROS_INFO("Entered (%s) : Currently have (%d) points", __FUNCTION__, int(globalFinishingPoints.size())); }
 	
 	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {	
 		candidates[jjj].clear();
 		currPoints[jjj].clear();
-		if (configData.verboseMode) { ROS_INFO("Considering application of detector (%u), with (%d) pts", jjj, globalFinishingPoints.size()); }
+		if (configData.verboseMode) { ROS_INFO("Considering application of detector (%u), with (%d) pts", jjj, int(globalFinishingPoints.size())); }
 		
 		testTime = timeElapsedMS(test_timer, false);
 		bool wantNewDetection = false;
@@ -1057,7 +1059,7 @@ void featureTrackerNode::detectNewFeatures() {
 				detectedFeaturesStream.close();
 			}
 			
-			if (configData.verboseMode) ROS_INFO("Detector (%u) found (%d) points.", jjj, currPoints[jjj].size());
+			if (configData.verboseMode) ROS_INFO("Detector (%d) found (%d) points.", jjj, int(currPoints[jjj].size()));
 			
 			discardedNewFeatures += int(currPoints[jjj].size());
 
@@ -1072,17 +1074,17 @@ void featureTrackerNode::detectNewFeatures() {
 
 				proximityViolationFilter(currPoints[jjj], globalFinishingPoints, configData.minSeparation);
 
-				if (configData.verboseMode) { ROS_INFO("Reduced to (%d) candidate points based on proximity.", currPoints[jjj].size()); }
+				if (configData.verboseMode) { ROS_INFO("Reduced to (%d) candidate points based on proximity.", int(currPoints[jjj].size())); }
 				if (int(currPoints[jjj].size() + globalFinishingPoints.size()) > configData.maxFeatures) reduceFeaturesToMaximum(currPoints[jjj], configData.maxFeatures - int(globalFinishingPoints.size()));
 				
-				if (configData.verboseMode) { ROS_INFO("Further reduced to (%d) candidate points based on maxFeatures limit.", currPoints[jjj].size()); }
+				if (configData.verboseMode) { ROS_INFO("Further reduced to (%d) candidate points based on maxFeatures limit.", int(currPoints[jjj].size())); }
 				
 				newlyDetectedFeatures += int(currPoints[jjj].size());
 				discardedNewFeatures -= int(currPoints[jjj].size());
 				
 				cv::KeyPoint::convert(currPoints[jjj], candidates[jjj]);
 
-				if (configData.verboseMode) { ROS_WARN("Adding (%d) new features", candidates[jjj].size()); }
+				if (configData.verboseMode) { ROS_WARN("Adding (%u) new features", candidates[jjj].size()); }
 				if (candidates[jjj].size() > 0) newlySensedFeatures.insert(newlySensedFeatures.end(), candidates[jjj].begin(), candidates[jjj].end());
 				
 			}
@@ -1113,7 +1115,7 @@ void featureTrackerNode::features_loop() {
 	
 	testTime = timeElapsedMS(test_timer, true);
 	
-	if (configData.verboseMode) { ROS_INFO("Starting features loop for frame (%u [%u]) with (%d) finishing points.", readyFrame, bufferIndices[readyFrame % 2], globalFinishingPoints.size()); }
+	if (configData.verboseMode) { ROS_INFO("Starting features loop for frame (%u [%u]) with (%u) finishing points.", readyFrame, bufferIndices[readyFrame % 2], globalFinishingPoints.size()); }
 		
 	if (configData.verboseMode) { ROS_INFO("About to update distance constraint."); }
 	updateDistanceConstraint();
@@ -1125,7 +1127,7 @@ void featureTrackerNode::features_loop() {
 	if (H12.rows != 0) {		
 		transformPoints(globalFinishingPoints, H12);
 		featuresVelocity = -1.0;
-		if (configData.verboseMode) { ROS_INFO("(%d) Points transformed.", globalFinishingPoints.size()); }
+		if (configData.verboseMode) { ROS_INFO("(%d) Points transformed.", int(globalFinishingPoints.size())); }
 	} else globalFinishingPoints.clear();
 	
 	if (configData.verboseMode) { ROS_INFO("About to attempt tracking..."); }
@@ -1144,7 +1146,7 @@ void featureTrackerNode::features_loop() {
 	
 	if (((int)globalFinishingPoints.size()) < configData.minFeatures) {
 		featuresTooLow = true;
-		if (configData.verboseMode) { ROS_WARN("featuresTooLow == true, because feature count is (%d) vs (%d, %u).", globalFinishingPoints.size(), configData.minFeatures, previousTrackedPointsPeak); }
+		if (configData.verboseMode) { ROS_WARN("featuresTooLow == true, because feature count is (%u) vs (%d, %u).", globalFinishingPoints.size(), configData.minFeatures, previousTrackedPointsPeak); }
 		previousTrackedPointsPeak = (unsigned int)(globalFinishingPoints.size());
 	} else featuresTooLow = false;
 	

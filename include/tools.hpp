@@ -25,6 +25,7 @@
 	#include <string.h>
 	#include <cstdlib>
 	#include <cmath>
+	#include <stdarg.h>
 #endif
 
 #include <iostream>
@@ -88,13 +89,34 @@ void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsig
 
 #ifdef _WIN32
 #define __SHORTENED_FILE__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#else
-#define __SHORTENED_FILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#endif
-
 #define ROS_INFO(fmt, ...) std::printf("%s:%s << " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
 #define ROS_WARN(fmt, ...) std::printf("%s:%s << WARNING! " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
 #define ROS_ERROR(fmt, ...) std::printf("%s:%s << ERROR! " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
+#else
+#define __SHORTENED_FILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+void ROS_INFO(char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+
+void ROS_WARN(char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+
+void ROS_ERROR(char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+
+#endif
 
 #endif
 
