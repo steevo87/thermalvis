@@ -288,7 +288,7 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
         while (newCorners.at(0).size() < (unsigned int)(num))
         {
 
-            printf("%s << newCorners.at(0).size() = %d; num = %d\n", __FUNCTION__, newCorners.at(0).size(), num);
+            printf("%s << newCorners.at(0).size() = %lu; num = %d\n", __FUNCTION__, newCorners.at(0).size(), num);
 
             maxIndex = 0;
             maxScore = 0;

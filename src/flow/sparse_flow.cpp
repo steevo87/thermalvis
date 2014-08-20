@@ -1464,7 +1464,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		string defaultOutput = configData.read_addr + "nodes/flow/log/" + timeString;
 #else
 		boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
-		sprintf(timeString, "%010u.%09u", pt.time_of_day().total_seconds(), pt.time_of_day().total_microseconds());
+		sprintf(timeString, "%010lu.%09lu", (long unsigned int)pt.time_of_day().total_seconds(), (long unsigned int)pt.time_of_day().total_microseconds());
 
 		string defaultDir = configData.read_addr + "data";
 		boost::filesystem::create_directory(defaultDir);

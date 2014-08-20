@@ -8,7 +8,7 @@
 double calculateFeatureSpeeds(const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2, vector<cv::Point2f>& velocities, double time1, double time2) {
 	
 	if ((pts1.size() != pts2.size()) || (pts1.size() == 0)) {
-		printf("%s << ERROR! pts vectors are of sizes (%d, %d)\n", __FUNCTION__, pts1.size(), pts2.size());
+		printf("%s << ERROR! pts vectors are of sizes (%lu, %lu)\n", __FUNCTION__, pts1.size(), pts2.size());
 		return 0.0;
 	}
 	
@@ -377,7 +377,7 @@ void concatenateWithExistingPoints(vector<cv::Point2f>& pts, vector<cv::Point2f>
 	for (int iii = int(kps.size())-1; iii >= 0; iii--) {
 		if (int(pts.size()) >= size) break;
 		bool isValid = checkRoomForFeature(pts, kps.at(iii), min_sep);
-		(!isValid) ? kps.erase(kps.begin()+iii) : pts.push_back(kps.at(iii));
+		if (!isValid) { kps.erase(kps.begin()+iii); } else { pts.push_back(kps.at(iii)); }
 	}
 }
 
@@ -556,8 +556,8 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 	if (camData.Kx.rows != 0) markEdgyTracks(pts2, statusVec, camData);
 	
 	if (warping) {
-		if (debugFlag) { printf("%s << W: pts1.size() = %u [before filtering]\n", __FUNCTION__, pts1.size()); }
-		if (debugFlag) { printf("%s << Debug (%d.%d) : (%u, %u)\n", __FUNCTION__, 7, 1, pts1.size(), pts2.size()); }
+		if (debugFlag) { printf("%s << W: pts1.size() = %lu [before filtering]\n", __FUNCTION__, pts1.size()); }
+		if (debugFlag) { printf("%s << Debug (%d.%d) : (%lu, %lu)\n", __FUNCTION__, 7, 1, pts1.size(), pts2.size()); }
 		
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 		filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), true);
@@ -588,7 +588,7 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 			}
 		}
 	} else {
-		if (debugFlag) { printf("%s << pts1.size() = %u [before filtering]\n", __FUNCTION__, pts1.size()); }
+		if (debugFlag) { printf("%s << pts1.size() = %lu [before filtering]\n", __FUNCTION__, pts1.size()); }
 		//printf("%s << passed distanceConstraint = %d\n", __FUNCTION__, distanceConstraint);
 		if (debugFlag) { printf("%s << Debug (%d.%d)\n", __FUNCTION__, 7, 3); }
 		

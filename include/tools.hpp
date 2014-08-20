@@ -85,6 +85,11 @@ double asymmetricGaussianValue(double score, double mean, double loVar, double h
 
 void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max_val);
 
+#ifndef _WIN32
+#define S_OK 		0
+#define S_FALSE 	-1
+#endif
+
 #ifndef _BUILD_FOR_ROS_
 
 #ifdef _WIN32

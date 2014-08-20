@@ -4,7 +4,6 @@
 
 #include "program.hpp"
 
-
 GenericOptions::GenericOptions() : pauseMode(false), isValid(true), wantsToOutput(false), FrameCounter1(0), writeInColor(true) {
 	output_directory = new char[MAX_INPUT_ARG_LENGTH];
 	displayImage = new cv::Mat();
@@ -16,7 +15,7 @@ GenericOptions::~GenericOptions() {
 
 void GenericOptions::displayFrame() {
 	if (displayImage->rows != 0) {
-		!pauseMode ? cv::imshow("display", *displayImage) : 0;
+		if (!pauseMode) cv::imshow("display", *displayImage);
 		char key = cv::waitKey(1);
 		if (key == 'q') isValid = false;
 	}

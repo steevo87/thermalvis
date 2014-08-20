@@ -264,7 +264,7 @@ void addMatchesToVector(vector<featureTrack>& featureTrackVector, unsigned int i
 	
 	// Can you even just assume that both are in order of age?? I think that might be how it works...
 	
-	if (debug) { printf("%s << Points to add before proximity trimming = (%d)\n", __FUNCTION__, points2.size()); }
+	if (debug) { printf("%s << Points to add before proximity trimming = (%lu)\n", __FUNCTION__, points2.size()); }
 	
 	for (unsigned int jjj = 1; jjj < points2.size(); jjj++) {
 		
@@ -285,7 +285,7 @@ void addMatchesToVector(vector<featureTrack>& featureTrackVector, unsigned int i
 		}
 	}
 	
-	if (debug) { printf("%s << Points to add after proximity trimming = (%d)\n", __FUNCTION__, points2.size()); }
+	if (debug) { printf("%s << Points to add after proximity trimming = (%lu)\n", __FUNCTION__, points2.size()); }
 	
 	for (unsigned int mmm = 0; mmm < points1.size(); mmm++) {
 		if (debug) { printf("%s << Adding match from index (%d) to (%d)..\n", __FUNCTION__, index1, index2); }

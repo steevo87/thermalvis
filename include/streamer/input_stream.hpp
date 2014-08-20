@@ -15,6 +15,10 @@
 #include "radiometric.hpp"
 #include "camera.hpp"
 
+#ifndef _IS_WINDOWS_
+#include "serial_comms.hpp"
+#endif
+
 #ifdef _USE_BOOST_
 #include "boost/filesystem.hpp"  
 
@@ -88,14 +92,8 @@
 //int getMapIndex(string mapping);
 void getMapping(int mapCode, int& fullMapCode);
 
-#ifndef _BUILD_FOR_ROS_
-/// \brief		Substitute for ROS live configuration adjustments
-class streamerConfig : public streamerRealtimeData {
-public:
-	streamerConfig() { }
-	bool assignStartingData(streamerData& startupData);
-
-};
+#ifndef _IS_WINDOWS_
+void displayTermiosData(termios options);
 #endif
 
 /// \brief		Stores configuration information for the streamer/image-processing routine
@@ -137,6 +135,16 @@ public:
 #endif
 
 };
+
+#ifndef _BUILD_FOR_ROS_
+/// \brief		Substitute for ROS live configuration adjustments
+class streamerConfig : public streamerRealtimeData {
+public:
+	streamerConfig() { }
+	bool assignStartingData(streamerData& startupData);
+
+};
+#endif
 
 /// \brief		Stores some basic camera information in OpenCV format
 struct camData_ {
@@ -253,7 +261,7 @@ private:
 	vector<string> inputList;
 	int fileCount;
 	
-#ifndef _WIN32
+#ifdef _BUILD_FOR_ROS_
 	streamerSource *mainVideoSource;
 #endif
 
@@ -343,12 +351,12 @@ public:
 	CvCapture* capture;
 	
 #ifndef _BUILD_FOR_ROS_
-	bool streamerNode::isVideoValid() { return videoValid; }
+	bool isVideoValid() { return videoValid; }
 #endif
 	
 	void setValidity(bool val) { videoValid = val; }
 	
-#ifndef _WIN32
+#ifdef _BUILD_FOR_ROS_
 	streamerSource * getMainVideoSource() { return mainVideoSource; }
 #endif
 

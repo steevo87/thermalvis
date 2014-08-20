@@ -174,7 +174,7 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 		startupData.outputFormatString = "png";
 		ROS_WARN("Setting <outputFormatString> to <png> as default.");
 	} else {
-		ROS_ERROR("Unrecognized <outputFormatString> of (%s).", startupData.outputFormatString);
+		ROS_ERROR("Unrecognized <outputFormatString> of (%s).", startupData.outputFormatString.c_str());
 		startupData.dataValid = false;
 	}
 	
@@ -595,11 +595,11 @@ bool inputStream::accessLatest8bitFrame(cv::Mat& latestFrame) {
 
 void inputStream::displayFrame() {
 	if (displayImage->rows != 0) {
-		!pauseMode ? cv::imshow("display", *displayImage) : 0;
+		if (!pauseMode) cv::imshow("display", *displayImage);
 	} else if (_8bitImage->rows != 0) {
-		!pauseMode ? cv::imshow("display", *_8bitImage) : 0;
+		if (!pauseMode) cv::imshow("display", *_8bitImage);
 	} else {
-		!pauseMode ? cv::imshow("display", *rawImage) : 0;
+		if (!pauseMode) cv::imshow("display", *rawImage);
 	}
 	
 	char key = cv::waitKey(1);
@@ -795,7 +795,7 @@ streamerNode::streamerNode(streamerData startupData) :
 	
 	if (configData.verboseMode) { ROS_INFO("Initializing camera (%s)", configData.topicname.c_str()); }
 	
-#ifndef _WIN32
+#ifdef _BUILD_FOR_ROS_
 	mainVideoSource = new streamerSource;
 #endif
 
@@ -914,7 +914,7 @@ streamerNode::streamerNode(streamerData startupData) :
 
 	if (configData.verboseMode) { ROS_INFO("Initializing video source..."); }
 
-#ifndef _WIN32
+#ifdef _BUILD_FOR_ROS_
 	mainVideoSource->initialize_video_source();
 #endif
 	getMapping(configData.mapCode, fullMapCode);
@@ -1434,8 +1434,11 @@ bool streamerNode::configureSerialComms() {
 		if (1) { ROS_INFO("SerialComms: Disabling mean-shifting..."); }
 		if (!sendSerialCommand(localCommand, 1)) ROS_WARN("Serial command (%s) failed after (%d) attempts", localCommand, 1);
 		
+#ifdef _BUILD_FOR_ROS_
 		ros::Duration(1.0).sleep();
-		
+#else
+		sleep(1000);
+#endif
 		char buff[SERIAL_BUFF_SIZE];	
 		read(mainfd, buff, SERIAL_BUFF_SIZE);
 		//ROS_WARN("Message received = (%s)\n", buff);
@@ -1448,7 +1451,11 @@ bool streamerNode::configureSerialComms() {
 		
 	}
 	
-	ros::Duration(1.0).sleep();
+#ifdef _BUILD_FOR_ROS_
+		ros::Duration(1.0).sleep();
+#else
+		sleep(1000);
+#endif
 					
 	if (configData.disableSkimming) {
 		char localCommand[256];
@@ -1575,7 +1582,9 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	
 	if (configData.detectorMode != config.detectorMode) {
 		configData.detectorMode = config.detectorMode;
-		(configData.serialComms) ? updateDetectorMode = true : ROS_WARN("Selecting a detector mode has no effect unless serial comms are enabled.");
+		if (configData.serialComms) { 
+			updateDetectorMode = true;
+		} else ROS_WARN("Selecting a detector mode has no effect unless serial comms are enabled.");
 	}
 	
 	configData.usbMode = config.usbMode;
@@ -2137,7 +2146,9 @@ bool streamerNode::processImage() {
 		} 
 		
 		if (configData.output16bit || (configData.writeImages && (configData.outputType == OUTPUT_TYPE_CV_16UC1))) {
-			(canRadiometricallyCorrect && configData.radiometricCorrection && configData.radiometricRaw) ? temperatureDownsample16(temperatureMat, scaled16Mat) : scaled16Mat = _16bitMat;
+			if (canRadiometricallyCorrect && configData.radiometricCorrection && configData.radiometricRaw) {
+				temperatureDownsample16(temperatureMat, scaled16Mat);
+			} else scaled16Mat = _16bitMat;
 		}
 		
 	} else if (configData.inputDatatype == DATATYPE_8BIT) {
@@ -2200,7 +2211,9 @@ bool streamerNode::processImage() {
 	}
 	
 	
-	(configData.filterMode > 0) ? applyFilter(preFilteredMat, smoothedMat, configData.filterMode, configData.filterParam) : smoothedMat = preFilteredMat;
+	if (configData.filterMode > 0) {
+		applyFilter(preFilteredMat, smoothedMat, configData.filterMode, configData.filterParam); 
+	} else smoothedMat = preFilteredMat;
 	
 	if ((configData.temporalSmoothing) && (configData.inputDatatype != DATATYPE_RAW)) {
 		if (((configData.outputColor) || ((configData.writeImages) && (configData.outputType == OUTPUT_TYPE_CV_8UC3))) || ((configData.output8bit) || ((configData.writeImages) && (configData.outputType == OUTPUT_TYPE_CV_8UC1)))) {
@@ -2262,7 +2275,7 @@ bool streamerNode::imageLoop() {
 
 void streamerNode::displayFrame(cv::Mat& frame, std::string name) {
 	if (frame.rows != 0) {
-		!pauseMode ? cv::imshow(name, frame) : 0;
+		if (!pauseMode) cv::imshow(name, frame);
 		char key = cv::waitKey(1);
 		if (key == 'q') isValid = false;
 	}
@@ -2509,7 +2522,7 @@ bool streamerNode::streamCallback(bool capture) {
 			
 			if (configData.verboseMode){ ROS_INFO("Attempting to capture frame..."); }
 			
-#ifndef _WIN32
+#ifdef _BUILD_FOR_ROS_
 			if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->oPacket)) != 0) {
 				if (configData.verboseMode){ ROS_WARN("av_read_frame() failed."); }
 				currAttempts++;
@@ -2791,7 +2804,7 @@ bool streamerNode::runRead() {
 		setValidity(true);
 		if (configData.verboseMode) { ROS_INFO("Opening file (%s)...", configData.filename.c_str()); }
 		if (configData.inputDatatype == DATATYPE_RAW) {
-#ifndef _WIN32
+#ifdef _BUILD_FOR_ROS_
 			if (getMainVideoSource()->setup_video_file(configData.filename) < 0) {
 				ROS_ERROR("Source configuration failed.");
 				return false;
