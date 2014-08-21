@@ -1137,6 +1137,7 @@ void streamerNode::prepareForTermination() {
 }
 
 int streamerNode::open_port() {
+#ifndef _IS_WINDOWS_
    int fd;                                   /* File descriptor for the port */
 
 
@@ -1166,6 +1167,8 @@ int streamerNode::open_port() {
 	   
    }
    return (fd);
+#endif
+   return -1;
 }
 
 #ifndef _WIN32
