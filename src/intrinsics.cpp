@@ -620,22 +620,22 @@ void optimizeCalibrationSet(Size imSize,
 
             //printf("%s << candidatePatternsCpy.size() = %d\n", __FUNCTION__, candidatePatternsCpy.size());
 
-            for (int i = 0; i < candidatePatternsCpy.size(); i++)
+            for (unsigned int i = 0; i < candidatePatternsCpy.size(); i++)
             {
 				
-				if (debugMode) { printf("%s << i = (%d / %lu)\n", __FUNCTION__, i, candidatePatternsCpy.size()); }
+				if (debugMode) { printf("%s << i = (%u / %lu)\n", __FUNCTION__, i, candidatePatternsCpy.size()); }
 
                 tempFrameTester.clear();
                 
-                if (debugMode) { printf("%s << i = (%d / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 0); }
+                if (debugMode) { printf("%s << i = (%u / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 0); }
                 
                 tempFrameTester.assign(selectedFrames.begin(), selectedFrames.end());
                 
-                if (debugMode) { printf("%s << i = (%d / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 1); }
+                if (debugMode) { printf("%s << i = (%u / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 1); }
                 
                 tempFrameTester.push_back(candidatePatternsCpy.at(i));
                 
-                if (debugMode) { printf("%s << i = (%d / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 2); }
+                if (debugMode) { printf("%s << i = (%u / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 2); }
 
                 bool alreadyAdded = false;
 
