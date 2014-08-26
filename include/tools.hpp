@@ -33,6 +33,10 @@
 #include <vector>
 #include <string.h>
 
+#ifdef _BUILD_FOR_ROS_
+#include <ros/ros.h>
+#endif
+
 #define MESSAGE_NORMAL	0
 #define MESSAGE_WARNING 1
 #define MESSAGE_ERROR	2
