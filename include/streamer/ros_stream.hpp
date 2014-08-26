@@ -20,7 +20,10 @@
 #include "tools.hpp"
 #include "improc.hpp"
 #include "radiometric.hpp"
+
+#ifdef _AVLIBS_AVAILABLE_
 #include "video.hpp"
+#endif
 
 #include <dynamic_reconfigure/server.h>
 #include "streamerConfig.h"

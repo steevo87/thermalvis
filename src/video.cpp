@@ -2,7 +2,7 @@
  *  \brief	Definitions for managing video sources and formats.
 */
 
-#if defined(WIN32) || !defined(_BUILD_FOR_ROS_)
+#if defined(WIN32) || !defined(_BUILD_FOR_ROS_) || !defined(_AVLIBS_AVAILABLE_)
 	// ..
 #else
 

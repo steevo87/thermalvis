@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-project(THERMALVIS)
+SET(PROJECT_NAME "thermalvis")
+project(${PROJECT_NAME})
 SET(THERMALVIS_COMPILE_FLAGS "-D_THERMALVIS_")
 
 IF(WIN32 OR win64)
@@ -18,10 +19,11 @@ ELSE()
 	SET(USERPROFILE "$ENV{HOME}")
 ENDIF()
 
-LIST(APPEND catkin_COMPONENTS roscpp rospy std_msgs)
+LIST(APPEND MSG_DEP_SET std_msgs sensor_msgs)
+LIST(APPEND catkin_COMPONENTS roscpp rospy dynamic_reconfigure)
 
 IF(NOT IS_WINDOWS)
-	find_package(catkin QUIET COMPONENTS ${catkin_COMPONENTS})
+	find_package(catkin QUIET COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
 	IF(catkin_FOUND)
 		OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." TRUE)
 		IF(BUILD_FOR_ROS)
@@ -30,7 +32,7 @@ IF(NOT IS_WINDOWS)
 			ELSE()
 				MESSAGE(STATUS "Configuring for a ROS build with CATKIN_DEVEL_PREFIX = ${CATKIN_DEVEL_PREFIX}")
 			ENDIF()
-			find_package(catkin COMPONENTS ${catkin_COMPONENTS})
+			find_package(catkin REQUIRED COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
 		ELSE()
 			MESSAGE(WARNING "Even though catkin has been found, <BUILD_FOR_ROS> has already been set false so this will be treated as a non-ROS build.")
 		ENDIF()
@@ -41,14 +43,37 @@ IF(NOT IS_WINDOWS)
 	ENDIF()
 ENDIF()
 
+IF(BUILD_FOR_ROS)
+	## Uncomment this if the package has a setup.py. This macro ensures
+	## modules and global scripts declared therein get installed
+	## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+	# catkin_python_setup()
+	
+	add_message_files(FILES feature_tracks.msg pose_confidence.msg)
+	
+	generate_messages(DEPENDENCIES ${MSG_DEP_SET})
+
+	generate_dynamic_reconfigure_options(
+	  cfg/calibrator.cfg
+	  cfg/flow.cfg
+	  cfg/slam.cfg
+	  cfg/streamer.cfg
+	)
+	
+	catkin_package(
+		INCLUDE_DIRS include 
+		LIBRARIES thermalvis
+		CATKIN_DEPENDS message_runtime ${MSG_DEP_SET}
+		#DEPENDS system_lib
+	)
+	include_directories(${catkin_INCLUDE_DIRS})
+	include_directories(cfg/cpp/thermalvis)
+	include_directories(${CATKIN_DEVEL_PREFIX}/include/${PROJECT_NAME})
+ENDIF()
+
 SET(ADDITIONAL_INCLUDES "")
 SET(ADDITIONAL_LIBRARIES "")
-
 OPTION(BUILD_APPS "Build demo apps." TRUE)
-
-IF(BUILD_FOR_ROS)
-	include_directories(${catkin_INCLUDE_DIRS})
-ENDIF()
 
 IF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 2010") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64 2010"))
 	SET(msvc_ABBREVIATION "msvc2010")
@@ -71,6 +96,31 @@ ENDIF()
 		
 #set(CMAKE_AUTOMOC ON)
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+LIST(APPEND avlibs_LIST va avformat avcodec avutil avdevice swscale)
+
+set (ADDITIONAL_LIBS thermalvis)
+
+IF(IS_WINDOWS)
+	SET(HAS_AVLIBS_AVAILABLE FALSE)
+ELSE()
+	SET(HAS_AVLIBS_AVAILABLE TRUE)
+	
+	foreach(AVLIBS_SUB_LIB ${avlibs_LIST})
+		string(TOUPPER "${AVLIBS_SUB_LIB}" UPPERCASE_NAME)
+		FIND_LIBRARY("LIB${UPPERCASE_NAME}_LIBRARY NAMES" ${AVLIBS_SUB_LIB} PATHS ${SEARCH_LIBRARY_PATHS})
+		if(HAS_AVLIBS_AVAILABLE AND (NOT "LIB${UPPERCASE_NAME}_LIBRARY"))
+			message(WARNING "${AVLIBS_SUB_LIB} library is missing. May not be able to use Miricle camera.")
+			SET(HAS_AVLIBS_AVAILABLE FALSE)
+		else()
+			LIST(APPEND ADDITIONAL_LIBS "LIB${UPPERCASE_NAME}_LIBRARY")
+		endif()
+	endforeach(AVLIBS_SUB_LIB) 
+ENDIF()
+ 
+IF(HAS_AVLIBS_AVAILABLE)
+	add_definitions( -D_AVLIBS_AVAILABLE_ )
+ENDIF()
 
 SET(Qt5Widgets_DIR "C:/Qt/Qt5.3.1/5.3/msvc2012_opengl/lib/cmake/Qt5Widgets" CACHE STRING "Default search path for QtWidgets cmake file")
 find_package(Qt5Widgets QUIET)

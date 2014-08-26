@@ -2,25 +2,6 @@
 
 #ifdef _BUILD_FOR_ROS_
 
-void mySigintHandler(int sig)
-{
-	// Do some custom action.
-	// For example, publish a stop message to some other nodes.
-
-	ROS_INFO("Requested shutdown... terminating feeds...");
-	wantsToShutdown = true;
-	
-#ifdef _BUILD_FOR_ROS_
-	(*globalNodePtr)->prepareForTermination();
-#endif
-	
-
-	//shutdown();
-
-	// All the default sigint handler does is call shutdown()
-  
-}
-
 bool streamerNode::runBag() {
 	
 	if (configData.subscribeMode) {

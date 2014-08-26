@@ -4,7 +4,7 @@
 
 void mySigintHandler(int sig) {
 	wantsToShutdown = true;
-	displayMessage("Requested shutdown... terminating feeds...", MESSAGE_WARNING);
+	ROS_WARN("Requested shutdown... terminating feeds...");
 	
 	(*globalNodePtr)->prepareForTermination();
 }

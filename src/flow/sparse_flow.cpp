@@ -92,6 +92,8 @@ trackerData::trackerData() :
 	multiplier[1] = DEFAULT_MULTIPLIER_2;
 }
 
+#ifdef _USE_BOOST_ 
+#ifndef _BUILD_FOR_ROS_
 bool trackerData::assignFromXml(xmlParameters& xP) {
 
 	int countOfFlowNodes = 0;
@@ -215,6 +217,8 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 	return true;
 
 }
+#endif
+#endif
 
 void featureTrackerNode::displayFrame() {
 	if (drawImage_resized.rows != 0) {
@@ -906,10 +910,10 @@ void featureTrackerNode::matchWithExistingTracks() {
 				cv::KeyPoint::convert(featuresFromPts[0], points1, queryIdxs);
 				cv::KeyPoint::convert(featuresFromPts[1], points2, trainIdxs);
 
-				if (configData.verboseMode) ROS_INFO("Still have (%d / %d) (%d/%d) (%d / %d) matches...", featuresFromPts[0].size(), featuresFromPts[1].size(), points1.size(), points2.size(), queryIdxs.size(), trainIdxs.size());
+				if (configData.verboseMode) ROS_INFO("Still have (%d / %d) (%d/%d) (%d / %d) matches...", int(featuresFromPts[0].size()), int(featuresFromPts[1].size()), int(points1.size()), int(points2.size()), int(queryIdxs.size()), int(trainIdxs.size()));
 
 				// Integrate matches into feature tracks structure
-				if (configData.verboseMode) ROS_WARN("About to add matches (%u, %u)", points1.size(), points2.size());
+				if (configData.verboseMode) ROS_WARN("About to add matches (%d, %d)", int(points1.size()), int(points2.size()));
 				
 				addMatchesToVector(featureTrackVector, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedTrackIndex, configData.minSeparation, false);
 				

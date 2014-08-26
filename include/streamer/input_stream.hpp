@@ -5,8 +5,14 @@
 #ifndef _THERMALVIS_INPUT_STREAM_H_
 #define _THERMALVIS_INPUT_STREAM_H_
 
+#include "tools.hpp"
 #include "general_resources.hpp"
+
+#ifdef _BUILD_FOR_ROS_
 #include "ros_resources.hpp"
+#include <thermalvis/streamerConfig.h>
+#endif
+
 #include "opencv_resources.hpp"
 	
 #include "launch.hpp"
@@ -21,12 +27,10 @@
 
 #ifdef _USE_BOOST_
 #include "boost/filesystem.hpp"  
-
 #ifndef _BUILD_FOR_ROS_
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #endif
-
 #endif
 
 #include "input_stream_config.hpp"
@@ -188,7 +192,7 @@ private:
 #endif
 
 	ros::Time info_time, image_time, original_time, dodgeTime, lastFlagReceived, lastNucPerformed_at_the_earliest;
-	ros::sensor_msgs::CameraInfo original_camera_info, camera_info;
+	sensor_msgs::CameraInfo original_camera_info, camera_info;
 
 #ifdef _BUILD_FOR_ROS_
 	cv_bridge::CvImagePtr cv_ptr;
@@ -262,7 +266,9 @@ private:
 	int fileCount;
 	
 #ifdef _BUILD_FOR_ROS_
+#ifdef _AVLIBS_AVAILABLE_
 	streamerSource *mainVideoSource;
+#endif
 #endif
 
 	cv::VideoCapture cap;
@@ -357,7 +363,9 @@ public:
 	void setValidity(bool val) { videoValid = val; }
 	
 #ifdef _BUILD_FOR_ROS_
+#ifdef _AVLIBS_AVAILABLE_
 	streamerSource * getMainVideoSource() { return mainVideoSource; }
+#endif
 #endif
 
 	cv::VideoCapture * getVideoCapture() { return &cap; }
@@ -436,7 +444,7 @@ protected:
 	cScheme *cMapping;
 
 public:
-	ros::sensor_msgs::CameraInfo camera_info;
+	sensor_msgs::CameraInfo camera_info;
 
 	inputStream();
 	bool processFrame();

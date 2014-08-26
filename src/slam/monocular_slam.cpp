@@ -19,6 +19,8 @@ slamData::slamData()
 	
 }
 
+#ifdef _USE_BOOST_ 
+#ifndef _BUILD_FOR_ROS_
 bool slamData::assignFromXml(xmlParameters& xP) {
 
 	int countOfNodes = 0;
@@ -71,6 +73,8 @@ bool slamData::assignFromXml(xmlParameters& xP) {
 	return true;
 
 }
+#endif
+#endif
 
 #ifdef _BUILD_FOR_ROS_
 void slamNode::serverCallback(thermalvis::slamConfig &config, uint32_t level) {

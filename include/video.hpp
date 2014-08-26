@@ -2,7 +2,7 @@
  *  \brief	Declarations for managing video sources and formats.
 */
 
-#if defined(WIN32) || !defined(_BUILD_FOR_ROS_)
+#if defined(WIN32) || !defined(_BUILD_FOR_ROS_) || !defined(_AVLIBS_AVAILABLE_)
 	// ..
 #else
 
@@ -11,7 +11,22 @@
 
 #include "general_resources.hpp"
 #include "ros_resources.hpp"
-#include "ffmpeg_resources.hpp"
+
+#include <asm/types.h>          /* for videodev2.h */
+
+/***** Add FFMPEG AVI Stuff *****/
+#ifndef INT64_C
+#	define INT64_C(c) (c ## LL)
+#	define UINT64_C(c) (c ## ULL)
+#endif
+
+extern "C" {
+	#include <linux/videodev2.h>
+	#include <libavcodec/avcodec.h>
+	#include <libavformat/avformat.h>
+	#include <libavdevice/avdevice.h>
+	#include <libswscale/swscale.h>
+}
 
 // http://credentiality2.blogspot.com.au/2010/04/v4l2-example.html
 

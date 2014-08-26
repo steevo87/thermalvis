@@ -16,10 +16,13 @@
 	
 #include "launch.hpp"
 #include "improc.hpp"
-#include "video.hpp"
 #include "features.hpp"
 #include "tracks.hpp"
 #include "initialization.hpp"
+
+#ifdef _AVLIBS_AVAILABLE_
+#include "video.hpp"
+#endif
 
 #ifdef _USE_BOOST_
 #include "boost/filesystem.hpp"  

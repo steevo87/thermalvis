@@ -4,6 +4,15 @@
 
 #include "streamer.hpp"
 
+void mySigintHandler(int sig)
+{
+	ROS_INFO("Requested shutdown... terminating feeds...");
+	wantsToShutdown = true;
+#ifdef _BUILD_FOR_ROS_
+	(*globalNodePtr)->prepareForTermination();
+#endif
+}
+
 int main(int argc, char **argv) {
 
 	#ifdef _BUILD_FOR_ROS_

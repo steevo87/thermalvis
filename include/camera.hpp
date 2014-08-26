@@ -10,41 +10,7 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include <math.h>
 
-namespace ros {
-
-struct Time {
-	unsigned long int sec;
-	unsigned long int nsec;
-
-	double toSec();
-	double toNSec();
-	Time();
-	Time(double input);
-	static Time now();
-};
-
-struct Header {
-	unsigned long int seq;
-	std::string frame_id;
-	Time stamp;
-	Header();
-};
-
-namespace sensor_msgs {
-
-struct CameraInfo {
-	Header header;
-	double K[9], R[9], P[12];
-	std::vector<double> D;
-	int width, height;
-	int binning_x, binning_y;
-	std::string distortion_model;
-
-	CameraInfo();
-};
-
-}
-}
+#include "tools.hpp"
 
 /// \brief		Stores camera calibration information in OpenCV format
 struct cameraParameters {
