@@ -10,10 +10,10 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	output8bit = startupData.output8bit;
 	outputColor = startupData.outputColor;
 
-	undistortImages = startupData.undistortImages;
+	wantsToUndistort = startupData.wantsToUndistort;
 	autoTemperature = startupData.autoTemperature;
 	wantsToUndistort = startupData.wantsToUndistort;
-	wantsToDumpTimestamps = startupData.wantsToDumpTimestamps;
+	dumpTimestamps = startupData.dumpTimestamps;
 	
 	inputDatatype = startupData.inputDatatype;
 	detectorMode = startupData.detectorMode;
@@ -23,8 +23,8 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	maxNucInterval = startupData.maxNucInterval;
 
 	normMode = startupData.normMode;
-	mapCode = startupData.mapCode;
-	showExtremeColors = startupData.showExtremeColors;
+	map = startupData.map;
+	extremes = startupData.extremes;
 	
 	minTemperature = startupData.minTemperature;
 	maxTemperature = startupData.maxTemperature;
@@ -73,7 +73,7 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 		} else ROS_INFO("Resizing to (%d x %d)", startupData.desiredCols, startupData.desiredRows);
 	}
 
-	if (startupData.undistortImages) { ROS_INFO("Undistorting images..."); }
+	if (startupData.wantsToUndistort) { ROS_INFO("Undistorting images..."); }
 
 	if (startupData.writeVideo) {
 		if (verboseMode) { ROS_INFO("Has chosen to encode."); }
@@ -315,7 +315,6 @@ streamerData::streamerData() :
 	resampleMode(false), 
 	loopMode(false), 
 	resizeImages(false), 
-	dumpTimestamps(false), 
 	removeDuplicates(false), 
 	temporalSmoothing(true), 
 	readTimestamps(false),
@@ -342,7 +341,8 @@ streamerData::streamerData() :
 	maxThermistorDiff(0.5),
 	maxIntensityChange(1), 
 	alpha(0.00),
-	dataValid(true)
+	dataValid(true),
+	soft_diff_limit(5000000)
 { }
 
 #ifdef _USE_BOOST_ 
@@ -402,10 +402,10 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialPollingRate")) serialPollingRate = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucThreshold")) maxNucThreshold = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			// Image processing
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("undistortImages")) undistortImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("wantsToUndistort")) wantsToUndistort = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoTemperature")) autoTemperature = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("wantsToUndistort")) wantsToUndistort = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("wantsToDumpTimestamps")) wantsToDumpTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("dumpTimestamps")) dumpTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("normMode")) normMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("normFactor")) normFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("threshFactor")) threshFactor = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
@@ -427,7 +427,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("camera_number")) camera_number = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredRows")) desiredRows = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredCols")) desiredCols = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("mapCode")) mapCode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("map")) map = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("temporalMemory")) temporalMemory = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputType")) outputType = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 
@@ -483,7 +483,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("dumpTimestamps")) dumpTimestamps = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("removeDuplicates")) removeDuplicates = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("temporalSmoothing")) temporalSmoothing = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("showExtremeColors")) showExtremeColors = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("extremes")) extremes = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("stepChangeTempScale")) stepChangeTempScale = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("rectifyImages")) rectifyImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -807,7 +807,9 @@ streamerNode::streamerNode(streamerData startupData) :
 	if (configData.verboseMode) { ROS_INFO("Initializing camera (%s)", configData.topicname.c_str()); }
 	
 #ifdef _BUILD_FOR_ROS_
+#ifdef _AVLIBS_AVAILABLE_
 	mainVideoSource = new streamerSource;
+#endif
 #endif
 
 	std::string camera_name;
@@ -926,10 +928,13 @@ streamerNode::streamerNode(streamerData startupData) :
 	if (configData.verboseMode) { ROS_INFO("Initializing video source..."); }
 
 #ifdef _BUILD_FOR_ROS_
+#ifdef _AVLIBS_AVAILABLE_
 	mainVideoSource->initialize_video_source();
 #endif
-	getMapping(configData.mapCode, fullMapCode);
-	colourMap.load_standard(fullMapCode, configData.showExtremeColors);
+#endif
+
+	getMapping(configData.map, fullMapCode);
+	colourMap.load_standard(fullMapCode, configData.extremes);
 	
 #ifdef _BUILD_FOR_ROS_
 	refreshCameraAdvertisements();
@@ -1643,7 +1648,9 @@ void streamerNode::releaseDevice() {
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
 		
 #ifdef _BUILD_FOR_ROS_
+#ifdef _AVLIBS_AVAILABLE_
 		getMainVideoSource()->close_video_capture();
+#endif
 #endif
 	}
 	
@@ -1665,7 +1672,6 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	configData.desiredDegreesPerGraylevel = config.desiredDegreesPerGraylevel;
 	configData.zeroDegreesOffset = config.zeroDegreesOffset;
 	configData.wantsToUndistort = config.wantsToUndistort;
-	configData.wantsToDumpTimestamps = config.wantsToDumpTimestamps;
 	
 	if (configData.autoTemperature != config.autoTemperature) {
 		lastMinDisplayTemp = -9e99, lastMaxDisplayTemp = 9e99;
@@ -1810,10 +1816,9 @@ void streamerNode::serverCallback(streamerConfig &config) {
 #endif
 	}
 
-	configData.mapCode = config.mapCode;
-	configData.showExtremeColors = config.showExtremeColors;
-	getMapping(configData.mapCode, fullMapCode);
-	colourMap.load_standard(fullMapCode, !configData.showExtremeColors);
+	configData.map = config.map;
+	getMapping(configData.map, fullMapCode);
+	colourMap.load_standard(fullMapCode, !configData.extremes);
     
 	if (configData.outputFolder == "outputFolder") {
 		ROS_WARN("No valid output folder specified...");
@@ -1824,7 +1829,7 @@ void streamerNode::serverCallback(streamerConfig &config) {
        //HGH
         //configData.wantsToRectify = config.rectifyImages;
 
-        if (config.undistortImages) {
+        if (config.wantsToUndistort) {
                 //if (map1.rows == 0) {
                     //HGH  initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalCameraInfo.R, globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
                     //HGH
@@ -1845,7 +1850,7 @@ void streamerNode::serverCallback(streamerConfig &config) {
                   //  }
 		}
 
-        configData.undistortImages = config.undistortImages;
+        configData.wantsToUndistort = config.wantsToUndistort;
 	
 	
 	if (!firstServerCallbackProcessed) {
@@ -1925,9 +1930,9 @@ bool streamerNode::setupDevice() {
 		if (configData.verboseMode) { ROS_INFO("Setting up device in 8-bit/MM mode..."); }
 		getVideoCapture()->open(configData.device_num);
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
-		if (configData.verboseMode) { ROS_INFO("Setting up device in 16-bit mode..."); }
-		
+#ifdef _AVLIBS_AVAILABLE_
 #ifdef _BUILD_FOR_ROS_
+		if (configData.verboseMode) { ROS_INFO("Setting up device in 16-bit mode..."); }
 		int deviceWidth, deviceHeight;
 		getMainVideoSource()->setup_video_capture(configData.capture_device.c_str(), deviceWidth, deviceHeight, configData.verboseMode);
 		
@@ -1950,6 +1955,9 @@ bool streamerNode::setupDevice() {
 			}
 			
 		}
+#endif
+#else
+		ROS_ERROR("AVLIBs not available");
 #endif
 	}
 	
@@ -2035,6 +2043,7 @@ void streamerNode::act_on_image() {
 	return;
 }
 
+#ifndef _BUILD_FOR_ROS_
 bool streamerNode::retrieveRawFrame() {
 	if (configData.loadMode) {
 
@@ -2068,14 +2077,16 @@ bool streamerNode::retrieveRawFrame() {
 	}
 	return false;
 }
+#endif
 
-
-bool streamerNode::get8bitImage(cv::Mat& img, ros::sensor_msgs::CameraInfo& info) { 
+#ifndef _BUILD_FOR_ROS_
+bool streamerNode::get8bitImage(cv::Mat& img, sensor_msgs::CameraInfo& info) { 
 	if (_8bitMat.rows == 0) return false;
 	img = _8bitMat;
 	info = camera_info;
 	return true;
 }
+#endif
 
 bool streamerNode::run() {
 #ifdef _BUILD_FOR_ROS_
@@ -2382,11 +2393,11 @@ void streamerNode::publishTopics() {
 
 	bool cameraPublished = false;
 
-	if (configData.wantsToDumpTimestamps) ofs << camera_info.header.stamp.toNSec() << endl;
+	if (configData.dumpTimestamps) ofs << camera_info.header.stamp.toNSec() << endl;
 
 	if ((configData.output16bit) || (configData.writeImages &&  (configData.outputType == OUTPUT_TYPE_CV_16UC1))) {
 
-		if (configData.undistortImages) {
+		if (configData.wantsToUndistort) {
 			if (scaled16Mat.data == _16bitMat_pub.data) _16bitMat_pub = cv::Mat(scaled16Mat.size(), scaled16Mat.type());
 			remap(scaled16Mat, _16bitMat_pub, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT, 0);
 		} else _16bitMat_pub = cv::Mat(scaled16Mat);
@@ -2412,7 +2423,7 @@ void streamerNode::publishTopics() {
 
 	if ((configData.output8bit) || (configData.writeImages &&  (configData.outputType == OUTPUT_TYPE_CV_8UC1))) {
 
-		if (configData.undistortImages) {
+		if (configData.wantsToUndistort) {
 			if (_8bitMat.data == _8bitMat_pub.data) _8bitMat_pub = cv::Mat(_8bitMat.size(), _8bitMat.type());
 			remap(_8bitMat, _8bitMat_pub, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT, 0);
 		} else {
@@ -2453,7 +2464,7 @@ void streamerNode::publishTopics() {
 
 		if (colourMat.rows > 0) {
 
-			if (configData.undistortImages) {
+			if (configData.wantsToUndistort) {
 				if (colourMat.data == colourMat_pub.data)colourMat_pub = cv::Mat(colourMat.size(), colourMat.type());
 				remap(colourMat, colourMat_pub, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT, 0);
 			} else colourMat_pub = cv::Mat(colourMat);
@@ -2487,6 +2498,17 @@ void streamerNode::publishTopics() {
 
 	readyToPublish = false;
 
+}
+
+bool streamerNode::isVideoValid() {
+	
+	if (isShutDownTriggered()) {
+		if (configData.verboseMode){ ROS_INFO("Wants to shut down.."); }
+		setValidity(false);
+	}	
+		
+	return videoValid;
+	
 }
 
 bool streamerNode::runDevice() {
@@ -2568,7 +2590,7 @@ bool streamerNode::runLoad() {
 #endif
 		}
 		
-	} while (configData.loopMode && !wantsToShutdown());
+	} while (configData.loopMode && !isShutDownTriggered());
 	
 	return true;
 	
@@ -2603,7 +2625,7 @@ bool streamerNode::streamCallback(bool capture) {
 		if (configData.verboseMode){ ROS_INFO("Frame captured."); }
 		ofs_retrieve_log << ros::Time::now().toNSec() << endl;
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
-		
+#ifdef _AVLIBS_AVAILABLE_		
 		ros::Time callTime, retrieveTime;
 		
 		callTime = ros::Time::now();
@@ -2616,6 +2638,7 @@ bool streamerNode::streamCallback(bool capture) {
 			if (configData.verboseMode){ ROS_INFO("Attempting to capture frame..."); }
 			
 #ifdef _BUILD_FOR_ROS_
+
 			if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->oPacket)) != 0) {
 				if (configData.verboseMode){ ROS_WARN("av_read_frame() failed."); }
 				currAttempts++;
@@ -2647,6 +2670,7 @@ bool streamerNode::streamCallback(bool capture) {
 				currAttempts++;
 				continue;
 			}
+			
 			if (configData.verboseMode){ ROS_INFO("Decoding frame..."); }
 			avcodec_decode_video2(mainVideoSource->pICodecCtx, mainVideoSource->pFrame, &(mainVideoSource->fFrame),&(mainVideoSource->oPacket));
 			if (configData.verboseMode){ ROS_INFO("Frame decoded."); }
@@ -2676,7 +2700,7 @@ bool streamerNode::streamCallback(bool capture) {
 				//sprintf(outbuff, "%016d000", firmwareTime);
 				sprintf(outbuff, "%010d.%09d", internal_sec, internal_nsec);
 				
-				if (configData.wantsToDumpTimestamps) {
+				if (configData.dumpTimestamps) {
 					ofs_internal_log << outbuff << endl;
 					//ofs_retrieve_log << retrieveTime.toNSec() << endl;
 					//ofs_retrieve_log << retrieveTime.sec << "." << retrieveTime.nsec << endl;
@@ -2705,6 +2729,10 @@ bool streamerNode::streamCallback(bool capture) {
 		if (currAttempts >= 1) {
 			ROS_WARN("Frame reading required (%d) attempts.", currAttempts+1);
 		}
+#else
+		setValidity(false);
+		return false;
+#endif
 	}
 	
 	if (configData.verboseMode) { ROS_INFO("Exiting callback..."); }
@@ -2898,10 +2926,15 @@ bool streamerNode::runRead() {
 		if (configData.verboseMode) { ROS_INFO("Opening file (%s)...", configData.filename.c_str()); }
 		if (configData.inputDatatype == DATATYPE_RAW) {
 #ifdef _BUILD_FOR_ROS_
+#ifdef _AVLIBS_AVAILABLE_		
 			if (getMainVideoSource()->setup_video_file(configData.filename) < 0) {
 				ROS_ERROR("Source configuration failed.");
 				return false;
 			}
+#else
+			return false;
+#endif
+
 #else
 			return false;
 #endif
@@ -2927,13 +2960,15 @@ bool streamerNode::runRead() {
 		
 		if (configData.inputDatatype == DATATYPE_RAW) {
 #ifdef _BUILD_FOR_ROS_
+#ifdef _AVLIBS_AVAILABLE_		
 			getMainVideoSource()->close_video_file(configData.filename);
+#endif
 #endif
 		} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
 			getVideoCapture()->release();
 		}
 
-	} while (configData.loopMode && !wantsToShutdown());
+	} while (configData.loopMode && !isShutDownTriggered());
 	
 	if (configData.verboseMode) { ROS_INFO("Video reading terminating..."); }
 	

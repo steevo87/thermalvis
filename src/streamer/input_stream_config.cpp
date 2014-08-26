@@ -12,9 +12,7 @@ streamerSharedData::streamerSharedData() :
 	output16bit(false), 
 	output8bit(true),
 	outputColor(false),
-	mapCode(CONFIG_MAP_CODE_CIELUV),
-	showExtremeColors(true),
-	undistortImages(false), 
+	map(CONFIG_MAP_CODE_CIELUV),
 	fusionFactor(0.6),  
 	serialPollingRate(25.0),
 	maxNucInterval(45),
@@ -29,7 +27,6 @@ streamerSharedData::streamerSharedData() :
 	debugMode(false),
 	wantsToAddExtrinsics(false),
 	wantsToUndistort(false),
-	wantsToDumpTimestamps(false),
 	wantsToRectify(false)
 { }
 
@@ -44,5 +41,11 @@ streamerLaunchOnlyData::streamerLaunchOnlyData() :
 	displayColour(false),
 	displayGUI(false),
 #endif
-	specialMode(false)
+	specialMode(false),
+	dumpTimestamps(false),
+	extremes(true),
+	wantsToWrite(false),
+	wantsToEncode(false),
+	wantsToKeepNames(false),
+	wantsToResize(false)
 { }

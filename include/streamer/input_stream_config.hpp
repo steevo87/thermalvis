@@ -9,9 +9,9 @@
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for streamer
 struct streamerSharedData {
-	bool output16bit, output8bit, outputColor, undistortImages, verboseMode, autoTemperature, debugMode, showExtremeColors, wantsToMarkDuplicates, wantsToUndistort, wantsToDumpTimestamps;
+	bool output16bit, output8bit, outputColor, verboseMode, autoTemperature, debugMode, wantsToMarkDuplicates, wantsToUndistort;
 	bool wantsToAddExtrinsics, wantsToRectify;
-	int maxReadAttempts, normMode, maxNucInterval, mapCode, inputDatatype, detectorMode, usbMode, zeroDegreesOffset;
+	int maxReadAttempts, normMode, maxNucInterval, map, inputDatatype, detectorMode, usbMode, zeroDegreesOffset;
 	double framerate, threshFactor, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, degreesPerGraylevel, desiredDegreesPerGraylevel;
 
 	streamerSharedData();
@@ -26,7 +26,7 @@ struct streamerRealtimeOnlyData {
 
 /// \brief		Parameters that are only changeable from launch interface
 struct streamerLaunchOnlyData {
-	bool specialMode;
+	bool specialMode, dumpTimestamps, extremes, wantsToWrite, wantsToEncode, wantsToKeepNames, wantsToResize;
 #ifndef _BUILD_FOR_ROS_
 	bool display8bit, display16bit, displayColour, displayGUI;
 #endif

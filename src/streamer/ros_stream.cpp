@@ -11,9 +11,9 @@ bool streamerNode::runBag() {
 	}
 
 	while (isVideoValid()) {
-		#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 		ros::spinOnce();
-		#endif
+#endif
 	}
 	
 	if (configData.subscribeMode) {
@@ -117,7 +117,7 @@ void streamerNode::acceptImage(void *ptr) {
 void streamerNode::initializeMessages() {
 	
 	
-	if (configData.output16bitFlag) {
+	if (configData.output16bit) {
 		if (msg_16bit.width == 0) {
 			if (_16bitMat.rows != 0) {
 				msg_16bit.width = _16bitMat.cols; 
@@ -131,7 +131,7 @@ void streamerNode::initializeMessages() {
 
 	}
 	
-	if (configData.output8bitFlag) {
+	if (configData.output8bit) {
 		if (msg_8bit.width == 0) {
 			if (_8bitMat.rows != 0) {
 				msg_8bit.width = _8bitMat.cols; 
@@ -144,7 +144,7 @@ void streamerNode::initializeMessages() {
 		}
 	}
 	
-	if (configData.outputColorFlag) {
+	if (configData.outputColor) {
 		if (msg_color.width == 0) {
 			if (colourMat.rows != 0) {
 				msg_color.width = colourMat.cols; 
@@ -461,48 +461,19 @@ void streamerNode::serialCallback(const ros::TimerEvent&) {
 
 void streamerNode::timerCallback(const ros::TimerEvent&) {
 	
-	if (configData.pauseMode) {
-		return;
-	}
-	
-	if (configData.captureMode || configData.subscribeMode) {
-		return;
-	}
+	if (configData.pauseMode) return;
+	if (configData.captureMode || configData.subscribeMode) return;
 	
 	if (configData.pollMode || configData.resampleMode) {
-		
-		if (configData.pollMode) {
-			
-			//ROS_ERROR("About to call stream");
-			
-			streamCallback();
-			
-			//ROS_ERROR("Stream called");
-		}
+		if (configData.pollMode) streamCallback();
 		
 		if (processImage()) {
 			
-			//ROS_ERROR("Processed");
-			
 			if (readyToPublish) {
-				if (configData.resampleMode) {
-					//updateCameraInfo();
-				}
 				publishTopics();
-				
-				//ROS_ERROR("Published");
-				
 				writeData();
-				
-				//ROS_ERROR("Written");
-				
 			}
-			
 		}
-		
-		//ROS_ERROR("All done.");
-		
-
 		return;
 	}
 	
@@ -510,48 +481,35 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 		
 		string filename;
 		
-		if (configData.folder.at(configData.folder.length()-1) == '/') {
-			filename = configData.folder + inputList.at(frameCounter);
-		} else {
-			filename = configData.folder + "/" + inputList.at(frameCounter);
-		}
+		(configData.folder.at(configData.folder.length()-1) == '/') ? filename = configData.folder + inputList.at(frameCounter) : filename = configData.folder + "/" + inputList.at(frameCounter);
 
 		frame = cv::imread(filename, -1);
 		
-		//ROS_INFO("Read frame (%s)", filename.c_str());
-		
 		if (processImage()) {
-			//ROS_INFO("Image process is true...");
 			if (readyToPublish) {
-				//ROS_INFO("Publishing...");
 				updateCameraInfo();
 				publishTopics();
 				writeData();
 			}
-			
 		}
 		
 		if (frameCounter >= fileCount) {
-			if (configData.verboseMode) { ROS_INFO("setValidity(false) : (frameCounter >= fileCount)"); }
+			if (configData.verboseMode) ROS_INFO("setValidity(false) : (frameCounter >= fileCount)");
 			setValidity(false);
 		}
-		
 		return;
 	}
 
 	bool validFrameRead = true;
 	
-	// If in read mode...
 	if (configData.inputDatatype == DATATYPE_RAW) {
-
+#ifdef _AVLIBS_AVAILABLE_
 		do { 
-			//ROS_WARN("Attempting to read frame...");
 			if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->packet)) != 0) {
 				ROS_WARN("Frame invalid...");
 				validFrameRead = false;
 				break;
 			}
-			//ROS_WARN("Frame valid!");
 		} while (mainVideoSource->packet.stream_index != mainVideoSource->videoStream);
 
 		
@@ -578,7 +536,10 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 			if (configData.verboseMode) { ROS_INFO("setValidity(false) : (validFrameRead)"); }
 			setValidity(false);
 		}
-		
+#else
+	ROS_ERROR("Cannot capture raw data. AVLIBs were not included in project.");
+	return;
+#endif
 	} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
 		
 		if (configData.verboseMode) { ROS_INFO("About to read in frame..."); }
@@ -686,153 +647,79 @@ void streamerNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg) 
 
 void streamerNode::refreshCameraAdvertisements() {
 
+	char colorPubName[256], _16bitPubName[256], _8bitPubName[256];
 
-        char colorPubName[256], _16bitPubName[256], _8bitPubName[256];
+	sprintf(colorPubName, "thermalvis/%s/image_col", nodeName);
+	sprintf(_16bitPubName, "thermalvis/%s/image_raw", nodeName);
+	sprintf(_8bitPubName, "thermalvis/%s/image_mono", nodeName);
 
-        sprintf(colorPubName, "thermalvis/%s/image_col", nodeName);
-        sprintf(_16bitPubName, "thermalvis/%s/image_raw", nodeName);
-        sprintf(_8bitPubName, "thermalvis/%s/image_mono", nodeName);
+	bool cameraAdvertised = false;
 
-        bool cameraAdvertised = false;
+	// Once all copies of the returned Publisher object are destroyed, the topic
+	// will be automatically unadvertised.
 
-        // Once all copies of the returned Publisher object are destroyed, the topic
-        // will be automatically unadvertised.
+	pub_color.shutdown();
+	pub_color_im.shutdown();
+	pub_16bit.shutdown();
+	pub_16bit_im.shutdown();
+	pub_8bit.shutdown();
+	pub_8bit_im.shutdown();
 
-        pub_color.shutdown();
-        pub_color_im.shutdown();
-        pub_16bit.shutdown();
-        pub_16bit_im.shutdown();
-        pub_8bit.shutdown();
-        pub_8bit_im.shutdown();
+	//HGH
+	pub_republish.shutdown();
+	pub_republish_im.shutdown();
 
-        //HGH
-        pub_republish.shutdown();
-        pub_republish_im.shutdown();
+	char _republishPubName[256];
+	sprintf(_republishPubName, "%s", configData.republishTopic.c_str());
 
-        char _republishPubName[256];
-        sprintf(_republishPubName, "%s", configData.republishTopic.c_str());
+	if (configData.output16bit) {
 
+	//HGH
+	if (configData.republishSource==REPUBLISH_CODE_16BIT) pub_republish = it->advertiseCamera(_republishPubName, 1);
+		if (!cameraAdvertised) {
+			pub_16bit = it->advertiseCamera(_16bitPubName, 1);
+			cameraAdvertised = true;
+		} else pub_16bit_im = it->advertise(_16bitPubName, 1);
+	}
 
-
-        if (configData.output16bitFlag) {
-
-            //HGH
-            if (configData.republishSource==REPUBLISH_CODE_16BIT){
-                pub_republish = it->advertiseCamera(_republishPubName, 1);
-            }
-
-                if (!cameraAdvertised) {
-                        pub_16bit = it->advertiseCamera(_16bitPubName, 1);
-
-                        cameraAdvertised = true;
-                } else {
-                        pub_16bit_im = it->advertise(_16bitPubName, 1);
-
-                }
-
-        }
-
-        if (configData.output8bitFlag) {
-
-            //HGH
-            if (configData.republishSource==REPUBLISH_CODE_8BIT_MONO){
-                pub_republish = it->advertiseCamera(_republishPubName, 1);
-            }
-
-                if (!cameraAdvertised) {
-                        pub_8bit = it->advertiseCamera(_8bitPubName, 1);
-
-                        cameraAdvertised = true;
-                } else {
-                        pub_8bit_im = it->advertise(_8bitPubName, 1);
-
-                }
-
-        }
+	if (configData.output8bit) {
+		//HGH
+		if (configData.republishSource==REPUBLISH_CODE_8BIT_MONO) pub_republish = it->advertiseCamera(_republishPubName, 1);
+		if (!cameraAdvertised) {
+				pub_8bit = it->advertiseCamera(_8bitPubName, 1);
+				cameraAdvertised = true;
+		} else pub_8bit_im = it->advertise(_8bitPubName, 1);
+	}
 
 
-        if (configData.outputColorFlag) {
-            //HGH
-            if (configData.republishSource==REPUBLISH_CODE_8BIT_COL){
-                pub_republish = it->advertiseCamera(_republishPubName, 1);
-            }
-                if (!cameraAdvertised) {
-                        pub_color = it->advertiseCamera(colorPubName, 1);
-
-                        cameraAdvertised = true;
-                } else {
-                        pub_color_im = it->advertise(colorPubName, 1);
-
-                }
-        }
-
+	if (configData.outputColor) {
+		//HGH
+		if (configData.republishSource==REPUBLISH_CODE_8BIT_COL) pub_republish = it->advertiseCamera(_republishPubName, 1);
+		if (!cameraAdvertised) {
+			pub_color = it->advertiseCamera(colorPubName, 1);
+			cameraAdvertised = true;
+		} else pub_color_im = it->advertise(colorPubName, 1);
+	}
 }
 
 
 
 void streamerNode::handle_image(const sensor_msgs::ImageConstPtr& msg_ptr) {
 	
-	//ROS_ERROR("handle_image");
-	
-	if (configData.syncMode == SYNCMODE_HARD) {
-		return;
-	}
-	
-	if ((!configData.subscribeMode) && (!configData.resampleMode)) {
-		return;
-	}
-
-	//cout << "Handling image..." << msg_ptr->header.stamp.toNSec() << ", " << image_time.toNSec() << endl;
+	if (configData.syncMode == SYNCMODE_HARD) return;
+	if ((!configData.subscribeMode) && (!configData.resampleMode)) return;
 	
 	original_time = msg_ptr->header.stamp;
 	
-	//ROS_INFO("original_time = (%f)", original_time.toSec());
-	
 	image_time = ros::Time::now();
-	cv_ptr = cv_bridge::toCvCopy(msg_ptr, enc::BGR8);					// For some reason it reads as BGR, not gray
+	cv_ptr = cv_bridge::toCvCopy(msg_ptr, enc::BGR8); // For some reason it reads as BGR, not gray
 	
 	if (configData.syncMode == SYNCMODE_SOFT) {
 		if (std::abs(image_time.toNSec() - info_time.toNSec()) < configData.soft_diff_limit) {
-			// ROS_ERROR("handle_image : image_time == info_time");
-			
 			image_time = dodgeTime;
 			act_on_image();
 		}
-	} else {
-		act_on_image();
-	}
-	
-	
-	//ROS_ERROR("image header = (%d)", msg_ptr->header.stamp.toNSec());
-		
-	
-
-	
-}
-
-streamerData::streamerData() {
-	
-	intrinsicsProvided = false;
-        //wantsToRectify = false;
-        //HGH
-        wantsToAddExtrinsics = false;
-	wantsToWrite = false;
-	wantsToEncode = false;
-	wantsToKeepNames = false;
-	wantsToUndistort = false;
-	wantsToResize = false;
-	loopMode = false;
-	imageDimensionsSpecified = false;
-	
-	
-	
-	mapCode = CIECOMP;
-	mapParam = 0;
-	
-	framerate = -1.0;
-	
-	soft_diff_limit = 5000000;
-	
+	} else act_on_image();
 }
 
 bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
@@ -872,28 +759,30 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		outputFormatString = "png";
 	}
 	
-	nh.param<std::string>("outputType", outputType, "CV_8UC3");
+	std::string outputTypeString;
 	
-	if (outputType == "CV_8UC3") {
+	nh.param<std::string>("outputType", outputTypeString, "CV_8UC3");
+	
+	if (outputTypeString == "CV_8UC3") {
 		if (outputFormatString == "pgm") {
 			ROS_WARN("PGM cannot write as CV_8UC3...");
 		}
-	} else if (outputType == "CV_8UC1") { 
+	} else if (outputTypeString == "CV_8UC1") { 
 		// ...
-	} else if (outputType == "CV_16UC1") {
+	} else if (outputTypeString == "CV_16UC1") {
 		if ((outputFormatString == "jpg") || (outputFormatString == "bmp")) {
 			ROS_WARN("JPG/BMP cannot write as CV_16UC1...");
 		}
 	} else {
-		ROS_WARN("Unrecognized output format (%s)", outputType.c_str());
+		ROS_WARN("Unrecognized output format (%s)", outputTypeString.c_str());
 	}
 
-	nh.param<double>("maxIntensityChange", maxIntensityChange, 2.0);
+	nh.param<int>("maxIntensityChange", maxIntensityChange, 2);
 
 	
 	nh.param<bool>("drawReticle", drawReticle, false);
 	nh.param<bool>("displayThermistor", displayThermistor, false);
-	nh.param<bool>("dumpDuplicates", wantsToOutputDuplicates, false);
+	nh.param<bool>("outputDuplicates", outputDuplicates, false);
 	nh.param<bool>("fixDudPixels", fixDudPixels, true);
 	nh.param<bool>("forceInputGray", forceInputGray, false);
 	nh.param<bool>("stepChangeTempScale", stepChangeTempScale, false);
@@ -944,9 +833,9 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<double>("writeQuality", writeQuality, 1.0);
 	
-	nh.param<bool>("output16bit", output16bitFlag, true);
-	nh.param<bool>("output8bit", output8bitFlag, false);
-	nh.param<bool>("outputColor", outputColorFlag, true);
+	nh.param<bool>("output16bit", output16bit, true);
+	nh.param<bool>("output8bit", output8bit, false);
+	nh.param<bool>("outputColor", outputColor, true);
 	
 	nh.param<bool>("loopMode", loopMode, false);
 	
@@ -995,8 +884,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	
 	
-	nh.param<std::string>("outputType", outputType, "CV_16UC1");
-	
 	outputFileParams.clear();
 	int val;
 	if (outputFormatString == "png") {
@@ -1016,16 +903,16 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<std::string>("outputVideo", outputVideo, "outputVideo");
 	nh.param<std::string>("videoType", videoType, "videoType");
 		
-	nh.param<bool>("undistortImages", wantsToUndistort, false);
+	nh.param<bool>("wantsToUndistort", wantsToUndistort, false);
         //HGH
         nh.param<bool>("rectifyImages", wantsToRectify, false);
 	
-	nh.param<bool>("removeDuplicates", wantsToRemoveDuplicates, false);
+	nh.param<bool>("removeDuplicates", removeDuplicates, false);
 	
 	if (outputFolder != "outputFolder") {
-		nh.param<bool>("dumpTimestamps", wantsToDumpTimestamps, false);
+		nh.param<bool>("dumpTimestamps", dumpTimestamps, false);
 	} else {
-		wantsToDumpTimestamps = false;
+		dumpTimestamps = false;
 	}
 	
 	nh.param<bool>("resizeMode", wantsToResize, false);
@@ -1054,38 +941,9 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	if (wantsToUndistort) { ROS_INFO("Undistorting images..."); }
 	
 	nh.param<int>("normMode", normMode, 0);
-	nh.param<std::string>("normalizationMode", normalizationMode, "normalizationMode");
 	
 	nh.param<double>("normFactor", normFactor, 0.0);
 	
-	if (normalizationMode == "standard") {
-		normMode = 0;
-	} else if (normalizationMode == "low_contrast") {
-		normMode = 1;
-	}
-	
-	/*
-	if (wantsToWrite) {
-		ROS_INFO("Has chosen to write.");
-		
-		if (outputFolder == "outputFolder") {
-			ROS_ERROR("outputFolder incorrectly specified...");
-			return false;
-		} else {
-			ROS_INFO("outputFolder = (%s)", outputFolder.c_str());
-			
-		}
-		
-		ROS_INFO("Image format = (%d); image type = (%s)", outputFormat, outputType.c_str());
-		
-		if (wantsToKeepNames) {
-			ROS_INFO("(retaining original names)");
-		} else {
-			ROS_INFO("(not retaining original names)");
-		}
-		
-	}
-	*/
 	
 	if (wantsToEncode) {
 		if (verboseMode) { ROS_INFO("Has chosen to encode."); }
@@ -1093,10 +951,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		if (outputVideo == "outputVideo") {
 			ROS_ERROR("outputVideo incorrectly specified...");
 			return false;
-		} else {
-			ROS_INFO("outputVideo = (%s)", outputVideo.c_str());
-			
-		}
+		} else ROS_INFO("outputVideo = (%s)", outputVideo.c_str());
 		
 		if (verboseMode) { ROS_INFO("Image format = (%s); image type = (%s)", "avi", videoType.c_str()); }
 		
@@ -1221,7 +1076,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		
 	}
 
-	getMapping(map, extremes, mapCode, mapParam);
+	//getMapping(map, extremes, mapCode, mapParam);
 		
 	int modeCount = 0;
 	
@@ -1276,17 +1131,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 
 	
 	return true;
-}
-
-bool streamerNode::isVideoValid() {
-	
-	if (::wantsToShutdown) {
-		if (configData.verboseMode){ ROS_INFO("Wants to shut down.."); }
-		setValidity(false);
-	}	
-		
-	return videoValid;
-	
 }
 	
 int getMapIndex(string mapping) {

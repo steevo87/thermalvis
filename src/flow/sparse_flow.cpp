@@ -918,11 +918,11 @@ void featureTrackerNode::matchWithExistingTracks() {
 				addMatchesToVector(featureTrackVector, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedTrackIndex, configData.minSeparation, false);
 				
 				if (configData.debugMode) addMatchesToVector(displayTracks, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedTrackIndex, configData.minSeparation);
-				if (configData.verboseMode)  { ROS_INFO("Added (%d) (%u) matches to vector", ppp, points2.size()); }
+				if (configData.verboseMode)  { ROS_INFO("Added (%d) (%d) matches to vector", ppp, int(points2.size())); }
 				matchedFeatures.insert(matchedFeatures.end(), points2.begin(), points2.end());
 				
 				concatenateWithExistingPoints(globalFinishingPoints, points2, configData.maxFeatures, configData.minSeparation);
-				if (configData.verboseMode) { ROS_INFO("After (%d) concat, have (%u) points...", ppp, points2.size()); }
+				if (configData.verboseMode) { ROS_INFO("After (%d) concat, have (%d) points...", ppp, int(points2.size())); }
 			}
 		}
 	}
@@ -1088,7 +1088,7 @@ void featureTrackerNode::detectNewFeatures() {
 				
 				cv::KeyPoint::convert(currPoints[jjj], candidates[jjj]);
 
-				if (configData.verboseMode) { ROS_WARN("Adding (%u) new features", candidates[jjj].size()); }
+				if (configData.verboseMode) { ROS_WARN("Adding (%d) new features", int(candidates[jjj].size())); }
 				if (candidates[jjj].size() > 0) newlySensedFeatures.insert(newlySensedFeatures.end(), candidates[jjj].begin(), candidates[jjj].end());
 				
 			}
@@ -1119,7 +1119,7 @@ void featureTrackerNode::features_loop() {
 	
 	testTime = timeElapsedMS(test_timer, true);
 	
-	if (configData.verboseMode) { ROS_INFO("Starting features loop for frame (%u [%u]) with (%u) finishing points.", readyFrame, bufferIndices[readyFrame % 2], globalFinishingPoints.size()); }
+	if (configData.verboseMode) { ROS_INFO("Starting features loop for frame (%d [%d]) with (%d) finishing points.", int(readyFrame), int(bufferIndices[readyFrame % 2]), int(globalFinishingPoints.size())); }
 		
 	if (configData.verboseMode) { ROS_INFO("About to update distance constraint."); }
 	updateDistanceConstraint();
@@ -1150,7 +1150,7 @@ void featureTrackerNode::features_loop() {
 	
 	if (((int)globalFinishingPoints.size()) < configData.minFeatures) {
 		featuresTooLow = true;
-		if (configData.verboseMode) { ROS_WARN("featuresTooLow == true, because feature count is (%u) vs (%d, %u).", globalFinishingPoints.size(), configData.minFeatures, previousTrackedPointsPeak); }
+		if (configData.verboseMode) { ROS_WARN("featuresTooLow == true, because feature count is (%d) vs (%d, %d).", int(globalFinishingPoints.size()), configData.minFeatures, int(previousTrackedPointsPeak)); }
 		previousTrackedPointsPeak = (unsigned int)(globalFinishingPoints.size());
 	} else featuresTooLow = false;
 	
@@ -1190,7 +1190,7 @@ void featureTrackerNode::features_loop() {
 		
 		if ((globalFinishingPoints.size() < ((unsigned int) configData.minFeatures/2)) && !lowPointsWarning) {
 			lowPointsWarning = true;
-			ROS_WARN("Successfully tracked points (%d) is currently low...", globalFinishingPoints.size());
+			ROS_WARN("Successfully tracked points (%d) is currently low...", int(globalFinishingPoints.size()));
 		} else if ((globalFinishingPoints.size() > ((unsigned int) configData.minFeatures)) && lowPointsWarning) lowPointsWarning = false;
 		
 		featuresVelocity = updateFeatureSpeeds(featureTrackVector, bufferIndices[(readyFrame-1) % 2], previous_time.toSec(), bufferIndices[(readyFrame) % 2], original_time.toSec(), configData.maxVelocity);
@@ -1341,7 +1341,7 @@ void featureTrackerNode::handle_very_new() {
 	// Feature detection
 	homogPoints[1].clear();
 	homographyDetector -> detect(grayImageBuffer[current_idx % 2], homogPoints[1]);
-	if (homogPoints[1].size() < 4) ROS_ERROR("Insufficient points detected (%d) in second frame for calculating homography..", homogPoints[1].size());
+	if (homogPoints[1].size() < 4) ROS_ERROR("Insufficient points detected (%d) in second frame for calculating homography..", int(homogPoints[1].size()));
 	
 	if ((homogPoints[0].size() < 4) || (homogPoints[1].size() < 4)) {
 		H12 = cv::Mat::eye(3, 3, CV_64FC1);
@@ -1383,7 +1383,7 @@ void featureTrackerNode::handle_very_new() {
 		return;
 	}
 	
-	if (configData.verboseMode) { ROS_INFO("Attempting to find homography with (%d, %d) matched points..", points1.size(), points2.size()); }
+	if (configData.verboseMode) { ROS_INFO("Attempting to find homography with (%d, %d) matched points..", int(points1.size()), int(points2.size())); }
 	H12 = cv::findHomography( cv::Mat(points1), cv::Mat(points2), validityMask, RANSAC, 5.0 );
 		
 	unsigned int validPoints = 0;
@@ -1398,7 +1398,7 @@ void featureTrackerNode::handle_very_new() {
 
 	unsigned int inlierPoints = cv::countNonZero(validityMask);
 	
-	if (configData.verboseMode) { ROS_INFO("Number of matches for interruption homography = (%u/%d)", inlierPoints, homogPoints[0].size()); } // , matches.size(), points1.size() 
+	if (configData.verboseMode) { ROS_INFO("Number of matches for interruption homography = (%u/%d)", inlierPoints, int(homogPoints[0].size())); } // , matches.size(), points1.size() 
 	if (configData.verboseMode) { cout << "H12 = " << H12 << endl; }
 	
 	// Then, do you want to move "globalFinishingPoints" so that they're at the locations estimated by H12?
@@ -1411,7 +1411,7 @@ void featureTrackerNode::handle_delay() {
 	homogPoints[0].clear();
 	homographyDetector -> detect(grayImageBuffer[current_idx % 2], homogPoints[0]);
 	if (homogPoints[0].size() < 4) {
-		ROS_ERROR("Insufficient points detected (%d) in first frame for calculating homography..", homogPoints[0].size());
+		ROS_ERROR("Insufficient points detected (%d) in first frame for calculating homography..", int(homogPoints[0].size()));
 	} else {
 		sort(homogPoints[0].begin(), homogPoints[0].end(), KeyPoint_comparison);
 		reduceFeaturesToMaximum(homogPoints[0], 200);

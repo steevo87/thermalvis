@@ -5,7 +5,7 @@
 #ifndef _STREAMER_H_
 #define _STREAMER_H_
 	
-#include "ros_stream.hpp"
+#include "streamer/ros_stream.hpp"
 	
 boost::shared_ptr < streamerNode > *globalNodePtr;
 

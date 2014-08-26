@@ -118,7 +118,7 @@ protected:
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
 	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;
 	bool captureMode, readMode, loadMode, subscribeMode, resampleMode, pollMode;
-	bool loopMode, resizeImages, dumpTimestamps, removeDuplicates, temporalSmoothing, pauseMode, stepChangeTempScale, readTimestamps;
+	bool loopMode, resizeImages, removeDuplicates, temporalSmoothing, pauseMode, stepChangeTempScale, readTimestamps;
 	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
 
 	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, inputWidth, inputHeight, serialCommsConfigurationCode, serialWriteAttempts;
@@ -356,9 +356,7 @@ public:
 
 	CvCapture* capture;
 	
-#ifndef _BUILD_FOR_ROS_
-	bool isVideoValid() { return videoValid; }
-#endif
+	bool isVideoValid();
 	
 	void setValidity(bool val) { videoValid = val; }
 	
@@ -419,10 +417,6 @@ public:
 	
 	int open_port();
     void getRectification();
-
-#ifndef _BUILD_FOR_ROS_
-	bool wantsToShutdown() { return false; }
-#endif
 	
 };
 

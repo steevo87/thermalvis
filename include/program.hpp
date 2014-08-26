@@ -20,7 +20,7 @@ class GenericOptions {
 
 protected:
 	int FrameCounter1, LastFrameCounter, FC0, FC1;
-	bool pauseMode, isValid;
+	bool pauseMode, isValid, *wantsToTerminate;
 	bool debugMode, wantsToOutput, writeInColor;
 	cv::Mat *displayImage;
 	char *output_directory;
@@ -30,6 +30,8 @@ public:
 	GenericOptions();
 	~GenericOptions();
 	bool wantsToRun();
+	void setTerminationTrigger(bool* trigger) { wantsToTerminate = trigger; }
+	bool isShutDownTriggered() { return *wantsToTerminate; }
 	bool setOutputDir(char* output_dir);
 	bool initializeOutput(char *output_dir);
 	virtual void setDebugMode(bool val) { debugMode = val; }
