@@ -62,7 +62,7 @@ private:
 	char *output_directory;
 	char *xmlAddress;
 	xmlParameters xP;
-	ros::sensor_msgs::CameraInfo camInfo;
+	sensor_msgs::CameraInfo camInfo;
 	cv::Mat workingFrame;
 
 	bool streamerIsLinked;

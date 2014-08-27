@@ -112,12 +112,12 @@ protected:
 	bool dataValid;
 	int syncMode, camera_number, desiredRows, desiredCols, temporalMemory, outputType;
 	
-	string radiometryFile, externalNucManagement, portAddress, read_addr, source, filename, folder, capture_device, intrinsics, extrinsics, topicname;
+	string radiometryFile, externalNucManagement, portAddress, source, filename, folder, capture_device, intrinsics, extrinsics, topicname;
 	string timeStampsAddress, republishTopic, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
 
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
 	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;
-	bool captureMode, readMode, loadMode, subscribeMode, resampleMode, pollMode;
+	
 	bool loopMode, resizeImages, removeDuplicates, temporalSmoothing, pauseMode, stepChangeTempScale, readTimestamps;
 	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
 
@@ -130,6 +130,9 @@ protected:
 	unsigned long soft_diff_limit;
 
 public:
+	bool captureMode, readMode, loadMode, subscribeMode, resampleMode, pollMode;
+	string read_addr;
+	
 	streamerData();
 
 	bool assignFromXml(xmlParameters& xP);
