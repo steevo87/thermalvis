@@ -13,7 +13,6 @@ int main(int argc, char** argv) {
 	bool inputIsValid = startupData.obtainStartingData(private_node_handle);
 	
 	startupData.read_addr = argv[0];
-	startupData.read_addr = startupData.read_addr.substr(0, startupData.read_addr.size()-8);
 	
 	if (!inputIsValid) {
 		ROS_ERROR("Configuration invalid.");

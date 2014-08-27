@@ -2500,15 +2500,12 @@ void streamerNode::publishTopics() {
 
 }
 
-bool streamerNode::isVideoValid() {
-	
-	if (isShutDownTriggered()) {
+bool streamerNode::isVideoValid() {	
+	if (*configData.wantsToTerminate) {
 		if (configData.verboseMode){ ROS_INFO("Wants to shut down.."); }
 		setValidity(false);
 	}	
-		
 	return videoValid;
-	
 }
 
 bool streamerNode::runDevice() {
@@ -2572,28 +2569,18 @@ bool streamerNode::runDevice() {
 }
 
 bool streamerNode::runLoad() {
-	ROS_INFO("Image load started...");
-	
-	if (!processFolder()) {
-		ROS_ERROR("Processing of folder failed...");
-		return false;
-	}
-	
 	do {
-		
+		ROS_INFO("Image load started...");
 		frameCounter = 0;
 		setValidity(true);
-		
 		while (isVideoValid()) {
 #ifdef _BUILD_FOR_ROS_
 			ros::spinOnce();		
 #endif
 		}
-		
-	} while (configData.loopMode && !isShutDownTriggered());
+	} while (configData.loopMode && !(*configData.wantsToTerminate));
 	
 	return true;
-	
 }
 
 bool streamerNode::streamCallback(bool capture) {
@@ -2740,8 +2727,7 @@ bool streamerNode::streamCallback(bool capture) {
 }
 
 bool streamerNode::processFolder() {
-	
-#ifndef _WIN32
+#ifndef _USE_BOOST_
 	DIR * dirp;
 	struct dirent * entry;
 	
@@ -2761,6 +2747,8 @@ bool streamerNode::processFolder() {
 	closedir(dirp);
 #else
 	std::string full_dir = configData.folder + "/";
+	boost::replace_all(full_dir, "\\", "/");
+	boost::replace_all(full_dir, "~", _USERPROFILE_);
 	boost::filesystem::path someDir(full_dir);
 		
 	if ( boost::filesystem::exists(someDir) && boost::filesystem::is_directory(someDir)) {
@@ -2786,7 +2774,6 @@ bool streamerNode::processFolder() {
 		
 
 	} else return false;
-
 #endif
 	
 	sort(inputList.begin(), inputList.end());
@@ -2798,7 +2785,7 @@ bool streamerNode::processFolder() {
 		return false;
 	}
 
-	ROS_INFO("No. of images in folder = %d\n", fileCount);
+	ROS_INFO("No. of images in folder = %d", fileCount);
 
 	if (fileCount == 0) {
 		ROS_ERROR("Returning, because no images are in folder.\n");
@@ -2968,7 +2955,7 @@ bool streamerNode::runRead() {
 			getVideoCapture()->release();
 		}
 
-	} while (configData.loopMode && !isShutDownTriggered());
+	} while (configData.loopMode && !(*configData.wantsToTerminate));
 	
 	if (configData.verboseMode) { ROS_INFO("Video reading terminating..."); }
 	

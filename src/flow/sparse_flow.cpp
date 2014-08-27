@@ -1465,7 +1465,9 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	
 #ifdef _BUILD_FOR_ROS_
 		sprintf(timeString, "%010d.%09d", ros::Time::now().sec, ros::Time::now().nsec);
-		string defaultOutput = configData.read_addr + "nodes/flow/log/" + timeString;
+		boost::filesystem::create_directory(configData.read_addr + "_log");
+		string defaultOutput = configData.read_addr + "_log/" + timeString;
+		boost::filesystem::create_directory(defaultOutput);
 #else
 		boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
 		sprintf(timeString, "%010lu.%09lu", (long unsigned int)pt.time_of_day().total_seconds(), (long unsigned int)pt.time_of_day().total_microseconds());

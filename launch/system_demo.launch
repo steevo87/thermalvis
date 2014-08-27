@@ -1,6 +1,6 @@
 <launch>
 
-	<node name="streamer" pkg="thermalvis" type="streamer">
+	<node name="streamer" pkg="thermalvis" type="streamer" output="screen">
 	
 		<param name="debugMode" value="false" />
 	
@@ -12,6 +12,7 @@
 		<!-- <param name="degreesPerGraylevel" value="0.025" /> --> <!-- value of 0.025 works OK for miricle sequences.. -->
 		<!-- <param name="desiredDegreesPerGraylevel" value="0.05" /> --> <!-- can adjust this to enhance contrast -->
 		
+		<param name="normMode" value="3" />
 		<param name="outputType" value="2" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
 		<param name="writeImages" value="false" />
 		<param name="outputFolder" value="~\Documents\Data\optris\output" />

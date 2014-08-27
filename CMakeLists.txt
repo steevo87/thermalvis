@@ -19,6 +19,8 @@ ELSE()
 	SET(USERPROFILE "$ENV{HOME}")
 ENDIF()
 
+add_definitions( -D_USERPROFILE_=\"${USERPROFILE}\" )
+
 LIST(APPEND MSG_DEP_SET std_msgs sensor_msgs)
 LIST(APPEND catkin_COMPONENTS roscpp rospy dynamic_reconfigure image_transport cv_bridge camera_calibration_parsers camera_info_manager)
 

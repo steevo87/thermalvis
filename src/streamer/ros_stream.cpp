@@ -464,9 +464,7 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 	
 	if (configData.pollMode || configData.resampleMode) {
 		if (configData.pollMode) streamCallback();
-		
 		if (processImage()) {
-			
 			if (readyToPublish) {
 				publishTopics();
 				writeData();
@@ -478,11 +476,8 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 	if (configData.loadMode) {
 		
 		string filename;
-		
 		(configData.folder.at(configData.folder.length()-1) == '/') ? filename = configData.folder + inputList.at(frameCounter) : filename = configData.folder + "/" + inputList.at(frameCounter);
-
-		frame = cv::imread(filename, -1);
-		
+		frame = read_image_from_file(filename);
 		if (processImage()) {
 			if (readyToPublish) {
 				updateCameraInfo();
@@ -510,12 +505,8 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 			}
 		} while (mainVideoSource->packet.stream_index != mainVideoSource->videoStream);
 
-		
 		if (validFrameRead) {
-
-			
 			avcodec_decode_video2(mainVideoSource->pCodecCtx, mainVideoSource->pFrame, &(mainVideoSource->frameFinished), &(mainVideoSource->packet));
-
 			acceptImage((void*) *(mainVideoSource->pFrame->data));
 
 			if (processImage()) {
@@ -525,9 +516,6 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 					writeData();
 				}
 			}
-
-			
-
 			av_free_packet(&(mainVideoSource->packet));
 			
 		} else {
@@ -545,27 +533,18 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 		if(!cap.isOpened()) {
 			ROS_ERROR("Actually, device isn't open...");
 			return;
-		} else {
-			if (configData.verboseMode) { ROS_INFO("Device is open..."); }
-		}
+		} else if (configData.verboseMode) { ROS_INFO("Device is open..."); }
 		
 		if (configData.verboseMode) { ROS_INFO("framecount = (%f)", cap.get(CV_CAP_PROP_FRAME_COUNT)); }
-		
 		if (configData.verboseMode) { ROS_INFO("dim = (%f, %f)", cap.get(CV_CAP_PROP_FRAME_WIDTH), cap.get(CV_CAP_PROP_FRAME_HEIGHT)); }
 		
 		cap >> frame;
-		//IplImage* tmp_im = cvQueryFrame(capture);
-		//frame = tmp_im;
 		
 		if (configData.verboseMode) { ROS_INFO("Frame read"); }
-		
-		//imshow("test", frame);
-		//waitKey();
 		
 		if (&frame == NULL) {
 			if (configData.verboseMode) { ROS_INFO("setValidity(false) : (&frame == NULL)"); }
 			setValidity(false);
-			
 		} else {
 			if (processImage()) {
 				if (readyToPublish) {
@@ -574,10 +553,7 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 					writeData();
 				}
 			}
-
-
 		}
-		
 	}
 }
 
@@ -938,7 +914,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	if (wantsToUndistort) { ROS_INFO("Undistorting images..."); }
 	
-	nh.param<int>("normMode", normMode, 0);
+	nh.param<int>("normMode", normMode, NORM_MODE_FIXED_TEMP_RANGE);
 	
 	nh.param<double>("normFactor", normFactor, 0.0);
 	
@@ -997,9 +973,21 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		}
 		
 		ROS_INFO("Reading from a file (%s)", filename.c_str());
-	} else if (source == "folder") {
+	} else if ((source == "folder") || (source == "directory")) {
 		
 		loadMode = true;
+		
+		nh.param<std::string>("folder", folder, "folder");
+		nh.param<std::string>("directory", folder, "folder");
+		
+		if (folder[0] == '~') {
+			folder = folder.substr(1, folder.size()-1);
+			folder = _USERPROFILE_ + folder;
+		}
+		
+		for (int iii = 0; iii < folder.size(); iii++) {
+			if (folder[iii] == '\\') folder[iii] = '/';
+		}
 		
 		if ((framerate < 0.0) || (framerate > MAX_READ_RATE)) {
 			ROS_WARN("Invalid framerate (%f) so defaulting to (%f).", framerate, DEFAULT_READ_RATE);
@@ -1086,7 +1074,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	if (resampleMode) modeCount++;
 	
 	if (modeCount == 0) {
-		ROS_ERROR("Either a device, file or topic should be specified for streaming.");
+		ROS_ERROR("%s << Either a device, file or topic should be specified for streaming.", __FUNCTION__);
 		return false;
 	} else if (modeCount > 1) {
 		ROS_ERROR("Either a device, file or topic should be specified - not more than one.");

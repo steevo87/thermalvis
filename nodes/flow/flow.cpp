@@ -2,11 +2,12 @@
 
 #include "flow.hpp"
 
+#define NODE_NAME "flow"
+
 int main(int argc, char** argv) {
 	
-	ROS_INFO("Node launched.");
 		
-	ros::init(argc, argv, "flow");
+	ros::init(argc, argv, NODE_NAME);
 	
 	ros::NodeHandle private_node_handle("~");
 	
@@ -15,7 +16,7 @@ int main(int argc, char** argv) {
 	bool inputIsValid = startupData.obtainStartingData(private_node_handle);
 	
 	startupData.read_addr = argv[0];
-	startupData.read_addr = startupData.read_addr.substr(0, startupData.read_addr.size()-8);
+	ROS_INFO("<%s> Node launched from (%s)", NODE_NAME, startupData.read_addr.c_str());
 	
 	if (!inputIsValid) {
 		ROS_ERROR("Configuration invalid.");

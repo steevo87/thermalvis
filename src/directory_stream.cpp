@@ -20,12 +20,7 @@ bool directoryManager::grabFrame() {
 
 	std::string full_path = std::string(input_directory) + "/" + file_list.at(FrameCounter1);
 
-	#ifdef _OPENCV_VERSION_3_PLUS_
-	*rawImage = cv::imread(full_path, cv::IMREAD_ANYDEPTH);
-	#else
-	*rawImage = cv::imread(full_path, CV_LOAD_IMAGE_ANYDEPTH);
-	#endif
-
+	*rawImage = read_image_from_file(full_path);
 	FrameCounter1++;
 	
 	return true;

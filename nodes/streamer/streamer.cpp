@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
 	streamerData startupData;
 	
 	startupData.read_addr = argv[0];
-	startupData.read_addr = startupData.read_addr.substr(0, startupData.read_addr.size()-12);
 	bool inputIsValid = startupData.obtainStartingData(private_node_handle);
+	startupData.setTerminationTrigger(&wantsToShutdown);
 	
 	if (!inputIsValid) {
 		ROS_ERROR("Configuration invalid!\n");
