@@ -13,7 +13,7 @@ echo "Searching for all source files.."
 
 file_count=0
 
-for f in $(find ${SCRIPT_DIR}/.. -name '*.h*' -or -name '*.c*' -or -name '*.sh' -or -name '*.txt');
+for f in $(find ${SCRIPT_DIR}/.. -name '*.h*' -or -name '*.c*' -or -name '*.sh' -or -name '*.txt' -or -name '*.xml');
 	do file_count=$((file_count+1))
 done
 

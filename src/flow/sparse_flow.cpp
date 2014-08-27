@@ -220,7 +220,7 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 #endif
 #endif
 
-void featureTrackerNode::displayFrame() {
+void featureTrackerNode::displayCurrentFrame() {
 	if (drawImage_resized.rows != 0) {
 		if (!pauseMode) cv::imshow("display", drawImage_resized);
 		char key = cv::waitKey(1);
@@ -639,7 +639,7 @@ void featureTrackerNode::publishRoutine() {
 		std::copy(&(drawImage_resized.at<cv::Vec3b>(0,0)[0]), &(drawImage_resized.at<cv::Vec3b>(0,0)[0])+(drawImage_resized.cols*drawImage_resized.rows*drawImage_resized.channels()), msg_debug.data.begin());
 		debug_pub.publish(msg_debug, debug_camera_info);
 		#else
-		if (configData.displayDebug) { displayFrame(); }
+		if (configData.displayDebug) { displayCurrentFrame(); }
 		#endif
 
 		if (configData.outputDebugImages) {

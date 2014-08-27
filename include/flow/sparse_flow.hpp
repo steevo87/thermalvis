@@ -289,7 +289,7 @@ public:
 	void prepareForTermination();
 
 	///brief	Displays latest debug frame
-	void displayFrame();
+	void displayCurrentFrame();
 	
 };
 

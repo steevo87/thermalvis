@@ -1,6 +1,4 @@
-#include "streamer/ros_stream.hpp"
-
-#ifdef _BUILD_FOR_ROS_
+#include "streamer/input_stream.hpp"
 
 bool streamerNode::runBag() {
 	
@@ -1326,6 +1324,3 @@ float streamerNode::getThermistorReading() {
 	return retVal;
 	
 }
-
-#endif
-

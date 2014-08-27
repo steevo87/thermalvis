@@ -604,7 +604,7 @@ bool inputStream::accessLatest8bitFrame(cv::Mat& latestFrame) {
 	return true;
 }
 
-void inputStream::displayFrame() {
+void inputStream::displayCurrentFrame() {
 	if (displayImage->rows != 0) {
 		if (!pauseMode) cv::imshow("display", *displayImage);
 	} else if (_8bitImage->rows != 0) {

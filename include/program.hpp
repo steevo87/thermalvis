@@ -36,8 +36,8 @@ public:
 	bool initializeOutput(char *output_dir);
 	virtual void setDebugMode(bool val) { debugMode = val; }
 	void setWriteMode(bool mode);
-	bool writeImageToDisk();
-	virtual void displayFrame();
+	virtual bool writeImageToDisk();
+	virtual void displayCurrentFrame();
 	void updateFrameCounter(int newCount) { FrameCounter1 = newCount; }
 };
 

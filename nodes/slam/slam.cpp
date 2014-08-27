@@ -4,12 +4,6 @@
 
 #include "slam.hpp"
 
-void mySigintHandler(int sig) {
-	wantsToShutdown = true;
-	ROS_WARN("Requested shutdown, terminating feeds...");
-	(*globalNodePtr)->prepareForTermination();
-}
-
 int main(int argc, char** argv) {
 	
 	ROS_INFO("Node launched.");
@@ -34,4 +28,15 @@ int main(int argc, char** argv) {
 	ROS_INFO("Node configured.");
 	while (!::wantsToShutdown) ros::spinOnce();
 	return 0;
+}
+
+bool slamData::obtainStartingData(ros::NodeHandle& nh) {
+	
+	return true;
+}
+
+void mySigintHandler(int sig) {
+	wantsToShutdown = true;
+	ROS_WARN("Requested shutdown, terminating feeds...");
+	(*globalNodePtr)->prepareForTermination();
 }

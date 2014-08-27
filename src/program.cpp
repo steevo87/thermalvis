@@ -13,7 +13,7 @@ GenericOptions::~GenericOptions() {
 	timestamps_stream.close();
 }
 
-void GenericOptions::displayFrame() {
+void GenericOptions::displayCurrentFrame() {
 	if (displayImage->rows != 0) {
 		if (!pauseMode) cv::imshow("display", *displayImage);
 		char key = cv::waitKey(1);

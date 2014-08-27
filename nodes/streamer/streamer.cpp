@@ -2,20 +2,12 @@
  *  \brief	Definitions for the ROS <streamer> node.
 */
 
-#include "streamer.hpp"
-
-void mySigintHandler(int sig)
-{
-	ROS_INFO("Requested shutdown... terminating feeds...");
-	wantsToShutdown = true;
 #ifdef _BUILD_FOR_ROS_
-	(*globalNodePtr)->prepareForTermination();
-#endif
-}
+
+#include "streamer.hpp"
 
 int main(int argc, char **argv) {
 
-	#ifdef _BUILD_FOR_ROS_
 	ros::init(argc, argv, "streamer");
 	
 	ros::NodeHandle private_node_handle("~");
@@ -44,30 +36,25 @@ int main(int argc, char **argv) {
 	
 	if (wantsToShutdown) {
 		ros::shutdown();
-
 		return 0;
 	}
 	
-	
-	if ((startupData.subscribeMode) || (startupData.resampleMode)) {
-		streamer_node->runBag();
-	}
-	
-	if (startupData.readMode) {
-		streamer_node->runRead();
-	}
-	
-	if (startupData.loadMode) {
-		streamer_node->runLoad();
-	}
-	
-	if ((startupData.captureMode) || (startupData.pollMode)) {	
-		streamer_node->runDevice();
-	}
+	if ((startupData.subscribeMode) || (startupData.resampleMode)) streamer_node->runBag();
+	if (startupData.readMode) streamer_node->runRead();
+	if (startupData.loadMode) streamer_node->runLoad();
+	if ((startupData.captureMode) || (startupData.pollMode)) streamer_node->runDevice();
 	
 	ros::shutdown();
-	#endif
+
 	
 	return 0;
-	
 }
+
+void mySigintHandler(int sig)
+{
+	ROS_INFO("Requested shutdown... terminating feeds...");
+	wantsToShutdown = true;
+	(*globalNodePtr)->prepareForTermination();
+}
+
+#endif

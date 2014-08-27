@@ -23,7 +23,7 @@
 
 	</node>
 	
-	<node name="reconfigure_streamer" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/streamer"/>
+	<node name="reconfigure_streamer" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" args="/streamer"/>
 	
 	<node name="flow" pkg="thermalvis" type="flow" output="screen">
 		

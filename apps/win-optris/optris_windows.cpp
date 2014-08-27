@@ -209,8 +209,6 @@ HRESULT optrisManager::NewFrame(short *ImgBuf, int frameCounter) {
 	opStream->displayFrame();
 	opStream->writeImageToDisk();
 
-	
-
 	return 0;
 }
 

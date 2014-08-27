@@ -8,9 +8,21 @@
 #include "tools.hpp"
 #include "general_resources.hpp"
 
+#include "time.h"
+
+#include "cxcore.h"
+#include "highgui.h"
+
+#include "serial_comms.hpp"
+
 #ifdef _BUILD_FOR_ROS_
 #include "ros_resources.hpp"
 #include <thermalvis/streamerConfig.h>
+#include <signal.h>
+#endif
+
+#ifdef _AVLIBS_AVAILABLE_
+#include "video.hpp"
 #endif
 
 #include "opencv_resources.hpp"
@@ -446,10 +458,10 @@ public:
 	inputStream();
 	bool processFrame();
 	void colorizeFrame() { cMapping->falsify_image(*_8bitImage, *displayImage); }		// THIS IS SLOWING THINGS DOWN!!
-	void displayFrame();
+	void displayCurrentFrame();
 	bool accessLatestRawFrame(cv::Mat& latestFrame);
 	bool accessLatest8bitFrame(cv::Mat& latestFrame);
-	virtual bool writeImageToDisk();
+	bool writeImageToDisk();
 
 	void load_standard(int mapCode, int mapParam = 0) { cMapping->load_standard(mapCode, mapParam); }
 	int get_colormap_index() { return colormap_index; }
