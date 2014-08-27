@@ -376,6 +376,11 @@ public:
 	void setValidity(bool val) { videoValid = val; }
 	
 #ifdef _BUILD_FOR_ROS_
+
+	void updateThermistor();
+	void calibrationModeRoutine();
+	
+
 #ifdef _AVLIBS_AVAILABLE_
 	streamerSource * getMainVideoSource() { return mainVideoSource; }
 #endif

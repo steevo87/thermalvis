@@ -574,18 +574,9 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<std::string>("outputType", outputTypeString, "CV_8UC3");
 	
-	switch (outputTypeString) {
-		case "CV_8UC3":
-			if (outputFormatString == "pgm") ROS_WARN("PGM cannot write as CV_8UC3...");
-			break;
-		case "CV_8UC1":
-			break;
-		case "CV_16UC1":
-			if ((outputFormatString == "jpg") || (outputFormatString == "bmp")) ROS_WARN("JPG/BMP cannot write as CV_16UC1...");
-			break;
-		default:
-			ROS_WARN("Unrecognized output format (%s)", outputTypeString.c_str());
-	}
+	if ((outputTypeString == "CV_8UC3") && (outputFormatString == "pgm")) ROS_WARN("PGM cannot write as CV_8UC3...");
+	if ((outputTypeString == "CV_16UC1") && ((outputFormatString == "jpg") || (outputFormatString == "bmp"))) ROS_WARN("JPG/BMP cannot write as CV_16UC1...");
+	if ((outputTypeString != "CV_8UC3") && (outputTypeString != "CV_8UC1") && (outputTypeString != "CV_16UC1")) ROS_WARN("Unrecognized output format (%s)", outputTypeString.c_str());
 	
 	nh.param<int>("maxIntensityChange", maxIntensityChange, 2);
 
