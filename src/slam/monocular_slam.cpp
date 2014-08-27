@@ -43,7 +43,7 @@ bool slamData::assignFromXml(xmlParameters& xP) {
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
 		if (v.first.compare("node")) continue;
 		if (v.second.get_child("<xmlattr>.type").data().compare("slam")) {
-			if (!v.second.get_child("<xmlattr>.type").data().compare("reconfigure_gui")) {
+			if ((!v.second.get_child("<xmlattr>.type").data().compare("reconfigure_gui")) || (!v.second.get_child("<xmlattr>.type").data().compare("rqt_reconfigure"))) {
 				if (!v.second.get_child("<xmlattr>.args").data().compare("slam")) displayGUI = true;
 				if (!v.second.get_child("<xmlattr>.args").data().compare("/slam")) displayGUI = true;
 			}

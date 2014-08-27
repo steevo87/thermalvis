@@ -107,10 +107,10 @@ void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsig
 #define ROS_ERROR(fmt, ...) std::printf("%s:%s << ERROR! " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
 #else
 #define __SHORTENED_FILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
 void ROS_INFO(char *fmt, ...);
 void ROS_WARN(char *fmt, ...);
 void ROS_ERROR(char *fmt, ...);
+#endif
 
 namespace ros {
 
@@ -148,8 +148,6 @@ struct CameraInfo {
 };
 
 }
-
-#endif
 
 #endif
 

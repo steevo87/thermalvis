@@ -96,7 +96,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>150</y>
+      <y>140</y>
       <width>111</width>
       <height>17</height>
      </rect>
@@ -221,19 +221,6 @@
       <string>HIGHLIGHTED</string>
      </property>
     </item>
-   </widget>
-   <widget class="QCheckBox" name="showExtremeColors">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>130</y>
-      <width>121</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>showExtremeColors</string>
-    </property>
    </widget>
    <widget class="QLineEdit" name="desiredDegreesPerGraylevel">
     <property name="geometry">

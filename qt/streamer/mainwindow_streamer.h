@@ -40,8 +40,6 @@ private slots:
 
     void on_mapCode_currentIndexChanged(int index);
 
-    void on_showExtremeColors_toggled(bool checked);
-
     void on_inputDatatype_currentIndexChanged(int index);
 
     void on_detectorMode_currentIndexChanged(int index);

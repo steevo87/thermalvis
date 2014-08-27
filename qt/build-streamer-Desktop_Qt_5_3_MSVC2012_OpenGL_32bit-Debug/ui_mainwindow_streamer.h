@@ -39,7 +39,6 @@ public:
     QCheckBox *undistortImages;
     QComboBox *normMode;
     QComboBox *mapCode;
-    QCheckBox *showExtremeColors;
     QLineEdit *desiredDegreesPerGraylevel;
     QComboBox *inputDatatype;
     QComboBox *detectorMode;
@@ -105,16 +104,13 @@ public:
         autoTemperature->setGeometry(QRect(10, 180, 111, 17));
         undistortImages = new QCheckBox(centralWidget);
         undistortImages->setObjectName(QStringLiteral("undistortImages"));
-        undistortImages->setGeometry(QRect(10, 150, 111, 17));
+        undistortImages->setGeometry(QRect(10, 140, 111, 17));
         normMode = new QComboBox(centralWidget);
         normMode->setObjectName(QStringLiteral("normMode"));
         normMode->setGeometry(QRect(320, 130, 131, 22));
         mapCode = new QComboBox(centralWidget);
         mapCode->setObjectName(QStringLiteral("mapCode"));
         mapCode->setGeometry(QRect(180, 130, 91, 22));
-        showExtremeColors = new QCheckBox(centralWidget);
-        showExtremeColors->setObjectName(QStringLiteral("showExtremeColors"));
-        showExtremeColors->setGeometry(QRect(10, 130, 121, 17));
         desiredDegreesPerGraylevel = new QLineEdit(centralWidget);
         desiredDegreesPerGraylevel->setObjectName(QStringLiteral("desiredDegreesPerGraylevel"));
         desiredDegreesPerGraylevel->setGeometry(QRect(330, 40, 61, 20));
@@ -294,7 +290,6 @@ public:
          << QApplication::translate("MainWindow_streamer", "HIGHLIGHTED", 0)
         );
         mapCode->setCurrentText(QApplication::translate("MainWindow_streamer", "CIELUV", 0));
-        showExtremeColors->setText(QApplication::translate("MainWindow_streamer", "showExtremeColors", 0));
         desiredDegreesPerGraylevel->setText(QString());
         inputDatatype->clear();
         inputDatatype->insertItems(0, QStringList()
