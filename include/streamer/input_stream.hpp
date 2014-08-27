@@ -311,7 +311,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void handle_camera(const cv::Mat& inputImage, const ros::sensor_msgs::CameraInfo *info_msg);
+	void handle_camera(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Initial receipt of an image WITHOUT camera info. 
@@ -325,7 +325,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void handle_info(const ros::sensor_msgs::CameraInfo *info_msg);
+	void handle_info(const sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Handles a command to perform a NUC. 
@@ -364,7 +364,7 @@ public:
 	void refreshCameraAdvertisements();
 #else
 	bool retrieveRawFrame();
-	bool get8bitImage(cv::Mat& img, ros::sensor_msgs::CameraInfo& info);
+	bool get8bitImage(cv::Mat& img, sensor_msgs::CameraInfo& info);
 #endif
 
 	void assignDefaultCameraInfo();

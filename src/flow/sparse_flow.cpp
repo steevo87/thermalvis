@@ -542,7 +542,7 @@ void featureTrackerNode::updateDistanceConstraint() {
 #ifdef _BUILD_FOR_ROS_
 void featureTrackerNode::process_info(const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-void featureTrackerNode::process_info(ros::sensor_msgs::CameraInfo *info_msg) {
+void featureTrackerNode::process_info(sensor_msgs::CameraInfo *info_msg) {
 #endif
 
 	try	{
@@ -1575,7 +1575,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 #ifdef _BUILD_FOR_ROS_
 void featureTrackerNode::handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-void featureTrackerNode::handle_camera(cv::Mat& inputImage, ros::sensor_msgs::CameraInfo *info_msg) {
+void featureTrackerNode::handle_camera(cv::Mat& inputImage, sensor_msgs::CameraInfo *info_msg) {
 #endif
 	while (!infoProcessed) process_info(info_msg);
 	if (readyFrame < frameCount) return;

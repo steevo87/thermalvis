@@ -37,6 +37,10 @@
 #include <ros/ros.h>
 #endif
 
+#ifdef _USE_BOOST_
+#include "boost/date_time/posix_time/posix_time.hpp"	
+#endif
+
 #define MESSAGE_NORMAL	0
 #define MESSAGE_WARNING 1
 #define MESSAGE_ERROR	2
@@ -128,10 +132,12 @@ struct Header {
 	Header();
 };
 
+}
+
 namespace sensor_msgs {
 
 struct CameraInfo {
-	Header header;
+	ros::Header header;
 	double K[9], R[9], P[12];
 	std::vector<double> D;
 	int width, height;
@@ -141,7 +147,6 @@ struct CameraInfo {
 	CameraInfo();
 };
 
-}
 }
 
 #endif

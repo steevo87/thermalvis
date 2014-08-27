@@ -211,14 +211,14 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void process_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void process_info(ros::sensor_msgs::CameraInfo *info_msg);
+	void process_info(sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Initial receipt of an image. 
 #ifdef _BUILD_FOR_ROS_
 	void handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
-	void handle_camera(cv::Mat& inputImage, ros::sensor_msgs::CameraInfo *info_msg);
+	void handle_camera(cv::Mat& inputImage, sensor_msgs::CameraInfo *info_msg);
 #endif
 
 	///brief	Broadcasts tracking information. 

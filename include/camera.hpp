@@ -7,7 +7,6 @@
 
 #include "opencv_resources.hpp"
 
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include <math.h>
 
 #include "tools.hpp"

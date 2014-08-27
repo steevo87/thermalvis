@@ -1,50 +1,36 @@
 #include "streamer/input_stream.hpp"
 
+#ifdef _BUILD_FOR_ROS_
+
 bool streamerNode::runBag() {
 	
 	if (configData.subscribeMode) {
 		ROS_INFO("Subscription started...");
-	} else if (configData.resampleMode) {
-		ROS_INFO("Resampling subscription started...");
-	}
+	} else if (configData.resampleMode) ROS_INFO("Resampling subscription started...");
 
-	while (isVideoValid()) {
-#ifdef _BUILD_FOR_ROS_
-		ros::spinOnce();
-#endif
-	}
+	while (isVideoValid()) ros::spinOnce();
 	
 	if (configData.subscribeMode) {
 		ROS_INFO("Subscription terminating...");
-	} else if (configData.resampleMode) {
-		ROS_INFO("Resampling subscription terminating...");
-	}
+	} else if (configData.resampleMode) ROS_INFO("Resampling subscription terminating...");
 	
 	return true;
 }
 
-#ifdef _BUILD_FOR_ROS_
-//HGH
 void streamerNode::updateCameraInfoExtrinsics() {
     if (configData.verboseMode) { ROS_INFO("Updating camera info..."); }
     if (configData.camera_number == 0){
         for (unsigned int iii = 0; iii < 3; iii++) {
-            for (unsigned int jjj = 0; jjj < 4; jjj++) {
-                camera_info.P[iii*4 + jjj] = globalExtrinsicsData.P0.at<double>(iii,jjj);
-            }
+            for (unsigned int jjj = 0; jjj < 4; jjj++) camera_info.P[iii*4 + jjj] = globalExtrinsicsData.P0.at<double>(iii,jjj);
         }
-    }else if (configData.camera_number == 1){
+    } else if (configData.camera_number == 1){
         for (unsigned int iii = 0; iii < 3; iii++) {
-            for (unsigned int jjj = 0; jjj < 4; jjj++) {
-                camera_info.P[iii*4 + jjj] = globalExtrinsicsData.P1.at<double>(iii,jjj);
-            }
+            for (unsigned int jjj = 0; jjj < 4; jjj++) camera_info.P[iii*4 + jjj] = globalExtrinsicsData.P1.at<double>(iii,jjj);
         }
     }
     if (configData.verboseMode) { ROS_INFO("Camera info updated."); }
 }
-#endif
 
-#ifdef _BUILD_FOR_ROS_
 bool streamerNode::setCameraInfo(sensor_msgs::SetCameraInfo::Request &req, sensor_msgs::SetCameraInfo::Response &rsp) {
 
 	camera_info = req.camera_info;
@@ -55,49 +41,32 @@ bool streamerNode::setCameraInfo(sensor_msgs::SetCameraInfo::Request &req, senso
 	if (camera_calibration_parsers::writeCalibrationIni("../camera_parameters.txt", "gscam", camera_info)) {
 		ROS_INFO("Camera information written to camera_parameters.txt");
 		return true;
-	}
-	else {
+	} else {
 		ROS_ERROR("Could not write camera_parameters.txt");
 		return false;
 	}
 }
-#endif
 
 void streamerNode::acceptImage(void *ptr) {
-	#ifdef _BUILD_FOR_ROS_
-	if (temperatureMat.rows == 0) {
-		if (canRadiometricallyCorrect) {
-			temperatureMat = cv::Mat::zeros(camera_info.height, camera_info.width, CV_32FC1);
-		}
-	}
+	if ((temperatureMat.rows == 0) && canRadiometricallyCorrect) temperatureMat = cv::Mat::zeros(camera_info.height, camera_info.width, CV_32FC1);
 	
 	if (configData.inputDatatype == DATATYPE_RAW) {
-		if ((frame.rows == 0) || (frame.type() != CV_16UC1)) {
-
-			frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_16UC1);
-		}
-		
+		if ((frame.rows == 0) || (frame.type() != CV_16UC1)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_16UC1);
 
 		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix... (%d, %d)", camera_info.width, camera_info.height); }
 		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height*2);
 		if (configData.verboseMode){ ROS_INFO("Data copied."); }
 
-		
-		
 	} else if (configData.inputDatatype == DATATYPE_8BIT) {
 
-		if ((frame.rows == 0) || (frame.type() != CV_8UC1)) {
-			frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC1);
-		}
+		if ((frame.rows == 0) || (frame.type() != CV_8UC1)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC1);
 		
 		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix.... (%d, %d)", camera_info.width, camera_info.height); }
 		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height);
 		if (configData.verboseMode){ ROS_INFO("Data copied."); }
 		
 	} else if (configData.inputDatatype == DATATYPE_MM){
-		if ((frame.rows == 0) || (frame.type() != CV_8UC3)) {
-			frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC3);
-		}
+		if ((frame.rows == 0) || (frame.type() != CV_8UC3)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC3);
 		
 		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix... (%d, %d)", camera_info.width, camera_info.height); }
 		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height*3);
@@ -109,11 +78,9 @@ void streamerNode::acceptImage(void *ptr) {
 		fix_bottom_right(frame);
 		if (configData.verboseMode){ ROS_INFO("Dud pixels fixed."); }
 	}
-	#endif
 }
 
 void streamerNode::initializeMessages() {
-	
 	
 	if (configData.output16bit) {
 		if (msg_16bit.width == 0) {
@@ -126,7 +93,6 @@ void streamerNode::initializeMessages() {
 				msg_16bit.data.resize(_16bitMat.cols*_16bitMat.rows*2);
 			}			
 		}
-
 	}
 	
 	if (configData.output8bit) {
@@ -168,204 +134,113 @@ bool streamerNode::performNuc() {
 	return true;
 }
 
-void streamerNode::serialCallback(const ros::TimerEvent&) {
+void streamerNode::updateThermistor() {
+	newThermistorReading = getThermistorReading();
+	if (!((newThermistorReading < MAX_VALID_THERMISTOR) && (newThermistorReading > MIN_VALID_THERMISTOR))) return;
 	
-	if (!configData.serialComms) {
+	if (!((lastThermistorReading == -99.0) || ( (lastThermistorReading != -99.0) && (abs(lastThermistorReading - newThermistorReading) < configData.maxThermistorDiff) ) )) return;
+	
+	// Update thermistor reading buffer
+	thermistorBuffer[recordedThermistorReadings % MAX_THERMISTOR_READINGS_TO_STORE][0] = ros::Time::now().toSec();
+	thermistorBuffer[recordedThermistorReadings % MAX_THERMISTOR_READINGS_TO_STORE][1] = newThermistorReading;
+	recordedThermistorReadings++;
+	
+	if (configData.smoothThermistor) {
+		double smoothReading = smoothThermistorReading();
+		
+		if ((smoothReading < MAX_VALID_THERMISTOR) && (smoothReading > MIN_VALID_THERMISTOR)) {
+			if ((abs(smoothReading - newThermistorReading) < configData.maxThermistorDiff)) newThermistorReading = smoothReading;
+		}
+	}
+
+	lastThermistorReading = newThermistorReading;
+
+}
+
+void streamerNode::calibrationModeRoutine() {
+	if (!(alternateCounter >= configData.alternatePeriod)) {
+		alternateCounter++;
 		return;
 	}
+		
+	char localCommand[256];
+
+	if (configData.calibrationMode == CALIBMODE_ALT_OUTPUT) {
+		(altStatus) ? sprintf(localCommand, "vidout raw") : sprintf(localCommand, "vidout ins");
+		altStatus = !altStatus;
+	} else if (configData.calibrationMode == CALIBMODE_ALT_SHUTTER) {
+		if (performingNuc) {
+			if (configData.verboseMode) { ROS_INFO("About to switch shutter"); }
+			(altStatus) ? sprintf(localCommand, "close") : sprintf(localCommand, "open");
+			altStatus = !altStatus;
+		} else {
+			if (configData.verboseMode) { ROS_INFO("About to perform a NUC"); }
+			sprintf(localCommand, "nuc");
+		}
+		performingNuc = !performingNuc;
+	} else if (configData.calibrationMode == CALIBMODE_LONG_SHUTTER) {
+		
+		if (configData.verboseMode) { ROS_INFO("About to switch shutter"); }
+		(altStatus) ? sprintf(localCommand, "close") : sprintf(localCommand, "open");
+		altStatus = !altStatus;
+	}
+	
+	if (configData.verboseMode) { ROS_INFO("Sending SPECIAL command: (%s)", localCommand); }
+	if (!sendSerialCommand(localCommand, configData.serialWriteAttempts)) ROS_WARN("Serial command (%s) failed after (%d) attempts", localCommand, configData.serialWriteAttempts);
+								
+	alternateCounter = 0;
+}
+
+void streamerNode::serialCallback(const ros::TimerEvent&) {
+	
+	if (!configData.serialComms) return;
 	
 	if (configData.serialPollingRate == 0.0) {
 		if (configData.verboseMode) { ROS_INFO("Skipping serial callback because desired frequency is zero (0)."); }
 		return;
-	} else {
-		//ROS_WARN("Polling serial device...");
-		
-		//struct termios options;
-		//int tcgetattr_ret = tcgetattr(mainfd, &options);
-		//displayTermiosData(options);
-		
-		if (configData.readThermistor) {
-			
-			newThermistorReading = getThermistorReading();
-			//ROS_INFO("Original reading (%f)...", newThermistorReading);
-			
-			if ((newThermistorReading < MAX_VALID_THERMISTOR) && (newThermistorReading > MIN_VALID_THERMISTOR)) {
-				
-				//ROS_INFO("DEBUG (%d) : (%f) (%f)", 0, lastThermistorReading, newThermistorReading);
-				
-				if ((lastThermistorReading == -99.0) || ( (lastThermistorReading != -99.0) && (abs(lastThermistorReading - newThermistorReading) < configData.maxThermistorDiff) ) ) {
-				
-				//if ((!isinf(-lastThermistorReading)) || ( (isinf(-lastThermistorReading)) && (abs(lastThermistorReading - newThermistorReading) < configData.maxThermistorDiff))) {
-				
-				//bool initTest = (lastThermistorReading < MAX_VALID_THERMISTOR) && (lastThermistorReading > MIN_VALID_THERMISTOR);
-					
-				//if (isinf(-lastThermistorReading) || (abs(lastThermistorReading - newThermistorReading) < configData.maxThermistorDiff)) {
-					
-					//ROS_INFO("DEBUG (%d)", 1);
-					
-					if (newThermistorReading == 0.0) {
-						//ROS_ERROR("newThermistorReading = (%f), lastThermistorReading = (%f)", newThermistorReading, lastThermistorReading);
-					}
-					
-					// Update thermistor reading buffer
-					thermistorBuffer[recordedThermistorReadings % MAX_THERMISTOR_READINGS_TO_STORE][0] = ros::Time::now().toSec();
-					thermistorBuffer[recordedThermistorReadings % MAX_THERMISTOR_READINGS_TO_STORE][1] = newThermistorReading;
-					recordedThermistorReadings++;
-					
-					//ofs_thermistor_log << newThermistorReading;
-					
-					if (configData.smoothThermistor) {
-						double smoothReading = smoothThermistorReading();
-						
-						if ((smoothReading < MAX_VALID_THERMISTOR) && (smoothReading > MIN_VALID_THERMISTOR)) {
-							
-							//ROS_INFO("DEBUG (%d)", 2);
-							
-							if ((abs(smoothReading - newThermistorReading) < configData.maxThermistorDiff)) {
-								newThermistorReading = smoothReading;
-								//ROS_INFO("Smoothed reading (%f)...", newThermistorReading);
-								
-								//ofs_thermistor_log << " " << newThermistorReading;
-							} else {
-								//ROS_ERROR("smoothReading vs newThermistorReading = (%f) vs (%f)", smoothReading, newThermistorReading);
-							}
-							
-						} else {
-							//ROS_ERROR("smoothReading = (%f)", smoothReading);
-						}
-						
-						
-					}
-	
-
-	
-					//ofs_thermistor_log << endl;
-					lastThermistorReading = newThermistorReading;
-					
-					
-					
-				}
-				
-				
-				
-			}
-			
-			//ROS_INFO("newVal = (%f) vs oldVal = (%f)", newThermistorReading, lastThermistorReading);
-			
-			// If new value is valid
-			//if ((newThermistorReading > MIN_THERMISTOR_READNG) && (newThermistorReading < MAX_THERMISTOR_READING)) {
-				
-				// If the historical value is valid
-				//if (lastThermistorReading != 0.0) {
-					
-					
-				//	if (abs(newThermistorReading - lastThermistorReading) < configData.maxThermistorDiff) {
-				//		lastThermistorReading = newThermistorReading;
-				//	}
-					
-					
-				//} else {
-					//lastThermistorReading = newThermistorReading;
-				//}
-				
-			//}
-			
-			//ROS_WARN("Thermistor value = (%f)", lastThermistorReading);
-		}
-		
-		if (configData.calibrationMode > 0) {
-			if (alternateCounter >= configData.alternatePeriod) {
-				
-				char localCommand[256];
-	
-				if (configData.calibrationMode == CALIBMODE_ALT_OUTPUT) {
-					if (altStatus) {
-						sprintf(localCommand, "vidout raw");
-					} else {
-						sprintf(localCommand, "vidout ins");
-					}
-					altStatus = !altStatus;
-				} else if (configData.calibrationMode == CALIBMODE_ALT_SHUTTER) {
-					if (performingNuc) {
-						
-						if (configData.verboseMode) { ROS_INFO("About to switch shutter"); }
-						
-						if (altStatus) {
-							sprintf(localCommand, "close");
-						} else {
-							sprintf(localCommand, "open");
-						}
-						altStatus = !altStatus;
-						
-					} else {
-						if (configData.verboseMode) { ROS_INFO("About to perform a NUC"); }
-						sprintf(localCommand, "nuc");
-					}
-					
-					performingNuc = !performingNuc;
-				} else if (configData.calibrationMode == CALIBMODE_LONG_SHUTTER) {
-					
-					if (configData.verboseMode) { ROS_INFO("About to switch shutter"); }
-					
-					if (altStatus) {
-						sprintf(localCommand, "close");
-					} else {
-						sprintf(localCommand, "open");
-					}
-					
-					altStatus = !altStatus;
-				}
-				
-				if (configData.verboseMode) { ROS_INFO("Sending SPECIAL command: (%s)", localCommand); }
-				if (!sendSerialCommand(localCommand, configData.serialWriteAttempts)) ROS_WARN("Serial command (%s) failed after (%d) attempts", localCommand, configData.serialWriteAttempts);
-											
-				alternateCounter = 0;
-			}
-			alternateCounter++;
-		}
-		
 	}
+	
+	if (configData.readThermistor) updateThermistor(); 
+	if (configData.calibrationMode > 0) calibrationModeRoutine();
 	
 	bool wantsToPerformNuc = false;
 	
 	if (currentNucProtectionMode && currentDesiredNucProtectionMode && (abs(ros::Time::now().toSec() - lastFlagReceived.toSec()) > MAX_TIME_WITHOUT_FLAGS) ) {
-		
 		if (configData.verboseMode) { ROS_INFO("Timer exceeded for disabled NUC mode, preparing to restore NUC settings..."); }
-		
 		currentDesiredNucProtectionMode = false;
 		updateNucInterval = true;
 		wantsToPerformNuc = true;
-		
 	}
 	
 	if (currentNucProtectionMode && !currentDesiredNucProtectionMode) {
-		
-		if (abs(ros::Time::now().toSec() - lastNucPerformed_at_the_earliest.toSec()) > MAX_TIME_WITHOUT_NUC_conservative) {
-			wantsToPerformNuc = true;
-		}
-		
+		if (abs(ros::Time::now().toSec() - lastNucPerformed_at_the_earliest.toSec()) > MAX_TIME_WITHOUT_NUC_conservative) wantsToPerformNuc = true;
 	}
 	
 	if (wantsToPerformNuc) {
 		lastNucPerformed_at_the_earliest = ros::Time::now();
 		performNuc();
-		
 	}
 	
 	if (updateDetectorMode) {
 		
 		string detectorCode;
 		
-		if (configData.detectorMode == DETECTOR_MODE_RAW) {
-			detectorCode = "raw";
-		} else if (configData.detectorMode == DETECTOR_MODE_LUM) {
-			detectorCode = "lum";
-		} else if (configData.detectorMode == DETECTOR_MODE_INS) {
-			detectorCode = "ins";
-		} else if (configData.detectorMode == DETECTOR_MODE_RAD) {
-			detectorCode = "rad";
-		} else if (configData.detectorMode == DETECTOR_MODE_TMP) {
-			detectorCode = "t";
+		switch (configData.detectorMode) {
+			case DETECTOR_MODE_RAW:
+				detectorCode = "raw";
+				break;
+			case DETECTOR_MODE_LUM:
+				detectorCode = "lum";
+				break;
+			case DETECTOR_MODE_INS:
+				detectorCode = "ins";
+				break;
+			case DETECTOR_MODE_RAD:
+				detectorCode = "rad";
+				break;
+			case DETECTOR_MODE_TMP:
+				detectorCode = "t";
+				break;
 		}
 		
 		if (configData.verboseMode) { ROS_INFO("Changing detector output..."); }
@@ -376,22 +251,16 @@ void streamerNode::serialCallback(const ros::TimerEvent&) {
 		char buff[SERIAL_BUFF_SIZE];
 		int n = read(mainfd, buff, SERIAL_BUFF_SIZE);
 		
-		// ROS_INFO("Returned is <%s>", buff);
-		
 		updateDetectorMode = false;
 	}
 	
 	if (updateUSBMode) {
 		
 		string usbCode;
-		
-		
-		
+
 		if (configData.usbMode == USB_MODE_16) {
 			usbCode = "1";
-		} else if (configData.usbMode == USB_MODE_8) {
-			usbCode = "2";
-		}
+		} else if (configData.usbMode == USB_MODE_8) usbCode = "2";
 		
 		
 		if (configData.verboseMode) { ROS_INFO("Changing usb output with command..."); }
@@ -440,21 +309,10 @@ void streamerNode::serialCallback(const ros::TimerEvent&) {
 		char buff[SERIAL_BUFF_SIZE];
 		int n = read(mainfd, buff, SERIAL_BUFF_SIZE);
 		
-		// ROS_INFO("Returned is (%s)", buff);
-		
-		/*
-		int testDelay;
-		double testDiff;
-		getNucSettingsReading(testDelay, testDiff);
-		ROS_WARN("Current nuc settings = (%d, %f)", testDelay, testDiff);
-		*/
-		
 		currentNucProtectionMode = currentDesiredNucProtectionMode;
 
 		updateNucInterval = false;
-
 	}
-	
 }
 
 void streamerNode::timerCallback(const ros::TimerEvent&) {
@@ -565,40 +423,21 @@ void streamerNode::overwriteCameraDims() {
 }
 
 void streamerNode::handle_nuc_instruction(const std_msgs::Float32::ConstPtr& nuc_msg) {
-//void streamerNode::handle_nuc_instruction(const std_msgs::Float32& nuc_msg) {
 	
 	if (configData.verboseMode) { ROS_INFO("Handling NUC instruction: (%f)", nuc_msg->data); }
-	
 	lastFlagReceived = ros::Time::now();
-	
 	currentDesiredNucProtectionMode = (nuc_msg->data < 0.5);
-	
-	if (currentDesiredNucProtectionMode != currentNucProtectionMode) { 
-		updateNucInterval = true;
-	}
-	
-	
+	if (currentDesiredNucProtectionMode != currentNucProtectionMode) updateNucInterval = true;
 }
 
 void streamerNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg) {
 	
-	//ROS_ERROR("handle_info");
-	
-	if (configData.syncMode != SYNCMODE_SOFT) {
-		return;
-	}
-	
-	
-	if ((!configData.subscribeMode) && (!configData.resampleMode)) {
-		return;
-	}
+	if (configData.syncMode != SYNCMODE_SOFT) return;
+	if ((!configData.subscribeMode) && (!configData.resampleMode)) return;
 	
 	if (configData.verboseMode) { ROS_INFO("Copying camera info over..."); }
 	
-	
 	original_camera_info = *info_msg;
-	
-	
 	
 	info_time = ros::Time::now();
 	original_time = info_msg->header.stamp;
@@ -607,16 +446,10 @@ void streamerNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg) 
 	original_bx = info_msg->binning_x;
 	original_by = info_msg->binning_y;
 	
-	//cout << "Handling info..." << info_msg->header.stamp.toNSec() << ", " << info_time.toNSec() << endl;
-	
 	if (std::abs(image_time.toNSec() - info_time.toNSec()) < configData.soft_diff_limit) {
-		//ROS_ERROR("handle_info : image_time == info_time");
 		image_time = dodgeTime;
-	
 		act_on_image();
 	}
-	
-	
 }
 
 void streamerNode::refreshCameraAdvertisements() {
@@ -676,8 +509,6 @@ void streamerNode::refreshCameraAdvertisements() {
 	}
 }
 
-
-
 void streamerNode::handle_image(const sensor_msgs::ImageConstPtr& msg_ptr) {
 	
 	if (configData.syncMode == SYNCMODE_HARD) return;
@@ -721,39 +552,43 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<int>("alternatePeriod", alternatePeriod, 5);
 	
-	if (outputFormat == 0) {
-		outputFormatString = "jpg";
-	} else if (outputFormat == 1) {
-		outputFormatString = "pgm";
-	} else if (outputFormat == 2) {
-		outputFormatString = "bmp";
-	} else if (outputFormat == 3) {
-		outputFormatString = "ppm";
-	} else if (outputFormat == 4) {
-		outputFormatString = "png";
+	switch (outputFormat) {
+		case 0:
+			outputFormatString = "jpg";
+			break;
+		case 1:
+			outputFormatString = "pgm";
+			break;
+		case 2:
+			outputFormatString = "bmp";
+			break;
+		case 3:
+			outputFormatString = "ppm";
+			break;
+		case 4:
+			outputFormatString = "png";
+			break;
 	}
 	
 	std::string outputTypeString;
 	
 	nh.param<std::string>("outputType", outputTypeString, "CV_8UC3");
 	
-	if (outputTypeString == "CV_8UC3") {
-		if (outputFormatString == "pgm") {
-			ROS_WARN("PGM cannot write as CV_8UC3...");
-		}
-	} else if (outputTypeString == "CV_8UC1") { 
-		// ...
-	} else if (outputTypeString == "CV_16UC1") {
-		if ((outputFormatString == "jpg") || (outputFormatString == "bmp")) {
-			ROS_WARN("JPG/BMP cannot write as CV_16UC1...");
-		}
-	} else {
-		ROS_WARN("Unrecognized output format (%s)", outputTypeString.c_str());
+	switch (outputTypeString) {
+		case "CV_8UC3":
+			if (outputFormatString == "pgm") ROS_WARN("PGM cannot write as CV_8UC3...");
+			break;
+		case "CV_8UC1":
+			break;
+		case "CV_16UC1":
+			if ((outputFormatString == "jpg") || (outputFormatString == "bmp")) ROS_WARN("JPG/BMP cannot write as CV_16UC1...");
+			break;
+		default:
+			ROS_WARN("Unrecognized output format (%s)", outputTypeString.c_str());
 	}
-
+	
 	nh.param<int>("maxIntensityChange", maxIntensityChange, 2);
 
-	
 	nh.param<bool>("drawReticle", drawReticle, false);
 	nh.param<bool>("displayThermistor", displayThermistor, false);
 	nh.param<bool>("outputDuplicates", outputDuplicates, false);
@@ -773,7 +608,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<int>("filterMode", filterMode, 0);
 	nh.param<double>("filterParam", filterParam, 2.0);
 	
-	
 	nh.param<std::string>("radiometryFile", radiometryFile, "radiometryFile");
 	
 	nh.param<double>("syncDiff", syncDiff, 0.005);
@@ -785,7 +619,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<bool>("autoAlpha", autoAlpha, true);
 	nh.param<double>("alpha", alpha, 0.00);
 	
-	
 	nh.param<int>("serialCommsConfigurationCode", serialCommsConfigurationCode, SERIAL_COMMS_CONFIG_DEFAULT);
 
 	nh.param<bool>("useCurrentRosTime", useCurrentRosTime, false);
@@ -796,7 +629,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<int>("inputWidth", inputWidth, 0);
 	nh.param<int>("inputHeight", inputHeight, 0);
-	
 	
 	nh.param<std::string>("extrinsics", extrinsics, "extrinsics");
 	
@@ -812,7 +644,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<bool>("outputColor", outputColor, true);
 	
 	nh.param<bool>("loopMode", loopMode, false);
-	
 	
 	nh.param<bool>("disableSkimming", disableSkimming, true);
 	
@@ -840,7 +671,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		outputFolder = "outputFolder";
 	}
 	
-	
 	if ((wantsToWrite) && (outputFolder.size() > 0)) {
 		// Create necessary folders
 		char folderCommand[256];
@@ -848,15 +678,10 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		
 		int res = system(folderCommand);
 		
-		if (res == 0) {
-			ROS_WARN("system() call returned 0...");
-		}
+		if (res == 0) ROS_WARN("system() call returned 0...");
 	}
 	
-	
 	if (verboseMode) { ROS_INFO("outputFolder = (%s)", outputFolder.c_str()); }
-	
-	
 	
 	outputFileParams.clear();
 	int val;
@@ -885,9 +710,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	if (outputFolder != "outputFolder") {
 		nh.param<bool>("dumpTimestamps", dumpTimestamps, false);
-	} else {
-		dumpTimestamps = false;
-	}
+	} else dumpTimestamps = false;
 	
 	nh.param<bool>("resizeMode", wantsToResize, false);
 	
@@ -897,8 +720,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	// "softSync", int_t, 1, "Image and camera_info topics do not have to be fully synchronized"),
 	// "imageOnly", int_t, 2, "To be used when no camera_info topic is present") ],
 
-
-	
 	nh.param<int>("rows", desiredRows, -1);
 	nh.param<int>("cols", desiredCols, -1);
 	
@@ -907,17 +728,13 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 			ROS_ERROR("Resizing values (%d, %d) invalid.",desiredCols, desiredRows);
 			return false;
 			
-		} else {
-			ROS_INFO("Resizing to (%d x %d)", desiredCols, desiredRows);
-		}
+		} else ROS_INFO("Resizing to (%d x %d)", desiredCols, desiredRows);
 	}
 	
 	if (wantsToUndistort) { ROS_INFO("Undistorting images..."); }
 	
 	nh.param<int>("normMode", normMode, NORM_MODE_FIXED_TEMP_RANGE);
-	
 	nh.param<double>("normFactor", normFactor, 0.0);
-	
 	
 	if (wantsToEncode) {
 		if (verboseMode) { ROS_INFO("Has chosen to encode."); }
@@ -928,26 +745,21 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		} else ROS_INFO("outputVideo = (%s)", outputVideo.c_str());
 		
 		if (verboseMode) { ROS_INFO("Image format = (%s); image type = (%s)", "avi", videoType.c_str()); }
-		
 	}
 	
-	if (inputDatatype == DATATYPE_8BIT) {
-		if (verboseMode) { ROS_INFO("Streaming mode: 8-bit"); }
-	} else if (inputDatatype == DATATYPE_RAW) {
-		if (verboseMode) { ROS_INFO("Streaming mode: 16-bit"); }
-	} else if (inputDatatype == DATATYPE_MM) {
-		if (verboseMode) { ROS_INFO("Streaming mode: multimodal"); }
+	if (verboseMode) { 
+		switch (inputDatatype) {
+			case DATATYPE_8BIT:
+				ROS_INFO("Streaming mode: 8-bit");
+				break;
+			case DATATYPE_RAW:
+				ROS_INFO("Streaming mode: 16-bit");
+				break;
+			case DATATYPE_MM:
+				ROS_INFO("Streaming mode: multimodal");
+				break;
+		}
 	}
-
-	// ROS_INFO("Source = %s", source.c_str());
-	
-	readMode = false;
-	loadMode = false;
-	captureMode = false;
-	pollMode = false;
-	subscribeMode = false;
-	resampleMode = false;
-	
 	
 	if (source == "dev") {
 		
@@ -968,9 +780,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		if ((framerate < 0.0) || (framerate > MAX_READ_RATE)) {
 			ROS_INFO("Invalid framerate (%f) so defaulting to (%f).", framerate, DEFAULT_READ_RATE);
 			framerate = DEFAULT_READ_RATE;
-		} else {
-			ROS_INFO("Requested framerate = %f", framerate);
-		}
+		} else ROS_INFO("Requested framerate = %f", framerate);
 		
 		ROS_INFO("Reading from a file (%s)", filename.c_str());
 	} else if ((source == "folder") || (source == "directory")) {
@@ -985,19 +795,14 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 			folder = _USERPROFILE_ + folder;
 		}
 		
-		for (int iii = 0; iii < folder.size(); iii++) {
-			if (folder[iii] == '\\') folder[iii] = '/';
-		}
+		for (int iii = 0; iii < folder.size(); iii++) if (folder[iii] == '\\') folder[iii] = '/';
 		
 		if ((framerate < 0.0) || (framerate > MAX_READ_RATE)) {
 			ROS_WARN("Invalid framerate (%f) so defaulting to (%f).", framerate, DEFAULT_READ_RATE);
 			framerate = DEFAULT_READ_RATE;
-		} else {
-			ROS_INFO("Requested framerate = %f", framerate);
-		}
+		} else ROS_INFO("Requested framerate = %f", framerate);
 		
 		ROS_INFO("Loading images from a folder (%s)", folder.c_str());
-		
 		
 	} else if (source == "topic") {
 		
@@ -1014,35 +819,25 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		
 	}
 	
-	
 	//maxIntensityChange = 100 / DEFAULT_READ_RATE;
 	
-	if (loopMode == true) {
-		ROS_INFO("Option to loop has been selected.");
-	}
+	if (loopMode == true) ROS_INFO("Option to loop has been selected.");
 	
 	if (intrinsics != "intrinsics") {
 		intrinsicsProvided = true;
 		if (verboseMode) { ROS_INFO("Intrinsics at (%s) selected.", intrinsics.c_str()); }
 		
-		if ((inputWidth != 0) && (inputHeight != 0)) {
-			ROS_WARN("Provided image dimensions will be ignored because of provided intrinsics file.");
-		}
+		if ((inputWidth != 0) && (inputHeight != 0)) ROS_WARN("Provided image dimensions will be ignored because of provided intrinsics file.");
 	} else {
 		
 		if ((inputWidth != 0) && (inputHeight != 0)) {
 			ROS_INFO("Provided image dimensions (%d, %d) will be used.", inputWidth, inputHeight);
 			imageDimensionsSpecified = true;
-		} else {
-			ROS_WARN("No intrinsics or image dimensions provided. Will attempt to estimate camera size...");	
-		}
+		} else ROS_WARN("No intrinsics or image dimensions provided. Will attempt to estimate camera size...");
 		
-			
 		//intrinsics = read_addr + "data/calibration/csiro-aslab/miricle-1.yml";
 		//ROS_ERROR("No intrinsics supplied. Defaulting to (%s)", intrinsics.c_str());
 	}
-	
-	
 	
 	if (extrinsics != "extrinsics") {
 		ROS_INFO("Extrinsics at %s selected.", extrinsics.c_str());
@@ -1055,11 +850,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		if (camera_number < 0) {
 			ROS_WARN("Invalid camera number selected (%d) so defaulting to (0).", camera_number);
 			camera_number = 0;
-			
-		} else {
-			ROS_INFO("Camera number (%d).", camera_number);
-		}
-		
+		} else ROS_INFO("Camera number (%d).", camera_number);	
 	}
 
 	//getMapping(map, extremes, mapCode, mapParam);
@@ -1081,92 +872,59 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		return false;
 	}
 	
-	if ((framerate < -1.0) || (framerate > MAX_READ_RATE)) {
-		framerate = DEFAULT_READ_RATE;
-	}
+	if ((framerate < -1.0) || (framerate > MAX_READ_RATE)) framerate = DEFAULT_READ_RATE;
 	
-	 //ROS_INFO("normalization mode = (%d)", normMode);
 
-       //HGH
-        nh.param<int>("republishSource", republishSource, NO_REPUBLISH_CODE);
-        nh.param<std::string>("republishTopic", republishTopic, "specifyTopic/image_raw");
-        //check for valid republishSource
-        switch(republishSource){
-        case REPUBLISH_CODE_8BIT_MONO:
-            ROS_INFO("Republishing mono image as %s", republishTopic.c_str() );
-            break;
-        case REPUBLISH_CODE_8BIT_COL:
-            ROS_INFO("Republishing color image as %s", republishTopic.c_str() );
-            break;
-        case REPUBLISH_CODE_16BIT:
-            ROS_INFO("Republishing 16bit image as %s", republishTopic.c_str() );
-            break;
-        default:
-            republishSource = NO_REPUBLISH_CODE;
-            break;
-        }
-        if (republishSource != NO_REPUBLISH_CODE){
-            ROS_INFO("Republish Code: %d", republishSource);
-        }
+	//HGH
+	nh.param<int>("republishSource", republishSource, NO_REPUBLISH_CODE);
+	nh.param<std::string>("republishTopic", republishTopic, "specifyTopic/image_raw");
+	//check for valid republishSource
+	switch(republishSource){
+		case REPUBLISH_CODE_8BIT_MONO:
+			ROS_INFO("Republishing mono image as %s", republishTopic.c_str() );
+			break;
+		case REPUBLISH_CODE_8BIT_COL:
+			ROS_INFO("Republishing color image as %s", republishTopic.c_str() );
+			break;
+		case REPUBLISH_CODE_16BIT:
+			ROS_INFO("Republishing 16bit image as %s", republishTopic.c_str() );
+			break;
+		default:
+			republishSource = NO_REPUBLISH_CODE;
+			break;
+	}
+	if (republishSource != NO_REPUBLISH_CODE){
+		ROS_INFO("Republish Code: %d", republishSource);
+	}
 
-        nh.param<bool>("republishNewTimeStamp",republishNewTimeStamp,false);
+	nh.param<bool>("republishNewTimeStamp",republishNewTimeStamp,false);
 
-        nh.param<std::string>("frameID", frameID, ""); //specify the frameID
+	nh.param<std::string>("frameID", frameID, ""); //specify the frameID
 
-        nh.param<bool>("drawReticle",drawReticle, false);
-
+	nh.param<bool>("drawReticle",drawReticle, false);
 	
 	return true;
 }
 	
 int getMapIndex(string mapping) {
 	
-	int map;
+	int map = 0;
 	
-	if (mapping == "GRAYSCALE") {
-		map = 0;
-	} else if (mapping == "CIECOMP") {
-		map = 1;
-	} else if (mapping == "BLACKBODY") {
-		map = 2;
-	} else if (mapping == "RAINBOW") {
-		map = 3;
-	} else if (mapping == "IRON") {
-		map = 4;
-	} else if (mapping == "BLUERED") {
-		map = 5;
-	} else if (mapping == "JET") {
-		map = 6;
-	} else if (mapping == "CIELUV") {
-		map = 7;
-	} else if (mapping == "ICEIRON") {
-		map = 8;
-	} else if (mapping == "ICEFIRE") {
-		map = 9;
-	} else if (mapping == "REPEATED") {
-		map = 10;
-	} else if (mapping == "HIGHLIGHTED") {
-		map = 11;
-	} else {
-		map = 0;
-	}
+	if (mapping == "GRAYSCALE") map = 0;
+	if (mapping == "CIECOMP") map = 1;
+	if (mapping == "BLACKBODY") map = 2;
+	if (mapping == "RAINBOW") map = 3;
+	if (mapping == "IRON") map = 4; 
+	if (mapping == "BLUERED") map = 5;
+	if (mapping == "JET") map = 6;
+	if (mapping == "CIELUV") map = 7;
+	if (mapping == "ICEIRON") map = 8;
+	if (mapping == "ICEFIRE") map = 9;
+	if (mapping == "REPEATED") map = 10;
+	if (mapping == "HIGHLIGHTED") map = 11;
 	
 	return map;
 }
-
-/*
-int streamerNode::mygetch() {
-  struct termios oldt,newt;
-  int ch;
-  tcgetattr( STDIN_FILENO, &oldt );
-  newt = oldt;
-  newt.c_lflag &= ~( ICANON | ECHO );
-  tcsetattr( STDIN_FILENO, TCSANOW, &newt );
-  ch = getchar();
-  tcsetattr( STDIN_FILENO, TCSANOW, &oldt );
-  return ch;
-}
-*/
 
 double streamerNode::smoothThermistorReading() {
 	
@@ -1238,10 +996,7 @@ bool streamerNode::getNucSettingsReading(int& delay, double& diff) {
 		ROS_WARN("NUC settings were unable to be read!");
 	} else if (n == 0) {
 		ROS_WARN("0 characters from NUC settings...");
-	} else {
-		readSucceeded = true;
-		
-	}
+	} else readSucceeded = true;
 	
 	ROS_INFO("Read: (%s)", buff);
 	
@@ -1277,18 +1032,12 @@ float streamerNode::getThermistorReading() {
 		ROS_WARN("Thermistor value was unable to be read!");
 	} else if (n == 0) {
 		ROS_WARN("Zero characters returned from attempted thermistor reading.");
-	} else {
-		readSucceeded = true;
-	}
+	} else readSucceeded = true;
 	
-	if (!readSucceeded) {
-		return -9e99;
-	}
+	if (!readSucceeded) return -9e99;
 	
 	for (unsigned int iii = 0; iii < 512; iii++) {
-		if (buff[iii] == '\r') {
-			buff[iii] = '-';
-		}
+		if (buff[iii] == '\r') buff[iii] = '-';
 	}
 	
 	//ROS_ERROR("getThermistorReading(): Line = [%d] (%s)", n, buff);
@@ -1297,18 +1046,7 @@ float streamerNode::getThermistorReading() {
 	
 	retVal = atof(&buff[103]);
 	
-	/*
-	char arrayChar[11];
-	
-	for (unsigned int iii = 0; iii < 10; iii++) {
-		arrayChar[iii] = buff[100+iii];
-	}
-	
-	arrayChar[10] = '\0';
-	*/
-	
-	// if (1) /*(configData.verboseMode)*/ { ROS_INFO("Temperature = (%f), (%s)", retVal, arrayChar); }
-	
 	return retVal;
-	
 }
+
+#endif

@@ -13,7 +13,6 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	wantsToUndistort = startupData.wantsToUndistort;
 	autoTemperature = startupData.autoTemperature;
 	wantsToUndistort = startupData.wantsToUndistort;
-	dumpTimestamps = startupData.dumpTimestamps;
 	
 	inputDatatype = startupData.inputDatatype;
 	detectorMode = startupData.detectorMode;
@@ -24,7 +23,6 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 
 	normMode = startupData.normMode;
 	map = startupData.map;
-	extremes = startupData.extremes;
 	
 	minTemperature = startupData.minTemperature;
 	maxTemperature = startupData.maxTemperature;
@@ -2967,7 +2965,7 @@ bool streamerNode::runRead() {
 #ifdef _BUILD_FOR_ROS_
 	void streamerNode::handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg) {
 #else
-	void streamerNode::handle_camera(const cv::Mat& inputImage, const ros::sensor_msgs::CameraInfo *info_msg) {
+	void streamerNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg) {
 #endif
 
 	if (configData.syncMode != SYNCMODE_HARD) return;

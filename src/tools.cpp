@@ -58,6 +58,8 @@ Time Time::now() {
 
 Header::Header() : seq(0), frame_id("") { }
 
+}
+
 namespace sensor_msgs {
 
 CameraInfo::CameraInfo() : 
@@ -84,8 +86,6 @@ CameraInfo::CameraInfo() :
 		P[iii] = 0.0;
 		if (iii < 9) R[iii] = 0.0;
 	}
-}
-
 }
 
 }

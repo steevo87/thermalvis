@@ -7,7 +7,7 @@
 #include "flow/sparse_flow.hpp"
 #include "slam/monocular_slam.hpp"
 
-#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/windows_demo.launch"
+#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/system_demo.launch"
 
 #ifdef _USE_QT_
 #include "mainwindow_streamer.h"
