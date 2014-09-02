@@ -206,7 +206,7 @@ HRESULT optrisManager::NewFrame(short *ImgBuf, int frameCounter) {
 	opStream->assignDataToRawImage((uchar*) ImgBuf);
 	opStream->processFrame();
 	opStream->colorizeFrame();
-	opStream->displayFrame();
+	opStream->displayCurrentFrame();
 	opStream->writeImageToDisk();
 
 	return 0;

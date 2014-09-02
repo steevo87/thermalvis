@@ -27,7 +27,7 @@ IF (NOT ("${_OpenCV_LIB_PATH}" STREQUAL ""))
 ENDIF()
 
 add_executable (OptrisWinTest ${WINOPTRIS_SOURCES} ${WINOPTRIS_HEADERS} )
-target_link_libraries (OptrisWinTest ${ADDITIONAL_LIBS} thermalvis streamer)
+target_link_libraries (OptrisWinTest ${ADDITIONAL_LIBS} thermalvis "thermalvis-streamer")
 
 IF(EXISTS "${OpenCV_BIN_DIR_OPT}/opencv_core${OPENCV_VER}.dll")
 	ADD_CUSTOM_COMMAND(TARGET OptrisWinTest POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OpenCV_BIN_DIR_OPT}/opencv_core${OPENCV_VER}.dll" $<TARGET_FILE_DIR:OptrisWinTest>)

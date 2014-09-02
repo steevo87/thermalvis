@@ -23,11 +23,10 @@ void MainWindow_streamer::linkRealtimeVariables(streamerRealtimeData* sourceData
 	ui->output16bit->setChecked(realtimeParameters->output16bit);
 	ui->outputColor->setChecked(realtimeParameters->outputColor);
     ui->autoTemperature->setChecked(realtimeParameters->autoTemperature);
-    ui->undistortImages->setChecked(realtimeParameters->undistortImages);
-    ui->showExtremeColors->setChecked(realtimeParameters->showExtremeColors);
+    ui->undistortImages->setChecked(realtimeParameters->wantsToUndistort);
 
     ui->normMode->setCurrentIndex(realtimeParameters->normMode);
-    ui->mapCode->setCurrentIndex(realtimeParameters->mapCode);
+    ui->mapCode->setCurrentIndex(realtimeParameters->map);
     ui->inputDatatype->setCurrentIndex(realtimeParameters->inputDatatype);
     ui->detectorMode->setCurrentIndex(realtimeParameters->detectorMode);
     ui->usbMode->setCurrentIndex(realtimeParameters->usbMode);
@@ -106,16 +105,7 @@ void MainWindow_streamer::on_autoTemperature_toggled(bool checked)
 void MainWindow_streamer::on_undistortImages_toggled(bool checked)
 {
 #ifdef _INCLUDE_INTERFACING_
-    realtimeParameters->undistortImages = checked;
-#else
-    (void)checked;
-#endif
-}
-
-void MainWindow_streamer::on_showExtremeColors_toggled(bool checked)
-{
-#ifdef _INCLUDE_INTERFACING_
-    realtimeParameters->showExtremeColors = checked;
+    realtimeParameters->wantsToUndistort = checked;
 #else
     (void)checked;
 #endif
@@ -133,7 +123,7 @@ void MainWindow_streamer::on_normMode_currentIndexChanged(int index)
 void MainWindow_streamer::on_mapCode_currentIndexChanged(int index)
 {
 #ifdef _INCLUDE_INTERFACING_
-    realtimeParameters->mapCode = index;
+    realtimeParameters->map = index;
 #else
     (void)index;
 #endif

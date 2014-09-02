@@ -374,7 +374,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 					if (v2.first.compare("remap")) continue;
 					if (!v2.second.get_child("<xmlattr>.from").data().compare("image")) images_to_display.push_back(v2.second.get_child("<xmlattr>.to").data());
 				}
-			} else if (!v.second.get_child("<xmlattr>.type").data().compare("reconfigure_gui")) {
+			} else if ((!v.second.get_child("<xmlattr>.type").data().compare("reconfigure_gui")) || (!v.second.get_child("<xmlattr>.type").data().compare("rqt_reconfigure"))) {
 				if (!v.second.get_child("<xmlattr>.args").data().compare("streamer")) displayGUI = true;
 				if (!v.second.get_child("<xmlattr>.args").data().compare("/streamer")) displayGUI = true;
 			}

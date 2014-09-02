@@ -4,14 +4,30 @@ SET(PROJECT_NAME "thermalvis")
 project(${PROJECT_NAME})
 SET(THERMALVIS_COMPILE_FLAGS "-D_THERMALVIS_")
 
+# Establish Architecture (32/64-bit) variables
+IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	SET(IS_32_BIT FALSE)
+	SET(IS_64_BIT TRUE)
+	SET(ARCH_ABBREV "64")
+	SET(ARCH_BITS "64")
+ELSE()
+	SET(IS_32_BIT TRUE)
+	SET(IS_64_BIT FALSE)
+	SET(ARCH_ABBREV "x86")
+	SET(ARCH_BITS "32")
+ENDIF()
+
+# Establish OS (Windows/Linux) variables
 IF(WIN32 OR win64)
 	SET(IS_WINDOWS TRUE)
+	SET(IS_LINUX FALSE)
 	ADD_DEFINITIONS( -D_IS_WINDOWS_ )
 	SET(DLL_EXT "dll")
 	SET(LIB_PREFIX "")
 	string(REGEX REPLACE "\\\\" "/" USERPROFILE "$ENV{USERPROFILE}")
 ELSE()
 	SET(IS_WINDOWS FALSE)
+	SET(IS_LINUX TRUE)
 	ADD_DEFINITIONS( -D_IS_LINUX_ )
 	SET(DLL_EXT "so")
 	SET(LIB_PREFIX "lib")
@@ -21,10 +37,11 @@ ENDIF()
 
 add_definitions( -D_USERPROFILE_=\"${USERPROFILE}\" )
 
-LIST(APPEND MSG_DEP_SET std_msgs sensor_msgs)
-LIST(APPEND catkin_COMPONENTS roscpp rospy dynamic_reconfigure image_transport cv_bridge camera_calibration_parsers camera_info_manager)
+# ROS testing/configuration
+IF(IS_LINUX)
+	LIST(APPEND MSG_DEP_SET std_msgs sensor_msgs)
+	LIST(APPEND catkin_COMPONENTS roscpp rospy dynamic_reconfigure image_transport cv_bridge camera_calibration_parsers camera_info_manager)
 
-IF(NOT IS_WINDOWS)
 	find_package(catkin QUIET COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
         IF(catkin_FOUND)
                 SET(BUILD_FOR_ROS TRUE CACHE BOOL "Build ROS interfaces and functions.")
@@ -48,73 +65,66 @@ IF(NOT IS_WINDOWS)
 		MESSAGE(STATUS "catkin has NOT been found. Assuming regular linux (non-ROS build)")
 		OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." FALSE)
 	ENDIF()
-ENDIF()
 
-IF(BUILD_FOR_ROS)
-	## Uncomment this if the package has a setup.py. This macro ensures
-	## modules and global scripts declared therein get installed
-	## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-	# catkin_python_setup()
-	
-	add_message_files(FILES feature_tracks.msg pose_confidence.msg)
-	
-	generate_messages(DEPENDENCIES ${MSG_DEP_SET})
+	IF(BUILD_FOR_ROS)
+		## Uncomment this if the package has a setup.py. This macro ensures
+		## modules and global scripts declared therein get installed
+		## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+		# catkin_python_setup()
+		
+		add_message_files(FILES feature_tracks.msg pose_confidence.msg)
+		
+		generate_messages(DEPENDENCIES ${MSG_DEP_SET})
 
-	generate_dynamic_reconfigure_options(
-	  cfg/calibrator.cfg
-	  cfg/flow.cfg
-	  cfg/slam.cfg
-	  cfg/streamer.cfg
-	)
-	
-	catkin_package(
-		INCLUDE_DIRS include 
-		LIBRARIES thermalvis
-		CATKIN_DEPENDS message_runtime ${MSG_DEP_SET}
-		#DEPENDS system_lib
-	)
-	include_directories(${catkin_INCLUDE_DIRS})
-	include_directories(cfg/cpp/thermalvis)
-        include_directories(${CATKIN_DEVEL_PREFIX}/include/${PROJECT_NAME})
-        SET(BUILD_APPS FALSE CACHE BOOL "Build demo apps.")
-ELSE()
-        SET(BUILD_APPS TRUE CACHE BOOL "Build demo apps.")
+		generate_dynamic_reconfigure_options(
+		  cfg/calibrator.cfg
+		  cfg/flow.cfg
+		  cfg/slam.cfg
+		  cfg/streamer.cfg
+		)
+		
+		catkin_package(
+			INCLUDE_DIRS include 
+			LIBRARIES thermalvis
+			CATKIN_DEPENDS message_runtime ${MSG_DEP_SET}
+			#DEPENDS system_lib
+		)
+		include_directories(${catkin_INCLUDE_DIRS})
+		include_directories(cfg/cpp/thermalvis)
+		include_directories(${CATKIN_DEVEL_PREFIX}/include/${PROJECT_NAME})
+                SET(BUILD_APPS FALSE CACHE BOOL "Build demo apps.")
+	ELSE()
+                SET(BUILD_APPS TRUE CACHE BOOL "Build demo apps.")
+	ENDIF()
+ELSE() # Is Windows
+	OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." FALSE)
+        OPTION(BUILD_APPS "Build demo apps." TRUE)
 ENDIF()
 
 SET(ADDITIONAL_INCLUDES "")
 SET(ADDITIONAL_LIBRARIES "")
 
-IF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 2010") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64 2010"))
-	SET(msvc_ABBREVIATION "msvc2010")
-	SET(MSVC_ABBREVIATION_CAPS "MSVC2010")
-ELSEIF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 2012") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 Win64 2012"))
-	SET(msvc_ABBREVIATION "msvc2012")
-	SET(MSVC_ABBREVIATION_CAPS "MSVC2012")
-ELSEIF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 Win64 2013") )
-	SET(msvc_ABBREVIATION "msvc2013")
-	SET(MSVC_ABBREVIATION_CAPS "MSVC2013")
+# Configure for Visual Studio
+IF(IS_WINDOWS)
+	IF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 2010") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64 2010"))
+		SET(msvc_ABBREVIATION "msvc2010")
+	ELSEIF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 2012") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 Win64 2012"))
+		SET(msvc_ABBREVIATION "msvc2012")
+	ELSEIF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 Win64 2013") )
+		SET(msvc_ABBREVIATION "msvc2013")
+	ENDIF()
+	string(TOUPPER ${msvc_ABBREVIATION} MSVC_ABBREVIATION_CAPS)
 ENDIF()
-
-IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
-	SET(ARCH_ABBREV "64")
-	SET(ARCH_BITS "64")
-ELSE()
-	SET(ARCH_ABBREV "x86")
-	SET(ARCH_BITS "32")
-ENDIF()
-		
-#set(CMAKE_AUTOMOC ON)
-#set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-LIST(APPEND avlibs_LIST va avformat avcodec avutil avdevice swscale)
 
 set (ADDITIONAL_LIBS thermalvis)
 
+# Configure for AV Libs (maybe required for some devices in linux)
 IF(IS_WINDOWS)
 	SET(HAS_AVLIBS_AVAILABLE FALSE)
 ELSE()
 	SET(HAS_AVLIBS_AVAILABLE TRUE)
 	
+	LIST(APPEND avlibs_LIST va avformat avcodec avutil avdevice swscale)
 	foreach(AVLIBS_SUB_LIB ${avlibs_LIST})
 		string(TOUPPER "${AVLIBS_SUB_LIB}" UPPERCASE_NAME)
 		FIND_LIBRARY("LIB${UPPERCASE_NAME}_LIBRARY NAMES" ${AVLIBS_SUB_LIB} PATHS ${SEARCH_LIBRARY_PATHS})
@@ -125,10 +135,10 @@ ELSE()
 			LIST(APPEND ADDITIONAL_LIBS "LIB${UPPERCASE_NAME}_LIBRARY")
 		endif()
 	endforeach(AVLIBS_SUB_LIB) 
-ENDIF()
- 
-IF(HAS_AVLIBS_AVAILABLE)
-	add_definitions( -D_AVLIBS_AVAILABLE_ )
+	
+	IF(HAS_AVLIBS_AVAILABLE)
+		add_definitions( -D_AVLIBS_AVAILABLE_ )
+	ENDIF()
 ENDIF()
 
 SET(Qt5Widgets_DIR "C:/Qt/Qt5.3.1/5.3/msvc2012_opengl/lib/cmake/Qt5Widgets" CACHE STRING "Default search path for QtWidgets cmake file")
