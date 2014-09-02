@@ -637,7 +637,9 @@ bool inputStream::processFrame() {
 }
 
 bool inputStream::writeImageToDisk() {
+    ROS_ERROR("Entered A.");
 	if (wantsToOutput) {
+        ROS_ERROR("Entered B.");
 		char imFilename[256];
 		sprintf(imFilename, "%s/frame%06d.png", output_directory, FrameCounter1);
 		std::string imageFilename(imFilename);
@@ -647,6 +649,7 @@ bool inputStream::writeImageToDisk() {
 		} else if (writeInColor && (_8bitImage->rows != 0)) {
 			cv::imwrite(imageFilename, *_8bitImage);
 		} else {
+            ROS_ERROR("Entered C.");
 			cv::imwrite(imageFilename, *rawImage);
 		}
 
@@ -1793,10 +1796,7 @@ void streamerNode::serverCallback(streamerConfig &config) {
 		}
 
 	}
-	
-	//configData.filterMode = config.filterMode;
-	//configData.filterParam = config.filterParam;
-	//configData.maxReadAttempts = config.maxReadAttempts;
+
 	configData.normMode = config.normMode;
 	
 	bool wantsToRefreshCameras = false;
@@ -2032,7 +2032,7 @@ void streamerNode::act_on_image() {
 		if (processImage()) {
 			if (readyToPublish) {
 				updateCameraInfo();
-				publishTopics();
+                publishTopics();
 				writeData();
 			}
 		}
@@ -2171,7 +2171,6 @@ bool streamerNode::processImage() {
 				if (configData.verboseMode) { ROS_INFO("newCentralVal = (%d)", newCentralVal); }
 				temperatureRangeBasedDownsample(_16bitMat, preFilteredMat, newCentralVal, configData.degreesPerGraylevel, configData.desiredDegreesPerGraylevel);
 			} else if (configData.normMode == NORM_MODE_FIXED_TEMP_LIMITS) {
-				
 				if (configData.alreadyCorrected) {
 					convertToTemperatureMat(_16bitMat, temperatureMat, (1.0 / configData.degreesPerGraylevel), configData.zeroDegreesOffset);
 				} else if (canRadiometricallyCorrect && configData.radiometricCorrection) {
@@ -2242,7 +2241,7 @@ bool streamerNode::processImage() {
 				}
 
 			} else {
-				 adaptiveDownsample(_16bitMat, preFilteredMat, configData.normMode, configData.normFactor);
+                adaptiveDownsample(_16bitMat, preFilteredMat, configData.normMode, configData.normFactor);
 			}
 			
 		} 
@@ -2831,9 +2830,7 @@ void streamerNode::writeData() {
 				sprintf(outputFilename, "%s/%s.%s", configData.outputFolder.c_str(), partialName.c_str(), configData.outputFormatString.c_str());
 			} else sprintf(outputFilename, "%s/frame%06d.%s", configData.outputFolder.c_str(), frameCounter-1, configData.outputFormatString.c_str());
 			
-			if (configData.verboseMode) { ROS_INFO("Output name = (%s), outputType = (%d)", outputFilename, configData.outputType); }
-			
-			if (configData.outputType == OUTPUT_TYPE_CV_16UC1) {
+            if (configData.outputType == OUTPUT_TYPE_CV_16UC1) {
 				if (scaled16Mat.rows > 0) {
 					
 					if ((configData.outputFormatString == "png") || (configData.outputFormatString == "PNG")) {
@@ -2845,9 +2842,7 @@ void streamerNode::writeData() {
 			} else if (configData.outputType == OUTPUT_TYPE_CV_8UC3) {
 				if (colourMat.rows > 0) {
 					
-					//ROS_ERROR("Actually writing...");
-					
-					if ((configData.outputFormatString == "png") || (configData.outputFormatString == "jpg")  || (configData.outputFormatString == "PNG") || (configData.outputFormatString == "JPG")) {
+                    if ((configData.outputFormatString == "png") || (configData.outputFormatString == "jpg")  || (configData.outputFormatString == "PNG") || (configData.outputFormatString == "JPG")) {
 						imwrite(outputFilename, colourMat_pub, configData.outputFileParams);
 					} else if ((configData.outputFormatString == "bmp") || (configData.outputFormatString == "ppm") || (configData.outputFormatString == "BMP") || (configData.outputFormatString == "PPM")) {
 						imwrite(outputFilename, colourMat_pub);

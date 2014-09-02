@@ -528,6 +528,8 @@ void streamerNode::handle_image(const sensor_msgs::ImageConstPtr& msg_ptr) {
 }
 
 bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
+
+    nh.param<bool>("verboseMode", verboseMode, false);
 	
 	nh.param<std::string>("source", source, "dev");
 	
@@ -570,15 +572,18 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 			break;
 	}
 	
-	std::string outputTypeString;
+    //std::string outputTypeString;
 	
-	nh.param<std::string>("outputType", outputTypeString, "CV_8UC3");
+    nh.param<int>("outputType", outputType, 2);
 	
-	if ((outputTypeString == "CV_8UC3") && (outputFormatString == "pgm")) ROS_WARN("PGM cannot write as CV_8UC3...");
-	if ((outputTypeString == "CV_16UC1") && ((outputFormatString == "jpg") || (outputFormatString == "bmp"))) ROS_WARN("JPG/BMP cannot write as CV_16UC1...");
-	if ((outputTypeString != "CV_8UC3") && (outputTypeString != "CV_8UC1") && (outputTypeString != "CV_16UC1")) ROS_WARN("Unrecognized output format (%s)", outputTypeString.c_str());
+    //if ((outputTypeString == "CV_8UC3") && (outputFormatString == "pgm")) ROS_WARN("PGM cannot write as CV_8UC3...");
+    //if ((outputTypeString == "CV_16UC1") && ((outputFormatString == "jpg") || (outputFormatString == "bmp"))) ROS_WARN("JPG/BMP cannot write as CV_16UC1...");
+    //if ((outputTypeString != "CV_8UC3") && (outputTypeString != "CV_8UC1") && (outputTypeString != "CV_16UC1")) ROS_WARN("Unrecognized output format (%s)", outputTypeString.c_str());
 	
 	nh.param<int>("maxIntensityChange", maxIntensityChange, 2);
+
+    nh.param<double>("degreesPerGraylevel", degreesPerGraylevel, DEFAULT_DEGREES_PER_GRAYLEVEL);
+    nh.param<double>("desiredDegreesPerGraylevel", desiredDegreesPerGraylevel, DEFAULT_DESIRED_DEGREES_PER_GRAYLEVEL);
 
 	nh.param<bool>("drawReticle", drawReticle, false);
 	nh.param<bool>("displayThermistor", displayThermistor, false);
@@ -638,7 +643,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<bool>("disableSkimming", disableSkimming, true);
 	
-	nh.param<bool>("writeImages", wantsToWrite, false);
 	nh.param<std::string>("outputFolder", outputFolder, "outputFolder");
 	
 	nh.param<bool>("serialComms", serialComms, false);
@@ -653,26 +657,16 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	ROS_INFO("calibrationMode = (%d)", calibrationMode);
 	
-	if (outputFolder.size() > 0) {
-		if (outputFolder.at(outputFolder.size()-1) == '/') {
-			outputFolder = outputFolder.substr(0, outputFolder.size()-1);
-		}
-	} else {
-		ROS_WARN("Specified output folder is 0 characters long - ignoring.");
-		outputFolder = "outputFolder";
-	}
-	
-	if ((wantsToWrite) && (outputFolder.size() > 0)) {
-		// Create necessary folders
-		char folderCommand[256];
-		sprintf(folderCommand, "mkdir -p %s", outputFolder.c_str());
-		
-		int res = system(folderCommand);
-		
-		if (res == 0) ROS_WARN("system() call returned 0...");
-	}
-	
-	if (verboseMode) { ROS_INFO("outputFolder = (%s)", outputFolder.c_str()); }
+    if ((outputFolder.size() > 0) && (outputFolder != "outputFolder")) {
+        if (outputFolder.at(outputFolder.size()-1) == '/') outputFolder = outputFolder.substr(0, outputFolder.size()-1);
+        writeImages = true;
+        if (verboseMode) ROS_INFO("Will write to outputFolder = (%s)", outputFolder.c_str());
+        char folderCommand[256];
+        sprintf(folderCommand, "mkdir -p %s", outputFolder.c_str());
+        if (verboseMode && (system(folderCommand) == 0)) ROS_WARN("Failed to create necessary output folder... perhaps it already exists!");
+    }
+
+    nh.param<bool>("writeImages", writeImages, writeImages); // Still check if user doesn't want to write images from the very beginning
 	
 	outputFileParams.clear();
 	int val;
@@ -728,7 +722,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<double>("normFactor", normFactor, 0.0);
 	
 	if (wantsToEncode) {
-		if (verboseMode) { ROS_INFO("Has chosen to encode."); }
+        if (verboseMode) { ROS_INFO("Has chosen to encode."); }
 		
 		if (outputVideo == "outputVideo") {
 			ROS_ERROR("outputVideo incorrectly specified...");

@@ -1687,11 +1687,9 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
 
 }
 
-void addToBinMap(Mat& binMap, std::vector<Point2f>& cornerSet, Size imSize)
-{
+void addToBinMap(Mat& binMap, std::vector<Point2f>& cornerSet, Size imSize) {
     int x, y;
-    for (unsigned int i = 0; i < cornerSet.size(); i++)
-    {
+    for (unsigned int i = 0; i < cornerSet.size(); i++) {
         // Determine Bin Index for this specific corner
         x = (int)((cornerSet.at(i).x/(double(imSize.width)))*binMap.cols);
         y = (int)((cornerSet.at(i).y/(double(imSize.height)))*binMap.rows);
@@ -1701,14 +1699,9 @@ void addToBinMap(Mat& binMap, std::vector<Point2f>& cornerSet, Size imSize)
     }
 }
 
-void prepForDisplay(const Mat& distributionMap, Mat& distributionDisplay)
-{
-
+void prepForDisplay(const Mat& distributionMap, Mat& distributionDisplay) {
     cv::Mat distMapCpy(distributionMap.size(), CV_8UC3), distMapCpyGray(distributionMap.size(), CV_8UC1);
     distributionDisplay = cv::Mat(distributionMap.size(), CV_8UC1);
-
-    // Temp
-    //distributionMap.copyTo(distMapCpy); // distMapCpy should be 0s and 1s
     
     distMapCpy = cv::Mat::zeros(distributionMap.size(), CV_8UC3);
 	
@@ -1716,57 +1709,26 @@ void prepForDisplay(const Mat& distributionMap, Mat& distributionDisplay)
 	
     for (int iii = 0; iii < distributionMap.rows; iii++) {
 		for (int jjj = 0; jjj < distributionMap.cols; jjj++) {
-			
-			//printf("%s << distMapCpy(%d, %d) = (%d)\n", __FUNCTION__, iii, jjj, distMapCpy.at<unsigned char>(iii,jjj));
-			
+
 			distMapCpy.at<Vec3b>(iii,jjj)[0] = 255;
 			distMapCpy.at<Vec3b>(iii,jjj)[1] = 255;
-			distMapCpy.at<Vec3b>(iii,jjj)[2] = 255;
-			
-			// distMapCpy.at<unsigned char>(iii,jjj) = 255 - distMapCpy.at<unsigned char>(iii,jjj);
+            distMapCpy.at<Vec3b>(iii,jjj)[2] = 255;
 			
 			if (distributionMap.at<unsigned char>(iii,jjj) > 0) {
 				unsigned char val = 0; // max(0, 255-10*int(distributionMap.at<unsigned char>(iii,jjj)));
 				markerColor = Scalar(val,val,val);
 				circle(distMapCpy, Point(jjj,iii), 0, markerColor, 5, CV_AA, 0);
 			}
-			
-			
-			
-			
-			
 		}
 	}
 	
-	
-	
     cvtColor(distMapCpy, distMapCpyGray, CV_RGB2GRAY);
-    
-    
-    //distMapCpy += 100;
     equalizeHist(distMapCpyGray, distributionDisplay);  // distDisplay should be 0s and 255s
-    
-    //imshow("a", distMapCpy);
-    //waitKey();
-    
     GaussianBlur(distributionDisplay, distMapCpyGray, Size(11, 11), 1.0, 1.0); // distMapCpy should range from 0 to 255
-    
-    //imshow("a", distMapCpy);
-    //waitKey();
-   
-    //equalizeHist(distMapCpy, distributionDisplay);  // distMapCpy should range from 0 to 255
     normalize(distMapCpyGray, distributionDisplay, 0,255, NORM_MINMAX);
-
-	//imshow("a", distMapCpy);
-    //waitKey();
-	
-    //distMapCpy.copyTo(distributionDisplay);
-
-    return;
 }
 
-void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& cornerSet, Size imSize)
-{
+void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& cornerSet, Size imSize) {
 
     Point2f center((float)((double(imSize.height-1))/2), (float)((double(imSize.width-1))/2));
     double dist, maxDist;
@@ -1778,14 +1740,12 @@ void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& c
     // needs to be until after you've calibrated..
     maxDist = pow(pow(double(imSize.height)/2, 2) + pow(double(imSize.width)/2, 2), 0.5);
 
-    for (unsigned int i = 0; i < cornerSet.size(); i++)
-    {
+    for (unsigned int i = 0; i < cornerSet.size(); i++) {
 
         dist = distBetweenPts2f(center, cornerSet.at(i));
 
         // Only add the point to the distribution if it's within the desired range
-        if (dist < maxDist)
-        {
+        if (dist < maxDist) {
             index = int((dist/maxDist)*(RADIAL_LENGTH-0.00001));
             radialDistribution[index]++;
         }
@@ -1794,12 +1754,8 @@ void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& c
 
 }
 
-void addToDistributionMap(Mat& distributionMap, vector<Point2f>& corners)
-{
-    for (unsigned int i = 0; i < corners.size(); i++)
-    {
-        distributionMap.at<unsigned char>((int)corners.at(i).y, (int)corners.at(i).x) += (unsigned char) 1;
-    }
+void addToDistributionMap(Mat& distributionMap, vector<Point2f>& corners) {
+    for (unsigned int i = 0; i < corners.size(); i++) distributionMap.at<unsigned char>((int)corners.at(i).y, (int)corners.at(i).x) += (unsigned char) 1;
 }
 
 double obtainSetScore(Mat& distributionMap,

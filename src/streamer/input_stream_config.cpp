@@ -21,8 +21,8 @@ streamerSharedData::streamerSharedData() :
 	autoTemperature(false),
 	minTemperature(25.0), 
 	maxTemperature(35.0),
-	degreesPerGraylevel(0.01),
-	desiredDegreesPerGraylevel(0.05), 
+    degreesPerGraylevel(DEFAULT_DEGREES_PER_GRAYLEVEL),
+    desiredDegreesPerGraylevel(DEFAULT_DESIRED_DEGREES_PER_GRAYLEVEL),
 	zeroDegreesOffset(0),
 	debugMode(false),
 	wantsToAddExtrinsics(false),
@@ -43,8 +43,7 @@ streamerLaunchOnlyData::streamerLaunchOnlyData() :
 #endif
 	specialMode(false),
 	dumpTimestamps(false),
-	extremes(true),
-	wantsToWrite(false),
+    extremes(true),
 	wantsToEncode(false),
 	wantsToKeepNames(false),
 	wantsToResize(false)
