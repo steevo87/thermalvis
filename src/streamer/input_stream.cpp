@@ -1818,38 +1818,21 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	getMapping(configData.map, fullMapCode);
 	colourMap.load_standard(fullMapCode, !configData.extremes);
     
-	if (configData.outputFolder == "outputFolder") {
-		ROS_WARN("No valid output folder specified...");
-		configData.writeImages = false;
-		configData.dumpTimestamps = false;
+	if (configData.outputFolder == "outputFolder") configData.writeImages = configData.dumpTimestamps = false;
+	
+    if (config.wantsToUndistort) {
+        if (configData.addExtrinsics){
+            if (configData.rectifyImages){
+                if (configData.camera_number == 0) {
+                    cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R0, globalExtrinsicsData.P0, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
+                } else if (configData.camera_number == 1) {
+                    cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R1, globalExtrinsicsData.P1, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
+                }
+            } else cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
+        } else cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
 	}
-	
-       //HGH
-        //configData.wantsToRectify = config.rectifyImages;
 
-        if (config.wantsToUndistort) {
-                //if (map1.rows == 0) {
-                    //HGH  initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalCameraInfo.R, globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
-                    //HGH
-                    if (configData.addExtrinsics){
-                        if (configData.rectifyImages){
-                            if (configData.camera_number == 0){
-                                cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R0, globalExtrinsicsData.P0, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
-                            }else if (configData.camera_number == 1){
-                                cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalExtrinsicsData.R1, globalExtrinsicsData.P1, globalCameraInfo.cameraSize, CV_32FC1,  map1, map2);
-                            }
-                            //initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalCameraInfo.R, globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_16SC2/*CV_32FC1*/, map1, map2);
-                        }else{
-                            cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
-                        }
-                    }else{
-                        cv::initUndistortRectifyMap(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs,  cv::Mat(), globalCameraInfo.newCamMat, globalCameraInfo.cameraSize, CV_32FC1, map1, map2);
-                    }
-                  //  }
-		}
-
-        configData.wantsToUndistort = config.wantsToUndistort;
-	
+    configData.wantsToUndistort = config.wantsToUndistort;
 	
 	if (!firstServerCallbackProcessed) {
 		firstServerCallbackProcessed = true;

@@ -188,34 +188,28 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 				outputFolder = std::getenv("USERPROFILE") + outputFolder;
 			}
 		}
+		if (predetectedFeatures.size() > 0) {
+			if (predetectedFeatures[0] == '~') {
+				predetectedFeatures.erase(predetectedFeatures.begin());
+				predetectedFeatures = std::getenv("USERPROFILE") + predetectedFeatures;
+			}
+		}
 #endif
-
 	}
 
 	std::string delimiter = "/";
 	for (unsigned int iii = 0; iii < images_to_display.size(); iii++) {
-
 		size_t pos = 0;
 		std::string token;
 		bool foundStreamer = false;
 		while ((pos = images_to_display.at(iii).find(delimiter)) != std::string::npos) {
 			token = images_to_display.at(iii).substr(0, pos);
 			images_to_display.at(iii).erase(0, pos + delimiter.length());
-			if (token.compare("flow") == 0) {
-				foundStreamer = true;
-			}
+			if (token.compare("flow") == 0) foundStreamer = true;
 		}
-
-		 if (foundStreamer) {
-			if (!images_to_display.at(iii).compare("image_col")) {
-				displayDebug = true;
-			}
-		 } 
-
+		if (foundStreamer && !images_to_display.at(iii).compare("image_col")) displayDebug = true;
 	}
-
 	return true;
-
 }
 #endif
 #endif

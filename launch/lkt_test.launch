@@ -1,0 +1,53 @@
+<launch>
+	<node name="streamer" pkg="thermalvis" type="streamer">
+		<param name="debugMode" value="true" />
+	
+		<param name="source" value="directory" />
+		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" />
+		
+		<param name="inputDatatype" value="1" /> <!-- 0 for 8-bit, 1 for raw (14-bit), 2 for multi-modality (2 channel), 3 for depth (16-bit) -->
+		
+		<!-- <param name="degreesPerGraylevel" value="0.01" /> --> <!-- value of 0.025 works OK for miricle sequences.. -->
+		<!-- <param name="desiredDegreesPerGraylevel" value="0.05" /> --> <!-- can adjust this to enhance contrast -->
+		
+		<param name="loopMode" value="false" />
+		
+		<param name="outputColor" value="true" />
+		<param name="output8bit" value="true" />
+	</node>
+	
+	<node name="flow" pkg="thermalvis" type="flow" output="screen">
+		
+		<param name="debugMode" value="true" />
+		<param name="verboseMode" value="false" />
+		
+		<param name="detectEveryFrame" value="false" />
+		<param name="attemptHistoricalRecovery" value="false" />
+		
+		<param name="outputDebugImages" value="false" />
+		<param name="outputTrackedFeatures" value="true" />
+		<param name="outputDetectedFeatures" value="false" />
+		<param name="showTrackHistory" value="true" />
+		<param name="autoTrackManagement" value="false" />
+		
+		<param name="adaptiveWindow" value="false" />
+		<param name="velocityPrediction" value="false" />
+		<param name="attemptMatching" value="false" />
+		
+		<param name="predetectedFeatures" value="~\Documents\GitHub\thermalvis\media\sample_video\optris_features" />
+		<param name="detector_1" value="FILE" /> <!-- options: FILE, FAST, GFTT and HARRIS -->
+
+		<param name="maxFeatures" value="300" />
+		<param name="sensitivity_1" value="0.1" /> <!-- default is 0.1 -->
+		<param name="flowThreshold" value="0.0002" /> <!-- default is 0.0002 -->
+		
+	</node>
+	
+	<node name="image_view" pkg="image_view" type="image_view" output="screen">
+		<remap from="image" to="/thermalvis/flow/image_col"/>
+		<param name="~/autosize" value="true" />
+	</node>
+	
+	<!-- <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="reconfigure_streamer" output="screen" args="/streamer"/> -->
+	<!-- <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="reconfigure_flow" output="screen" args="/flow"/> -->
+</launch>
