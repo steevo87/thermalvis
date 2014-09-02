@@ -1,0 +1,39 @@
+<launch>
+
+	<node pkg="rosbag" type="play" name="player" output="screen" args="/home/steve/Documents/Data/thermalprj/2012-09-07-17-36-27.bag" /> 
+
+	<node name="streamer_reprocessed" pkg="thermalvis" type="streamer" output="screen">
+	
+		<param name="debugMode" value="true" />
+		<param name="verboseMode" value="true" />
+	
+		<param name="source" value="topic" />
+		<param name="topic" value="/thermalvis/streamer/image_raw" /> -->
+		
+		<param name="inputDatatype" value="1" /> <!-- 0 for 8-bit, 1 for raw (14-bit), 2 for multi-modality (2 channel), 3 for depth (16-bit) -->
+		
+		<param name="markDuplicates" value="true" />
+		
+		<!-- <param name="degreesPerGraylevel" value="0.025" /> --> <!-- value of 0.025 works OK for miricle sequences.. -->
+		<param name="desiredDegreesPerGraylevel" value="0.05" /> <!-- can adjust this to enhance contrast -->
+		
+		<param name="outputType" value="2" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
+		<param name="writeImages" value="true" />
+		<param name="outputFolder" value="/home/steve/Documents/Data/optris/output" />
+		
+		<param name="loopMode" value="false" />
+		
+		<param name="outputColor" value="false" />
+		<param name="output8bit" value="true" />
+		<param name="output16bit" value="false" />
+
+	</node>
+	
+	<node pkg="image_view" type="image_view" name="grayscale_thermal" output="screen">
+		<remap from="image" to="/thermalvis/streamer_reprocessed/image_mono"/>
+		<param name="~/autosize" value="true" />
+	</node>
+	
+	<node pkg="rqt_reconfigure" type="rqt_reconfigure" name="cfg_streamer" output="screen" args="/streamer_reprocessed"/>
+	
+</launch>
