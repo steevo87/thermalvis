@@ -43,8 +43,25 @@ IF(IS_LINUX)
 	LIST(APPEND catkin_COMPONENTS roscpp rospy dynamic_reconfigure image_transport cv_bridge camera_calibration_parsers camera_info_manager)
 
 	find_package(catkin QUIET COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
+
+        SET(APOSITION -1)
+        STRING(FIND ${PROJECT_SOURCE_DIR} "catkin" APOSITION)
+        IF(NOT(${APOSITION} STREQUAL "-1"))
+            SET(IN_CATKIN_DIR TRUE)
+            MESSAGE(STATUS "Appear to be building from within a catkin directory...")
+        ELSE()
+            SET(IN_CATKIN_DIR FALSE)
+            MESSAGE(STATUS "Appear to NOT be building from within a catkin directory...")
+        ENDIF()
+
         IF(catkin_FOUND)
-                SET(BUILD_FOR_ROS TRUE CACHE BOOL "Build ROS interfaces and functions.")
+                IF(IN_CATKIN_DIR)
+                    SET(BUILD_FOR_ROS TRUE CACHE BOOL "Build ROS interfaces and functions.")
+                ELSE()
+                    SET(BUILD_FOR_ROS FALSE CACHE BOOL "Build ROS interfaces and functions.")
+                    MESSAGE(WARNING "Even though catkin has been found, it doesn't appear that the source is in a catkin-related directory, .")
+                ENDIF()
+
 		IF(BUILD_FOR_ROS)
 			IF("${CATKIN_DEVEL_PREFIX}" STREQUAL "")
 				MESSAGE(WARNING "CATKIN_DEVEL_PREFIX is empty! Still setting ROS build as default.")
@@ -57,16 +74,16 @@ IF(IS_LINUX)
                                 ENDIF()
                         ENDIF()
 			find_package(catkin REQUIRED COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
-		ELSE()
+                ELSE()
 			MESSAGE(WARNING "Even though catkin has been found, <BUILD_FOR_ROS> has already been set false so this will be treated as a non-ROS build.")
 		ENDIF()
-
-	ELSE()
-		MESSAGE(STATUS "catkin has NOT been found. Assuming regular linux (non-ROS build)")
-		OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." FALSE)
+        ELSE()
+                SET(BUILD_FOR_ROS FALSE CACHE BOOL "Build ROS interfaces and functions." FORCE)
+                MESSAGE(STATUS "catkin has NOT been found. Assuming regular linux (non-ROS build)")
 	ENDIF()
 
 	IF(BUILD_FOR_ROS)
+                MESSAGE(STATUS "This project will be built for ROS. If you don't know what that is, you might want to consider deselecting the option <BUILD_FOR_ROS>.")
 		## Uncomment this if the package has a setup.py. This macro ensures
 		## modules and global scripts declared therein get installed
 		## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -140,6 +157,8 @@ ELSE()
 		add_definitions( -D_AVLIBS_AVAILABLE_ )
 	ENDIF()
 ENDIF()
+
+include(cmake/find_doxygen.cmake)
 
 SET(Qt5Widgets_DIR "C:/Qt/Qt5.3.1/5.3/msvc2012_opengl/lib/cmake/Qt5Widgets" CACHE STRING "Default search path for QtWidgets cmake file")
 find_package(Qt5Widgets QUIET)
@@ -465,3 +484,5 @@ ENDIF()
 IF(BUILD_FOR_ROS)
 	ADD_SUBDIRECTORY(nodes)
 ENDIF()
+
+include(cmake/configure_docs.cmake)
