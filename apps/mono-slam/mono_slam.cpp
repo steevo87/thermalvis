@@ -183,7 +183,16 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 	writeMode = !(argc >= 4);
 	
 	if (argc > 1) {
-		sprintf(xmlAddress, "%s", argv[1]);
+		string xmlString = string(argv[1]);
+#ifdef _WIN32
+		if (xmlString.size() > 0) {
+			if (xmlString[0] == '~') {
+				xmlString.erase(xmlString.begin());
+				xmlString = std::getenv("USERPROFILE") + xmlString;
+			}
+		}
+#endif
+		sprintf(xmlAddress, "%s", xmlString.c_str());
 		ROS_INFO("Using XML file provided at (%s)", xmlAddress);
 	} else {
 #ifdef _WIN32
