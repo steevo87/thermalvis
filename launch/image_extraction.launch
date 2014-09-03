@@ -1,6 +1,6 @@
 <launch>
 
-	<node pkg="rosbag" type="play" name="player" output="screen" args="/home/steve/Documents/Data/thermalprj/mapper_optris_sequence.bag" /> 
+	<node pkg="rosbag" type="play" name="player" output="screen" args="/home/steve/Documents/Data/thermalprj/mapper_optris_sequence_blue.bag -d 2.0 -r 1.0" />
 
 	<node name="streamer_reprocessed" pkg="thermalvis" type="streamer" output="screen">
 	
@@ -10,6 +10,7 @@
 		<param name="source" value="topic" />
 		<!-- <param name="topic" value="/thermalvis/streamer/image_raw" /> -->
 		<param name="topic" value="/optris/thermal_image" />
+		<param name="directory" value="/home/steve/Documents/Data/optris/desktop-1" />
 		
 		<param name="inputDatatype" value="1" /> <!-- 0 for 8-bit, 1 for raw (14-bit), 2 for multi-modality (2 channel), 3 for depth (16-bit) -->
 		

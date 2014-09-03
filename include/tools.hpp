@@ -114,6 +114,9 @@ void ROS_ERROR(char *fmt, ...);
 
 namespace ros {
 
+/**
+ * A structure to substitute for the ros::Time structure when ROS is not being used
+ */
 struct Time {
 	unsigned long int sec;
 	unsigned long int nsec;
@@ -125,6 +128,9 @@ struct Time {
 	static Time now();
 };
 
+/**
+ * A structure to substitute for the ros::Header structure when ROS is not being used
+ */
 struct Header {
 	unsigned long int seq;
 	std::string frame_id;
@@ -136,6 +142,9 @@ struct Header {
 
 namespace sensor_msgs {
 
+/**
+ * A structure to substitute for the ROS sensor_msgs::CameraInfo structure when ROS is not being used
+ */
 struct CameraInfo {
 	ros::Header header;
 	double K[9], R[9], P[12];

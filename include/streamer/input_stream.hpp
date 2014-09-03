@@ -440,6 +440,7 @@ public:
 	
 };
 
+/// \brief		Temporary class for streaming in Windows from the Optris camera
 class inputStream : public GenericOptions {
 
 protected:

@@ -39,9 +39,13 @@ public:
 	void updateFrameCounter(int newCount) { FrameCounter1 = newCount; }
 };
 
+/**
+ * A structure to represent data common to all nodes
+ */
 struct commonData {
-	cameraParameters cameraData;
-	string topic, topicParent, read_addr, outputFolder;
+    cameraParameters cameraData; /**< the camera parameters corresponding to the video stream */
+    string topic, topicParent, read_addr;
+    string outputFolder; /**< directory where output information will be written */
 	bool *wantsToTerminate;
 
 	commonData() : outputFolder("outputFolder"), read_addr("./") { };

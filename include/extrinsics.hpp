@@ -1,9 +1,3 @@
-/*! \file﻿  extrinsics.hpp
- *  \brief﻿  Declarations for extrinsic (geometric) calibration
- *
- * Ideally this file should only contain functions needed for extrinsic calibration, and not intrinsic calibration.
- * Functions required by both should be included in the "calibration.hpp/cpp" files.
- */
 
 #ifndef _THERMALVIS_EXTRINSICS_HPP_
 #define _THERMALVIS_EXTRINSICS_HPP_

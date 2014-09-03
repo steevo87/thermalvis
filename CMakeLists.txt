@@ -4,134 +4,13 @@ SET(PROJECT_NAME "thermalvis")
 project(${PROJECT_NAME})
 SET(THERMALVIS_COMPILE_FLAGS "-D_THERMALVIS_")
 
-# Establish Architecture (32/64-bit) variables
-IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
-	SET(IS_32_BIT FALSE)
-	SET(IS_64_BIT TRUE)
-	SET(ARCH_ABBREV "64")
-	SET(ARCH_BITS "64")
-ELSE()
-	SET(IS_32_BIT TRUE)
-	SET(IS_64_BIT FALSE)
-	SET(ARCH_ABBREV "x86")
-	SET(ARCH_BITS "32")
-ENDIF()
-
-# Establish OS (Windows/Linux) variables
-IF(WIN32 OR win64)
-	SET(IS_WINDOWS TRUE)
-	SET(IS_LINUX FALSE)
-	ADD_DEFINITIONS( -D_IS_WINDOWS_ )
-	SET(DLL_EXT "dll")
-	SET(LIB_PREFIX "")
-	string(REGEX REPLACE "\\\\" "/" USERPROFILE "$ENV{USERPROFILE}")
-ELSE()
-	SET(IS_WINDOWS FALSE)
-	SET(IS_LINUX TRUE)
-	ADD_DEFINITIONS( -D_IS_LINUX_ )
-	SET(DLL_EXT "so")
-	SET(LIB_PREFIX "lib")
-	SET(THERMALVIS_COMPILE_FLAGS "${THERMALVIS_COMPILE_FLAGS} -Wno-write-strings")
-	SET(USERPROFILE "$ENV{HOME}")
-ENDIF()
-
-add_definitions( -D_USERPROFILE_=\"${USERPROFILE}\" )
-
-# ROS testing/configuration
-IF(IS_LINUX)
-	LIST(APPEND MSG_DEP_SET std_msgs sensor_msgs)
-	LIST(APPEND catkin_COMPONENTS roscpp rospy dynamic_reconfigure image_transport cv_bridge camera_calibration_parsers camera_info_manager)
-
-	find_package(catkin QUIET COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
-
-        SET(APOSITION -1)
-        STRING(FIND ${PROJECT_SOURCE_DIR} "catkin" APOSITION)
-        IF(NOT(${APOSITION} STREQUAL "-1"))
-            SET(IN_CATKIN_DIR TRUE)
-            MESSAGE(STATUS "Appear to be building from within a catkin directory...")
-        ELSE()
-            SET(IN_CATKIN_DIR FALSE)
-            MESSAGE(STATUS "Appear to NOT be building from within a catkin directory...")
-        ENDIF()
-
-        IF(catkin_FOUND)
-                IF(IN_CATKIN_DIR)
-                    SET(BUILD_FOR_ROS TRUE CACHE BOOL "Build ROS interfaces and functions.")
-                ELSE()
-                    SET(BUILD_FOR_ROS FALSE CACHE BOOL "Build ROS interfaces and functions.")
-                    MESSAGE(WARNING "Even though catkin has been found, it doesn't appear that the source is in a catkin-related directory, .")
-                ENDIF()
-
-		IF(BUILD_FOR_ROS)
-			IF("${CATKIN_DEVEL_PREFIX}" STREQUAL "")
-				MESSAGE(WARNING "CATKIN_DEVEL_PREFIX is empty! Still setting ROS build as default.")
-			ELSE()
-                                SET(APOSITION -1)
-                                STRING(FIND ${CATKIN_DEVEL_PREFIX} "/build/thermalvis" APOSITION)
-                                IF(NOT(${APOSITION} STREQUAL "-1"))
-                                    STRING(REGEX REPLACE "/build/thermalvis" "" CATKIN_DEVEL_PREFIX "${CATKIN_DEVEL_PREFIX}")
-                                    MESSAGE(WARNING "Appear to be building from within Qt Creator, so adjusting the variable <CATKIN_DEVEL_PREFIX> to restore to ROS catkin default of ${CATKIN_DEVEL_PREFIX}")
-                                ENDIF()
-                        ENDIF()
-			find_package(catkin REQUIRED COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
-                ELSE()
-			MESSAGE(WARNING "Even though catkin has been found, <BUILD_FOR_ROS> has already been set false so this will be treated as a non-ROS build.")
-		ENDIF()
-        ELSE()
-                SET(BUILD_FOR_ROS FALSE CACHE BOOL "Build ROS interfaces and functions." FORCE)
-                MESSAGE(STATUS "catkin has NOT been found. Assuming regular linux (non-ROS build)")
-	ENDIF()
-
-	IF(BUILD_FOR_ROS)
-                MESSAGE(STATUS "This project will be built for ROS. If you don't know what that is, you might want to consider deselecting the option <BUILD_FOR_ROS>.")
-		## Uncomment this if the package has a setup.py. This macro ensures
-		## modules and global scripts declared therein get installed
-		## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-		# catkin_python_setup()
-		
-		add_message_files(FILES feature_tracks.msg pose_confidence.msg)
-		
-		generate_messages(DEPENDENCIES ${MSG_DEP_SET})
-
-		generate_dynamic_reconfigure_options(
-		  cfg/calibrator.cfg
-		  cfg/flow.cfg
-		  cfg/slam.cfg
-		  cfg/streamer.cfg
-		)
-		
-		catkin_package(
-			INCLUDE_DIRS include 
-			LIBRARIES thermalvis
-			CATKIN_DEPENDS message_runtime ${MSG_DEP_SET}
-			#DEPENDS system_lib
-		)
-		include_directories(${catkin_INCLUDE_DIRS})
-		include_directories(cfg/cpp/thermalvis)
-		include_directories(${CATKIN_DEVEL_PREFIX}/include/${PROJECT_NAME})
-                SET(BUILD_APPS FALSE CACHE BOOL "Build demo apps.")
-	ELSE()
-                SET(BUILD_APPS TRUE CACHE BOOL "Build demo apps.")
-	ENDIF()
-ELSE() # Is Windows
-	OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." FALSE)
-        OPTION(BUILD_APPS "Build demo apps." TRUE)
-ENDIF()
+include(cmake/configure_arch.cmake)
+include(cmake/configure_os.cmake)
+include(cmake/configure_compiler.cmake)
+include(cmake/configure_framework.cmake)
 
 SET(ADDITIONAL_INCLUDES "")
 SET(ADDITIONAL_LIBRARIES "")
-
-# Configure for Visual Studio
-IF(IS_WINDOWS)
-	IF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 2010") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 Win64 2010") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 10 2010 Win64") )
-		SET(msvc_ABBREVIATION "msvc2010")
-	ELSEIF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 2012") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 Win64 2012") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 11 2012 Win64") )
-		SET(msvc_ABBREVIATION "msvc2012")
-	ELSEIF( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 Win64") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 Win64 2013") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013 Win64") )
-		SET(msvc_ABBREVIATION "msvc2013")
-	ENDIF()
-	string(TOUPPER ${msvc_ABBREVIATION} MSVC_ABBREVIATION_CAPS)
-ENDIF()
 
 set (ADDITIONAL_LIBS thermalvis)
 
