@@ -532,7 +532,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 		if (outputFolder.size() > 0) {
 			if (outputFolder[0] == '~') {
 				outputFolder.erase(outputFolder.begin());
-				substitutionString + outputFolder;
+				outputFolder = substitutionString + outputFolder;
 			}
 		}
 		
@@ -637,9 +637,7 @@ bool inputStream::processFrame() {
 }
 
 bool inputStream::writeImageToDisk() {
-    ROS_ERROR("Entered A.");
-	if (wantsToOutput) {
-        ROS_ERROR("Entered B.");
+    if (wantsToOutput) {
 		char imFilename[256];
 		sprintf(imFilename, "%s/frame%06d.png", output_directory, FrameCounter1);
 		std::string imageFilename(imFilename);
@@ -648,10 +646,7 @@ bool inputStream::writeImageToDisk() {
 			cv::imwrite(imageFilename, *displayImage);
 		} else if (writeInColor && (_8bitImage->rows != 0)) {
 			cv::imwrite(imageFilename, *_8bitImage);
-		} else {
-            ROS_ERROR("Entered C.");
-			cv::imwrite(imageFilename, *rawImage);
-		}
+		} cv::imwrite(imageFilename, *rawImage);
 
 		timestamps_stream << camera_info.header.stamp.sec << "." << setfill('0') << setw(9) << camera_info.header.stamp.nsec << std::endl;
 		return true;
