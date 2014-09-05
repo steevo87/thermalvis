@@ -23,6 +23,7 @@
 		
 		<param name="detectEveryFrame" value="false" />
 		<param name="attemptHistoricalRecovery" value="false" />
+		<param name="minSeparation" value="0" />
 		
 		<param name="outputDebugImages" value="false" />
 		<param name="outputTrackedFeatures" value="true" />
@@ -37,6 +38,7 @@
 		<param name="predetectedFeatures" value="~\Documents\GitHub\thermalvis\media\sample_video\optris_features" />
 		<param name="detector_1" value="FILE" /> <!-- options: FILE, FAST, GFTT and HARRIS -->
 
+		<param name="minFeatures" value="1" />
 		<param name="maxFeatures" value="300" />
 		<param name="sensitivity_1" value="0.1" /> <!-- default is 0.1 -->
 		<param name="flowThreshold" value="0.0002" /> <!-- default is 0.0002 -->

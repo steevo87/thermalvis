@@ -139,7 +139,7 @@ private:
 
 	std::vector<unsigned int> activeTrackIndices, lostTrackIndices;
 	int previousIndex, currentIndex, skippedFrameCount, capturedFrameCount, referenceFrame;
-	long int lastAllocatedTrackIndex;
+	long int lastAllocatedTrackIndex, lastAllocatedDisplayTrackIndex;
 	
 	bool debugInitialized, lowPointsWarning, infoProcessed, infoSent, freezeNextOutput;
 	
@@ -242,6 +242,9 @@ public:
 
 	///brief	Handles the situation where the first new frame after a NUC interruption arrives.
 	void handle_very_new();
+
+	///brief	Clear all values stored in the candidates arrays
+	void clearCandidates();
 	
 	///brief	Reduces the size of the feature track vector by eliminating unlikely-to-be-recovered tracks.
 	void trimFeatureTrackVector();

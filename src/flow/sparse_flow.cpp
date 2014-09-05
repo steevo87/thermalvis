@@ -417,7 +417,7 @@ void featureTrackerNode::attemptHistoricalTracking() {
 							
 		if (configData.verboseMode) { ROS_INFO("About to add historically tracked features from (%d) to (%d): (%d, %d)", olderIndices[ppp], currentIndex, ((int)startingPoints.size()), ((int)finishingPoints.size())); }
 		addMatchesToVector(featureTrackVector, olderIndices[ppp], startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation, false);
-		if (configData.debugMode) addMatchesToVector(displayTracks, olderIndices[ppp], startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation);
+		if (configData.debugMode) addMatchesToVector(displayTracks, olderIndices[ppp], startingPoints, currentIndex, finishingPoints, lastAllocatedDisplayTrackIndex, configData.minSeparation);
 	
 		globalStartingPoints.insert(globalStartingPoints.end(), startingPoints.begin(), startingPoints.end());
 		globalFinishingPoints.insert(globalFinishingPoints.end(), finishingPoints.begin(), finishingPoints.end());
@@ -473,9 +473,9 @@ void featureTrackerNode::attemptTracking() {
 	lostTrackCount += int(lostTrackIndices.size());
 
 	if ((previousIndex == 0) || (currentIndex == 0)) { ROS_WARN("About to add matches from (%d) to (%d): (%d, %d)", previousIndex, currentIndex, ((int)startingPoints.size()), ((int)finishingPoints.size())); }
-	addMatchesToVector(featureTrackVector, previousIndex, startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation, false);
 	
-	if (configData.debugMode) addMatchesToVector(displayTracks, previousIndex, startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation);
+	addMatchesToVector(featureTrackVector, previousIndex, startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation, false);
+	if (configData.debugMode) addMatchesToVector(displayTracks, previousIndex, startingPoints, currentIndex, finishingPoints, lastAllocatedDisplayTrackIndex, configData.minSeparation);
 	
 	globalStartingPoints.clear();
 	globalStartingPoints.insert(globalStartingPoints.end(), startingPoints.begin(), startingPoints.end());
@@ -910,8 +910,8 @@ void featureTrackerNode::matchWithExistingTracks() {
 				if (configData.verboseMode) ROS_WARN("About to add matches (%d, %d)", int(points1.size()), int(points2.size()));
 				
 				addMatchesToVector(featureTrackVector, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedTrackIndex, configData.minSeparation, false);
-				
-				if (configData.debugMode) addMatchesToVector(displayTracks, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedTrackIndex, configData.minSeparation);
+				if (configData.debugMode) addMatchesToVector(displayTracks, aimedIndex, points1, bufferIndices[readyFrame % 2], points2, lastAllocatedDisplayTrackIndex, configData.minSeparation);
+
 				if (configData.verboseMode)  { ROS_INFO("Added (%d) (%d) matches to vector", ppp, int(points2.size())); }
 				matchedFeatures.insert(matchedFeatures.end(), points2.begin(), points2.end());
 				
@@ -964,7 +964,9 @@ void featureTrackerNode::loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec) {
 	char buffer[512];
 	cv::KeyPoint kp;
 	while (true) {
+		buffer[0] = '\0';
 		ifs.getline(buffer, 512);
+		if (buffer[0] == '\0') break;
 		
 		if ((buffer[0] == '#') || (buffer[0] == 'c') || (buffer[0] == 'x') || (buffer[0] == 'r')) continue;
 
@@ -997,7 +999,8 @@ void featureTrackerNode::updateTrackingVectors() {
 					
 			int before = lastAllocatedTrackIndex;
 			addProjectionsToVector(featureTrackVector, bufferIndices[readyFrame % 2], candidates[jjj], lastAllocatedTrackIndex, configData.minSeparation);
-					
+			if (configData.debugMode) addProjectionsToVector(displayTracks, bufferIndices[readyFrame % 2], candidates[jjj], lastAllocatedDisplayTrackIndex, configData.minSeparation);
+
 			clearDangerFeatures(featureTrackVector, lastAllocatedTrackIndex);
 					
 			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector after adding projections = (%d)", int(featureTrackVector.size())); }
@@ -1016,12 +1019,9 @@ void featureTrackerNode::updateTrackingVectors() {
 
 void featureTrackerNode::detectNewFeatures() {
 	
-	
 	if (configData.verboseMode) { ROS_INFO("Entered (%s) : Currently have (%d) points", __FUNCTION__, int(globalFinishingPoints.size())); }
 	
 	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {	
-		candidates[jjj].clear();
-		currPoints[jjj].clear();
 		if (configData.verboseMode) { ROS_INFO("Considering application of detector (%u), with (%d) pts", jjj, int(globalFinishingPoints.size())); }
 		
 		testTime = timeElapsedMS(test_timer, false);
@@ -1092,6 +1092,13 @@ void featureTrackerNode::detectNewFeatures() {
 	if (H12.rows != 0) H12.release();
 }
 
+void featureTrackerNode::clearCandidates() {
+	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {	
+		candidates[jjj].clear();
+		currPoints[jjj].clear();
+	}
+}
+
 #ifdef _BUILD_FOR_ROS_
 void featureTrackerNode::features_loop(const ros::TimerEvent& event) {
 #else
@@ -1149,6 +1156,8 @@ void featureTrackerNode::features_loop() {
 	} else featuresTooLow = false;
 	
 	if (cycleFlag) { if (configData.verboseMode) ROS_INFO("Cycle flag is true (%d) vs (%d, %d, %d)", cycleCount, configData.multiplier[0], configData.multiplier[1], configData.multiplier[2]); }
+
+	clearCandidates();
 
 	if (featuresTooLow || configData.detectEveryFrame || (H12.rows != 0)) {
 		if (configData.verboseMode) { ROS_INFO("About to detect new features on frame (%d).. because (%d, %d, %d, %d)", currentIndex, featuresTooLow, cycleFlag, configData.detectEveryFrame, (H12.rows != 0)); }
@@ -1422,6 +1431,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 #endif
 	debugInitialized(false), 
 	lastAllocatedTrackIndex(-1), 
+	lastAllocatedDisplayTrackIndex(-1),
 	cycleFlag(false), 
 	cycleCount(0), 
 	freezeNextOutput(false),
