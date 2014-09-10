@@ -125,7 +125,6 @@ int main(int argc, char* argv[]) {
 	return S_OK;
 #endif
 
-	std::cin.get();
 	return S_OK;
 }
 
@@ -203,7 +202,7 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 		ROS_INFO("No XML config file provided, therefore using default at (%s)", xmlAddress);
 	}
 
-	xP.parseInputXML(xmlAddress);
+	if (!xP.parseInputXML(xmlAddress)) return false;
 	ROS_INFO("About to print XML summary..");
 	xP.printInputSummary();
 

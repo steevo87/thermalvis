@@ -4,6 +4,10 @@
 
 bool xmlParameters::parseInputXML(char *file_address) {
 
+	if (!boost::filesystem::exists(file_address)) {
+		ROS_ERROR("Launch file (%s) doesn't exist. Please check.", file_address);
+		return false;
+	}
 	boost::property_tree::xml_parser::read_xml(std::string(file_address), pt);
 
 	return true;

@@ -5,13 +5,14 @@
 #ifndef THERMALVIS_LAUNCH_H
 #define THERMALVIS_LAUNCH_H
 
-#include <iostream>
+#include "tools.hpp"
 
 #ifdef _USE_BOOST_
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
+#include "boost/filesystem.hpp"  
 
 //#include "flow/sparse_flow.hpp"
 
