@@ -6,8 +6,8 @@
 		<param name="verboseMode" value="true" />
 	
 		<param name="source" value="file" />
-		<param name="file" value="G:\Data\miricle\icarcv\capture-1.avi" />
-		<!-- <param name="file" value="C:\Users\Stephen\Documents\Data\20140910_152534.mp4" /> -->
+		<!-- <param name="file" value="G:\Data\miricle\icarcv\capture-1.avi" /> -->
+		<param name="file" value="/media/steve/Steve-Research/Data/miricle/icarcv/capture-1.avi" />
 		
 		<param name="inputDatatype" value="1" /> <!-- 0 for 8-bit, 1 for raw (14-bit), 2 for multi-modality (2 channel), 3 for depth (16-bit) -->
 		

@@ -2,11 +2,11 @@
  *  \brief	Definitions for managing video sources and formats.
 */
 
-#if defined(WIN32) || !defined(_BUILD_FOR_ROS_) || !defined(_AVLIBS_AVAILABLE_)
-	// ..
-#else
-
+#if !defined(_IS_WINDOWS_) && defined(_AVLIBS_AVAILABLE_)
+	
 #include "video.hpp"
+
+#define __CONFIG_0__
 
 void streamerSource::initialize_video_source() {
 
@@ -46,7 +46,8 @@ int streamerSource::close_video_file(std::string filename) {
     avcodec_close(pCodecCtx);
 
     // Close the video file
-    av_close_input_file(pIFormatCtx);
+    //av_close_input_file(pIFormatCtx);
+    avformat_close_input(&pIFormatCtx);
     
     return 0;
 }
@@ -92,7 +93,8 @@ int streamerSource::setup_video_file(std::string filename) {
         
 
     // Retrieve stream information
-    if (av_find_stream_info(pIFormatCtx) < 0) {
+    //if (av_find_stream_info(pIFormatCtx) < 0) {
+    if (avformat_find_stream_info(pIFormatCtx, NULL) < 0) {
         printf("%s << Couldn't find stream info...\n", __FUNCTION__);
         return -1; // Couldn't find stream information
 	}
@@ -127,7 +129,8 @@ int streamerSource::setup_video_file(std::string filename) {
         return -1; // Codec not found
     }
     // Open codec
-    if (avcodec_open(pCodecCtx, pCodec) < 0) {
+    // if (avcodec_open(pCodecCtx, pCodec) < 0) {
+	if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
         printf("%s << Couldn't open codec...\n", __FUNCTION__);
         return -1; // Could not open codec
 	}
@@ -158,8 +161,8 @@ int streamerSource::setup_video_file(std::string filename) {
 
 void streamerSource::close_video_capture() {
 	
-	//avformat_close_input (&pIFormatCtx);
-	av_close_input_file(pIFormatCtx);
+	avformat_close_input (&pIFormatCtx);
+	//av_close_input_file(pIFormatCtx);
 	
 }
 
@@ -167,8 +170,8 @@ int streamerSource::setup_video_capture(std::string devicename, int& deviceWidth
 
 	if (verbose) { printf("%s << Registering (1)...\n", __FUNCTION__); }
 	av_register_all();
-	if (verbose) { printf("%s << Registering (2)...\n", __FUNCTION__); }
-	avdevice_register_all();
+	//if (verbose) { printf("%s << Registering (2)...\n", __FUNCTION__); }
+	//avdevice_register_all();
 	
 	//avformat_alloc_context();
 
@@ -210,7 +213,8 @@ int streamerSource::setup_video_capture(std::string devicename, int& deviceWidth
 
     /* Retrieve stream information */
     if (verbose) { printf("%s << Retrieving stream info...\n", __FUNCTION__); }
-    if (av_find_stream_info(pIFormatCtx) < 0) {
+    //if (av_find_stream_info(pIFormatCtx) < 0) {
+	if (avformat_find_stream_info(pIFormatCtx, NULL) < 0) {
         fprintf(stderr, "No stream info\n");
         return 1;
     }
@@ -243,7 +247,8 @@ int streamerSource::setup_video_capture(std::string devicename, int& deviceWidth
  
     /* Open input codec */
     if (verbose) { printf("%s << Open input codec...\n", __FUNCTION__); }
-    if (avcodec_open(pICodecCtx, pICodec) < 0) {
+    //if (avcodec_open(pICodecCtx, pICodec) < 0) {
+	if (avcodec_open2(pICodecCtx, pICodec, NULL) < 0) {
         fprintf(stderr, "Could not open codec\n");
         return 1;
     }
@@ -266,7 +271,8 @@ int streamerSource::setup_video_capture(std::string devicename, int& deviceWidth
  
     /* Allocate Output Codec */
     if (verbose) { printf("%s << Allocating output codec...\n", __FUNCTION__); }
-    pOCodecCtx = avcodec_alloc_context();
+    //pOCodecCtx = avcodec_alloc_context();
+    pOCodecCtx = avcodec_alloc_context3(NULL);
     if (!pOCodecCtx) {
         fprintf(stderr, "Could not allocate codec\n");
         return 1;
@@ -292,7 +298,8 @@ int streamerSource::setup_video_capture(std::string devicename, int& deviceWidth
     }
     
     if (verbose) { printf("%s << Attempting to open codec...\n", __FUNCTION__); }
-    if (avcodec_open(pOCodecCtx, pOCodec) < 0) {
+    //if (avcodec_open(pOCodecCtx, pOCodec) < 0) {
+	if (avcodec_open2(pOCodecCtx, pOCodec, NULL) < 0) {
         fprintf(stderr, "Could not open codec\n");
         return 1;
     }
@@ -455,7 +462,8 @@ int streamerSource::init_mjpeg_decoder(int image_width, int image_height)
     return 0;
   }
 
-  avcodec_context = avcodec_alloc_context();
+  //avcodec_context = avcodec_alloc_context();
+  avcodec_context = avcodec_alloc_context3(NULL);
   avframe_camera = avcodec_alloc_frame();
   avframe_rgb = avcodec_alloc_frame();
 
@@ -469,8 +477,8 @@ int streamerSource::init_mjpeg_decoder(int image_width, int image_height)
   avframe_rgb_size = avpicture_get_size(PIX_FMT_RGB24, image_width, image_height);
 
   /* open it */
-  if (avcodec_open(avcodec_context, avcodec) < 0)
-  {
+  //if (avcodec_open(avcodec_context, avcodec) < 0) {
+  if (avcodec_open2(avcodec_context, avcodec, NULL) < 0) {
     fprintf(stderr,"Could not open MJPEG Decoder\n");
     return 0;
   }

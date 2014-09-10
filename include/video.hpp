@@ -2,12 +2,10 @@
  *  \brief	Declarations for managing video sources and formats.
 */
 
-#if defined(WIN32) || !defined(_BUILD_FOR_ROS_) || !defined(_AVLIBS_AVAILABLE_)
-	// ..
-#else
-
-#ifndef _THERMALVIS_VIDEO_H_
-#define _THERMALVIS_VIDEO_H_
+#if !defined(_IS_WINDOWS_) && defined(_AVLIBS_AVAILABLE_)
+	
+#ifndef THERMALVIS_VIDEO_H
+#define THERMALVIS_VIDEO_H
 
 #include "general_resources.hpp"
 #include "ros_resources.hpp"
@@ -24,13 +22,15 @@ extern "C" {
 	#include <linux/videodev2.h>
 	#include <libavcodec/avcodec.h>
 	#include <libavformat/avformat.h>
-	#include <libavdevice/avdevice.h>
+	//#include <libavdevice/avdevice.h>
 	#include <libswscale/swscale.h>
 }
 
 // http://credentiality2.blogspot.com.au/2010/04/v4l2-example.html
 
+#ifdef _BUILD_FOR_ROS_
 namespace enc = sensor_msgs::image_encodings;
+#endif
 
 #define CODEC_TYPE_VIDEO AVMEDIA_TYPE_VIDEO
 #define CODEC_TYPE_AUDIO AVMEDIA_TYPE_AUDIO
@@ -182,6 +182,5 @@ public:
 
 };
 
-#endif
-
+#endif // THERMALVIS_VIDEO_H
 #endif

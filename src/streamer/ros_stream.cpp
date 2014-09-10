@@ -47,39 +47,6 @@ bool streamerNode::setCameraInfo(sensor_msgs::SetCameraInfo::Request &req, senso
 	}
 }
 
-void streamerNode::acceptImage(void *ptr) {
-	if ((temperatureMat.rows == 0) && canRadiometricallyCorrect) temperatureMat = cv::Mat::zeros(camera_info.height, camera_info.width, CV_32FC1);
-	
-	if (configData.inputDatatype == DATATYPE_RAW) {
-		if ((frame.rows == 0) || (frame.type() != CV_16UC1)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_16UC1);
-
-		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix... (%d, %d)", camera_info.width, camera_info.height); }
-		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height*2);
-		if (configData.verboseMode){ ROS_INFO("Data copied."); }
-
-	} else if (configData.inputDatatype == DATATYPE_8BIT) {
-
-		if ((frame.rows == 0) || (frame.type() != CV_8UC1)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC1);
-		
-		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix.... (%d, %d)", camera_info.width, camera_info.height); }
-		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height);
-		if (configData.verboseMode){ ROS_INFO("Data copied."); }
-		
-	} else if (configData.inputDatatype == DATATYPE_MM){
-		if ((frame.rows == 0) || (frame.type() != CV_8UC3)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC3);
-		
-		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix... (%d, %d)", camera_info.width, camera_info.height); }
-		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height*3);
-		if (configData.verboseMode){ ROS_INFO("Data copied."); }
-	}
-
-	if (configData.fixDudPixels) {
-		if (configData.verboseMode){ ROS_INFO("Fixing dud pixels..."); }
-		fix_bottom_right(frame);
-		if (configData.verboseMode){ ROS_INFO("Dud pixels fixed."); }
-	}
-}
-
 void streamerNode::initializeMessages() {
 	
 	if (configData.output16bit) {
@@ -313,13 +280,6 @@ void streamerNode::serialCallback(const ros::TimerEvent&) {
 
 		updateNucInterval = false;
 	}
-}
-
-void streamerNode::overwriteCameraDims() {
-	
-	camera_info.height = globalCameraInfo.imageSize.at<unsigned short>(0, 1);
-	camera_info.width = globalCameraInfo.imageSize.at<unsigned short>(0, 0);
-	
 }
 
 void streamerNode::handle_nuc_instruction(const std_msgs::Float32::ConstPtr& nuc_msg) {

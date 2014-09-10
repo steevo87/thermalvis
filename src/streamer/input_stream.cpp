@@ -1644,10 +1644,8 @@ void streamerNode::releaseDevice() {
 		getVideoCapture()->release();
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
 		
-#ifdef _BUILD_FOR_ROS_
 #ifdef _AVLIBS_AVAILABLE_
 		getMainVideoSource()->close_video_capture();
-#endif
 #endif
 	}
 	
@@ -1908,7 +1906,6 @@ bool streamerNode::setupDevice() {
 		getVideoCapture()->open(configData.device_num);
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
 #ifdef _AVLIBS_AVAILABLE_
-#ifdef _BUILD_FOR_ROS_
 		if (configData.verboseMode) { ROS_INFO("Setting up device in 16-bit mode..."); }
 		int deviceWidth, deviceHeight;
 		getMainVideoSource()->setup_video_capture(configData.capture_device.c_str(), deviceWidth, deviceHeight, configData.verboseMode);
@@ -1932,7 +1929,6 @@ bool streamerNode::setupDevice() {
 			}
 			
 		}
-#endif
 #else
 		ROS_ERROR("AVLIBs not available");
 #endif
@@ -1943,6 +1939,11 @@ bool streamerNode::setupDevice() {
 	setValidity(true);
 	deviceCreated = true;
 	return true;
+}
+
+void streamerNode::overwriteCameraDims() {
+    camera_info.height = globalCameraInfo.imageSize.at<unsigned short>(0, 1);
+    camera_info.width = globalCameraInfo.imageSize.at<unsigned short>(0, 0);
 }
 
 void streamerNode::updateMap() {
@@ -2552,39 +2553,33 @@ bool streamerNode::streamCallback(bool capture) {
 		if (configData.verboseMode){ ROS_INFO("Frame captured."); }
 		ofs_retrieve_log << ros::Time::now().toNSec() << endl;
 	} else if (configData.inputDatatype == DATATYPE_RAW) {
-#ifdef _AVLIBS_AVAILABLE_		
+
 		ros::Time callTime, retrieveTime;
 		
 		callTime = ros::Time::now();
 		if (configData.verboseMode) { ROS_INFO("Capturing frame (16-bit)... (%f)", callTime.toSec()); }
 
+#ifdef _AVLIBS_AVAILABLE_
 		//bool frameRead = false;
 		while ((configData.maxReadAttempts == 0) || (currAttempts < configData.maxReadAttempts)) {
 			// Keep on looping, but if max defined, only until curr attempts is high enough
 			
 			if (configData.verboseMode){ ROS_INFO("Attempting to capture frame..."); }
-			
-#ifdef _BUILD_FOR_ROS_
 
 			if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->oPacket)) != 0) {
 				if (configData.verboseMode){ ROS_WARN("av_read_frame() failed."); }
 				currAttempts++;
 				continue;
 			}
-#endif
 			
 			if (configData.verboseMode){ ROS_INFO("Frame captured successfully."); }
 			
 			retrieveTime = ros::Time::now();
-#ifdef _BUILD_FOR_ROS_
 			firmwareTime = mainVideoSource->oPacket.pts;	
-#endif
 			if (configData.verboseMode){ ROS_INFO("Updating camera info..."); }
 			updateCameraInfo();
 			if (configData.verboseMode){ ROS_INFO("Camera info updated."); }
 
-			
-#ifdef _BUILD_FOR_ROS_
 
 			if (mainVideoSource->bRet < 0) {
 				if (configData.verboseMode) { ROS_WARN("(mainVideoSource->bRet < 0) failed."); }
@@ -2632,13 +2627,12 @@ bool streamerNode::streamCallback(bool capture) {
 					//ofs_retrieve_log << retrieveTime.toNSec() << endl;
 					//ofs_retrieve_log << retrieveTime.sec << "." << retrieveTime.nsec << endl;
 					char output_time[256];
-					sprintf(output_time,"%010d.%09d", retrieveTime.sec, retrieveTime.nsec);
+                    sprintf(output_time,"%010d.%09d", int(retrieveTime.sec), int(retrieveTime.nsec));
 					ofs_retrieve_log << output_time << endl;
 					ofs_call_log << callTime.toNSec() << endl;
 				}
 				
 			}
-#endif
 
 			// Want to exit loop if it actually worked
 			if (configData.verboseMode){ ROS_INFO("Frame read."); }
@@ -2848,16 +2842,11 @@ bool streamerNode::runRead() {
 		setValidity(true);
 		if (configData.verboseMode) { ROS_INFO("Opening file (%s)...", configData.file.c_str()); }
 		if (configData.inputDatatype == DATATYPE_RAW) {
-#ifdef _BUILD_FOR_ROS_
 #ifdef _AVLIBS_AVAILABLE_		
 			if (getMainVideoSource()->setup_video_file(configData.file) < 0) {
 				ROS_ERROR("Source configuration failed.");
 				return false;
 			}
-#else
-			return false;
-#endif
-
 #else
 			return false;
 #endif
@@ -2882,10 +2871,8 @@ bool streamerNode::runRead() {
 		if (configData.verboseMode) { ROS_INFO("Video complete."); }
 		
 		if (configData.inputDatatype == DATATYPE_RAW) {
-#ifdef _BUILD_FOR_ROS_
 #ifdef _AVLIBS_AVAILABLE_		
 			getMainVideoSource()->close_video_file(configData.file);
-#endif
 #endif
 		} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
 			getVideoCapture()->release();
@@ -3036,10 +3023,45 @@ bool streamerNode::getFrameFromSubscription() {
 	return true;
 }
 
+void streamerNode::acceptImage(void *ptr) {
+	if ((temperatureMat.rows == 0) && canRadiometricallyCorrect) temperatureMat = cv::Mat::zeros(camera_info.height, camera_info.width, CV_32FC1);
+	
+	if (configData.inputDatatype == DATATYPE_RAW) {
+		if ((frame.rows == 0) || (frame.type() != CV_16UC1)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_16UC1);
+
+		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix... (%d, %d)", camera_info.width, camera_info.height); }
+		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height*2);
+		if (configData.verboseMode){ ROS_INFO("Data copied."); }
+
+	} else if (configData.inputDatatype == DATATYPE_8BIT) {
+
+		if ((frame.rows == 0) || (frame.type() != CV_8UC1)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC1);
+		
+		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix.... (%d, %d)", camera_info.width, camera_info.height); }
+		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height);
+		if (configData.verboseMode){ ROS_INFO("Data copied."); }
+		
+	} else if (configData.inputDatatype == DATATYPE_MM){
+		if ((frame.rows == 0) || (frame.type() != CV_8UC3)) frame = cv::Mat::zeros(camera_info.height, camera_info.width, CV_8UC3);
+		
+		if (configData.verboseMode){ ROS_INFO("Copying image data to internal matrix... (%d, %d)", camera_info.width, camera_info.height); }
+		memcpy(&(frame.at<unsigned char>(0,0)), ptr, camera_info.width*camera_info.height*3);
+		if (configData.verboseMode){ ROS_INFO("Data copied."); }
+	}
+
+	if (configData.fixDudPixels) {
+		if (configData.verboseMode){ ROS_INFO("Fixing dud pixels..."); }
+		fix_bottom_right(frame);
+		if (configData.verboseMode){ ROS_INFO("Dud pixels fixed."); }
+	}
+}
+
 bool streamerNode::getFrameUsingAVLibs() {
 #ifndef _AVLIBS_AVAILABLE_
 	return false;
 #else
+	bool validFrameRead = true;
+    cin.get();
 	do { 
 		if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->packet)) != 0) {
 			ROS_WARN("Frame invalid...");

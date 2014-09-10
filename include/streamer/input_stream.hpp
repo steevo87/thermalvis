@@ -282,10 +282,8 @@ private:
 	vector<string> inputList;
 	int fileCount;
 	
-#ifdef _BUILD_FOR_ROS_
 #ifdef _AVLIBS_AVAILABLE_
 	streamerSource *mainVideoSource;
-#endif
 #endif
 
 	cv::VideoCapture cap;
@@ -388,14 +386,12 @@ public:
 	void setValidity(bool val) { videoValid = val; }
 	
 #ifdef _BUILD_FOR_ROS_
-
 	void updateThermistor();
 	void calibrationModeRoutine();
-	
+#endif
 
 #ifdef _AVLIBS_AVAILABLE_
-	streamerSource * getMainVideoSource() { return mainVideoSource; }
-#endif
+    streamerSource * getMainVideoSource() { return mainVideoSource; }
 #endif
 
 	cv::VideoCapture * getVideoCapture() { return &cap; }
@@ -411,8 +407,9 @@ public:
 	void writeData();
 	bool processFolder();
 	
+    void overwriteCameraDims();
+
 #ifdef _BUILD_FOR_ROS_
-	void overwriteCameraDims();
 	bool runBag();
 	void initializeMessages();
 #endif
