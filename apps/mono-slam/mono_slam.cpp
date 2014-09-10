@@ -147,7 +147,7 @@ void ProcessingThread::run() {
 
 	while (sM->wantsToRun()) {
 		sM->serverCallback(*scData);
-		if (!sM->retrieveRawFrame()) return;
+		if (!sM->loopCallback()) return;
 		sM->imageLoop();
 		
 		if (wantsFlow) {

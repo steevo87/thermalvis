@@ -26,6 +26,8 @@
 #endif
 
 #include "opencv_resources.hpp"
+
+//#include <opencv2/videoio/videoio.hpp>
 	
 #include "launch.hpp"
 #include "program.hpp"
@@ -124,7 +126,7 @@ protected:
 	bool dataValid;
 	int syncMode, camera_number, desiredRows, desiredCols, temporalMemory, outputType;
 	
-	string radiometryFile, externalNucManagement, portAddress, source, filename, folder, capture_device, intrinsics, extrinsics, topicname;
+	string radiometryFile, externalNucManagement, portAddress, source, file, folder, capture_device, intrinsics, extrinsics, topicname;
 	string timeStampsAddress, republishTopic, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
 
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
@@ -270,7 +272,7 @@ private:
 	cv::Mat _8bitMat, _16bitMat, colourMat;
 	cv::Mat preFilteredMat, smoothedMat, scaled16Mat;
 	cv::Mat _8bitMat_pub, _16bitMat_pub, colourMat_pub;
-	cv::Mat newImage, normalizedMat, frame, workingFrame, undistorted;
+	cv::Mat newImage, normalizedMat, videoFrame, frame, workingFrame, undistorted;
 	
 	camData_ globalCameraInfo;
     camExtrinsicsData_ globalExtrinsicsData;
@@ -351,10 +353,23 @@ public:
 	
 	///brief	Periodically checks for some things... 
 #ifdef _BUILD_FOR_ROS_
-	void timerCallback(const ros::TimerEvent& e);
+	bool timerCallback(const ros::TimerEvent& e);
 #else
-	void timerCallback();
+	bool loopCallback();
 #endif
+
+	///brief	Extracts the next frame from the video file
+	bool getFrameFromVideoFile();
+
+	///brief	Extracts the next frame from the topic subscription?
+	bool getFrameFromSubscription();
+
+	bool getFrameUsingAVLibs();
+
+	bool getFrameUsingCVLibs();
+
+	bool getFrameFromDirectoryNONROS();
+	bool getFrameFromDirectoryROS();
 
 	void updateCameraInfo();
 	void assignCameraInfo();
@@ -363,13 +378,10 @@ public:
 	void updateCameraInfoExtrinsics();
 	void refreshCameraAdvertisements();
 #else
-	bool retrieveRawFrame();
 	bool get8bitImage(cv::Mat& img, sensor_msgs::CameraInfo& info);
 #endif
 
 	void assignDefaultCameraInfo();
-
-	CvCapture* capture;
 	
 	bool isVideoValid();
 	
@@ -387,6 +399,7 @@ public:
 #endif
 
 	cv::VideoCapture * getVideoCapture() { return &cap; }
+	bool setupVideoForReading();
 
 	void displayFrame(cv::Mat& frame, std::string name = "streamer_display");
 

@@ -115,7 +115,8 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 			ROS_INFO("Requested framerate = %f", framerate);
 		}
 		
-		ROS_INFO("Reading from a file (%s)", startupData.filename.c_str());
+		ROS_INFO("Reading from a file (%s)", startupData.file.c_str());
+
 	} else if ((startupData.source == "folder") || (startupData.source == "directory")) {
 		
 		startupData.loadMode = true;
@@ -274,7 +275,7 @@ streamerData::streamerData() :
 	externalNucManagement(""), 
 	portAddress("/dev/ttyUSB0"), 
 	source("dev"), 
-	filename("file"), 
+	file("file"), 
 	capture_device( "/dev/video0"), 
 	folder("folder"), 
 	intrinsics("intrinsics"), 
@@ -434,7 +435,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("portAddress")) portAddress = v2.second.get_child("<xmlattr>.value").data();
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("read_addr")) read_addr = v2.second.get_child("<xmlattr>.value").data();
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("source")) source = v2.second.get_child("<xmlattr>.value").data();
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("filename")) filename = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("file")) file = v2.second.get_child("<xmlattr>.value").data();
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("folder")) folder = v2.second.get_child("<xmlattr>.value").data();
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("directory")) folder = v2.second.get_child("<xmlattr>.value").data();
 
@@ -2020,42 +2021,6 @@ void streamerNode::act_on_image() {
 }
 
 #ifndef _BUILD_FOR_ROS_
-bool streamerNode::retrieveRawFrame() {
-	if (configData.loadMode) {
-
-		if (inputList.size() == 0) return false;
-
-		if (frameCounter >= int(inputList.size())) {
-			if (configData.loopMode) {
-				frameCounter = 0;
-			} else return false;
-		}
-
-		std::string full_path = std::string(configData.folder) + "/" + inputList.at(frameCounter);
-		camera_info.header.seq = frameCounter;
-
-		frame = read_image_from_file(full_path);
-
-		if (determineFrameType(frame) != configData.inputDatatype) {
-			ROS_ERROR("The specified <inputDataType> does not match the actual image format!");
-			return false;
-		}	
-
-		if (configData.readTimestamps) {
-			if (int(prereadTimestamps.size()) <= frameCounter) {
-				ROS_ERROR("Node has been instructed to use provided timestamps, but none were found!");
-				return false;
-			}
-			camera_info.header.stamp = ros::Time(prereadTimestamps.at(frameCounter));
-		}
-
-		return true;
-	}
-	return false;
-}
-#endif
-
-#ifndef _BUILD_FOR_ROS_
 bool streamerNode::get8bitImage(cv::Mat& img, sensor_msgs::CameraInfo& info) { 
 	if (_8bitMat.rows == 0) return false;
 	img = _8bitMat;
@@ -2881,11 +2846,11 @@ bool streamerNode::runRead() {
 	ROS_INFO("Video reading started...");	
 	do {
 		setValidity(true);
-		if (configData.verboseMode) { ROS_INFO("Opening file (%s)...", configData.filename.c_str()); }
+		if (configData.verboseMode) { ROS_INFO("Opening file (%s)...", configData.file.c_str()); }
 		if (configData.inputDatatype == DATATYPE_RAW) {
 #ifdef _BUILD_FOR_ROS_
 #ifdef _AVLIBS_AVAILABLE_		
-			if (getMainVideoSource()->setup_video_file(configData.filename) < 0) {
+			if (getMainVideoSource()->setup_video_file(configData.file) < 0) {
 				ROS_ERROR("Source configuration failed.");
 				return false;
 			}
@@ -2897,13 +2862,13 @@ bool streamerNode::runRead() {
 			return false;
 #endif
 		} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
-			getVideoCapture()->open(configData.filename.c_str());
+			getVideoCapture()->open(configData.file.c_str());
 			
 			if(!cap.isOpened()) { // check if we succeeded
 				ROS_ERROR("File open failed (using OpenCV).");
 				return false;
 			}
-			//capture = cvCaptureFromAVI(configData.filename.c_str());
+			//capture = cvCaptureFromAVI(configData.file.c_str());
 		}	
 		
 		if (configData.verboseMode) { ROS_INFO("Source configured."); }
@@ -2919,7 +2884,7 @@ bool streamerNode::runRead() {
 		if (configData.inputDatatype == DATATYPE_RAW) {
 #ifdef _BUILD_FOR_ROS_
 #ifdef _AVLIBS_AVAILABLE_		
-			getMainVideoSource()->close_video_file(configData.filename);
+			getMainVideoSource()->close_video_file(configData.file);
 #endif
 #endif
 		} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
@@ -3009,4 +2974,172 @@ void streamerNode::updateCameraInfo() {
 	msg_16bit.header = camera_info.header;
 	msg_8bit.header = camera_info.header;
 #endif
+}
+
+bool streamerNode::getFrameFromDirectoryNONROS() {
+	if (inputList.size() == 0) return false;
+	
+	if (frameCounter >= int(inputList.size())) {
+		if (configData.loopMode) {
+			frameCounter = 0;
+		} else return false;
+	}
+
+	std::string full_path = std::string(configData.folder) + "/" + inputList.at(frameCounter);
+	camera_info.header.seq = frameCounter;
+
+	frame = read_image_from_file(full_path);
+
+	if (determineFrameType(frame) != configData.inputDatatype) {
+		ROS_ERROR("The specified <inputDataType> does not match the actual image format!");
+		return false;
+	}	
+
+	if (configData.readTimestamps) {
+		if (int(prereadTimestamps.size()) <= frameCounter) {
+			ROS_ERROR("Node has been instructed to use provided timestamps, but none were found!");
+			return false;
+		}
+		camera_info.header.stamp = ros::Time(prereadTimestamps.at(frameCounter));
+	}
+
+	return true;
+}
+
+bool streamerNode::getFrameFromDirectoryROS() {
+	string filename;
+	(configData.folder.at(configData.folder.length()-1) == '/') ? filename = configData.folder + inputList.at(frameCounter) : filename = configData.folder + "/" + inputList.at(frameCounter);
+	frame = read_image_from_file(filename);
+	if (processImage()) {
+		if (readyToPublish) {
+			updateCameraInfo();
+			publishTopics();
+			writeData();
+		}
+	}
+		
+	if (frameCounter >= fileCount) {
+		if (configData.verboseMode) ROS_INFO("setValidity(false) : (frameCounter >= fileCount)");
+		setValidity(false);
+	}
+	return true;
+}
+
+bool streamerNode::getFrameFromSubscription() {
+	if (configData.pollMode) streamCallback();
+	if (processImage()) {
+		if (readyToPublish) {
+			publishTopics();
+			writeData();
+		}
+	}
+	return true;
+}
+
+bool streamerNode::getFrameUsingAVLibs() {
+#ifndef _AVLIBS_AVAILABLE_
+	return false;
+#else
+	do { 
+		if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->packet)) != 0) {
+			ROS_WARN("Frame invalid...");
+			validFrameRead = false;
+			break;
+		}
+	} while (mainVideoSource->packet.stream_index != mainVideoSource->videoStream);
+
+	if (validFrameRead) {
+		avcodec_decode_video2(mainVideoSource->pCodecCtx, mainVideoSource->pFrame, &(mainVideoSource->frameFinished), &(mainVideoSource->packet));
+		acceptImage((void*) *(mainVideoSource->pFrame->data));
+
+		if (processImage()) {
+			if (readyToPublish) {
+				updateCameraInfo();
+				publishTopics();
+				writeData();
+			}
+		}
+		av_free_packet(&(mainVideoSource->packet));
+		return true;
+	} else {
+		if (configData.verboseMode) { ROS_INFO("setValidity(false) : (validFrameRead)"); }
+		setValidity(false);
+		return false;
+	}
+#endif
+}
+
+bool streamerNode::setupVideoForReading() {
+	ROS_INFO("Attempting to open video (%s)", configData.file.c_str());
+	cap.open(configData.file);
+	if (!cap.isOpened()) {
+		ROS_ERROR("Unable to open video...");
+	} else {
+		ROS_INFO("framecount = (%d); format = (%d); dimensions = (%d, %d)", int(cap.get(CV_CAP_PROP_FRAME_COUNT)), int(cap.get(CV_CAP_PROP_FORMAT)), int(cap.get(CV_CAP_PROP_FRAME_WIDTH)), int(cap.get(CV_CAP_PROP_FRAME_HEIGHT)));
+	}
+	return cap.isOpened();
+}
+
+bool streamerNode::getFrameUsingCVLibs() {
+	if (configData.verboseMode) ROS_INFO("About to read in frame...");
+		
+	if(!cap.isOpened()) {
+		if (!setupVideoForReading()) {
+			setValidity(false);
+			return false;
+		}
+		ROS_INFO("Device successfully opened...");
+	} else if (configData.verboseMode) ROS_INFO("Device is open...");
+		
+	cap >> frame;
+
+	if (&frame == NULL) {
+		if (configData.verboseMode) ROS_INFO("setValidity(false) : (&frame == NULL)");
+		setValidity(false);
+		return false;
+	} else if (processImage()) {
+		if (readyToPublish) {
+			updateCameraInfo();
+			publishTopics();
+			writeData();
+		}
+	}
+	return true;
+}
+
+bool streamerNode::getFrameFromVideoFile() {
+	if (configData.inputDatatype == DATATYPE_RAW) {
+#ifdef _AVLIBS_AVAILABLE_
+		return getFrameUsingAVLibs();
+#else
+		ROS_ERROR("Cannot capture raw data. AVLIBs were not included in project.");
+		return false;
+#endif
+	} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) return getFrameUsingCVLibs();
+	
+	ROS_ERROR("Input datatype doesn't seem to be recognized.");
+	return false;
+}
+
+#ifdef _BUILD_FOR_ROS_
+bool streamerNode::timerCallback(const ros::TimerEvent&) {
+#else
+bool streamerNode::loopCallback() {
+#endif
+	if (configData.pauseMode) return true;
+	if (configData.captureMode || configData.subscribeMode) return true;
+	if (configData.pollMode || configData.resampleMode) return getFrameFromSubscription();
+	
+	if (configData.loadMode) {
+#ifdef _BUILD_FOR_ROS_
+		return getFrameFromDirectoryROS();
+#else
+		return getFrameFromDirectoryNONROS();
+#endif
+	}
+
+	if (configData.readMode) return getFrameFromVideoFile();
+
+	ROS_ERROR("No mode recognized for sourcing the image data!");
+	return false;
 }

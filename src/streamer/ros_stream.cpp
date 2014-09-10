@@ -315,106 +315,6 @@ void streamerNode::serialCallback(const ros::TimerEvent&) {
 	}
 }
 
-void streamerNode::timerCallback(const ros::TimerEvent&) {
-	
-	if (configData.pauseMode) return;
-	if (configData.captureMode || configData.subscribeMode) return;
-	
-	if (configData.pollMode || configData.resampleMode) {
-		if (configData.pollMode) streamCallback();
-		if (processImage()) {
-			if (readyToPublish) {
-				publishTopics();
-				writeData();
-			}
-		}
-		return;
-	}
-	
-	if (configData.loadMode) {
-		
-		string filename;
-		(configData.folder.at(configData.folder.length()-1) == '/') ? filename = configData.folder + inputList.at(frameCounter) : filename = configData.folder + "/" + inputList.at(frameCounter);
-		frame = read_image_from_file(filename);
-		if (processImage()) {
-			if (readyToPublish) {
-				updateCameraInfo();
-				publishTopics();
-				writeData();
-			}
-		}
-		
-		if (frameCounter >= fileCount) {
-			if (configData.verboseMode) ROS_INFO("setValidity(false) : (frameCounter >= fileCount)");
-			setValidity(false);
-		}
-		return;
-	}
-
-	bool validFrameRead = true;
-	
-	if (configData.inputDatatype == DATATYPE_RAW) {
-#ifdef _AVLIBS_AVAILABLE_
-		do { 
-			if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->packet)) != 0) {
-				ROS_WARN("Frame invalid...");
-				validFrameRead = false;
-				break;
-			}
-		} while (mainVideoSource->packet.stream_index != mainVideoSource->videoStream);
-
-		if (validFrameRead) {
-			avcodec_decode_video2(mainVideoSource->pCodecCtx, mainVideoSource->pFrame, &(mainVideoSource->frameFinished), &(mainVideoSource->packet));
-			acceptImage((void*) *(mainVideoSource->pFrame->data));
-
-			if (processImage()) {
-				if (readyToPublish) {
-					updateCameraInfo();
-					publishTopics();
-					writeData();
-				}
-			}
-			av_free_packet(&(mainVideoSource->packet));
-			
-		} else {
-			if (configData.verboseMode) { ROS_INFO("setValidity(false) : (validFrameRead)"); }
-			setValidity(false);
-		}
-#else
-	ROS_ERROR("Cannot capture raw data. AVLIBs were not included in project.");
-	return;
-#endif
-	} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
-		
-		if (configData.verboseMode) { ROS_INFO("About to read in frame..."); }
-		
-		if(!cap.isOpened()) {
-			ROS_ERROR("Actually, device isn't open...");
-			return;
-		} else if (configData.verboseMode) { ROS_INFO("Device is open..."); }
-		
-		if (configData.verboseMode) { ROS_INFO("framecount = (%f)", cap.get(CV_CAP_PROP_FRAME_COUNT)); }
-		if (configData.verboseMode) { ROS_INFO("dim = (%f, %f)", cap.get(CV_CAP_PROP_FRAME_WIDTH), cap.get(CV_CAP_PROP_FRAME_HEIGHT)); }
-		
-		cap >> frame;
-		
-		if (configData.verboseMode) { ROS_INFO("Frame read"); }
-		
-		if (&frame == NULL) {
-			if (configData.verboseMode) { ROS_INFO("setValidity(false) : (&frame == NULL)"); }
-			setValidity(false);
-		} else {
-			if (processImage()) {
-				if (readyToPublish) {
-					updateCameraInfo();
-					publishTopics();
-					writeData();
-				}
-			}
-		}
-	}
-}
-
 void streamerNode::overwriteCameraDims() {
 	
 	camera_info.height = globalCameraInfo.imageSize.at<unsigned short>(0, 1);
@@ -533,7 +433,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<std::string>("source", source, "dev");
 	
-	nh.param<std::string>("file", filename, "file");
+	nh.param<std::string>("file", file, "file");
 	nh.param<std::string>("dev", capture_device, "/dev/video0");
 	device_num = atoi(&(capture_device.c_str(), capture_device.at(capture_device.length()-1)));
 	
@@ -767,7 +667,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 			framerate = DEFAULT_READ_RATE;
 		} else ROS_INFO("Requested framerate = %f", framerate);
 		
-		ROS_INFO("Reading from a file (%s)", filename.c_str());
+		ROS_INFO("Reading from a file (%s)", file.c_str());
 	} else if ((source == "folder") || (source == "directory")) {
 		
 		loadMode = true;
