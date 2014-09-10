@@ -54,3 +54,7 @@ ELSE() # Is Windows
 	OPTION(BUILD_FOR_ROS "Build ROS interfaces and functions." FALSE)
         OPTION(BUILD_APPS "Build demo apps." TRUE)
 ENDIF()
+
+IF(IS_WINDOWS AND BUILD_FOR_ROS)
+	MESSAGE(FATAL_ERROR "ROS-compatibility is not possible in Windows environment. Please deselect <BUILD_FOR_ROS>.")
+ENDIF()

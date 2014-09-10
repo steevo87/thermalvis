@@ -2,91 +2,21 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 SET(PROJECT_NAME "thermalvis")
 project(${PROJECT_NAME})
-SET(THERMALVIS_COMPILE_FLAGS "-D_THERMALVIS_")
 
 include(cmake/configure_arch.cmake)
 include(cmake/configure_os.cmake)
 include(cmake/configure_compiler.cmake)
 include(cmake/configure_framework.cmake)
+include(cmake/configure_sample_data.cmake)
 
-SET(ADDITIONAL_INCLUDES "")
-SET(ADDITIONAL_LIBRARIES "")
-
-# Configure for AV Libs (maybe required for some devices in linux)
-IF(IS_WINDOWS)
-	SET(HAS_AVLIBS_AVAILABLE FALSE)
-ELSE()
-	SET(HAS_AVLIBS_AVAILABLE TRUE)
-	
-	LIST(APPEND avlibs_LIST avutil avformat avcodec swscale) # va avdevice avconv
-	foreach(AVLIBS_SUB_LIB ${avlibs_LIST})
-		string(TOUPPER "${AVLIBS_SUB_LIB}" UPPERCASE_NAME)
-		FIND_LIBRARY("${UPPERCASE_NAME}_LIBRARY" NAMES ${AVLIBS_SUB_LIB} PATHS ${SEARCH_LIBRARY_PATHS})
-		if(HAS_AVLIBS_AVAILABLE AND (NOT "${UPPERCASE_NAME}_LIBRARY"))
-			message(WARNING "${AVLIBS_SUB_LIB} library is missing. May not be able to use Miricle camera or read in 16-bit videos saved in YUYV format.")
-			SET(HAS_AVLIBS_AVAILABLE FALSE)
-		elseif(HAS_AVLIBS_AVAILABLE)
-			LIST(APPEND ADDITIONAL_LIBRARIES ${${UPPERCASE_NAME}_LIBRARY})
-		endif()
-	endforeach(AVLIBS_SUB_LIB) 
-	
-	IF(HAS_AVLIBS_AVAILABLE)
-		add_definitions( -D_AVLIBS_AVAILABLE_ )
-	ENDIF()
-ENDIF()
-
-MESSAGE(STATUS "ADDITIONAL_LIBRARIES = ${ADDITIONAL_LIBRARIES}")
-
-include(cmake/find_doxygen.cmake)
-
-SET(Qt5Widgets_DIR "C:/Qt/Qt5.3.1/5.3/msvc2012_opengl/lib/cmake/Qt5Widgets" CACHE STRING "Default search path for QtWidgets cmake file")
-find_package(Qt5Widgets QUIET)
-
-IF(Qt5Widgets_FOUND)
-	IF(IS_64_BIT AND IS_WINDOWS)
-		OPTION(BUILD_GUI "Build qt-based GUI controls." FALSE)
-	ELSE()
-		OPTION(BUILD_GUI "Build qt-based GUI controls." TRUE)
-	ENDIF()
-ELSE()
-	OPTION(BUILD_GUI "Build qt-based GUI controls." FALSE)
-ENDIF()
-
-IF(BUILD_GUI)
-	IF(IS_64_BIT AND IS_WINDOWS)
-		MESSAGE(FATAL_ERROR "Qt libraries do not yet work in 64-bit mode in Windows. Please switch to 32-bit mode for this functionality, or disable the <BUILD_GUI> option.")
-	ENDIF()
-	find_package(Qt5Widgets)
-ENDIF()
-
-IF(BUILD_GUI AND Qt5Widgets_FOUND)
-	ADD_DEFINITIONS( -D_USE_QT_ )
-	string(REPLACE "." ";" Qt5Widgets_VERSION_SEP ${Qt5Widgets_VERSION})
-	list(GET Qt5Widgets_VERSION_SEP 0 QT_VERSION_MAJOR)
-	list(GET Qt5Widgets_VERSION_SEP 1 QT_VERSION_MINOR)
-	if(POLICY CMP0020)
-		cmake_policy(SET CMP0020 NEW)
-	endif()
-	
-	SET(Qt_STREAMER_BUILD_DIR "build-streamer-Desktop_Qt_${QT_VERSION_MAJOR}_${QT_VERSION_MINOR}_${MSVC_ABBREVIATION_CAPS}_openGL_${ARCH_BITS}bit-Debug")
-	SET(QTSTREAMER_BUILD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qt/${Qt_STREAMER_BUILD_DIR}" CACHE STRING "Build directory for Qt streamer app")
-	SET(Qt_FLOW_BUILD_DIR "build-flow-Desktop_Qt_${QT_VERSION_MAJOR}_${QT_VERSION_MINOR}_${MSVC_ABBREVIATION_CAPS}_openGL_${ARCH_BITS}bit-Debug")
-	SET(QTFLOW_BUILD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qt/${Qt_FLOW_BUILD_DIR}" CACHE STRING "Build directory for Qt flow app")
-	SET(Qt_SLAM_BUILD_DIR "build-slam-Desktop_Qt_${QT_VERSION_MAJOR}_${QT_VERSION_MINOR}_${MSVC_ABBREVIATION_CAPS}_openGL_${ARCH_BITS}bit-Debug")
-	SET(QTSLAM_BUILD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qt/${Qt_SLAM_BUILD_DIR}" CACHE STRING "Build directory for Qt slam app")
-	#LIST(APPEND ADDITIONAL_LIBRARIES Qt5::WinMain)
-ELSEIF(BUILD_GUI)
-	MESSAGE(FATAL_ERROR "Qt5 was not found. Please check that the <Qt5Widgets_DIR> variable points to the location of <Qt5WidgetsConfig.cmake>. If you want to build without the GUI, please deselect the option <BUILD_GUI>")
-ENDIF()
-
-IF(WIN32 OR win64)
-	IF (BUILD_FOR_ROS)
-		MESSAGE(FATAL_ERROR "ROS-compatibility is not possible in Windows environment. Please deselect <BUILD_FOR_ROS>.")
-	ENDIF()
-ENDIF()
-
-SET(DEFAULT_SAMPLE_DATA "${USERPROFILE}/Documents/Data/optris/test_seq_001" CACHE STRING "...")
-ADD_DEFINITIONS(-D_DEFAULT_SAMPLE_DATA_="${DEFAULT_SAMPLE_DATA}")
+LIST(APPEND EXTERNAL_LIBRARIES 
+	"avutil"
+	"doxygen"
+	"qt"
+)
+foreach(EXTERNAL_LIB ${EXTERNAL_LIBRARIES}) 
+	include(cmake/find_${EXTERNAL_LIB}.cmake)
+endforeach(EXTERNAL_LIB)
 
 IF(IS_WINDOWS)
 	IF(EXISTS "C:/eigen")
@@ -339,7 +269,6 @@ FILE(GLOB_RECURSE "${LIBRARY_NAME}_LIB_SOURCES" src/*.cpp)
 ADD_LIBRARY(${LIBRARY_NAME} ${${LIBRARY_NAME}_LIB_SOURCES} ${${LIBRARY_NAME}_LIB_HEADERS} )
 TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${ADDITIONAL_LIBRARIES})
 MESSAGE(STATUS "ADDITIONAL_LIBRARIES = ${ADDITIONAL_LIBRARIES}")
-SET_TARGET_PROPERTIES(${LIBRARY_NAME} PROPERTIES COMPILE_FLAGS ${THERMALVIS_COMPILE_FLAGS})
 
 LIST(APPEND SUBLIBRARY_NAMES "streamer" "flow" "slam")
 
@@ -350,7 +279,6 @@ foreach(SUBLIB_NAME ${SUBLIBRARY_NAMES})
 	FILE(GLOB "${UPPERCASE_NAME}_LIB_SOURCES" src/${SUBLIB_NAME}/*.cpp)
 	ADD_LIBRARY(${APPENDED_SUBLIB_NAME} ${${UPPERCASE_NAME}_LIB_SOURCES} ${${UPPERCASE_NAME}_LIB_HEADERS} )
 	TARGET_LINK_LIBRARIES(${APPENDED_SUBLIB_NAME} thermalvis ${ADDITIONAL_LIBRARIES})
-	SET_TARGET_PROPERTIES(${APPENDED_SUBLIB_NAME} PROPERTIES COMPILE_FLAGS ${THERMALVIS_COMPILE_FLAGS})
 endforeach(SUBLIB_NAME) 
 
 IF(BUILD_GUI)

@@ -1,0 +1,21 @@
+IF(IS_WINDOWS)
+	SET(HAS_AVLIBS_AVAILABLE FALSE)
+ELSE()
+	SET(HAS_AVLIBS_AVAILABLE TRUE)
+	
+	LIST(APPEND avlibs_LIST avutil avformat avcodec swscale) # va avdevice avconv
+	foreach(AVLIBS_SUB_LIB ${avlibs_LIST})
+		string(TOUPPER "${AVLIBS_SUB_LIB}" UPPERCASE_NAME)
+		FIND_LIBRARY("${UPPERCASE_NAME}_LIBRARY" NAMES ${AVLIBS_SUB_LIB} PATHS ${SEARCH_LIBRARY_PATHS})
+		if(HAS_AVLIBS_AVAILABLE AND (NOT "${UPPERCASE_NAME}_LIBRARY"))
+			message(WARNING "${AVLIBS_SUB_LIB} library is missing. May not be able to use Miricle camera or read in 16-bit videos saved in YUYV format.")
+			SET(HAS_AVLIBS_AVAILABLE FALSE)
+		elseif(HAS_AVLIBS_AVAILABLE)
+			LIST(APPEND ADDITIONAL_LIBRARIES ${${UPPERCASE_NAME}_LIBRARY})
+		endif()
+	endforeach(AVLIBS_SUB_LIB) 
+	
+	IF(HAS_AVLIBS_AVAILABLE)
+		add_definitions( -D_AVLIBS_AVAILABLE_ )
+	ENDIF()
+ENDIF()
