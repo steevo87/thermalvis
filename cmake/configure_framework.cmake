@@ -44,6 +44,7 @@ IF(IS_LINUX)
 	ENDIF()
 
 	IF(BUILD_FOR_ROS)
+		ADD_DEFINITIONS( -D_BUILD_FOR_ROS_ )
 		include(cmake/configure_catkin.cmake)
         
                 SET(BUILD_APPS FALSE CACHE BOOL "Build demo apps.")
