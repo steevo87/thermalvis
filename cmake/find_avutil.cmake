@@ -2,20 +2,43 @@ IF(IS_WINDOWS)
 	SET(HAS_AVLIBS_AVAILABLE FALSE)
 ELSE()
 	SET(HAS_AVLIBS_AVAILABLE TRUE)
+
+        LIST(APPEND avlibs_LIST avutil avformat avcodec swscale) # va avdevice avconv
+        foreach(AVLIBS_SUB_LIB ${avlibs_LIST})
+                string(TOUPPER "${AVLIBS_SUB_LIB}" UPPERCASE_NAME)
+                FIND_LIBRARY("${UPPERCASE_NAME}_LIBRARY" NAMES ${AVLIBS_SUB_LIB} PATHS ${SEARCH_LIBRARY_PATHS} QUIET)
+                if(HAS_AVLIBS_AVAILABLE AND (NOT "${UPPERCASE_NAME}_LIBRARY"))
+                    IF(HAS_AVLIBS_AVAILABLE)
+                        MESSAGE(STATUS "Unable to find library ${AVLIBS_SUB_LIB} so terminating search for further avutil-related libraries.")
+                    ENDIF()
+                        SET(HAS_AVLIBS_AVAILABLE FALSE)
+                endif()
+        endforeach(AVLIBS_SUB_LIB)
+
+        IF(HAS_AVLIBS_AVAILABLE)
+            SET(avutil_FOUND TRUE)
+        ENDIF()
 	
-	LIST(APPEND avlibs_LIST avutil avformat avcodec swscale) # va avdevice avconv
-	foreach(AVLIBS_SUB_LIB ${avlibs_LIST})
-		string(TOUPPER "${AVLIBS_SUB_LIB}" UPPERCASE_NAME)
-		FIND_LIBRARY("${UPPERCASE_NAME}_LIBRARY" NAMES ${AVLIBS_SUB_LIB} PATHS ${SEARCH_LIBRARY_PATHS})
-		if(HAS_AVLIBS_AVAILABLE AND (NOT "${UPPERCASE_NAME}_LIBRARY"))
-			message(WARNING "${AVLIBS_SUB_LIB} library is missing. May not be able to use Miricle camera or read in 16-bit videos saved in YUYV format.")
-			SET(HAS_AVLIBS_AVAILABLE FALSE)
-		elseif(HAS_AVLIBS_AVAILABLE)
-			LIST(APPEND ADDITIONAL_LIBRARIES ${${UPPERCASE_NAME}_LIBRARY})
-		endif()
-	endforeach(AVLIBS_SUB_LIB) 
-	
-	IF(HAS_AVLIBS_AVAILABLE)
-		add_definitions( -D_AVLIBS_AVAILABLE_ )
-	ENDIF()
+
 ENDIF()
+
+IF(avutil_FOUND)
+    OPTION(USE_AVUTIL "Use the avutil and related libraries." TRUE)
+ELSE()
+    OPTION(USE_AVUTIL "Use the avutil and related libraries." FALSE)
+ENDIF()
+
+IF(USE_AVUTIL)
+    IF(NOT avutil_FOUND)
+        MESSAGE(FATAL_ERROR "Cannot find avutil and related libraries. Please deselect <USE_AVUTIL>.")
+    ENDIF()
+
+    foreach(AVLIBS_SUB_LIB ${avlibs_LIST})
+            string(TOUPPER "${AVLIBS_SUB_LIB}" UPPERCASE_NAME)
+            LIST(APPEND ADDITIONAL_LIBRARIES ${${UPPERCASE_NAME}_LIBRARY})
+    endforeach(AVLIBS_SUB_LIB)
+
+    add_definitions( -D_AVLIBS_AVAILABLE_ )
+ENDIF()
+
+

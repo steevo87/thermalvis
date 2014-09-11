@@ -1,11 +1,11 @@
-/*! \file	input_stream_config.hpp
+/*! \file	streamer_config.hpp
  *  \brief	Declarations for video input configuration.
 */
 
 #include "streamer_defines.hpp"
 
-#ifndef _THERMALVIS_INPUT_STREAM_CONFIG_H_
-#define _THERMALVIS_INPUT_STREAM_CONFIG_H_
+#ifndef STREAMER_CONFIG_H
+#define STREAMER_CONFIG_H
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for streamer
 struct streamerSharedData {
@@ -42,4 +42,4 @@ public:
 	streamerRealtimeData() { }
 };
 
-#endif
+#endif // STREAMER_CONFIG_H

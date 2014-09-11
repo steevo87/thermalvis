@@ -16,6 +16,7 @@ IF(IS_LINUX)
         ENDIF()
 
         IF(catkin_FOUND)
+			MESSAGE(STATUS "catkin has been found")
                 IF(IN_CATKIN_DIR)
                     SET(BUILD_FOR_ROS TRUE CACHE BOOL "Build ROS interfaces and functions.")
                 ELSE()

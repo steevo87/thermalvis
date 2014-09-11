@@ -47,7 +47,7 @@
 #endif
 #endif
 
-#include "input_stream_config.hpp"
+#include "streamer_config.hpp"
 
 #define _16BIT_MEDIAN_BUFFER_SIZE				256
 
