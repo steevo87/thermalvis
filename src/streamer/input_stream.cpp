@@ -3129,6 +3129,7 @@ bool streamerNode::setupVideoFile() {
     }
 
     if (configData.verboseMode) { ROS_INFO("Source configured."); }
+	return true;
 }
 
 bool streamerNode::closeVideoFile() {
@@ -3141,6 +3142,7 @@ bool streamerNode::closeVideoFile() {
     } else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
         getVideoCapture()->release();
     }
+	return true;
 }
 
 bool streamerNode::getFrameFromVideoFile() {

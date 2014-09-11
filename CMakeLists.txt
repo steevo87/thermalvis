@@ -4,7 +4,6 @@ SET(PROJECT_NAME "thermalvis")
 project(${PROJECT_NAME})
 LIST(APPEND SUBLIBRARY_NAMES "streamer" "flow" "slam")
 ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-write-strings" )
 
 include(cmake/configure_arch.cmake)
 include(cmake/configure_os.cmake)
