@@ -331,7 +331,7 @@ public:
 	///brief	Handles a command to perform a NUC. 
 #ifdef _BUILD_FOR_ROS_
 	void handle_nuc_instruction(const std_msgs::Float32::ConstPtr& nuc_msg);
-#else
+#elsesetupVideoFile
 	void handle_nuc_instruction(const bool& perform_nuc);
 #endif
 
@@ -365,6 +365,9 @@ public:
 	bool getFrameUsingAVLibs();
 
 	bool getFrameUsingCVLibs();
+
+    bool setupVideoFile();
+    bool closeVideoFile();
 
 	bool getFrameFromDirectoryNONROS();
 	bool getFrameFromDirectoryROS();
@@ -406,6 +409,7 @@ public:
 	void publishTopics();
 	void writeData();
 	bool processFolder();
+    bool prepareVideo();
 	
     void overwriteCameraDims();
 

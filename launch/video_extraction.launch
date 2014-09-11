@@ -3,7 +3,7 @@
 	<node name="streamer_reprocessed" pkg="thermalvis" type="streamer" output="screen">
 	
 		<param name="debugMode" value="true" />
-		<param name="verboseMode" value="true" />
+		<param name="verboseMode" value="false" />
 	
 		<param name="source" value="file" />
 		<!-- <param name="file" value="G:\Data\miricle\icarcv\capture-1.avi" /> -->
@@ -16,9 +16,9 @@
 		<!-- <param name="degreesPerGraylevel" value="0.01" /> --> <!-- value of 0.025 works OK for miricle -->
 		<param name="desiredDegreesPerGraylevel" value="0.01" /> <!-- can adjust this to enhance contrast -->
 		
-		<param name="outputType" value="1" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
+		<param name="outputType" value="2" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
 		<param name="writeImages" value="true" />
-		<param name="outputFolder" value="G:\Data\miricle\icarcv\capture-1" />
+		<param name="outputFolder" value="/home/steve/Documents/Data/miricle/test" />
 		
 		<param name="loopMode" value="false" />
 		
@@ -30,8 +30,8 @@
 
 	</node>
 	
-	<node pkg="image_view" type="image_view" name="grayscale_thermal" output="screen">
-		<remap from="image" to="/thermalvis/streamer_reprocessed/image_mono"/>
+	<node pkg="image_view" type="image_view" name="color_thermal" output="screen">
+		<remap from="image" to="/thermalvis/streamer/image_col"/>
 		<param name="~/autosize" value="true" />
 	</node>
 	

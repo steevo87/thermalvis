@@ -802,11 +802,9 @@ streamerNode::streamerNode(streamerData startupData) :
 	}
 	
 	if (configData.verboseMode) { ROS_INFO("Initializing camera (%s)", configData.topicname.c_str()); }
-	
-#ifdef _BUILD_FOR_ROS_
+
 #ifdef _AVLIBS_AVAILABLE_
 	mainVideoSource = new streamerSource;
-#endif
 #endif
 
 	std::string camera_name;
@@ -924,10 +922,8 @@ streamerNode::streamerNode(streamerData startupData) :
 
 	if (configData.verboseMode) { ROS_INFO("Initializing video source..."); }
 
-#ifdef _BUILD_FOR_ROS_
 #ifdef _AVLIBS_AVAILABLE_
 	mainVideoSource->initialize_video_source();
-#endif
 #endif
 
 	getMapping(configData.map, fullMapCode);
@@ -1836,7 +1832,12 @@ void streamerNode::serverCallback(streamerConfig &config) {
 				ROS_ERROR("Processing of folder failed...");
 				configData.dataValid = false;
 			}
-		}
+        } else if (configData.readMode) {
+            if (!prepareVideo()) {
+                ROS_ERROR("Preparing of video failed...");
+                configData.dataValid = false;
+            }
+        }
 
 	}
 	
@@ -2839,44 +2840,13 @@ bool streamerNode::runRead() {
 	
 	ROS_INFO("Video reading started...");	
 	do {
-		setValidity(true);
-		if (configData.verboseMode) { ROS_INFO("Opening file (%s)...", configData.file.c_str()); }
-		if (configData.inputDatatype == DATATYPE_RAW) {
-#ifdef _AVLIBS_AVAILABLE_		
-			if (getMainVideoSource()->setup_video_file(configData.file) < 0) {
-				ROS_ERROR("Source configuration failed.");
-				return false;
-			}
-#else
-			return false;
-#endif
-		} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
-			getVideoCapture()->open(configData.file.c_str());
-			
-			if(!cap.isOpened()) { // check if we succeeded
-				ROS_ERROR("File open failed (using OpenCV).");
-				return false;
-			}
-			//capture = cvCaptureFromAVI(configData.file.c_str());
-		}	
-		
-		if (configData.verboseMode) { ROS_INFO("Source configured."); }
-		
-		while (isVideoValid()) {
+        setupVideoFile();
+
+        while (isVideoValid()) {
 #ifdef _BUILD_FOR_ROS_
-			ros::spinOnce();
+            ros::spinOnce();
 #endif
-		}
-		
-		if (configData.verboseMode) { ROS_INFO("Video complete."); }
-		
-		if (configData.inputDatatype == DATATYPE_RAW) {
-#ifdef _AVLIBS_AVAILABLE_		
-			getMainVideoSource()->close_video_file(configData.file);
-#endif
-		} else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
-			getVideoCapture()->release();
-		}
+        }
 
 	} while (configData.loopMode && !(*configData.wantsToTerminate));
 	
@@ -3061,7 +3031,7 @@ bool streamerNode::getFrameUsingAVLibs() {
 	return false;
 #else
 	bool validFrameRead = true;
-    cin.get();
+
 	do { 
 		if (av_read_frame(mainVideoSource->pIFormatCtx, &(mainVideoSource->packet)) != 0) {
 			ROS_WARN("Frame invalid...");
@@ -3091,22 +3061,27 @@ bool streamerNode::getFrameUsingAVLibs() {
 #endif
 }
 
-bool streamerNode::setupVideoForReading() {
-	ROS_INFO("Attempting to open video (%s)", configData.file.c_str());
-	cap.open(configData.file);
-	if (!cap.isOpened()) {
-		ROS_ERROR("Unable to open video...");
-	} else {
-		ROS_INFO("framecount = (%d); format = (%d); dimensions = (%d, %d)", int(cap.get(CV_CAP_PROP_FRAME_COUNT)), int(cap.get(CV_CAP_PROP_FORMAT)), int(cap.get(CV_CAP_PROP_FRAME_WIDTH)), int(cap.get(CV_CAP_PROP_FRAME_HEIGHT)));
-	}
-	return cap.isOpened();
+bool streamerNode::prepareVideo() {
+    if (configData.inputDatatype == DATATYPE_RAW) {
+#ifdef _AVLIBS_AVAILABLE_
+        if (getMainVideoSource()->setup_video_file(configData.file) < 0) {
+            ROS_ERROR("Source configuration failed.");
+            return false;
+        }
+#else
+        return false;
+#endif
+    } else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
+        return setupVideoFile();
+    }
+    return true;
 }
 
 bool streamerNode::getFrameUsingCVLibs() {
 	if (configData.verboseMode) ROS_INFO("About to read in frame...");
 		
 	if(!cap.isOpened()) {
-		if (!setupVideoForReading()) {
+        if (!setupVideoFile()) {
 			setValidity(false);
 			return false;
 		}
@@ -3129,7 +3104,47 @@ bool streamerNode::getFrameUsingCVLibs() {
 	return true;
 }
 
+bool streamerNode::setupVideoFile() {
+    setValidity(true);
+
+    if (configData.verboseMode) { ROS_INFO("Opening file (%s)...", configData.file.c_str()); }
+
+    if (configData.inputDatatype == DATATYPE_RAW) {
+#ifdef _AVLIBS_AVAILABLE_
+        if (getMainVideoSource()->setup_video_file(configData.file) < 0) {
+            ROS_ERROR("Source configuration failed.");
+            return false;
+        }
+#else
+        return false;
+#endif
+    } else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
+        getVideoCapture()->open(configData.file.c_str());
+
+        if(!cap.isOpened()) { // check if we succeeded
+            ROS_ERROR("File open failed (using OpenCV).");
+            return false;
+        }
+        //capture = cvCaptureFromAVI(configData.file.c_str());
+    }
+
+    if (configData.verboseMode) { ROS_INFO("Source configured."); }
+}
+
+bool streamerNode::closeVideoFile() {
+    if (configData.verboseMode) { ROS_INFO("Video complete."); }
+
+    if (configData.inputDatatype == DATATYPE_RAW) {
+#ifdef _AVLIBS_AVAILABLE_
+        getMainVideoSource()->close_video_file(configData.file);
+#endif
+    } else if ((configData.inputDatatype == DATATYPE_8BIT) || (configData.inputDatatype == DATATYPE_MM)) {
+        getVideoCapture()->release();
+    }
+}
+
 bool streamerNode::getFrameFromVideoFile() {
+
 	if (configData.inputDatatype == DATATYPE_RAW) {
 #ifdef _AVLIBS_AVAILABLE_
 		return getFrameUsingAVLibs();

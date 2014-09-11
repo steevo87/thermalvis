@@ -15,7 +15,7 @@
 		<param name="normMode" value="3" />
 		<param name="outputType" value="2" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
 		<param name="writeImages" value="false" />
-		<param name="outputFolder" value="~\Documents\Data\optris\output" />
+		<param name="outputFolder" value="~\Documents\Data\miricle\output" />
 		
 		<param name="loopMode" value="true" />
 		

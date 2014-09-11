@@ -28,9 +28,12 @@ void streamerSource::initialize_video_source() {
 	avframe_rgb_size = 0;
 	image = (usb_cam_camera_image_t *) calloc(1, sizeof(usb_cam_camera_image_t));
 
-	/***** FFMPEG AVI Initialization *****/
+    /***** FFMPEG AVI Initialization *****/
+    printf("%s << Initializing video source...\n", __FUNCTION__);
 	av_init_packet(&packet);
+    printf("%s << Registering video source...\n", __FUNCTION__);
 	av_register_all();
+    printf("%s << Video source initialized and registered.\n", __FUNCTION__);
 
 };
 
@@ -58,20 +61,22 @@ int streamerSource::setup_video_file(std::string filename) {
 	//return 0;
 	
 	printf("%s << Trying to set up file...\n", __FUNCTION__);
-	av_register_all();
+    //av_register_all();
 	// Open video file
 	
 	pIFormatCtx = NULL;
 	// AVInputFormat *avIF = av_find_input_format("video4linux2");
 	
-	#ifdef __CONFIG_0__ // Steve's config
-		//pFormatCtx = NULL;
-		int err = avformat_open_input (&pIFormatCtx, filename.c_str(), NULL, NULL);	
-	#endif
-	
-	#ifdef __CONFIG_1__ // Hajmi's config
-		int err = (av_open_input_file(&pIFormatCtx, filename.c_str(), NULL, 0, NULL) != 0);
-	#endif
+#ifdef __CONFIG_0__ // Steve's config
+    //pFormatCtx = NULL;
+    printf("%s << Trying <avformat_open_input> with (%s)...\n", __FUNCTION__, filename.c_str());
+    int err = avformat_open_input (&pIFormatCtx, filename.c_str(), NULL, NULL);
+#endif
+
+#ifdef __CONFIG_1__ // Hajmi's config
+    ROS_INFO("%s << Trying <av_open_input_file> with (%s)...\n", __FUNCTION__, filename.c_str());
+    int err = (av_open_input_file(&pIFormatCtx, filename.c_str(), NULL, 0, NULL) != 0);
+#endif
 	
 	if (err != 0) {
 		//if (av_open_input_file(&pFormatCtx, filename.c_str(), NULL, 0, NULL) != 0) {
@@ -82,9 +87,15 @@ int streamerSource::setup_video_file(std::string filename) {
 			} else if (err == EINVAL) {
 				printf("%s << Error = EINVAL\n", __FUNCTION__);
 			} else {
+
 				printf("%s << Error = (%d)\n", __FUNCTION__, err);
 			}
 			
+            char error_string[256];
+            av_strerror	(err, error_string, sizeof(error_string));
+            printf("%s << Error Description = (%s)\n", __FUNCTION__, error_string);
+            //print_error_and_exit(err, "avformat_open_input()");
+
 			//printf("%s << Couldn't open file (%s)...\n", __FUNCTION__, filename.c_str());
 			
 			return -1; // Couldn't open file
