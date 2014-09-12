@@ -74,6 +74,8 @@ private slots:
 
     void on_detector_3_currentIndexChanged(int index);
 
+    void on_flowThreshold_returnPressed();
+
 private:
     Ui::MainWindow_flow *ui;
 

@@ -472,7 +472,7 @@ void featureTrackerNode::attemptTracking() {
 	successfullyTrackedFeatures += int(globalFinishingPoints.size());
 	lostTrackCount += int(lostTrackIndices.size());
 
-	if ((previousIndex == 0) || (currentIndex == 0)) { ROS_WARN("About to add matches from (%d) to (%d): (%d, %d)", previousIndex, currentIndex, ((int)startingPoints.size()), ((int)finishingPoints.size())); }
+	if (currentIndex == 0) { ROS_WARN("About to add matches from (%d) to (%d): (%d, %d)", previousIndex, currentIndex, ((int)startingPoints.size()), ((int)finishingPoints.size())); }
 	
 	addMatchesToVector(featureTrackVector, previousIndex, startingPoints, currentIndex, finishingPoints, lastAllocatedTrackIndex, configData.minSeparation, false);
 	if (configData.debugMode) addMatchesToVector(displayTracks, previousIndex, startingPoints, currentIndex, finishingPoints, lastAllocatedDisplayTrackIndex, configData.minSeparation);
@@ -1595,7 +1595,7 @@ void featureTrackerNode::handle_camera(cv::Mat& inputImage, sensor_msgs::CameraI
 
 	if (lastCycleFrameTime.toSec() > original_time.toSec()) lastCycleFrameTime = original_time;
 
-	if (currentIndex < previousIndex) {
+	if ((currentIndex < previousIndex) && !undergoingDelay) {
 		ROS_WARN("Current received image index is lower than previous, assuming watching a looped video. (%d) vs (%d) : (%d)", previousIndex, currentIndex, frameCount);
 		featuresVelocity = -1.0;
 		capturedFrameCount++;

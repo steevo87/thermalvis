@@ -26,8 +26,6 @@
 
 	</node>
 	
-	<node name="reconfigure_streamer" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" args="/streamer"/>
-	
 	<node name="flow" pkg="thermalvis" type="flow" output="screen">
 		
 		<param name="debugMode" value="true" />
@@ -53,5 +51,9 @@
 		<remap from="image" to="/thermalvis/flow/image_col"/>
 		<param name="~/autosize" value="true" />
 	</node>
+	
+	<!-- <node name="reconfigure_streamer" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" args="/streamer"/> -->
+	<node name="reconfigure_flow" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" args="/flow"/>
+	<!-- <node name="reconfigure_slam" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" args="/slam"/> -->
 	
 </launch>

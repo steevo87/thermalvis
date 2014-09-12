@@ -73,6 +73,8 @@ public:
     QLabel *detector_2_label;
     QLabel *detector_3_label;
     QLabel *matchingMode_label;
+    QLineEdit *flowThreshold;
+    QLabel *flowThreshold_label;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -137,10 +139,10 @@ public:
         matchingMode->setGeometry(QRect(370, 10, 91, 22));
         maxFrac = new QLineEdit(centralWidget);
         maxFrac->setObjectName(QStringLiteral("maxFrac"));
-        maxFrac->setGeometry(QRect(300, 80, 61, 20));
+        maxFrac->setGeometry(QRect(320, 70, 61, 20));
         maxFrac_label = new QLabel(centralWidget);
         maxFrac_label->setObjectName(QStringLiteral("maxFrac_label"));
-        maxFrac_label->setGeometry(QRect(200, 80, 91, 16));
+        maxFrac_label->setGeometry(QRect(220, 70, 91, 16));
         maxFrac_label->setFrameShape(QFrame::NoFrame);
         maxFrac_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         minSeparation = new QLineEdit(centralWidget);
@@ -152,11 +154,11 @@ public:
         minSeparation_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         maxVelocity_label = new QLabel(centralWidget);
         maxVelocity_label->setObjectName(QStringLiteral("maxVelocity_label"));
-        maxVelocity_label->setGeometry(QRect(200, 110, 91, 16));
+        maxVelocity_label->setGeometry(QRect(220, 100, 91, 16));
         maxVelocity_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         maxVelocity = new QLineEdit(centralWidget);
         maxVelocity->setObjectName(QStringLiteral("maxVelocity"));
-        maxVelocity->setGeometry(QRect(300, 110, 61, 20));
+        maxVelocity->setGeometry(QRect(320, 100, 61, 20));
         newFeaturesPeriod = new QLineEdit(centralWidget);
         newFeaturesPeriod->setObjectName(QStringLiteral("newFeaturesPeriod"));
         newFeaturesPeriod->setGeometry(QRect(570, 100, 51, 20));
@@ -240,6 +242,13 @@ public:
         matchingMode_label->setGeometry(QRect(290, 10, 71, 20));
         matchingMode_label->setFrameShape(QFrame::NoFrame);
         matchingMode_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        flowThreshold = new QLineEdit(centralWidget);
+        flowThreshold->setObjectName(QStringLiteral("flowThreshold"));
+        flowThreshold->setGeometry(QRect(320, 130, 61, 20));
+        flowThreshold_label = new QLabel(centralWidget);
+        flowThreshold_label->setObjectName(QStringLiteral("flowThreshold_label"));
+        flowThreshold_label->setGeometry(QRect(220, 130, 91, 16));
+        flowThreshold_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         MainWindow_flow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow_flow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -339,6 +348,8 @@ public:
         detector_2_label->setText(QApplication::translate("MainWindow_flow", "detector_2", 0));
         detector_3_label->setText(QApplication::translate("MainWindow_flow", "detector_3", 0));
         matchingMode_label->setText(QApplication::translate("MainWindow_flow", "matchingMode", 0));
+        flowThreshold->setText(QString());
+        flowThreshold_label->setText(QApplication::translate("MainWindow_flow", "flowThreshold", 0));
     } // retranslateUi
 
 };

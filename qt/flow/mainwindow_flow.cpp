@@ -49,6 +49,8 @@ void MainWindow_flow::linkRealtimeVariables(flowRealtimeData* sourceData) {
     ui->multiplier_1->setText(QString::number(realtimeParameters->multiplier_1));
     ui->multiplier_2->setText(QString::number(realtimeParameters->multiplier_2));
 
+    ui->flowThreshold->setText(QString::number(realtimeParameters->flowThreshold));
+
 }
 #endif
 
@@ -259,6 +261,16 @@ void MainWindow_flow::on_multiplier_2_returnPressed()
 #endif
 }
 
+
+void MainWindow_flow::on_flowThreshold_returnPressed()
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->flowThreshold = ui->flowThreshold->text().toDouble();
+#else
+    (void)0;
+#endif
+}
+
 void MainWindow_flow::on_detector_1_currentIndexChanged(int index)
 {
 #ifdef _INCLUDE_INTERFACING_
@@ -285,3 +297,4 @@ void MainWindow_flow::on_detector_3_currentIndexChanged(int index)
     (void)index;
 #endif
 }
+
