@@ -943,9 +943,9 @@ streamerNode::streamerNode(streamerData startupData) :
 	(configData.framerate > 0.0) ? configData.pauseMode = false : configData.pauseMode = true;
 
 #ifdef _BUILD_FOR_ROS_
-	if (configData.framerate > 0.0) {
-		timer = nh.createTimer(ros::Duration(1.0 / ((double) configData.framerate)), &streamerNode::timerCallback, this);
-	} else timer = nh.createTimer(ros::Duration(1.0 / 1.0), &streamerNode::timerCallback, this);
+    if (configData.framerate > 0.0) {
+        timer = nh.createTimer(ros::Duration(1.0 / ((double) configData.framerate)), &streamerNode::timerCallback, this);
+    } else timer = nh.createTimer(ros::Duration(1.0 / 1.0), &streamerNode::timerCallback, this);
 #endif
 	
 	// Configure log files
@@ -3161,24 +3161,31 @@ bool streamerNode::getFrameFromVideoFile() {
 }
 
 #ifdef _BUILD_FOR_ROS_
-bool streamerNode::timerCallback(const ros::TimerEvent&) {
+void streamerNode::timerCallback(const ros::TimerEvent&) {
 #else
 bool streamerNode::loopCallback() {
 #endif
-	if (configData.pauseMode) return true;
-	if (configData.captureMode || configData.subscribeMode) return true;
-	if (configData.pollMode || configData.resampleMode) return getFrameFromSubscription();
-	
-	if (configData.loadMode) {
+    bool retVal = false;
+
+    if (configData.pauseMode) {
+        retVal = false;
+    } else if (configData.captureMode || configData.subscribeMode) {
+        retVal = true;
+    } else if (configData.pollMode || configData.resampleMode) {
+        retVal = getFrameFromSubscription();
+    } else if (configData.loadMode) {
 #ifdef _BUILD_FOR_ROS_
-		return getFrameFromDirectoryROS();
+        retVal = getFrameFromDirectoryROS();
 #else
-		return getFrameFromDirectoryNONROS();
+        retVal = getFrameFromDirectoryNONROS();
 #endif
-	}
+    } else if (configData.readMode) {
+        retVal = getFrameFromVideoFile();
+    } else ROS_ERROR("No mode recognized for sourcing the image data!");
 
-	if (configData.readMode) return getFrameFromVideoFile();
-
-	ROS_ERROR("No mode recognized for sourcing the image data!");
-	return false;
+#ifdef _BUILD_FOR_ROS_
+    return;
+#else
+    return retVal;
+#endif
 }

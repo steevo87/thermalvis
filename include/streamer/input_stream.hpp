@@ -331,7 +331,7 @@ public:
 	///brief	Handles a command to perform a NUC. 
 #ifdef _BUILD_FOR_ROS_
 	void handle_nuc_instruction(const std_msgs::Float32::ConstPtr& nuc_msg);
-#elsesetupVideoFile
+#else
 	void handle_nuc_instruction(const bool& perform_nuc);
 #endif
 
@@ -351,7 +351,7 @@ public:
 	
 	///brief	Periodically checks for some things... 
 #ifdef _BUILD_FOR_ROS_
-	bool timerCallback(const ros::TimerEvent& e);
+    void timerCallback(const ros::TimerEvent& e);
 #else
 	bool loopCallback();
 #endif
