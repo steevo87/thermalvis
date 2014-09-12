@@ -9,6 +9,8 @@
 		<param name="filterMode" value="0" /> <!-- 0 for no filter, 1 for gaussian, 2 for bilateral, 3 for adaptive bilateral -->
 		<param name="filterParam" value="2.0" />
 		
+		<param name="markDuplicates" value="true" />
+		
 		<!-- <param name="degreesPerGraylevel" value="0.025" /> --> <!-- value of 0.025 works OK for miricle sequences.. -->
 		<!-- <param name="desiredDegreesPerGraylevel" value="0.05" /> --> <!-- can adjust this to enhance contrast -->
 		

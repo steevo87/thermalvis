@@ -1,33 +1,18 @@
 <launch>
 
 	<node name="streamer_reprocessed" pkg="thermalvis" type="streamer" output="screen">
-	
-		<param name="debugMode" value="true" />
-		<param name="verboseMode" value="false" />
-	
 		<param name="source" value="file" />
-		<!-- <param name="file" value="G:\Data\miricle\icarcv\capture-1.avi" /> -->
-		<param name="file" value="/media/steve/Steve-Research/Data/miricle/icarcv/capture-1.avi" />
+		<param name="file" value="~/Documents/Data/miricle/icarcv/capture-11.avi" />
 		
 		<param name="inputDatatype" value="1" /> <!-- 0 for 8-bit, 1 for raw (14-bit), 2 for multi-modality (2 channel), 3 for depth (16-bit) -->
 		
-		<param name="markDuplicates" value="true" />
-		
-		<!-- <param name="degreesPerGraylevel" value="0.01" /> --> <!-- value of 0.025 works OK for miricle -->
-		<param name="desiredDegreesPerGraylevel" value="0.01" /> <!-- can adjust this to enhance contrast -->
-		
 		<param name="outputType" value="2" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
 		<param name="writeImages" value="true" />
-		<param name="outputFolder" value="/home/steve/Documents/Data/miricle/test" />
+		<param name="outputFolder" value="~/Documents/Data/miricle/icarcv/capture-11" />
 		
-		<param name="loopMode" value="false" />
+		<param name="removeDuplicates" value="true" />
 		
 		<param name="outputColor" value="true" />
-		<param name="output8bit" value="true" />
-		<param name="output16bit" value="false" />
-		
-		<param name="syncMode" value="2" /> <!-- Value of 0 is default. Value 2 can be used when there is no camera_info topic present. -->
-
 	</node>
 	
 	<node pkg="image_view" type="image_view" name="color_thermal" output="screen">

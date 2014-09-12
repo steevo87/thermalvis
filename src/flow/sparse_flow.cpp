@@ -1209,7 +1209,7 @@ void featureTrackerNode::features_loop() {
 		unsigned int activeTrackCount = getActiveTrackCount(featureTrackVector, bufferIndices[(readyFrame-1) % 2], bufferIndices[(readyFrame) % 2]);
 		
 		if ((featuresVelocity == 0.0) && (activeTrackCount > 0)) { 
-			ROS_WARN("featuresVelocity = (%f) : Are you forgetting to mark duplicate images using <streamer>?", featuresVelocity); 
+            ROS_WARN("featuresVelocity = (%f) for (%d / %d) : Are you forgetting to mark duplicate images using <streamer>?", featuresVelocity, ((int)globalFinishingPoints.size()), activeTrackCount);
 		} else if (configData.verboseMode) ROS_INFO("featuresVelocity = (%f) over (%f) seconds", featuresVelocity, (original_time.toSec()-previous_time.toSec()));
 	}
 	

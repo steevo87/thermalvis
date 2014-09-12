@@ -523,26 +523,26 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 		string substitutionString = std::getenv("HOME");
 #endif
 		// Substitute tildes
-		if (folder.size() > 0) {
-			if (folder[0] == '~') {
-				folder.erase(folder.begin());
-				folder = substitutionString + folder;
-			}
-		}
+        string** stringsToRepair;
+        int nStringsToRepair = 3;
+        stringsToRepair = new string*[nStringsToRepair];
+        stringsToRepair[0] = &folder;
+        stringsToRepair[1] = &outputFolder;
+        stringsToRepair[2] = &file;
 
-		if (outputFolder.size() > 0) {
-			if (outputFolder[0] == '~') {
-				outputFolder.erase(outputFolder.begin());
-				outputFolder = substitutionString + outputFolder;
-			}
-		}
-		
+        for (int iii = 0; iii < nStringsToRepair; iii++) {
+            if (stringsToRepair[iii]->size() > 0) {
+                if (stringsToRepair[iii]->at(0) == '~') {
+                    stringsToRepair[iii]->erase(stringsToRepair[iii]->begin());
+                    (*stringsToRepair[iii]) = substitutionString + (*stringsToRepair[iii]);
+                }
 #ifndef _WIN32
-		for (int iii = 0; iii < folder.size(); iii++) {
-			if (folder.at(iii) == '\\') folder.at(iii) = '/';
-		}
+                for (int jjj = 0; jjj < stringsToRepair[iii]->size(); jjj++) {
+                    if (stringsToRepair[iii]->at(jjj) == '\\') stringsToRepair[iii]->at(jjj) = '/';
+                }
 #endif
-
+            }
+        }
 	}
 
 	std::string delimiter = "/";
