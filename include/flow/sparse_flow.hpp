@@ -163,7 +163,7 @@ private:
 	
 	unsigned int numHistoryFrames, bufferIndices[2], olderIndices[MAX_HISTORY_FRAMES];
 	
-	std::vector<featureTrack> displayTracks, featureTrackVector;
+	std::vector<featureTrack> displayTracks;
 
 	std::vector<std::string> predetectedFeatureFiles;
 	
@@ -178,6 +178,8 @@ private:
     int distanceConstraint, peakTracks;
 	
 public:
+
+	std::vector<featureTrack> featureTrackVector;
 
 	///brief	Processes online changes in node configuration and applies them.
 #ifdef _BUILD_FOR_ROS_

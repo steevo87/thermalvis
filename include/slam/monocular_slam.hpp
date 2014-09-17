@@ -10,6 +10,8 @@
 #include "general_resources.hpp"
 #include "ros_resources.hpp"
 #include "opencv_resources.hpp"
+
+#include "tracks.hpp"
 	
 #include "launch.hpp"
 
@@ -64,6 +66,8 @@ private:
 	
 public:
 
+	vector<featureTrack> *featureTrackVector;
+
 	///brief	Processes online changes in node configuration and applies them.
 #ifdef _BUILD_FOR_ROS_
 	void serverCallback(thermalvis::slamConfig &config, uint32_t level);
@@ -77,12 +81,14 @@ public:
 #else
 	slamNode(slamData startupData);
 #endif
-	
+
 	///brief	Sets the debug mode - if true, images and data for visualization will be displayed to the user. 
 	void setDebugMode(bool val) { 
 		debugMode = val;
 		configData.debugMode = val; 
 	}
+
+	bool slam_loop();
 	
 	///brief	Prepares node for termination.
 	void prepareForTermination();

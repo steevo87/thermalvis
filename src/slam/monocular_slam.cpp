@@ -85,6 +85,12 @@ void slamNode::serverCallback(slamConfig &config) {
 	
 }
 
+bool slamNode::slam_loop() {
+	if (featureTrackVector == NULL) return false;
+	ROS_INFO("featureTrackVector.size() = (%d)", featureTrackVector->size());
+	return true;
+}
+
 #ifdef _BUILD_FOR_ROS_
 slamNode::slamNode(ros::NodeHandle& nh, slamData startupData)
 #else
