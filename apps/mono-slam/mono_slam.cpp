@@ -121,8 +121,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (a.exec()) return 1;
-	std::cin.get();
-	return S_OK;
 #endif
 
 	return S_OK;
