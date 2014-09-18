@@ -8,6 +8,7 @@
 #define _THERMALVIS_CLOUDPROC_H_
 
 #include "core/improc.hpp"
+#include "core/colormapping.hpp"
 #include "slam/pcl_resources.hpp"
 
 #define DPM_GRAY					0

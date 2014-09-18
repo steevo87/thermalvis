@@ -7,6 +7,8 @@
 
 #include "general_resources.hpp"
 
+#include "opencv2/opencv.hpp"
+
 // OpenCV
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"

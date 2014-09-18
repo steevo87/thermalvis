@@ -21,6 +21,7 @@
 
 //#include "cv_utils.hpp"
 #include "core/improc.hpp"
+#include "core/colormapping.hpp"
 #include "calibrator/calibration.hpp"
 #include "core/tools.hpp"
 

@@ -2,18 +2,16 @@
  *  \brief	Declarations for local feature detection, description and cv::Matching.
 */
 
-#ifndef _THERMALVIS_FEATURES_H_
-#define _THERMALVIS_FEATURES_H_
+#ifndef THERMALVIS_FEATURES_H
+#define THERMALVIS_FEATURES_H
+
+#include <algorithm>
 
 #include "core/general_resources.hpp"
 #include "core/opencv_resources.hpp"
-
 #include "core/improc.hpp"
 #include "core/tools.hpp"
 #include "core/camera.hpp"
-
-//HGH
-#include <algorithm>
 
 #define MAX_DETECTORS				10
 
@@ -23,14 +21,8 @@
 
 #define DEFAULT_SVM_GRADIENT		-1.42
 
-void fadeImage(const cv::Mat& src, cv::Mat& dst);
-
+/// \brief		Allows sorting of KeyPoint datatypes based on feature strength
 bool KeyPoint_comparison(cv::KeyPoint i, cv::KeyPoint j);
-
-/// \brief		Draws KeyPoints to scale with coloring proportional to feature strength
-void drawRichKeyPoints(const cv::Mat& src, std::vector<cv::KeyPoint>& kpts, cv::Mat& dst);
-
-void draw_circle(cv::Mat& img, cv::Point center, int radius, const cv::Scalar& color, int thickness, int shift);
 
 int getOpticalFlowFlags();
 
@@ -62,8 +54,6 @@ void checkDistances(vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, vector
 
 /// \brief      Prints KeyPoints onto a copy of an image
 void displayKeyPoints(const cv::Mat& image, const vector<cv::KeyPoint>& KeyPoints, cv::Mat& outImg, const cv::Scalar& color, int thickness = 1, bool pointsOnly = false);
-
-void showMatches(const cv::Mat& pim1, vector<cv::Point2f>& pts1, const cv::Mat& pim2, vector<cv::Point2f>& pts2, cv::Mat& drawImg);
 
 /// \brief      Prints KeyPoints onto a copy of an image
 void displayKeyPoints(const cv::Mat& image, const vector<cv::Point2f>& pts, cv::Mat& outImg, cv::Scalar color, int thickness = 1, bool pointsOnly = false);
@@ -141,4 +131,4 @@ void markEdgyTracks(vector<cv::Point2f>& pts, vector<uchar>& statusVec, cameraPa
 
 void reduceWeakFeatures(cv::Mat& im, vector<cv::KeyPoint>& feats, double minResponse);
 
-#endif
+#endif // THERMALVIS_FEATURES_H

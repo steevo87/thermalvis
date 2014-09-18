@@ -32,6 +32,7 @@
 #include "core/launch.hpp"
 #include "core/program.hpp"
 #include "core/improc.hpp"
+#include "core/colormapping.hpp"
 #include "streamer/radiometric.hpp"
 #include "core/camera.hpp"
 

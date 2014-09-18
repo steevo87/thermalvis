@@ -2,14 +2,13 @@
  *  \brief	Declarations for geometric camera parameters.
 */
  
-#ifndef _THERMALVIS_CAMERA_H_
-#define _THERMALVIS_CAMERA_H_
-
-#include "opencv_resources.hpp"
+#ifndef THERMALVIS_CAMERA_H
+#define THERMALVIS_CAMERA_H
 
 #include <math.h>
 
-#include "tools.hpp"
+#include "core/opencv_resources.hpp"
+#include "core/tools.hpp"
 
 /// \brief		Stores camera calibration information in OpenCV format
 struct cameraParameters {
@@ -36,4 +35,4 @@ struct cameraParameters {
 	
 };
 
-#endif
+#endif // THERMALVIS_CAMERA_H

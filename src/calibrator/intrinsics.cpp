@@ -321,7 +321,7 @@ double calculateERE( Size imSize,
 			}
 		
 			char imageName[256];
-			sprintf(imageName, "/home/steve/Dropbox/Steve-Peyman/jfr2013/draft/figures/intrinsics/heatmap-%3.3f.jpg", lim);
+			sprintf(imageName, "heatmap-%3.3f.jpg", lim);
 			imwrite(imageName, heatMapCol);
 				
 			//imshow("heatMap", heatMapCol);
