@@ -2,7 +2,7 @@
  *  \brief	Definitions for serial comms communications for Miricle cameras on Linux
 */
 
-#include "serial_comms.hpp"
+#include "streamer/serial_comms.hpp"
 
 serialCommsDevice::serialCommsDevice() :
 	STOP(FALSE),

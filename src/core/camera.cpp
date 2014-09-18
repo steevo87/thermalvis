@@ -2,7 +2,7 @@
  *  \brief	Definitions for geometric camera parameters.
 */
 
-#include "camera.hpp"
+#include "core/camera.hpp"
 
 cameraParameters::cameraParameters() {
 

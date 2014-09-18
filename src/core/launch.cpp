@@ -1,4 +1,8 @@
-#include "launch.hpp"
+/*! \file	launch.cpp
+ *  \brief	Definitions for processing XML launch files.
+*/
+
+#include "core/launch.hpp"
 
 #ifdef _USE_BOOST_
 

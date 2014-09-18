@@ -4,7 +4,7 @@
 
 #ifdef _USE_PCL_
 
-#include "cloudproc.hpp"
+#include "slam/cloudproc.hpp"
 
 void findThermalCloudPercentiles(pcl::PointCloud<pcl::RGB>::Ptr& thermalCloud, double *vals, double *percentiles, unsigned int num) {
 

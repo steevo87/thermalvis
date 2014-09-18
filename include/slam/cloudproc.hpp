@@ -7,8 +7,8 @@
 #ifndef _THERMALVIS_CLOUDPROC_H_
 #define _THERMALVIS_CLOUDPROC_H_
 
-#include "improc.hpp"
-#include "pcl_resources.hpp"
+#include "core/improc.hpp"
+#include "slam/pcl_resources.hpp"
 
 #define DPM_GRAY					0
 #define DPM_AXES					1

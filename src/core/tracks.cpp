@@ -2,7 +2,7 @@
  *  \brief	Definitions for managing local feature tracks across video sequences.
 */
 
-#include "tracks.hpp"
+#include "core/tracks.hpp"
 
 void featureTrack::set3dLoc(const cv::Point3d& loc) {
 	if (!isTriangulated) {

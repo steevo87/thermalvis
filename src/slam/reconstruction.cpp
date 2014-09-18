@@ -4,7 +4,7 @@
 
 #ifdef _USE_PCL_
 
-#include "reconstruction.hpp"
+#include "slam/reconstruction.hpp"
 
 void summarizeTransformation(const cv::Mat& C, char *summary) {
 

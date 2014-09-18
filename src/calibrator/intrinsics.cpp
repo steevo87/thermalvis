@@ -2,7 +2,7 @@
  *  \brief	Definitions for intrinsic (geometric) calibration.
 */
 
-#include "intrinsics.hpp"
+#include "calibrator/intrinsics.hpp"
 
 double calculateERE( Size imSize,
                      std::vector<Point3f>& physicalPoints,

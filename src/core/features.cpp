@@ -2,7 +2,7 @@
  *  \brief	Definitions for local feature detection, description and matching.
 */
 
-#include "features.hpp"
+#include "core/features.hpp"
 
 
 double calculateFeatureSpeeds(const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2, vector<cv::Point2f>& velocities, double time1, double time2) {

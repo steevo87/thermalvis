@@ -5,12 +5,12 @@
 #ifndef _THERMALVIS_STEREO_H_
 #define _THERMALVIS_STEREO_H_
 
-#include "general_resources.hpp"
-#include "opencv_resources.hpp"
+#include "core/general_resources.hpp"
+#include "core/opencv_resources.hpp"
 
-#include "improc.hpp"
-#include "tools.hpp"
-#include "features.hpp"
+#include "core/improc.hpp"
+#include "core/tools.hpp"
+// #include "flow/features.hpp"
 
 void getContours(const cv::Mat& src, vector<vector<vector<cv::Point> > >& contours);
 void drawContours(const cv::Mat& src, cv::Mat& dst);

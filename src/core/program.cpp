@@ -2,7 +2,7 @@
  *  \brief	Definitions for generic programs.
 */
 
-#include "program.hpp"
+#include "core/program.hpp"
 
 GenericOptions::GenericOptions() : pauseMode(false), isValid(true), wantsToOutput(false), FrameCounter1(0), writeInColor(true) {
 	output_directory = new char[MAX_INPUT_ARG_LENGTH];

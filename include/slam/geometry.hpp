@@ -7,10 +7,10 @@
 #ifndef _THERMALVIS_GEOMETRY_H_
 #define _THERMALVIS_GEOMETRY_H_
 
-#include "general_resources.hpp"
-#include "opencv_resources.hpp"
-#include "pcl_resources.hpp"
-#include "ros_resources.hpp"
+#include "core/general_resources.hpp"
+#include "core/opencv_resources.hpp"
+#include "slam/pcl_resources.hpp"
+#include "core/ros_resources.hpp"
 
 #include <Eigen/Geometry>
 

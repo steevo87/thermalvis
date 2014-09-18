@@ -4,7 +4,7 @@
 
 #ifdef _USE_EIGEN_
 
-#include "geometry.hpp"
+#include "slam/geometry.hpp"
 
 /// \brief 		Minimum number of projections required to achieve the specified number of pairs
 int minProjections(int pairs) {

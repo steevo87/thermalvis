@@ -5,8 +5,8 @@
 #define EXTRINSICS_DEFAULT_FLAGS 0
 
 //#include "cv_utils.hpp"
-#include "improc.hpp"
-#include "calibration.hpp"
+#include "core/improc.hpp"
+#include "calibrator/calibration.hpp"
 
 #define DEFAULT_EXTRINSICS_FLAGS                    CV_CALIB_RATIONAL_MODEL + CV_CALIB_FIX_INTRINSIC
 

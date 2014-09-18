@@ -5,7 +5,7 @@
 #ifndef _THERMALVIS_RADIOMETRIC_H_
 #define _THERMALVIS_RADIOMETRIC_H_
 
-#include "improc.hpp"
+#include "core/improc.hpp"
 
 /// \brief		For configuring and applying radiometric mapping to thermal images
 class rScheme {

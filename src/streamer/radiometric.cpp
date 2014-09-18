@@ -1,7 +1,7 @@
 /*! \file	radiometric.cpp
  *  \brief	Definitions for radiometric image processing.
 */
-#include "radiometric.hpp"
+#include "streamer/radiometric.hpp"
 
 rScheme::rScheme() {
 	// ...

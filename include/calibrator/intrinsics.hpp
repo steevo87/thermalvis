@@ -20,9 +20,9 @@
 #define MIN_BINS 12
 
 //#include "cv_utils.hpp"
-#include "improc.hpp"
-#include "calibration.hpp"
-#include "tools.hpp"
+#include "core/improc.hpp"
+#include "calibrator/calibration.hpp"
+#include "core/tools.hpp"
 
 using namespace std;
 using namespace cv;

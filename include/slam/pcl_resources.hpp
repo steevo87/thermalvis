@@ -6,7 +6,7 @@
 #ifndef _THERMALVIS_PCL_RESOURCES_H_
 #define _THERMALVIS_PCL_RESOURCES_H_
 
-#include "general_resources.hpp"
+#include "core/general_resources.hpp"
 
 //#include "pcl/point_types.h"
 //#include "pcl_ros/io/bag_io.h"

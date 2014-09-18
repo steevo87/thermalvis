@@ -6,7 +6,7 @@
 #define _THERMALVIS_CALIBRATION_HPP_
 
 //#include "cv_utils.hpp"
-#include "improc.hpp"
+#include "core/improc.hpp"
 
 // =============================================
 // INCLUDES

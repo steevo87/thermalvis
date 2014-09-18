@@ -2,7 +2,7 @@
  *  \brief	Definitions for calculations and management relating to keyframes (for loop closure).
 */
 
-#include "keyframes.hpp"
+#include "slam/keyframes.hpp"
 
 bool getValidLocalMaxima(cv::Mat& scores, unsigned int last_iii, unsigned int last_jjj, unsigned int& opt_iii, unsigned int& opt_jjj) {
 
@@ -23,7 +23,7 @@ bool getValidLocalMaxima(cv::Mat& scores, unsigned int last_iii, unsigned int la
 	
 	foundMaxima = true;
 
-	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+	#if defined(max) && defined(min) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 		for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-2,0)); ((int)aaa) < min(((int) last_iii),(int)scores.cols); aaa++) {
 			for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-2,0)); ((int)bbb) < min(((int) last_jjj),(int)scores.rows); bbb++) {
 				if (scores.at<double>(aaa,bbb) > candidateScore) {
@@ -57,7 +57,7 @@ bool getValidLocalMaxima(cv::Mat& scores, unsigned int last_iii, unsigned int la
 		// cell to the direct above is a candidate
 		candidateScore = scores.at<double>(last_iii-1, last_jjj);
 
-		#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		#if defined(min) && defined(max) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 			for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-2,0)); ((int)aaa) < min(((int) last_iii),(int)scores.cols); aaa++) {
 				for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-1,0)); ((int)bbb) < min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
 				
@@ -98,7 +98,7 @@ bool getValidLocalMaxima(cv::Mat& scores, unsigned int last_iii, unsigned int la
 		// current cell is a candidate
 		candidateScore = scores.at<double>(last_iii, last_jjj);
 
-		#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		#if defined(min) && defined(max) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 			for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-1,0)); ((int)aaa) < min(((int) last_iii)+1,(int)scores.cols); aaa++) {
 				for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-1,0)); ((int)bbb) < min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
 				
@@ -142,11 +142,11 @@ bool getValidLocalMaxima(cv::Mat& scores, unsigned int last_iii, unsigned int la
 	
 }
 
-void keyframeStore::findStrongConnections(int idx, vector<unsigned int>& cIndices) {
+void keyframeStore::findStrongConnections(int idx, std::vector<unsigned int>& cIndices) {
 	
 	bool connectionsAllFound = false;
 	
-	vector<unsigned int> kIndices;
+	std::vector<unsigned int> kIndices;
 	kIndices.push_back(idx);
 	
 	//printf("%s << Entered. connections.size() = %d\n", __FUNCTION__, connections.size());

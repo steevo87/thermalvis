@@ -8,17 +8,17 @@
 #define MINIMUM_MATCHING_RANK	10
 #define DEFAULT_DESCRIPTOR_AREA	3.0
 
-#include "program.hpp"
+#include "core/program.hpp"
 
-#include "general_resources.hpp"
-#include "ros_resources.hpp"
-#include "opencv_resources.hpp"
+#include "core/general_resources.hpp"
+#include "core/ros_resources.hpp"
+#include "core/opencv_resources.hpp"
 	
-#include "launch.hpp"
-#include "improc.hpp"
-#include "features.hpp"
-#include "tracks.hpp"
-#include "initialization.hpp"
+#include "core/launch.hpp"
+#include "core/improc.hpp"
+#include "core/features.hpp"
+#include "core/tracks.hpp"
+#include "core/initialization.hpp"
 
 #ifdef _AVLIBS_AVAILABLE_
 #include "video.hpp"

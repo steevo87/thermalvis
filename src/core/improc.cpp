@@ -2,7 +2,7 @@
  *  \brief	Definitions for image processing.
 */
 
-#include "improc.hpp"
+#include "core/improc.hpp"
 
 double scoreColorImage(const cv::Mat& src) {
 	double score = 0.00;

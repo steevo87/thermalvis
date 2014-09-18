@@ -2,7 +2,7 @@
  *  \brief	Definitions for generic tools not depending on libraries such as OpenCV, PCL and ROS.
 */
 
-#include "tools.hpp"
+#include "core/tools.hpp"
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	double round(double d) {

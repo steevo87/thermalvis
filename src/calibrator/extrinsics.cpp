@@ -2,7 +2,7 @@
  *  \brief	Definitions for extrinsic (geometric) calibration
 */
  
-#include "extrinsics.hpp"
+#include "calibrator/extrinsics.hpp"
 
 double calculateExtrinsicERE(int nCams,
                              std::vector<Point3f>& physicalPoints,

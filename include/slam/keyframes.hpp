@@ -5,10 +5,10 @@
 #ifndef _THERMALVIS_KEYFRAMES_H_
 #define _THERMALVIS_KEYFRAMES_H_
 
-#include "general_resources.hpp"
-#include "opencv_resources.hpp"
+#include "core/general_resources.hpp"
+#include "core/opencv_resources.hpp"
 
-#include "features.hpp"
+#include "core/features.hpp"
 
 #define 	KF_CONNECTION_WEAK			0
 #define 	KF_CONNECTION_GEOMETRIC		1
@@ -31,7 +31,7 @@ struct keyframe {
 	
 	unsigned int idx;
 	cv::Mat im;
-	vector<cv::KeyPoint> keypoints;
+	std::vector<cv::KeyPoint> keypoints;
 	cv::Mat descriptors;
 	//Mat pose;
 	bool poseDetermined;
@@ -53,15 +53,15 @@ struct connection {
 	double confidence;
 	cv::Mat relation;
 	bool processed;
-	vector<vector<cv::DMatch> > matches1to2;
+	std::vector<std::vector<cv::DMatch> > matches1to2;
 	
 };
 
 /// \brief		Stores information linking keyframes within a SLAM sequence
 struct keyframeStore {
 	
-	vector<keyframe> keyframes;
-	vector<connection> connections;
+	std::vector<keyframe> keyframes;
+	std::vector<connection> connections;
 	unsigned int count;
 	
 	// Should also store matches
@@ -78,7 +78,7 @@ struct keyframeStore {
 	void addConnection(int idx1, int idx2, int type = KF_CONNECTION_WEAK, cv::Mat rel = cv::Mat());
 	
 	/// \brief      Returns indices of connections that are strongly linked to this keyframe
-	void findStrongConnections(int idx, vector<unsigned int>& cIndices);
+	void findStrongConnections(int idx, std::vector<unsigned int>& cIndices);
 	
 	/// \brief      Finds all matches between weak keyframes
 	void findMatches();

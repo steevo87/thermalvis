@@ -5,7 +5,7 @@
 #ifndef _SERIAL_COMMS_H_
 #define _SERIAL_COMMS_H_
 
-#include "tools.hpp"
+#include "core/tools.hpp"
 
 #ifndef _WIN32
 #include <termios.h>

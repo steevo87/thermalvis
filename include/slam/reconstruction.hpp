@@ -7,12 +7,12 @@
 #ifndef _THERMALVIS_RECONSTRUCTION_H_
 #define _THERMALVIS_RECONSTRUCTION_H_
 
-#include "general_resources.hpp"
-#include "opencv_resources.hpp"
-#include "ros_resources.hpp"
-#include "camera.hpp"
-#include "geometry.hpp"
-#include "tracks.hpp"
+#include "core/general_resources.hpp"
+#include "core/opencv_resources.hpp"
+#include "core/ros_resources.hpp"
+#include "core/camera.hpp"
+#include "slam/geometry.hpp"
+#include "core/tracks.hpp"
 
 #ifdef _BUILD_FOR_ROS_
 #include <visualization_msgs/MarkerArray.h>

@@ -5,15 +5,15 @@
 #ifndef _THERMALVIS_MONOCULAR_SLAM_H_
 #define _THERMALVIS_MONOCULAR_SLAM_H_
 
-#include "program.hpp"
+#include "core/program.hpp"
 
-#include "general_resources.hpp"
-#include "ros_resources.hpp"
-#include "opencv_resources.hpp"
+#include "core/general_resources.hpp"
+#include "core/ros_resources.hpp"
+#include "core/opencv_resources.hpp"
 
-#include "tracks.hpp"
+#include "core/tracks.hpp"
 	
-#include "launch.hpp"
+#include "core/launch.hpp"
 
 #ifdef _BUILD_FOR_ROS_
 #include "slamConfig.h"

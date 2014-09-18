@@ -2,7 +2,7 @@
  *  \brief	Definitions for depth from stereo related functions.
 */
 
-#include "stereo.hpp"
+#include "streamer/stereo.hpp"
 
 void depthFromContours(vector<vector<vector<cv::Point> > >& c1, vector<vector<vector<cv::Point> > >& c2, cv::Mat& disp) {
 	/*

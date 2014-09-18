@@ -5,12 +5,12 @@
 #ifndef _THERMALVIS_FEATURES_H_
 #define _THERMALVIS_FEATURES_H_
 
-#include "general_resources.hpp"
-#include "opencv_resources.hpp"
+#include "core/general_resources.hpp"
+#include "core/opencv_resources.hpp"
 
-#include "improc.hpp"
-#include "tools.hpp"
-#include "camera.hpp"
+#include "core/improc.hpp"
+#include "core/tools.hpp"
+#include "core/camera.hpp"
 
 //HGH
 #include <algorithm>

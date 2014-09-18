@@ -2,7 +2,7 @@
  *  \brief	Monocular SLAM demonstration app
 */
 
-#include "launch.hpp"
+#include "core/launch.hpp"
 #include "streamer/directory_stream.hpp"
 #include "flow/sparse_flow.hpp"
 #include "slam/monocular_slam.hpp"

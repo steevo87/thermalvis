@@ -5,8 +5,8 @@
 #ifndef _THERMALVIS_INPUT_STREAM_H_
 #define _THERMALVIS_INPUT_STREAM_H_
 
-#include "tools.hpp"
-#include "general_resources.hpp"
+#include "core/tools.hpp"
+#include "core/general_resources.hpp"
 
 #include "time.h"
 
@@ -25,15 +25,15 @@
 #include "video.hpp"
 #endif
 
-#include "opencv_resources.hpp"
+#include "core/opencv_resources.hpp"
 
 //#include <opencv2/videoio/videoio.hpp>
 	
-#include "launch.hpp"
-#include "program.hpp"
-#include "improc.hpp"
-#include "radiometric.hpp"
-#include "camera.hpp"
+#include "core/launch.hpp"
+#include "core/program.hpp"
+#include "core/improc.hpp"
+#include "streamer/radiometric.hpp"
+#include "core/camera.hpp"
 
 #ifndef _IS_WINDOWS_
 #include "serial_comms.hpp"
