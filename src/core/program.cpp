@@ -37,6 +37,7 @@ bool GenericOptions::initializeOutput(char *output_dir) {
 		printf("%s << Using data output directory of <%s>.\n", __FUNCTION__, output_dir);
 		wantsToOutput = true;
 		sprintf(output_directory, "%s", output_dir);
+		CreateDirectory(output_directory, NULL);
 		char timestamps_file[256];
 		sprintf(timestamps_file, "%s-timestamps.txt", output_dir);
 		timestamps_stream.open(timestamps_file);

@@ -2,7 +2,7 @@
  *  \brief	Definitions for generic geometric calibration.
 */
 
-#include "calibration.hpp"
+#include "calibrator/calibration.hpp"
 
 void generateRandomIndexArray(int * randomArray, int maxElements, int maxVal)
 {
