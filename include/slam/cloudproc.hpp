@@ -4,12 +4,14 @@
 
 #ifdef _USE_PCL_
 
-#ifndef _THERMALVIS_CLOUDPROC_H_
-#define _THERMALVIS_CLOUDPROC_H_
+#ifndef THERMALVIS_CLOUDPROC_H
+#define THERMALVIS_CLOUDPROC_H
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 #include "core/improc.hpp"
 #include "core/colormapping.hpp"
-#include "slam/pcl_resources.hpp"
 
 #define DPM_GRAY					0
 #define DPM_AXES					1
@@ -51,6 +53,6 @@ public:
 	
 };
 
-#endif
+#endif // THERMALVIS_CLOUDPROC_H
 
-#endif
+#endif // _USE_PCL_

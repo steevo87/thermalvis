@@ -619,3 +619,59 @@ void assignHistoricalPoints(const vector<featureTrack>& src, unsigned int idx_1,
 		}
 	}
 }
+
+void reduceVectorsToTrackedPoints(const vector<cv::Point2f>& points1, vector<cv::Point2f>& trackedPoints1, const vector<cv::Point2f>& points2, vector<cv::Point2f>& trackedPoints2, vector<uchar>& statusVec) {
+	
+	trackedPoints1.clear();
+	trackedPoints2.clear();
+	
+	for (unsigned int iii = 0; iii < statusVec.size(); iii++) {
+		if (statusVec.at(iii) > 0) {
+			trackedPoints1.push_back(points1.at(iii));
+			trackedPoints2.push_back(points2.at(iii));
+		}
+	}
+}
+
+void getPointsFromTracks(vector<featureTrack>& tracks, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int idx1, int idx2) {
+	
+	// Could make more efficient by only testing tracks that are long enough, but
+	// If there are missing frames (acceptable?) then the simple way of achieving this won't work)
+	
+	//printf("%s << searching for indices (%d) & (%d) [tracks.size() = (%d)]\n", __FUNCTION__, idx1, idx2, tracks.size());
+	
+	for (unsigned int iii = 0; iii < tracks.size(); iii++) {
+		
+		//printf("%s << Searching track (%d)...\n", __FUNCTION__, iii);
+		
+		for (unsigned int kkk = 0; kkk < tracks.at(iii).locations.size(); kkk++) {
+			
+			//printf("%s << Searching element (%d) ; (%d)\n", __FUNCTION__, kkk, tracks.at(iii).locations.at(kkk).imageIndex);
+			
+			//if (tracks.at(iii).locations.at(kkk).imageIndex == 0) {
+				//printf("%s << FOUND A ZERO TRACK!!!\n", __FUNCTION__);
+			//}
+			
+			// If the track extends between the two images of interest
+			if (((int)tracks.at(iii).locations.at(kkk).imageIndex) == idx1) {
+				
+				//printf("%s << Found index A (%d)...\n", __FUNCTION__, idx1);
+				
+				for (unsigned int jjj = 0; jjj < tracks.at(iii).locations.size(); jjj++) {
+					
+					//printf("%s << Searching element (%d)...\n", __FUNCTION__, jjj);
+					
+					if (((int)tracks.at(iii).locations.at(jjj).imageIndex) == idx2) {
+						
+						//printf("%s << Found match!\n", __FUNCTION__);
+						
+						pts1.push_back(tracks.at(iii).locations.at(kkk).featureCoord);
+						pts2.push_back(tracks.at(iii).locations.at(jjj).featureCoord);
+						break;
+					}
+				}
+				
+			}
+		}
+	}
+}

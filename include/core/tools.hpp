@@ -69,7 +69,8 @@ int countElementsInFolder(const char* folderName, vector<string>& elementNames, 
 
 void convertUcharToBinary(unsigned char val, int* binaryArray);
 
-
+/// \brief		J.M.P. van Waveren
+float ReciprocalSqrt( float x );
 
 /// \brief      Calls the relevant system function to ensure number pseudo-randomness
 void initializeRandomNums();

@@ -8,41 +8,28 @@ bool getValidLocalMaxima(cv::Mat& scores, unsigned int last_iii, unsigned int la
 
 	// First, find the cell/s that could be optimized now
 	
-	if (last_iii == 0) {
-		return false;
-	}
+	if (last_iii == 0) return false;
 	
-	bool foundMaxima = false;
-	
+	bool foundMaxima = true;
 	
 	// make sure you never select it if it's value is zero - or do that check in the main prog?
 	
-	
-	// cell to the above left is a candidate
-	double candidateScore = scores.at<double>(last_iii-1, last_jjj-1);
-	
-	foundMaxima = true;
+	double candidateScore = scores.at<double>(last_iii-1, last_jjj-1); // cell to the above left is a candidate
 
-	#if defined(max) && defined(min) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-		for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-2,0)); ((int)aaa) < min(((int) last_iii),(int)scores.cols); aaa++) {
-			for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-2,0)); ((int)bbb) < min(((int) last_jjj),(int)scores.rows); bbb++) {
-				if (scores.at<double>(aaa,bbb) > candidateScore) {
-					foundMaxima = false;
-				}
-			}
+#if defined(max) && defined(min) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+	for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-2,0)); ((int)aaa) < min(((int) last_iii),(int)scores.cols); aaa++) {
+		for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-2,0)); ((int)bbb) < min(((int) last_jjj),(int)scores.rows); bbb++) {
+			if (scores.at<double>(aaa,bbb) > candidateScore) foundMaxima = false;
 		}
-	#else
-		for (unsigned int aaa = ((unsigned int) std::max(((int) last_iii)-2,0)); ((int)aaa) < std::min(((int) last_iii),(int)scores.cols); aaa++) {
-			for (unsigned int bbb = ((unsigned int) std::max(((int) last_jjj)-2,0)); ((int)bbb) < std::min(((int) last_jjj),(int)scores.rows); bbb++) {
-				if (scores.at<double>(aaa,bbb) > candidateScore) {
-					foundMaxima = false;
-				}
-			}
+	}
+#else
+	for (unsigned int aaa = ((unsigned int) std::max(((int) last_iii)-2,0)); ((int)aaa) < std::min(((int) last_iii),(int)scores.cols); aaa++) {
+		for (unsigned int bbb = ((unsigned int) std::max(((int) last_jjj)-2,0)); ((int)bbb) < std::min(((int) last_jjj),(int)scores.rows); bbb++) {
+			if (scores.at<double>(aaa,bbb) > candidateScore) foundMaxima = false;
 		}
-	#endif
+	}
+#endif
 
-	
-	
 	double bestCandidateScore = 0.00;
 	
 	if (foundMaxima == true) {
@@ -53,93 +40,56 @@ bool getValidLocalMaxima(cv::Mat& scores, unsigned int last_iii, unsigned int la
 	
 	if (last_jjj == (scores.cols-1)) {
 		foundMaxima = true;
-		
-		// cell to the direct above is a candidate
-		candidateScore = scores.at<double>(last_iii-1, last_jjj);
+		candidateScore = scores.at<double>(last_iii-1, last_jjj); // cell to the direct above is a candidate
 
-		#if defined(min) && defined(max) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-2,0)); ((int)aaa) < min(((int) last_iii),(int)scores.cols); aaa++) {
-				for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-1,0)); ((int)bbb) < min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
-				
-					if (scores.at<double>(aaa,bbb) > candidateScore) {
-						foundMaxima = false;
-					}
-				
-				}
+#if defined(min) && defined(max) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-2,0)); ((int)aaa) < min(((int) last_iii),(int)scores.cols); aaa++) {
+			for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-1,0)); ((int)bbb) < min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
+				if (scores.at<double>(aaa,bbb) > candidateScore) foundMaxima = false;
 			}
-		#else
-			for (unsigned int aaa = ((unsigned int) std::max(((int) last_iii)-2,0)); ((int)aaa) < std::min(((int) last_iii),(int)scores.cols); aaa++) {
-				for (unsigned int bbb = ((unsigned int) std::max(((int) last_jjj)-1,0)); ((int)bbb) < std::min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
-				
-					if (scores.at<double>(aaa,bbb) > candidateScore) {
-						foundMaxima = false;
-					}
-				
-				}
-			}
-		#endif
-		
-		
-		
-		if (foundMaxima == true) {
-			if (candidateScore > bestCandidateScore) {
-				bestCandidateScore = candidateScore;
-				opt_iii = last_iii-1;
-				opt_jjj = last_jjj;
-			}
-			
 		}
+#else
+		for (unsigned int aaa = ((unsigned int) std::max(((int) last_iii)-2,0)); ((int)aaa) < std::min(((int) last_iii),(int)scores.cols); aaa++) {
+			for (unsigned int bbb = ((unsigned int) std::max(((int) last_jjj)-1,0)); ((int)bbb) < std::min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
+				if (scores.at<double>(aaa,bbb) > candidateScore) foundMaxima = false;
+			}
+		}
+#endif
 		
+		if ((foundMaxima == true) && (candidateScore > bestCandidateScore)) {
+			bestCandidateScore = candidateScore;
+			opt_iii = last_iii-1;
+			opt_jjj = last_jjj;
+		}
 	}
 	
 	if ((last_jjj == (scores.cols-1)) && (last_iii == (scores.rows-2))) {
 		foundMaxima = true;
-		
-		// current cell is a candidate
-		candidateScore = scores.at<double>(last_iii, last_jjj);
+		candidateScore = scores.at<double>(last_iii, last_jjj); // current cell is a candidate
 
-		#if defined(min) && defined(max) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-1,0)); ((int)aaa) < min(((int) last_iii)+1,(int)scores.cols); aaa++) {
-				for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-1,0)); ((int)bbb) < min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
-				
-					if (scores.at<double>(aaa,bbb) > candidateScore) {
-						foundMaxima = false;
-					}
-				
-				}
+#if defined(min) && defined(max) // defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		for (unsigned int aaa = ((unsigned int) max(((int) last_iii)-1,0)); ((int)aaa) < min(((int) last_iii)+1,(int)scores.cols); aaa++) {
+			for (unsigned int bbb = ((unsigned int) max(((int) last_jjj)-1,0)); ((int)bbb) < min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
+				if (scores.at<double>(aaa,bbb) > candidateScore) foundMaxima = false;
 			}
-		#else
-			for (unsigned int aaa = ((unsigned int) std::max(((int) last_iii)-1,0)); ((int)aaa) < std::min(((int) last_iii)+1,(int)scores.cols); aaa++) {
-				for (unsigned int bbb = ((unsigned int) std::max(((int) last_jjj)-1,0)); ((int)bbb) < std::min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
-				
-					if (scores.at<double>(aaa,bbb) > candidateScore) {
-						foundMaxima = false;
-					}
-				
-				}
+		}
+#else
+		for (unsigned int aaa = ((unsigned int) std::max(((int) last_iii)-1,0)); ((int)aaa) < std::min(((int) last_iii)+1,(int)scores.cols); aaa++) {
+			for (unsigned int bbb = ((unsigned int) std::max(((int) last_jjj)-1,0)); ((int)bbb) < std::min(((int) last_jjj)+1,(int)scores.rows); bbb++) {
+				if (scores.at<double>(aaa,bbb) > candidateScore) foundMaxima = false;
 			}
-		#endif
+		}
+#endif
 		
-		
-		
-		if (foundMaxima == true) {
-			if (candidateScore > bestCandidateScore) {
-				bestCandidateScore = candidateScore;
-				opt_iii = last_iii;
-				opt_jjj = last_jjj;
-			}
-			
+		if ((foundMaxima == true) && (candidateScore > bestCandidateScore)) {
+			bestCandidateScore = candidateScore;
+			opt_iii = last_iii;
+			opt_jjj = last_jjj;
 		}
 	}
 	
-	//printf("%s << opt_iii = %d; opt_jjj = %d\n", __FUNCTION__, opt_iii, opt_jjj);
-	
-	if (bestCandidateScore > 0.00) {
-		return true;
-	} else {
-		return false;
-	}
-	
+	if (bestCandidateScore > 0.00) return true;
+	return false;
 }
 
 void keyframeStore::findStrongConnections(int idx, std::vector<unsigned int>& cIndices) {
@@ -253,9 +203,7 @@ void keyframe::extractDescriptors(cv::Ptr<cv::DescriptorExtractor>& extractor) {
 	extractor->compute(im, keypoints, descriptors);
 }
 
-keyframeStore::keyframeStore() {
-	count = 0;
-}
+keyframeStore::keyframeStore() { }
 
 bool keyframeStore::getBestPair(int& idx1, int& idx2) {
 
@@ -274,10 +222,6 @@ void keyframeStore::addKeyframe(int idx, cv::Mat& image) {
 	newFrame.poseDetermined = false;
 	
 	keyframes.push_back(newFrame);
-	
-	
-	
-	count++;
 	
 }
 

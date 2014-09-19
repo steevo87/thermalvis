@@ -1,17 +1,18 @@
 /*! \file	reconstruction.hpp
- *  \brief	Declarations for triangulation and other recovery-of-3D structure functions.
+ *  \brief	Declarations for establishing 3D structure of scene.
 */
 
 #ifdef _USE_PCL_
 
-#ifndef _THERMALVIS_RECONSTRUCTION_H_
-#define _THERMALVIS_RECONSTRUCTION_H_
+#ifndef THERMALVIS_RECONSTRUCTION_H
+#define THERMALVIS_RECONSTRUCTION_H
 
 #include "core/general_resources.hpp"
 #include "core/opencv_resources.hpp"
 #include "core/ros_resources.hpp"
 #include "core/camera.hpp"
 #include "slam/geometry.hpp"
+#include "slam/triangulation.hpp"
 #include "core/tracks.hpp"
 
 #ifdef _BUILD_FOR_ROS_
@@ -28,8 +29,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#define DEFAULT_NEAR_RADIUS 0.3
-
 #ifdef _USE_SBA_
 using namespace sba;
 #endif
@@ -42,145 +41,60 @@ using namespace sba;
 #define CLUSTER_MEAN_MODE			1
 #define MAX_REPROJECTION_DISPARITY	20.0
 
-#define EPSILON 0.00001
 // #define __SFM__DEBUG__
 
+// STRUCTURE INITIALIZATION
 
-void getTranslationBetweenCameras(cv::Mat& C1, cv::Mat& C2, double *translations);
+/// \brief 		Calculate the bias towards either F-GRIC or H-GRIC
+double normalizedGRICdifference(std::vector<cv::Point2f>& pts1, std::vector<cv::Point2f>& pts2, cv::Mat& F, cv::Mat& H, cv::Mat& mask_F, cv::Mat& mask_H, double& F_GRIC, double& H_GRIC);
 
-void triangulateTracks(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, cv::Mat *cameras, unsigned int earliest_index, unsigned int latest_index);
+/// \brief 		Calculate the Geometric Robust Information Criterion (GRIC) score
+double calculateGRIC(std::vector<cv::Point2f>& pts1, std::vector<cv::Point2f>& pts2, cv::Mat& rel, cv::Mat& mask, int d, double k, double r, double lambda_3, int distMethod);
 
-unsigned int putativelyTriangulateNewTracks(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, cv::Mat *cameras, unsigned int earliest_index, unsigned int latest_index);
-unsigned int addNewPoints(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, cv::Mat *cameras, unsigned int earliest_index, unsigned int latest_index);
+/// \brief 		Calculate the 'Rho' factor, used in the GRIC calculation
+double calculateRho(double e, double sig, double r, double lambda_3, int d);
 
-void findTriangulatableTracks(vector<featureTrack>& tracks, vector<unsigned int>& indices, vector<unsigned int>& cameras, unsigned int min_length = 10);
-void findTriangulatableTracks3(vector<featureTrack>& tracks, vector<unsigned int>& indices, int latest_index = -1, unsigned int min_length = 10);
+/// \brief 		Calculate one of several alternative geometric distances between two 2D points
+double calcGeometryDistance(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& mat, int distMethod = SAMPSON_DISTANCE);
 
-void filterNearPoints(vector<featureTrack>& featureTrackVector, double x, double y, double z, double limit = DEFAULT_NEAR_RADIUS);
+/// \brief		http://www.ics.forth.gr/~lourakis/homest/
+double lourakisSampsonError(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& H);
 
-// For odometry node, avoids triangulating if pairs of camera views are not sufficiently spaced..
-#ifdef _BUILD_FOR_ROS_
-int initialTrackTriangulationDummy(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation = 0.2, double maxSeparation = 1.0, int minEstimates = 3, double maxStandardDev = 0.1, bool handedness = false, int xCode = 0);
-int initialTrackTriangulation(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation = 0.2, double maxSeparation = 1.0, int minEstimates = 3, double maxStandardDev = 0.1, double maxReprojectionDisparity = MAX_REPROJECTION_DISPARITY);
-#endif
-
-void findP1Matrix(cv::Mat& P1, const cv::Mat& R, const cv::Mat& t);
-
-void reduceVectorsToTrackedPoints(const vector<cv::Point2f>& points1, vector<cv::Point2f>& trackedPoints1, const vector<cv::Point2f>& points2, vector<cv::Point2f>& trackedPoints2, vector<uchar>& statusVec);
-
-int TriangulateNewTracks(vector<featureTrack>& trackVector, const int index1, const int index2, const cv::Mat& K, const cv::Mat& K_inv, const cv::Mat& P0, const cv::Mat& P1, bool initializeOnFocalPlane = false);
-void ExtractPointCloud(vector<cv::Point3d>& cloud, vector<featureTrack>& trackVector);
-void Triangulate(const cv::Point2f& pt1, const cv::Point2f& pt2, const cv::Mat& K, const cv::Mat& Kinv,	const cv::Mat& P1, const cv::Mat& P2, cv::Point3d& xyzPoint, bool debug = false);
-
-void LinearLSTriangulation(cv::Mat& dst, const cv::Point3d& u1, const cv::Mat& P1, const cv::Point3d& u2, const cv::Mat& P2);
-void Triangulate_1(const cv::Point2d& pt1, const cv::Point2d& pt2, const cv::Mat& K, const cv::Mat& Kinv, const cv::Mat& P1, const cv::Mat& P2, cv::Point3d& xyzPoint, bool iterate = true);
-void IterativeLinearLSTriangulation(cv::Mat& dst, const cv::Point3d& u1, const cv::Mat& P1, const cv::Point3d& u2, const cv::Mat& P2);
-
-
+/// \brief		Find the average point position of the dominant cluster
 bool findClusterMean(const vector<cv::Point3d>& estimatedLocations, cv::Point3d& pt3d, int mode = DEFAULT_MEAN_MODE, int minEstimates = 3, double maxStandardDev = 0.1);
 
-void TriangulatePoints(const vector<cv::Point2f>& pt_set1,
-                       const vector<cv::Point2f>& pt_set2,
-                       const cv::Mat& K,
-                       const cv::Mat& Kinv,
-                       const cv::Mat& P,
-                       const cv::Mat& P1,
-                       vector<cv::Point3d>& pointcloud,
-                       vector<cv::Point2f>& correspImg1Pt);
-                       
-void initializeP0(cv::Mat& P);
-void getWandZ(cv::Mat& W, cv::Mat& Winv, cv::Mat& Z);
+/// \brief		Extract the triangulated 3D points from the tracking vector
+void ExtractPointCloud(vector<cv::Point3d>& cloud, vector<featureTrack>& trackVector);
 
+/// \brief		Find the best (out of four possible) transformations between cameras for reconstruction
 bool findBestReconstruction(const cv::Mat& P0, cv::Mat& P1, cv::Mat& R, cv::Mat& t, const cv::SVD& svd, const cv::Mat& K, const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2, bool useDefault = false);
 
-#ifdef _USE_SBA_
-int addToTracks(SysSBA& sys, int im1, vector<cv::Point2f>& pts1, int im2, vector<cv::Point2f>& pts2);
-
-void addFixedCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C);
-void addNewCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C);
-void updateCameraNode_2(SysSBA& sys, const cv::Mat& R, const cv::Mat& t, int image_index);
-void updateCameraNode_2(SysSBA& sys, const cv::Mat& C, int image_index);
-void addBlankCamera(SysSBA& sys, cameraParameters& cameraData, bool isFixed = false);
-
-#ifdef _BUILD_FOR_ROS_
-double retrieveCameraPose(const SysSBA& sys, unsigned int idx, geometry_msgs::Pose& pose);
-#endif
-
-void retrieveCameraPose(const SysSBA& sys, unsigned int idx, cv::Mat& camera);
-void retrieveAllCameras(cv::Mat *allCameraPoses, const SysSBA& sys);
-void retrieveAllPoints(vector<cv::Point3d>& pts, const SysSBA& sys);
-void updateTracks(vector<featureTrack>& trackVector, const SysSBA& sys);
-
-void updateCameraNode(SysSBA& sys, cv::Mat R, cv::Mat t, int img1, int img2);
-void printSystemSummary(SysSBA& sys);
-
-void assignTracksToSBA(SysSBA& sys, vector<featureTrack>& trackVector, int maxIndex);
-
-void addNewPoints(SysSBA& sys, const vector<cv::Point3d>& pc);
-void constrainDodgyPoints(SysSBA& sys);
-
-void updateSystemTracks(SysSBA& sys, vector<featureTrack>& tracks, unsigned int start_index);
-#endif
-
-
-float ReciprocalSqrt( float x );
-
-// maxIndex says what's the latest frame for which tracks should be included
-
-
-void transfer3dPoint(const cv::Point3d& src, cv::Point3d& dst, const cv::Mat& C);
-
-void transfer3DPoints(const vector<cv::Point3d>& src, vector<cv::Point3d>& dst, const cv::Mat& C);
-
-
-
-double getRotationInDegrees(const cv::Mat& R);
-double getDistanceInUnits(const cv::Mat& t);
-
-double getQuaternionAngle(const Eigen::Quaterniond& q1, const Eigen::Quaterniond& q2);
-
-void convertPoint3dToMat(const cv::Point3d& src, cv::Mat& dst);
-
-Quaterniond defaultQuaternion();
-
-void convertProjectionMatCVToEigen(const cv::Mat& mat, Eigen::Matrix< double, 3, 4 >& m);
-void convertProjectionMatEigenToCV(const Eigen::Matrix< double, 3, 4 >& m, cv::Mat& mat);
-
-double dotProduct(const cv::Mat& vec1, const cv::Mat& vec2);
-double dotProduct(const Quaterniond& q1, const Quaterniond& q2);
-
-
-
-//void convertFromMatToQuaternion(const Mat& mat, Quaterniond& quat);
-
-void convertVec4dToMat(const Vector4d& vec4, cv::Mat& mat);
-
+/// \brief		Finds the four possible transformations from the Essential matrix
 void findFourTransformations(cv::Mat *C, const cv::Mat& E, const cv::Mat& K, const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2);
 
-// I think these are known as a cheirality test?
+// \brief		"cheirality test"? This function is when you have the 3D points and both transformation matrices
 int pointsInFront(const cv::Mat& C1, const cv::Mat& C2, const vector<cv::Point3d>& pts);
+
+// \brief		"cheirality test"? This function is when you have the relative transformation matrix, cam matrix, and 2D locations of points..
 int pointsInFront(const cv::Mat& C1, const cv::Mat& K, const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2);
 
-void compileTransform(cv::Mat& c, const cv::Mat& R, const cv::Mat& t);
-void combineTransforms(cv::Mat& CN, const cv::Mat& C0, const cv::Mat& C1);
-void decomposeTransform(const cv::Mat& c, cv::Mat& R, cv::Mat& t);
-
+// \brief		Calculate frame score from geometry score and number of tracked features
 double calcFrameScore(double geomScore, int numFeatures, int numTracks);
 
-//double calcGeometryScore(vector<Point2f>& points1, vector<Point2f>& points2, Mat& F, Mat& Fmask, Mat& H, Mat& Hmask);
+// \brief		Calculate geometry score from H/F inliers and sampson errors
 double calcGeometryScore(int numInliers_H, int numInliers_F, double sampsonError_H, double sampsonError_F);
 
+// \brief		Calculate the sampson error between two vectors
 double calcSampsonError(vector<cv::Point2f>& points1, vector<cv::Point2f>& points2, cv::Mat& H, cv::Mat& Hmask);
 
+// \brief		Calculate the sampson distance between two points and the F matrix
 double calcSampsonDistance(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& F);
 
+// \brief		Calculate the geometry distance only using the inliers
 double calcInlierGeometryDistance(vector<cv::Point2f>& points1, vector<cv::Point2f>& points2, cv::Mat& mat, cv::Mat& mask, int distMethod = SAMPSON_DISTANCE);
 
+// \brief		Overwrite the P0 matrix with the provided intrinsics
 void assignIntrinsicsToP0(cv::Mat& P0, const cv::Mat& K);
-
-// I think this will give you all of the points that were successfully tracked from idx1 to idx2
-void getPointsFromTracks(vector<featureTrack>& tracks, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int idx1, int idx2);
-void getPoints3dFromTracks(vector<featureTrack>& tracks, vector<cv::Point3d>& cloud, int idx1 = -1, int idx2 = -1);
 
 // Gets the 2d locations of points that have been tracked
 void getCorrespondingPoints(vector<featureTrack>& tracks, const vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int idx0, int idx1);
@@ -235,6 +149,6 @@ void getTriangulatedFullSpanPoints(vector<featureTrack>& tracks, vector<cv::Poin
 
 bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<featureTrack>& tracks, unsigned int index, const cv::Mat& guide, unsigned minAppearances = 1, unsigned int iterCount = 100, double maxReprojErr = 4.0, double inliersPercentage = 0.9, double *reprojError = 0, double *pnpInlierProp = 0, bool debug = false);
 	
-#endif
+#endif // THERMALVIS_RECONSTRUCTION_H
 
-#endif
+#endif // _USE_PCL_

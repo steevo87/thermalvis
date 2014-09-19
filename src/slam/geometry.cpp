@@ -642,297 +642,205 @@ void quaternionToMatrix(const Eigen::Quaternion<double>& quat, cv::Mat& mat, boo
 
 }
 
-double normalizedGRICdifference(std::vector<cv::Point2f>& pts1, std::vector<cv::Point2f>& pts2, cv::Mat& F, cv::Mat& H, cv::Mat& mask_F, cv::Mat& mask_H, double& F_GRIC, double& H_GRIC) {
+void getWandZ(cv::Mat& W, cv::Mat& Winv, cv::Mat& Z) {
+	W = cv::Mat::zeros(3, 3, CV_64FC1);
 	
-	int d, k;
-	double lambda_3 = 2.00;
-	double r = 4.00;	// assuming always with 2-frames
-	int distMethod;
+	W.at<double>(0,0) = 0.0;
+	W.at<double>(0,1) = -1.0;
+	W.at<double>(0,2) = 0.0;
 	
-	// determine d & k
-	d = 2;
-	k = 8;
-	distMethod = LOURAKIS_DISTANCE;
-	H_GRIC = calculateGRIC(pts1, pts2, H, mask_H, d, k, r, lambda_3, distMethod);
+	W.at<double>(1,0) = 1.0;
+	W.at<double>(1,1) = 0.0;
+	W.at<double>(1,2) = 0.0;
 	
-	d = 3;
-	k = 7;
-	distMethod = SAMPSON_DISTANCE;
-	F_GRIC = calculateGRIC(pts1, pts2, F, mask_F, d, k, r, lambda_3, distMethod);
+	W.at<double>(2,0) = 0.0;
+	W.at<double>(2,1) = 0.0;
+	W.at<double>(2,2) = 1.0;
 	
-	double retVal = abs(F_GRIC - H_GRIC) / H_GRIC;
+	Winv = cv::Mat::zeros(3, 3, CV_64FC1);
 	
-	return retVal;
+	Winv.at<double>(0,0) = 0.0;
+	Winv.at<double>(0,1) = 1.0;
+	Winv.at<double>(0,2) = 0.0;
 	
+	Winv.at<double>(1,0) = -1.0;
+	Winv.at<double>(1,1) = 0.0;
+	Winv.at<double>(1,2) = 0.0;
 	
+	Winv.at<double>(2,0) = 0.0;
+	Winv.at<double>(2,1) = 0.0;
+	Winv.at<double>(2,2) = 1.0;	
+	
+	Z = cv::Mat::zeros(3, 3, CV_64FC1);
+	
+	Z.at<double>(0,1) = 1.0;
+	Z.at<double>(1,0) = -1.0;
 }
 
-double calculateGRIC(std::vector<cv::Point2f>& pts1, std::vector<cv::Point2f>& pts2, cv::Mat& rel, cv::Mat& mask, int d, double k, double r, double lambda_3, int distMethod) {
+void findP1Matrix(cv::Mat& P1, const cv::Mat& R, const cv::Mat& t) {
+	//cv::Mat W, Winv, Z;
 	
-	double retVal = 0.00;
+	//getWandZ(W, Z);
+	//Winv = W.inv();
 
-	int n = int(pts1.size()); // countNonZero(mask);
+	//R = svd.u * W * svd.vt; //HZ 9.19
+	//t = svd.u.col(2); //u3
 	
-	double lambda_1 = log(r);
-	double lambda_2 = log(r*((double)n));
-	
-	double *e_vals;
-	e_vals = new double[n];
-	
-	// gotta calculate sig and e
-	
-	// they calculate 'e' using:
-	//		for F: point to epipolar line cost
-	//		for H: symmetric transfer error
-	
-	double e_mean = 0.00, sig = 0.00;
-	
-	for (unsigned int iii = 0; iii < pts1.size(); iii++) {
-		
-		e_vals[iii] = calcGeometryDistance(pts1.at(iii), pts2.at(iii), rel, distMethod);
-		e_mean += e_vals[iii] / ((double) n);
-		
-	}
-	
-	// Calculate variance
-	
-	for (unsigned int iii = 0; iii < pts1.size(); iii++) {
-		sig += pow((e_vals[iii] - e_mean), 2.0) / ((double) n);
-	}
-	
-	for (unsigned int iii = 0; iii < pts1.size(); iii++) {
-		retVal += calculateRho(e_vals[iii], sig, r, lambda_3, d);
-	}
-	
-	retVal +=  lambda_1*((double) d)*n + lambda_2*((double) k);
-
-	return retVal;
-	
-}
-
-double calculateRho(double e, double sig, double r, double lambda_3, int d) {
-	
-	double val1 = pow(e, 2.0) / pow(sig, 2.0);
-	double val2 = lambda_3 * (r - ((double) d));
-	
-	return std::min(val1, val2);
-	
-}
-
-double calcGeometryDistance(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& mat, int distMethod) {
-	
-	cv::Mat p1, p2;
-	p1 = cv::Mat::ones(3,1,CV_64FC1);
-	p2 = cv::Mat::ones(3,1,CV_64FC1);
-	
-	p1.at<double>(0,0) = (double) pt1.x;
-	p1.at<double>(1,0) = (double) pt1.y;
-	
-	p2.at<double>(0,0) = (double) pt2.x;
-	p2.at<double>(1,0) = (double) pt2.y;
-	
-	cv::Mat p2t;
-	transpose(p2, p2t);
-	
-	double dist = 0.0;
-	
-	double ri;
-	
-	cv::Mat A;
-	
-	A = p2t * mat * p1; 
-	ri = A.at<double>(0,0); 
-	
-	double r = abs(ri);	// not sure if this is correct and/or needed
+	P1 = cv::Mat(3, 4, CV_64FC1);
 			
-	double rx, ry, rxd, ryd;
+	P1.at<double>(0,0) = R.at<double>(0,0);
+	P1.at<double>(0,1) = R.at<double>(0,1);
+	P1.at<double>(0,2) = R.at<double>(0,2);
+	P1.at<double>(0,3) = t.at<double>(0,0);
 	
-	rx = mat.at<double>(0,0) * pt2.x + mat.at<double>(1,0) * pt2.y + mat.at<double>(2,0);
-	ry = mat.at<double>(0,1) * pt2.x + mat.at<double>(1,1) * pt2.y + mat.at<double>(2,1);
-	rxd = mat.at<double>(0,0) * pt1.x + mat.at<double>(0,1) * pt1.y + mat.at<double>(0,2);
-	ryd = mat.at<double>(1,0) * pt1.x + mat.at<double>(1,1) * pt1.y + mat.at<double>(1,2);
+	P1.at<double>(1,0) = R.at<double>(1,0);
+	P1.at<double>(1,1) = R.at<double>(1,1);
+	P1.at<double>(1,2) = R.at<double>(1,2);
+	P1.at<double>(1,3) = t.at<double>(1,0);
 	
-	double e1, e2;
-	
-	e1 = r / pow( pow(rx, 2.0) + pow(ry, 2.0) , 0.5);
-	e2 = r / pow( pow(rxd, 2.0) + pow(ryd, 2.0) , 0.5);
-	
-	double de;
-	
-	de = pow(pow(e1, 2.0) + pow(e2, 2.0), 0.5);
-	
-	double ds;
-	
-	ds = r * pow((1 / (pow(rx, 2.0) + pow(ry, 2.0) + pow(rxd, 2.0) + pow(ryd, 2.0))), 0.5);
-	
-	switch (distMethod) {
-		case SAMPSON_DISTANCE:
-			dist = ds;
-			break;
-		case ALGEBRAIC_DISTANCE: 
-			dist = r;
-			break;
-		case EPIPOLAR_DISTANCE:
-			dist = de;
-			break;
-		case LOURAKIS_DISTANCE:
-			dist = lourakisSampsonError(pt1, pt2, mat);
-			break;
-		default:
-			break;
-	}
-	
-	return dist;
+	P1.at<double>(2,0) = R.at<double>(2,0);
+	P1.at<double>(2,1) = R.at<double>(2,1);
+	P1.at<double>(2,2) = R.at<double>(2,2);
+	P1.at<double>(2,3) = t.at<double>(2,0);
 }
 
-// http://www.ics.forth.gr/~lourakis/homest/
-double lourakisSampsonError(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& H) {
+void getTranslationBetweenCameras(cv::Mat& C1, cv::Mat& C2, double *translations) {
+	cv::Mat CD = C2 - C1;
+	translations[0] = CD.at<double>(0,3);
+	translations[1] = CD.at<double>(1,3);
+	translations[2] = CD.at<double>(2,3);
+}
+
+void initializeP0(cv::Mat& P) {
+	P = cv::Mat::zeros(3, 4, CV_64FC1);
+	P.at<double>(0,0) = 1.0;
+	P.at<double>(0,1) = 0.0;
+	P.at<double>(0,2) = 0.0;
+	P.at<double>(0,3) = 0.0;
+	P.at<double>(1,0) = 0.0;
+	P.at<double>(1,1) = 1.0;
+	P.at<double>(1,2) = 0.0;
+	P.at<double>(1,3) = 0.0;
+	P.at<double>(2,0) = 0.0;
+	P.at<double>(2,1) = 0.0;
+	P.at<double>(2,2) = 1.0;
+	P.at<double>(2,3) = 0.0;
+}
+
+void transfer3dPoint(const cv::Point3d& src, cv::Point3d& dst, const cv::Mat& C) {
 	
-	double error = 0.0;
+	cv::Mat pt1, pt2;
 	
-	double t1, t10, t100, t104, t108, t112, t118, t12, t122, t125, t126, t129, t13, t139, t14, t141, t144, t15, t150, t153, t161, t167, t17, t174, t18, t19, t193, t199;
-	double t2, t20, t201, t202, t21, t213, t219, t22, t220, t222, t225, t23, t236, t24, t243, t250, t253, t26, t260, t27, t271, t273, t28, t29, t296;
-	double t3, t30, t303, t31, t317, t33, t331, t335, t339, t34, t342, t345, t35, t350, t354, t36, t361, t365, t37, t374, t39;
-	double t4, t40, t41, t42, t43, t44, t45, t46, t47, t49, t51, t57;
-	double t6, t65, t66, t68, t69;
-	double t7, t72, t78;
-	double t8, t86, t87, t90, t95;
+	pt1 = cv::Mat::zeros(4, 1, CV_64FC1);
+	pt2 = cv::Mat::zeros(4, 1, CV_64FC1);
 	
-	double h[9];
+	pt1.at<double>(3, 0) = 1.0;
+	pt2.at<double>(3, 0) = 1.0;
+
 	
-	for (int iii = 0; iii < 3; iii++) {
-		for (int jjj = 0; jjj < 3; jjj++) {
-			h[3*iii + jjj] = H.at<double>(iii,jjj);
-		}
+	pt1.at<double>(0,0) = src.x;
+	pt1.at<double>(1,0) = src.y;
+	pt1.at<double>(2,0) = src.z;
+	
+	pt2 = C * pt1;
+	
+	dst = cv::Point3d(pt2.at<double>(0,0), pt2.at<double>(1,0), pt2.at<double>(2,0));
+	
+}
+
+void transfer3DPoints(const std::vector<cv::Point3d>& src, std::vector<cv::Point3d>& dst, const cv::Mat& C) {
+	
+	cv::Mat pt1, pt2;
+	
+	pt1 = cv::Mat::zeros(4, 1, CV_64FC1);
+	pt2 = cv::Mat::zeros(4, 1, CV_64FC1);
+	
+	pt1.at<double>(3, 0) = 1.0;
+	pt2.at<double>(3, 0) = 1.0;
+	
+	cv::Point3d shiftedPoint;
+		
+	for (unsigned int iii = 0; iii < src.size(); iii++) {
+		pt1.at<double>(0,0) = src.at(iii).x;
+		pt1.at<double>(1,0) = src.at(iii).y;
+		pt1.at<double>(2,0) = src.at(iii).z;
+		
+		pt2 = C * pt1;		// pt2 = C.inv() * pt1;
+		
+		//printf("%s << pt2.at<double>(3,0) = %f\n", __FUNCTION__, pt2.at<double>(3,0));
+		
+		shiftedPoint.x = pt2.at<double>(0,0);
+		shiftedPoint.y = pt2.at<double>(1,0);
+		shiftedPoint.z = pt2.at<double>(2,0);
+		
+		dst.push_back(shiftedPoint);
 	}
 	
-	double m1[2], m2[2];
 	
-	m1[0] = (double) pt1.x;
-	m1[1] = (double) pt1.y;
-	m2[0] = (double) pt2.x;
-	m2[1] = (double) pt2.y;
 	
-	t1 = m2[0];
-	t2 = h[6];
-	t3 = t2*t1;
-	t4 = m1[0];
-	t6 = h[7];
-	t7 = t1*t6;
-	t8 = m1[1];
-	t10 = h[8];
-	t12 = h[0];
-	t13 = t12*t4;
-	t14 = h[1];
-	t15 = t14*t8;
-	t17 = t3*t4+t7*t8+t1*t10-t13-t15-h[2];
-	t18 = m2[1];
-	t19 = t18*t18;
-	t20 = t2*t2;
-	t21 = t19*t20;
-	t22 = t18*t2;
-	t23 = h[3];
-	t24 = t23*t22;
-	t26 = t23*t23;
-	t27 = t6*t6;
-	t28 = t19*t27;
-	t29 = t18*t6;
-	t30 = h[4];
-	t31 = t29*t30;
-	t33 = t30*t30;
-	t34 = t4*t4;
-	t35 = t20*t34;
-	t36 = t2*t4;
-	t37 = t6*t8;
-	t39 = 2.0*t36*t37;
-	t40 = t36*t10;
-	t41 = 2.0*t40;
-	t42 = t8*t8;
-	t43 = t42*t27;
-	t44 = t37*t10;
-	t45 = 2.0*t44;
-	t46 = t10*t10;
-	t47 = t21-2.0*t24+t26+t28-2.0*t31+t33+t35+t39+t41+t43+t45+t46;
-	t49 = t12*t12;
-	t51 = t6*t30;
-	t57 = t20*t2;
-	t65 = t1*t1;
-	t66 = t65*t20;
-	t68 = t65*t57;
-	t69 = t4*t10;
-	t72 = t2*t49;
-	t78 = t27*t6;
-	t86 = t65*t78;
-	t87 = t8*t10;
-	t90 = t65*t27;
-	t95 = -2.0*t49*t18*t51-2.0*t3*t12*t46-2.0*t1*t57*t12*t34-2.0*t3*t12*t33+t66
-	*t43+2.0*t68*t69+2.0*t72*t69-2.0*t7*t14*t46-2.0*t1*t78*t14*t42-2.0*t7*t14*t26+
-	2.0*t86*t87+t90*t35+2.0*t49*t6*t87;
-	t100 = t14*t14;
-	t104 = t100*t2;
-	t108 = t2*t23;
-	t112 = t78*t42*t8;
-	t118 = t57*t34*t4;
-	t122 = t10*t26;
-	t125 = t57*t4;
-	t126 = t10*t19;
-	t129 = t78*t8;
-	t139 = -2.0*t57*t34*t18*t23+2.0*t100*t6*t87+2.0*t104*t69-2.0*t100*t18*t108+
-	4.0*t36*t112+6.0*t43*t35+4.0*t118*t37+t35*t28+2.0*t36*t122+2.0*t125*t126+2.0*
-	t129*t126+2.0*t37*t122-2.0*t78*t42*t18*t30+t43*t21;
-	t141 = t10*t33;
-	t144 = t46*t18;
-	t150 = t46*t19;
-	t153 = t46*t10;
-	t161 = t27*t27;
-	t167 = 2.0*t36*t141-2.0*t144*t108+2.0*t37*t141+t66*t33+t150*t27+t150*t20+
-	4.0*t37*t153+6.0*t43*t46+4.0*t112*t10+t43*t33+t161*t42*t19+t43*t26+4.0*t36*t153
-	;
-	t174 = t20*t20;
-	t193 = 6.0*t35*t46+4.0*t10*t118+t35*t33+t35*t26+t174*t34*t19+t100*t27*t42+
-	t100*t20*t34+t100*t19*t20+t90*t46+t65*t161*t42+t90*t26+t49*t27*t42+t49*t20*t34+
-	t49*t19*t27;
-	t199 = t34*t34;
-	t201 = t12*t23;
-	t202 = t14*t30;
-	t213 = t42*t42;
-	t219 = t66*t46+t100*t26+t46*t100+t174*t199-2.0*t201*t202-2.0*t144*t51+t46*
-	t26+t65*t174*t34+t49*t33+t49*t46+t46*t33+t161*t213-2.0*t7*t14*t20*t34;
-	t220 = t1*t27;
-	t222 = t36*t8;
-	t225 = t7*t14;
-	t236 = t4*t6*t8;
-	t243 = t3*t12;
-	t250 = t46*t46;
-	t253 = t1*t20;
-	t260 = -4.0*t220*t14*t222-4.0*t225*t40-4.0*t220*t15*t10+2.0*t90*t40+2.0*
-	t225*t24+2.0*t72*t236-2.0*t3*t12*t27*t42-4.0*t243*t44+2.0*t66*t44+2.0*t243*t31+
-	t250+2.0*t68*t236-4.0*t253*t12*t236-4.0*t253*t13*t10;
-	t271 = t4*t20;
-	t273 = t8*t18;
-	t296 = t10*t18;
-	t303 = 2.0*t104*t236-2.0*t35*t31+12.0*t35*t44+2.0*t125*t37*t19-4.0*t271*t6*
-	t273*t23+2.0*t36*t37*t26+2.0*t36*t129*t19-4.0*t36*t27*t273*t30+2.0*t36*t37*t33+
-	12.0*t36*t43*t10+12.0*t36*t37*t46-4.0*t271*t296*t23+2.0*t36*t126*t27;
-	t317 = t18*t14;
-	t331 = t14*t2;
-	t335 = t12*t18;
-	t339 = t220*t18;
-	t342 = t7*t30;
-	t345 = t317*t6;
-	t350 = -4.0*t31*t40-2.0*t43*t24+2.0*t37*t126*t20-4.0*t44*t24-4.0*t27*t8*
-	t296*t30-2.0*t253*t317*t30-2.0*t65*t2*t23*t6*t30+2.0*t3*t23*t14*t30-2.0*t12*t19
-	*t331*t6+2.0*t335*t331*t30-2.0*t201*t339+2.0*t201*t342+2.0*t201*t345+2.0*t86*
-	t222;
-	t354 = 1/(t95+t139+t167+t193+t219+t260+t303+t350);
-	t361 = t22*t4+t29*t8+t296-t23*t4-t30*t8-h[5];
-	t365 = t253*t18-t3*t23-t335*t2+t201+t339-t342-t345+t202;
-	t374 = t66-2.0*t243+t49+t90-2.0*t225+t100+t35+t39+t41+t43+t45+t46;
+}
 
-	error = sqrt((t17*t47*t354-t361*t365*t354)*t17+(-t17*t365*t354+t361*t374*
-	t354)*t361);
+double getQuaternionAngle(const Quaterniond& q1, const Quaterniond& q2) {
+	double angle, dot_prod;
+	
+	dot_prod = dotProduct(q1, q2);
+	
+	angle = 2.0 * acos(abs(dot_prod));
+	
+	return angle;
+}
 
-	return error;
-}	
+double dotProduct(const Quaterniond& q1, const Quaterniond& q2) {
+	double prod;
+	
+	prod = q1.x()*q2.x() + q1.y()*q2.y() + q1.z()*q2.z() + q1.w()*q2.w();
+	
+	return prod;
+}
+
+void combineTransforms(cv::Mat& CN, const cv::Mat& C0, const cv::Mat& C1) {
+	CN = cv::Mat::eye(4, 4, CV_64FC1);
+	
+	CN = C0 * C1;
+}
+
+double dotProduct(const cv::Mat& vec1, const cv::Mat& vec2) {
+	double prod;
+	
+	prod = vec1.at<double>(0,0)*vec2.at<double>(0,0) + vec1.at<double>(0,0)*vec2.at<double>(0,0) + vec1.at<double>(0,0)*vec2.at<double>(0,0);
+
+	return prod;
+
+}
+
+double getRotationInDegrees(const cv::Mat& R) {
+	Quaterniond rotation;
+	matrixToQuaternion(R, rotation);
+	Quaterniond dq = defaultQuaternion();
+	double qa = getQuaternionAngle(rotation, dq) * 180.0 / M_PI;
+	
+	return qa;
+
+}
+
+double getDistanceInUnits(const cv::Mat& t) {
+	double retVal = 0.0;
+	
+	retVal += pow(t.at<double>(0,0), 2.0);
+	retVal += pow(t.at<double>(1,0), 2.0);
+	retVal += pow(t.at<double>(2,0), 2.0);
+	retVal = pow(retVal, 0.5);
+	
+	return retVal;
+}
+
+void convertVec4dToMat(const Vector4d& vec4, cv::Mat& mat) {
+	mat = cv::Mat::zeros(3, 1, CV_64FC1);
+	
+	mat.at<double>(0,0) = vec4.x();
+	mat.at<double>(1,0) = vec4.y();
+	mat.at<double>(2,0) = vec4.z();
+	
+}
 	
 #endif

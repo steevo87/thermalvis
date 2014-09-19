@@ -7,6 +7,614 @@
 
 #include "sba.hpp"
 
+void updateSystemTracks(SysSBA& sys, vector<featureTrack>& tracks, unsigned int start_index) {
+	
+	//sys = SysSBA();
+	
+	sys.tracks.clear();
+
+	
+	for (unsigned int iii = 0; iii < tracks.size(); iii++) {
+		
+		//printf("%s << Checking track (%d) (size = %d)\n", __FUNCTION__, iii, tracks.at(iii).locations.size());
+		
+		if (tracks.at(iii).isTriangulated) {
+
+			
+			//printf("%s << Track is triangulated\n", __FUNCTION__);
+			
+			Vector4d temppoint(tracks.at(iii).get3dLoc().x, tracks.at(iii).get3dLoc().y, tracks.at(iii).get3dLoc().z, 1.0);
+			sys.addPoint(temppoint);
+			
+			//printf("%s << Point added; nodes = %d\n", __FUNCTION__, sys.nodes.size());
+			//printf("%s << sys.tracks.size() = %d\n", __FUNCTION__, sys.tracks.size());
+			
+			// sys.tracks.size()-1
+			
+	
+			for (unsigned int jjj = 0; jjj < tracks.at(iii).locations.size(); jjj++) {
+				
+				// Only want to add projections for active nodes
+				
+				if ((((unsigned int) tracks.at(iii).locations.at(jjj).imageIndex) >= start_index) && (((unsigned int) tracks.at(iii).locations.at(jjj).imageIndex) < (start_index+sys.nodes.size()))) {
+					//printf("%s << Assembling projection (%d)(%d)\n", __FUNCTION__, iii, jjj);
+				
+					Vector2d proj;
+					
+					proj.x() = tracks.at(iii).locations.at(jjj).featureCoord.x;
+					proj.y() = tracks.at(iii).locations.at(jjj).featureCoord.y;
+					
+					//printf("%s << Adding projection (track: %d)(loc: %d) node #: [%d]\n", __FUNCTION__, iii, jjj, tracks.at(iii).locations.at(jjj).imageIndex);
+					
+					//printf("%s << vec size (tracks: %d, nodes for this track: %d)\n", __FUNCTION__, tracks.size(), tracks.at(iii).locations.size());
+					//printf("%s << sys size (tracks: %d, nodes: %d)\n", __FUNCTION__, sys.tracks.size(), sys.nodes.size());
+					
+					// If you only have 30 nodes, then how are you adding a track that has an image index of 53?
+					
+					//printf("%s << Adding mono projection: (cam: %d / %d, track: %d / %d) = (%f, %f)\n", __FUNCTION__, tracks.at(iii).locations.at(jjj).imageIndex, sys.nodes.size(), sys.tracks.size()-1, sys.tracks.size(), proj.x(), proj.y());
+					sys.addMonoProj(tracks.at(iii).locations.at(jjj).imageIndex-start_index, sys.tracks.size()-1, proj);
+					
+					//printf("%s << Added.\n", __FUNCTION__);
+					
+					// 0, 53, proj
+				}
+				
+				
+				
+			}
+			
+			//printf("%s << Projections added\n", __FUNCTION__);
+		
+		}
+		
+	}
+	
+}
+
+void addFixedCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C) {
+	addBlankCamera(sys, cameraData, true);
+	updateCameraNode_2(sys, C, sys.nodes.size()-1);
+}
+
+void addNewCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C) {
+	addBlankCamera(sys, cameraData, false);
+	updateCameraNode_2(sys, C, sys.nodes.size()-1);
+}
+
+void updateTracks(vector<featureTrack>& trackVector, const SysSBA& sys) {
+	cv::Point3d tmpPt;
+	for (unsigned int iii = 0; iii < sys.tracks.size(); iii++) {
+		if (iii < trackVector.size()) {
+			tmpPt.x = sys.tracks[iii].point.x();
+			tmpPt.y = sys.tracks[iii].point.y();
+			tmpPt.z = sys.tracks[iii].point.z();
+			trackVector.at(iii).set3dLoc(tmpPt);
+		} // otherwise these points mightn't belong in the track vector..
+		
+	}
+}
+
+void retrieveAllPoints(vector<cv::Point3d>& pts, const SysSBA& sys) {
+	
+	cv::Point3d point_3;
+	
+	for (unsigned int iii = 0; iii < sys.tracks.size(); iii++) {
+		point_3.x = sys.tracks[iii].point.x();
+		point_3.y = sys.tracks[iii].point.y();
+		point_3.z = sys.tracks[iii].point.z();
+			
+		pts.push_back(point_3);
+	}
+}
+
+void retrieveCameraPose(const SysSBA& sys, unsigned int idx, cv::Mat& camera) {
+	
+	cv::Mat R, t;
+	quaternionToMatrix(sys.nodes[idx].qrot, R);
+	convertVec4dToMat(sys.nodes[idx].trans, t);
+	composeTransform(R, t, camera);
+	
+}
+
+double retrieveCameraPose(const SysSBA& sys, unsigned int idx, geometry_msgs::Pose& pose) {
+	
+	cv::Point3d sysPt(sys.nodes[idx].trans(0), sys.nodes[idx].trans(1), sys.nodes[idx].trans(2));
+	cv::Point3d posePt(pose.position.x, pose.position.y, pose.position.z);
+	
+	double dist = distBetweenPts(sysPt, posePt);
+	
+	
+	pose.orientation.w = sys.nodes[idx].qrot.w();
+	pose.orientation.x = sys.nodes[idx].qrot.x();
+	pose.orientation.y = sys.nodes[idx].qrot.y();
+	pose.orientation.z = sys.nodes[idx].qrot.z();
+	
+	pose.position.x = sys.nodes[idx].trans(0);
+	pose.position.y = sys.nodes[idx].trans(1);
+	pose.position.z = sys.nodes[idx].trans(2);
+	
+	return dist;
+	
+}
+		
+
+void retrieveAllCameras(cv::Mat *allCameraPoses, const SysSBA& sys) {
+	
+	for (unsigned int iii = 0; iii < sys.nodes.size(); iii++) {
+		//if (allCameraPoses[iii].rows < 4) {
+			
+		retrieveCameraPose(sys, iii, allCameraPoses[iii]);
+			
+		/*
+		Mat R, t, C;
+		quaternionToMatrix(sys.nodes[iii].qrot, R);
+		convertVec4dToMat(sys.nodes[iii].trans, t);
+		
+		compileTransform(C, R, t);
+		C.copyTo(allCameraPoses[iii]);
+		*/
+		//} 
+	}
+}
+
+void assignTracksToSBA(SysSBA& sys, vector<featureTrack>& trackVector, int maxIndex) {
+	
+	sys.tracks.clear();
+	
+	// ConnMat ??
+	sys.connMat.clear();
+	
+	
+	//printf("%s << Assigning (%d) tracks...\n", __FUNCTION__, trackVector.size());
+	
+	
+	// For each track
+	for (unsigned int iii = 0; iii < trackVector.size(); iii++) {
+		
+		// The first occurence of this feature has to be before the "maxIndex"
+		if (((int)trackVector.at(iii).locations.at(0).imageIndex) < maxIndex) {
+			cv::Point3d tmp3dPt = trackVector.at(iii).get3dLoc();
+			Vector4d temppoint(tmp3dPt.x, tmp3dPt.y, tmp3dPt.z, 1.0);
+			sys.addPoint(temppoint);
+		}
+		
+	}
+	
+	// For each track
+	for (unsigned int iii = 0; iii < trackVector.size(); iii++) {
+		Vector2d proj;
+		
+		// The first occurence of this feature has to be before the "maxIndex"
+		if (((int)trackVector.at(iii).locations.at(0).imageIndex) < maxIndex) {
+			
+			// For each projection
+			for (unsigned int jjj = 0; jjj < trackVector.at(iii).locations.size(); jjj++) {
+
+				// Projection cannot be in an image beyond the currently "active" camera
+				if (trackVector.at(iii).locations.at(jjj).imageIndex < (maxIndex+1)) {
+					proj.x() = trackVector.at(iii).locations.at(jjj).featureCoord.x;
+					proj.y() = trackVector.at(iii).locations.at(jjj).featureCoord.y;
+					
+					sys.addMonoProj(trackVector.at(iii).locations.at(jjj).imageIndex, iii, proj);
+				}
+
+				
+			}
+		}
+		
+							
+	}
+	
+}
+
+void addNewPoints(SysSBA& sys, const vector<cv::Point3d>& pc) {
+	
+	Vector2d proj;
+	
+	proj.x() = 0.0;
+	proj.y() = 0.0;
+	
+	for (unsigned int iii = 0; iii < pc.size(); iii++) {
+		Vector4d temppoint(pc.at(iii).x, pc.at(iii).y, pc.at(iii).z, 1.0);
+			
+		sys.addPoint(temppoint);
+		
+		sys.addMonoProj(0, iii, proj);
+	}
+}
+
+int addToTracks(SysSBA& sys, int im1, vector<cv::Point2f>& pts1, int im2, vector<cv::Point2f>& pts2) {
+	
+	//printSystemSummary(sys);
+	
+	//printf("%s << Entered.\n", __FUNCTION__);
+	
+	Vector2d proj;
+	
+	//printf("%s << oldTrackCount = %d\n", __FUNCTION__, oldTrackCount);
+	//printf("%s << nodes = %d\n", __FUNCTION__, sys.nodes.size());
+	
+	for (unsigned int iii = 0; iii < pts1.size(); iii++) {
+		
+		bool pointInTracks = false;
+		
+		//printf("%s << [%d][%d][%d] : tracks = %d\n", __FUNCTION__, im1, im2, iii, sys.tracks.size());
+		
+		for (unsigned int ttt = 0; ttt < sys.tracks.size(); ttt++) { // NOT oldTrackCount, in case of automatic re-ordering...
+			
+			//printf("%s << old_track(%d) size = %d\n", __FUNCTION__, ttt, sys.tracks.at(ttt).projections.size());
+			
+			int finalIndex = sys.tracks.at(ttt).projections.size() - 1;
+			
+			//printf("%s << [%d] finalIndex = %d\n", __FUNCTION__, ttt, finalIndex);
+			
+			if (finalIndex > -1) {
+				
+				//printf("%s << DEBUG[%d] (%d vs %d)\n", __FUNCTION__, 0, finalIndex, sys.tracks.at(ttt).projections.size());
+				
+				printf("%s << Attempting [%d][%d][%d][%d]\n", __FUNCTION__, im1, im2, iii, ttt);
+				printf("%s << ndi(%d / %d) = \n", __FUNCTION__, finalIndex, ((int)sys.tracks.at(ttt).projections.size()));
+				
+				printf("%s << sizeof() %d\n", __FUNCTION__, int(sizeof(sys.tracks.at(ttt).projections)));
+				
+				if (finalIndex > 0) {
+					printf("%s << (-1) %d\n", __FUNCTION__, sys.tracks.at(ttt).projections.at(finalIndex-1).ndi);
+				}
+				
+				printf("%s << %d\n", __FUNCTION__, sys.tracks.at(ttt).projections.at(finalIndex).ndi);
+				
+				if ((im1 == 2) && (im2 == 3) && (iii == 16) && (ttt == 68)) {
+					//cin.get();
+				}
+				// 3, 4, 0, #49/50 track
+				
+				// why would it say that projections is large enough, but then you can't read ndi...?
+				// or is size returning the wrong info?
+				
+				if (sys.tracks.at(ttt).projections.at(finalIndex).ndi == im1) {
+
+					//printf("%s << DEBUG[%d]\n", __FUNCTION__, 1);
+					
+					if ((sys.tracks.at(ttt).projections.at(finalIndex).kp.x() == pts1.at(iii).x) && (sys.tracks.at(ttt).projections.at(finalIndex).kp.y() == pts1.at(iii).y)) {
+						
+						//printf("%s << DEBUG[%d]\n", __FUNCTION__, 2);
+						
+						//printf("%s << Point exists in this track (%d)!\n", __FUNCTION__, ttt);
+						
+						pointInTracks = true;
+						
+						proj.x() = pts2.at(iii).x;
+						proj.y() = pts2.at(iii).y;
+						
+						if (!sys.addMonoProj(im2, ttt, proj)) {
+							printf("%s << Adding point failed!\n", __FUNCTION__);
+						}
+						
+						//printf("%s << Projection added.\n", __FUNCTION__);
+						
+						break;
+						
+					}
+					
+					//printf("%s << DEBUG[%d]\n", __FUNCTION__, 3);
+				}
+				
+				//printf("%s << DEBUG[%d]\n", __FUNCTION__, 4);
+			}
+			
+			
+
+		}
+		
+		if (!pointInTracks) {
+			
+			//printf("%s << Point not in any of the tracks...\n", __FUNCTION__);
+			
+			int newTrackNum = sys.tracks.size();
+			
+			Vector4d temppoint(0.0, 0.0, 0.0, 1.0);
+			
+			//temppoint.x() = 0.0;
+			//temppoint.y() = 0.0;
+			//temppoint.z() = 0.0;
+			sys.addPoint(temppoint);
+			
+			// Then add a track?
+			//sys.tracks.push_back(Track(temppoint));
+			
+			proj.x() = pts1.at(iii).x;
+			proj.y() = pts1.at(iii).y;
+			
+			if (!sys.addMonoProj(im1, newTrackNum, proj)) {
+				printf("%s << Adding point failed!\n", __FUNCTION__);
+			}
+			
+			proj.x() = pts2.at(iii).x;
+			proj.y() = pts2.at(iii).y;
+			
+			if (!sys.addMonoProj(im2, newTrackNum, proj)) {
+				printf("%s << Adding point failed!\n", __FUNCTION__);
+			}
+			
+			//printf("%s << Two projections added.\n", __FUNCTION__);
+		} else {
+			//printf("%s << Point already in tracks...\n", __FUNCTION__);
+		}
+		
+		
+	}
+	
+	return sys.tracks.size();
+}
+
+void addBlankCamera(SysSBA& sys, cameraParameters& cameraData, bool isFixed) {
+	
+	frame_common::CamParams cam_params;
+	
+	
+    cam_params.fx = cameraData.K.at<double>(0, 0); 	// Focal length in x
+    cam_params.fy = cameraData.K.at<double>(1, 1); 	// Focal length in y
+    
+    cam_params.cx = cameraData.K.at<double>(0, 2); 	// X position of principal point
+    cam_params.cy = cameraData.K.at<double>(1, 2); 	// Y position of principal point
+    cam_params.tx = 0;   							// Baseline (no baseline since this is monocular)
+    
+    // printf("%s << Added camera: (%f, %f, %f, %f)\n", __FUNCTION__, cam_params.fx, cam_params.fy, cam_params.cx, cam_params.cy);
+    
+	Vector4d trans(0, 0, 0, 1);
+            
+	// Don't rotate.
+	Quaterniond rot(1, 0, 0, 0);
+	rot.normalize();
+	
+	//printf("%s << rot = (%f, %f, %f, %f)\n", __FUNCTION__, rot.x(), rot.y(), rot.z(), rot.w());
+
+	// Add a new node to the system.
+	sys.addNode(trans, rot, cam_params, isFixed);	// isFixed
+	
+	sys.nodes.at(sys.nodes.size()-1).setDr(true);
+	
+	if (isFixed) {
+		// sys.nFixed++;
+	}
+	
+	/*
+	sys.nodes[currIndex].normRot();
+	sys.nodes[currIndex].setTransform();
+	sys.nodes[currIndex].setProjection();
+	sys.nodes[currIndex].setDr(true);
+	*/
+
+}
+
+void printSystemSummary(SysSBA& sys) {
+	printf("%s << sys.nodes.size() = %d\n", __FUNCTION__, ((int)sys.nodes.size()));
+	printf("%s << sys.tracks.size() = %d\n", __FUNCTION__, ((int)sys.tracks.size()));
+}
+
+void updateCameraNode_2(SysSBA& sys, const cv::Mat& C, int image_index) {
+	cv::Mat R, t;
+	
+	cv::Mat Cnew;
+	
+	if (C.rows == 4) {
+		C.copyTo(Cnew);
+	} else {
+		Cnew = cv::Mat(4, 4, CV_64FC1);
+		for (unsigned int iii = 0; iii < 3; iii++) {
+			for (unsigned int jjj = 0; jjj < 4; jjj++) {
+				Cnew.at<double>(iii,jjj) = C.at<double>(iii,jjj);
+				
+			}
+		}
+		
+		Cnew.at<double>(3,0) = 0.0;
+		Cnew.at<double>(3,1) = 0.0;
+		Cnew.at<double>(3,2) = 0.0;
+		Cnew.at<double>(3,3) = 1.0;
+	}
+	
+	cv::Mat C_inv = Cnew.inv();
+	
+	decomposeTransform(C, R, t);
+	
+	for (unsigned int iii = 0; iii < 3; iii++) {
+		for (unsigned int jjj = 0; jjj < 4; jjj++) {
+			sys.nodes.at(image_index).w2n(iii,jjj) = C.at<double>(iii,jjj);
+		}
+	}
+	
+	updateCameraNode_2(sys, R, t, image_index);
+}
+
+void updateCameraNode_2(SysSBA& sys, const cv::Mat& R, const cv::Mat& t, int image_index) {
+	Vector4d translation;
+	Quaterniond rotation;
+	
+	// printf("%s << t = (%f, %f, %f, %f)\n", __FUNCTION__, t.at<double>(0,0), t.at<double>(1,0), t.at<double>(2,0), t.at<double>(3,0));
+	
+	translation.x() = t.at<double>(0,0);
+	translation.y() = t.at<double>(1,0);
+	translation.z() = t.at<double>(2,0);
+	
+	//printf("%s << Assigning (%d) translation: (%f, %f, %f)\n", __FUNCTION__, image_index, translation.x(), translation.y(), translation.z());
+	
+	matrixToQuaternion(R, rotation);
+	
+	//Quaterniond dq = defaultQuaternion();
+	//double qa = getQuaternionAngle(rotation, dq);
+	
+	//printf("%s << Angle = %f / %f\n", __FUNCTION__, qa, qa * 180.0 / M_PI);
+	
+	//cout << __FUNCTION__ << " << R = " << R << endl;
+	
+	//printf("%s << rotation = (%f, %f, %f, %f)\n", __FUNCTION__, rotation.x(), rotation.y(), rotation.z(), rotation.w());
+	
+	//cv::Mat R2;
+	//quaternionToMatrix(rotation, R2);
+	
+	//cout << __FUNCTION__ << " << R2 = " << R2 << endl;
+	
+	sys.nodes[image_index].trans = translation;
+	sys.nodes[image_index].qrot = rotation;
+	
+}
+
+void updateCameraNode(SysSBA& sys, cv::Mat R, cv::Mat t, int img1, int img2) {
+	
+	cv::Mat full_R;
+	
+	Rodrigues(R, full_R);
+	
+	printf("%s << Trying to determine position of camera node (%d, %d)...\n", __FUNCTION__, img1, img2);
+	
+	cout << "R = " << R << endl;
+	cout << "t = " << t << endl;
+	
+	// First camera parameters
+	Vector4d temptrans = sys.nodes[img1].trans;
+	Quaterniond tempqrot = sys.nodes[img1].qrot;
+	
+	//printf("%s << Debug [%d]\n", __FUNCTION__, 0);
+	
+	// NEED TO COMBINE TRANSLATION AND QUATERNION FOR PREVIOUS CAMERA WITH THE ONE FOR THE PRESENT ONE...
+	// NEED TO KNOW: 	CONVERSION FROM R/t to quaternion
+	//					mapping of one co-ordinate system onto another
+	
+	// Establish ORIGIN relative to NODE A
+			Vector4d temptrans_N;
+			Quaterniond tempqrot_N;
+			temptrans_N.x() = -temptrans.x();
+			temptrans_N.y() = -temptrans.y();
+			temptrans_N.z() = -temptrans.z();
+			tempqrot_N.x() = tempqrot.x();
+			tempqrot_N.y() = tempqrot.y();
+			tempqrot_N.z() = tempqrot.z();
+			tempqrot_N.w() = -tempqrot.w();
+			tempqrot_N.normalize();
+			
+			sba::Node negativeOrigin;
+			negativeOrigin.trans = temptrans_N;
+			negativeOrigin.qrot = tempqrot_N;
+	
+	//Mat testMat;
+	//Quaterniond testQuaterniond;
+	//printf("%s << q(1) = (%f, %f, %f, %f)\n", __FUNCTION__, tempqrot_N.x(), tempqrot_N.y(), tempqrot_N.z(), tempqrot_N.w());
+	//convertFromQuaternionToMat(tempqrot_N, testMat);
+	//cout << "testMat = " << testMat << endl;
+	//convertFromMatToQuaternion(testMat, testQuaterniond);
+	//printf("%s << q(2) = (%f, %f, %f, %f)\n", __FUNCTION__, testQuaterniond.x(), testQuaterniond.y(), testQuaterniond.z(), testQuaterniond.w());	
+	//convertFromQuaternionToMat(testQuaterniond, testMat);
+	//cout << "testMat2 = " << testMat << endl;
+	
+	//cout << "temptrans_N = " << temptrans_N << endl;
+	//cout << "tempqrot_N = " << tempqrot_N << endl;
+			
+	//printf("%s << Debug [%d]\n", __FUNCTION__, 1);
+			
+	// Establish NODE B relative to NODE A
+				
+			Vector4d temptrans_B;
+			Quaterniond tempqrot_B;
+			temptrans_B.x() = t.at<double>(0,0);
+			temptrans_B.y() = t.at<double>(1,0);
+			temptrans_B.z() = t.at<double>(2,0);
+			
+			matrixToQuaternion(full_R, tempqrot_B);
+			
+			//cout << "full_R = " << full_R << endl;
+			//printf("%s << tempqrot_B = (%f, %f, %f, %f)\n", __FUNCTION__, tempqrot_B.x(), tempqrot_B.y(), tempqrot_B.z(), tempqrot_B.w());
+			
+			//tempqrot_B.x() = R.at<double>(0,0);		// not correct conversion to quaternion
+			//tempqrot_B.y() = R.at<double>(1,0);
+			//tempqrot_B.z() = R.at<double>(2,0);
+			tempqrot_B.normalize();
+			
+			sba::Node secondNode;
+			secondNode.trans = temptrans_B;
+			secondNode.qrot = tempqrot_B;
+			
+	//printf("%s << Debug [%d]\n", __FUNCTION__, 2);
+	
+	// Find transform from Origin to camera B
+
+			Eigen::Matrix< double, 4, 1 > transformationMat;
+			Eigen::Quaternion< double > quaternionVec;
+
+			sba::transformN2N(transformationMat, quaternionVec, negativeOrigin, secondNode);
+			
+	//printf("%s << Debug [%d]\n", __FUNCTION__, 3);
+			
+	// Assign this transformation to the new camera mode
+	
+			temptrans.x() = transformationMat(0,0);
+			temptrans.y() = transformationMat(1,0);
+			temptrans.z() = transformationMat(2,0);
+		
+			tempqrot.x() = quaternionVec.x();
+			tempqrot.y() = quaternionVec.y();
+			tempqrot.z() = quaternionVec.z();
+			tempqrot.normalize();
+
+			sys.nodes[img2].trans = temptrans;
+			sys.nodes[img2].qrot = tempqrot;
+
+			sys.nodes[img2].normRot();
+			sys.nodes[img2].setTransform();
+			sys.nodes[img2].setProjection();
+			sys.nodes[img2].setDr(true);
+			
+	//printf("%s << Debug [%d]\n", __FUNCTION__, 4);
+	
+	return;
+	
+	// OLD
+
+
+	// Add the new translations
+	temptrans.x() += t.at<double>(0,0);
+	temptrans.y() += t.at<double>(1,0);
+	temptrans.z() += t.at<double>(2,0);
+	
+	// This is probably not a valid conversion 
+	
+	tempqrot.x() += R.at<double>(0,0);
+	tempqrot.y() += R.at<double>(1,0);
+	tempqrot.z() += R.at<double>(2,0);
+	tempqrot.normalize();
+
+	sys.nodes[img2].trans = temptrans;
+	sys.nodes[img2].qrot = tempqrot;
+
+	// These methods should be called to update the node.
+	
+	sys.nodes[img2].normRot();
+	sys.nodes[img2].setTransform();
+	sys.nodes[img2].setProjection();
+	sys.nodes[img2].setDr(true);
+	
+}
+
+
+void constrainDodgyPoints(SysSBA& sys) {
+	
+	for (unsigned int iii = 0; iii < sys.nodes.size(); iii++) {
+		if ((abs(sys.nodes[iii].trans.x()) > POSITION_LIMIT) || (abs(sys.nodes[iii].trans.y()) > POSITION_LIMIT) || (abs(sys.nodes[iii].trans.z()) > POSITION_LIMIT)) {
+			sys.nodes[iii].trans.x() = 0.0;
+			sys.nodes[iii].trans.y() = 0.0;
+			sys.nodes[iii].trans.z() = 0.0;
+		}
+	}
+	
+	for (unsigned int iii = 0; iii < sys.tracks.size(); iii++) {
+		if ((abs(sys.tracks[iii].point.x()) > POSITION_LIMIT) || (abs(sys.tracks[iii].point.y()) > POSITION_LIMIT) || (abs(sys.tracks[iii].point.z()) > POSITION_LIMIT)) {
+			sys.tracks[iii].point.x() = 0.0;
+			sys.tracks[iii].point.y() = 0.0;
+			sys.tracks[iii].point.z() = 0.0;
+		}
+	}
+}
+
 void findRelevantIndices(vector<featureTrack>& tracks, vector<unsigned int>& triangulated, vector<unsigned int>& untriangulated, unsigned int last_index, unsigned int new_index) {
 	
 	//unsigned int min_sightings = max(0, (((int) new_index) - ((int) last_index)) / 2);

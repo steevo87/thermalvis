@@ -106,6 +106,18 @@ void initializeRandomNums() {
 #endif
 }
 
+float ReciprocalSqrt( float x ) {
+	long i;
+	float y, r;
+	
+	y = x * 0.5f;
+	i = *(long *)( &x );
+	i = 0x5f3759df - ( i >> 1 );
+	r = *(float *)( &i );
+	r = r * ( 1.5f - r * r * y );
+	return r;
+}
+
 void findLinearModel(double* x, double* y, int termsToConsider, double &m, double &c) {
 	
 	double mean_x = 0.0, mean_y = 0.0;

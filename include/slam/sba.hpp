@@ -119,6 +119,35 @@ void copySys(const SysSBA& src, SysSBA& dst);
 double optimizeSubsystem(cameraParameters& camData, cv::Mat *C, vector<unsigned int>& c_i, vector<featureTrack>& tracks, vector<unsigned int>& t_i, unsigned int iterations = 100);
 
 void finishTracks(vector<featureTrack>& tracks, vector<cv::Point2f>& pts, double retainProp = 0.80, unsigned int maxOccurrences = 0);
+
+int addToTracks(SysSBA& sys, int im1, vector<cv::Point2f>& pts1, int im2, vector<cv::Point2f>& pts2);
+
+void addFixedCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C);
+void addNewCamera(SysSBA& sys, cameraParameters& cameraData, const cv::Mat& C);
+void updateCameraNode_2(SysSBA& sys, const cv::Mat& R, const cv::Mat& t, int image_index);
+void updateCameraNode_2(SysSBA& sys, const cv::Mat& C, int image_index);
+void addBlankCamera(SysSBA& sys, cameraParameters& cameraData, bool isFixed = false);
+
+#ifdef _BUILD_FOR_ROS_
+double retrieveCameraPose(const SysSBA& sys, unsigned int idx, geometry_msgs::Pose& pose);
+#endif
+
+void retrieveCameraPose(const SysSBA& sys, unsigned int idx, cv::Mat& camera);
+void retrieveAllCameras(cv::Mat *allCameraPoses, const SysSBA& sys);
+void retrieveAllPoints(vector<cv::Point3d>& pts, const SysSBA& sys);
+void updateTracks(vector<featureTrack>& trackVector, const SysSBA& sys);
+
+void updateCameraNode(SysSBA& sys, cv::Mat R, cv::Mat t, int img1, int img2);
+void printSystemSummary(SysSBA& sys);
+
+void assignTracksToSBA(SysSBA& sys, vector<featureTrack>& trackVector, int maxIndex);
+
+void addNewPoints(SysSBA& sys, const vector<cv::Point3d>& pc);
+void constrainDodgyPoints(SysSBA& sys);
+
+void updateSystemTracks(SysSBA& sys, vector<featureTrack>& tracks, unsigned int start_index);
+
+
 #endif
 
 #endif

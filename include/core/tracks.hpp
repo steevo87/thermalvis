@@ -67,6 +67,9 @@ unsigned int getActiveTrackCount(const vector<featureTrack>& featureTrackVector,
 
 void removeObsoleteElements(vector<featureTrack>& featureTrackVector, const vector<unsigned int>& activeFrameIndices);
 
+// \brief		I think this will give you all of the 2D projections for points that were successfully tracked from idx1 to idx2
+void getPointsFromTracks(vector<featureTrack>& tracks, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, int idx1, int idx2);
+
 /// \brief		Search structure for tracks, then predict their future locations
 void assignEstimatesBasedOnVelocities(const vector<featureTrack>& featureTrackVector, const vector<cv::Point2f>& startingPoints, vector<cv::Point2f>& finishingPoints, unsigned int idx, double time1, double time2);
 
@@ -98,5 +101,7 @@ bool createTrackMatrix(const vector<featureTrack>& src, cv::Mat& dst, int latest
 
 /// \brief		Find only the features from the first image that have NOT been tracked successfully in the second
 void assignHistoricalPoints(const vector<featureTrack>& src, unsigned int idx_1, unsigned int idx_2, vector<cv::Point2f>& dst);
+
+void reduceVectorsToTrackedPoints(const vector<cv::Point2f>& points1, vector<cv::Point2f>& trackedPoints1, const vector<cv::Point2f>& points2, vector<cv::Point2f>& trackedPoints2, vector<uchar>& statusVec);
 
 #endif
