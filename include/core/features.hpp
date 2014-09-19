@@ -21,6 +21,8 @@
 
 #define DEFAULT_SVM_GRADIENT		-1.42
 
+#define DO_EPIPOLAR_CHECK			false
+
 /// \brief		Allows sorting of KeyPoint datatypes based on feature strength
 bool KeyPoint_comparison(cv::KeyPoint i, cv::KeyPoint j);
 

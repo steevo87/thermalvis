@@ -390,9 +390,9 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 		if (debugFlag) { printf("%s << Debug (%d.%d) : (%lu, %lu)\n", __FUNCTION__, 7, 1, pts1.size(), pts2.size()); }
 		
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-		filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), true);
+		filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), DO_EPIPOLAR_CHECK);
 #else
-		filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), true);
+		filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), DO_EPIPOLAR_CHECK);
 #endif
 		
 		if (0) {
@@ -424,9 +424,9 @@ void trackPoints(const cv::Mat& im1, const cv::Mat& im2, vector<cv::Point2f>& pt
 		
 		if (guiding) {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-			filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), true);
+			filterVectors(pts1, pts2, statusVec, ((double) max(im1.rows, im1.cols)), DO_EPIPOLAR_CHECK);
 #else
-			filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), true);
+			filterVectors(pts1, pts2, statusVec, ((double) std::max(im1.rows, im1.cols)), DO_EPIPOLAR_CHECK);
 #endif
 			
 		} else filterVectors(pts1, pts2, statusVec, ((double) distanceConstraint));
