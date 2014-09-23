@@ -443,7 +443,7 @@ void optimizeCalibrationSet(Size imSize,
     vector<unsigned int> currentIndices, topIndices, bestIndices;
 
     // For optimum number of frames
-    double prevBestScore = 9e99;
+    double prevBestScore = std::numeric_limits<double>::max();
     int optimumNum = 0;
     unsigned long int possibleCombos;
 
@@ -455,7 +455,7 @@ void optimizeCalibrationSet(Size imSize,
     int randomNum = 0;
     double testingProbability = 1.00;
 
-    double bestErr = 9e99;
+    double bestErr = std::numeric_limits<double>::max();
 
     // Random trials code
     int nTrials = 20;
@@ -1010,13 +1010,13 @@ void optimizeCalibrationSet(Size imSize,
             printf("%s << Searching for absolute optimum.\n", __FUNCTION__);
         }
 
-        bestScore = 9e99;
+        bestScore = std::numeric_limits<double>::max();
 
         // For each different value of N
         for (int N = 0; N < num; N++)
         {
 
-            topScore = 9e99;
+            topScore = std::numeric_limits<double>::max();
 
             printf("%s << N(+1) = %d\n", __FUNCTION__, N+1);
 
@@ -1091,7 +1091,7 @@ void optimizeCalibrationSet(Size imSize,
     case BEST_OF_RANDOM_PATTERNS_OPTIMIZATION_CODE:     //              MANY RANDOM TRIALS FRAME SELECTION
         // ==================================================
 
-        bestErr = 9e99;
+        bestErr = std::numeric_limits<double>::max();
 
         printf("%s << Random trial selection\n", __FUNCTION__);
 

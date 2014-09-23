@@ -303,7 +303,7 @@ double fitFixedLine(vector<unsigned short>& x, vector<unsigned short>& y, double
 	printf("%s << minVal = (%d); maxVal = (%d)\n", __FUNCTION__, minVal, maxVal);
 	
 	
-	double bestError = 9e99;
+	double bestError = std::numeric_limits<double>::max();
 	unsigned int bestCount = 0;
 	
 	//for (double t_shift = -abs(maxVal-minVal); t_shift < abs(maxVal-minVal); t_shift += 0.5) {

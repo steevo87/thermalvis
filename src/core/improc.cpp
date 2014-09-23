@@ -1750,8 +1750,8 @@ void shiftIntensities(cv::Mat& im, double scaler, double shifter, double downer)
 
 void findIntensityValues(double *vals, cv::Mat& im, cv::Mat& mask) {
 
-	vals[0] = 9e99;
-	vals[1] = -9e99;
+	vals[0] = std::numeric_limits<double>::max();
+	vals[1] = -std::numeric_limits<double>::max();
 	vals[2] = 0.0;
 
 	unsigned int activeCount = countNonZero(mask);
@@ -2223,7 +2223,7 @@ void generateHistogram(cv::Mat& src, cv::Mat& dst, double* im_hist, double* im_s
 }
 
 cv::Mat normForDisplay(cv::Mat origMat) {
-    double minVal = 9e99, maxVal = -9e99;
+    double minVal = std::numeric_limits<double>::max(), maxVal = -std::numeric_limits<double>::max();
 
     for (int iii = 0; iii < origMat.rows; iii++) {
         for (int jjj = 0; jjj < origMat.cols; jjj++) {

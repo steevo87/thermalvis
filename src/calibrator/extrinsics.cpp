@@ -218,7 +218,7 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
     double err;
 
     // For optimum number of frames
-    double prevBestScore = 9e99;
+    double prevBestScore = std::numeric_limits<double>::max();
     int optimumNum = 0;
 
     double testingProbability = 1.00;

@@ -16,7 +16,13 @@
 #define DPM_GRAY					0
 #define DPM_AXES					1
 
+#define CLUSTER_MEAN_MODE			1
+#define DEFAULT_MEAN_MODE			0
+
 void findThermalCloudPercentiles(pcl::PointCloud<pcl::RGB>::Ptr& thermalCloud, double *vals, double *percentiles, unsigned int num);
+
+/// \brief		Find the average point position of the dominant cluster
+bool findClusterMean(const vector<cv::Point3d>& estimatedLocations, cv::Point3d& pt3d, int mode = DEFAULT_MEAN_MODE, int minEstimates = 3, double maxStandardDev = 0.1);
 	
 class cCloudScheme : public cScheme {
 	

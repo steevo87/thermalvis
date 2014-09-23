@@ -1665,7 +1665,7 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	configData.wantsToUndistort = config.wantsToUndistort;
 	
 	if (configData.autoTemperature != config.autoTemperature) {
-		lastMinDisplayTemp = -9e99, lastMaxDisplayTemp = 9e99;
+		lastMinDisplayTemp = -std::numeric_limits<double>::max(), lastMaxDisplayTemp = std::numeric_limits<double>::max();
 		configData.autoTemperature = config.autoTemperature;
 	}
 	

@@ -159,7 +159,7 @@ void ProcessingThread::run() {
 
 			if (wantsSlam && (featureTracks != NULL)) {
 				_slamNode->serverCallback(*_slamData);
-				_slamNode->slam_loop();
+				_slamNode->main_loop();
 			}
 		}
 		
@@ -219,41 +219,37 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	// === FLOW NODE === //
 	// Preliminary settings
-	wantsFlow = trackerStartupData->assignFromXml(xP);
+	if (!trackerStartupData->assignFromXml(xP)) return true;
 
-	if (wantsFlow) {
-		// Real-time changeable variables
-		fcData->assignStartingData(*trackerStartupData);
+	// Real-time changeable variables
+	if (!fcData->assignStartingData(*trackerStartupData)) return false;
 
-		#ifdef _DEBUG
-		if (
-			((fcData->getDetector1() != DETECTOR_FAST) && (fcData->getDetector1() != DETECTOR_OFF)) || 
-			((fcData->getDetector2() != DETECTOR_FAST) && (fcData->getDetector2() != DETECTOR_OFF)) || 
-			((fcData->getDetector3() != DETECTOR_FAST) && (fcData->getDetector3() != DETECTOR_OFF))
-		) {
-			ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
-		}
-		#endif
-
-		fM = new featureTrackerNode(*trackerStartupData);
-		fM->initializeOutput(output_directory);
-		fM->setWriteMode(writeMode);
+	#ifdef _DEBUG
+	if (
+		((fcData->getDetector1() != DETECTOR_FAST) && (fcData->getDetector1() != DETECTOR_OFF)) || 
+		((fcData->getDetector2() != DETECTOR_FAST) && (fcData->getDetector2() != DETECTOR_OFF)) || 
+		((fcData->getDetector3() != DETECTOR_FAST) && (fcData->getDetector3() != DETECTOR_OFF))
+	) {
+		ROS_WARN("The GFTT/HARRIS detector is EXTREMELY slow in the Debug build configuration, so consider switching to an alternative while you are debugging.");
 	}
+	#endif
+
+	fM = new featureTrackerNode(*trackerStartupData);
+	fM->initializeOutput(output_directory);
+	fM->setWriteMode(writeMode);
 
 	// === SLAM NODE === //
 	// Preliminary settings
-	wantsSlam = slamStartupData->assignFromXml(xP);
+	if (!slamStartupData->assignFromXml(xP)) return true;
 
-	if (wantsSlam) {
-		// Real-time changeable variables
-		if (!_slamData->assignStartingData(*slamStartupData)) return false;
+	// Real-time changeable variables
+	if (!_slamData->assignStartingData(*slamStartupData)) return false;
 
-		_slamNode = new slamNode(*slamStartupData);
-		_slamNode->initializeOutput(output_directory);
-		//if (!fM->getFeatureTracks(featureTracks)) return false;
-		featureTracks = &fM->featureTrackVector;
-		_slamNode->featureTrackVector = featureTracks;
-	}
+	_slamNode = new slamNode(*slamStartupData);
+	_slamNode->initializeOutput(output_directory);
+	//if (!fM->getFeatureTracks(featureTracks)) return false;
+	featureTracks = &fM->featureTrackVector;
+	_slamNode->featureTrackVector = featureTracks;
 
 	return true;
 }

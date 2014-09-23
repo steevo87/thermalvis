@@ -10,6 +10,7 @@
 #include "camera.hpp"
 #include "tools.hpp"
 #include "improc.hpp"
+#include "core/features.hpp"
 
 #define DEFAULT_MAX_VELOCITY 			10000.0
 #define MAX_TIME_DIFF_FOR_PREDICTION	1.0
@@ -103,5 +104,9 @@ bool createTrackMatrix(const vector<featureTrack>& src, cv::Mat& dst, int latest
 void assignHistoricalPoints(const vector<featureTrack>& src, unsigned int idx_1, unsigned int idx_2, vector<cv::Point2f>& dst);
 
 void reduceVectorsToTrackedPoints(const vector<cv::Point2f>& points1, vector<cv::Point2f>& trackedPoints1, const vector<cv::Point2f>& points2, vector<cv::Point2f>& trackedPoints2, vector<uchar>& statusVec);
+
+double getFeatureMotion(vector<featureTrack>& tracks, vector<unsigned int>& indices, unsigned int idx_1, unsigned int idx_2);
+
+void findRelevantIndices(vector<featureTrack>& tracks, vector<unsigned int>& triangulated, vector<unsigned int>& untriangulated, unsigned int last_index, unsigned int new_index);
 
 #endif

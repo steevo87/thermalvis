@@ -122,7 +122,7 @@ struct Time {
 	unsigned long int sec;
 	unsigned long int nsec;
 
-	double toSec();
+	double toSec() const;
 	double toNSec();
 	Time();
 	Time(double input);
@@ -155,6 +155,44 @@ struct CameraInfo {
 	std::string distortion_model;
 
 	CameraInfo();
+};
+
+}
+
+namespace geometry_msgs {
+
+/**
+ * A structure to substitute for the ROS geometry_msgs::Point structure when ROS is not being used
+ */
+struct Point {
+	float x,y,z;
+	Point();
+};
+
+/**
+ * A structure to substitute for the ROS geometry_msgs::Point structure when ROS is not being used
+ */
+struct Quaternion {
+	float x,y,z,w;
+	Quaternion();
+};
+
+/**
+ * A structure to substitute for the ROS geometry_msgs::Pose structure when ROS is not being used
+ */
+struct Pose {
+	Point position;
+	Quaternion orientation;
+	Pose();
+};
+
+/**
+ * A structure to substitute for the ROS geometry_msgs::PoseStamped structure when ROS is not being used
+ */
+struct PoseStamped {
+	ros::Header header;
+	Pose pose;
+	PoseStamped();
 };
 
 }

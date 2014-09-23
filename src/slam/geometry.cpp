@@ -112,7 +112,6 @@ void transformPoints(std::vector<cv::Point3d>& pts, unsigned int option) {
 	
 }
 
-#ifdef _BUILD_FOR_ROS_
 void assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C, int idx, ros::Time timestamp, int mode) {
 	
 	pPose.header.seq = idx;
@@ -149,57 +148,49 @@ void assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C, int idx, ros::Tim
 	// 0, 1, 2
    
 	if (mode == MAPPER_ASSIGN_MODE) {
-		pPose.pose.position.x = t.at<double>(0,0); //;
-		pPose.pose.position.y = t.at<double>(1,0); //t.at<double>(1,0);
-		pPose.pose.position.z = t.at<double>(2,0); //t.at<double>(2,0);
+		pPose.pose.position.x = float(t.at<double>(0,0)); //;
+		pPose.pose.position.y = float(t.at<double>(1,0)); //t.at<double>(1,0);
+		pPose.pose.position.z = float(t.at<double>(2,0)); //t.at<double>(2,0);
 	
 	} else {
 		
-		pPose.pose.position.x = t.at<double>(2,0); //;
-		pPose.pose.position.y = -t.at<double>(0,0); //t.at<double>(1,0);
-		pPose.pose.position.z = -t.at<double>(1,0); //t.at<double>(2,0);
+		pPose.pose.position.x = float(t.at<double>(2,0)); //;
+		pPose.pose.position.y = float(-t.at<double>(0,0)); //t.at<double>(1,0);
+		pPose.pose.position.z = float(-t.at<double>(1,0)); //t.at<double>(2,0);
 	   
 	}
    
-	if (abs(pPose.pose.position.x) > MAX_RVIZ_DISPLACEMENT) {
-			pPose.pose.position.x = 0.0;
-	}
-
-	if (abs(pPose.pose.position.y) > MAX_RVIZ_DISPLACEMENT) {
-			pPose.pose.position.y = 0.0;
-	}
-   
-	if (abs(pPose.pose.position.z) > MAX_RVIZ_DISPLACEMENT) {
-			pPose.pose.position.z = 0.0;
-	}
+	if (abs(pPose.pose.position.x) > MAX_RVIZ_DISPLACEMENT) pPose.pose.position.x = 0.0;
+	if (abs(pPose.pose.position.y) > MAX_RVIZ_DISPLACEMENT) pPose.pose.position.y = 0.0;
+	if (abs(pPose.pose.position.z) > MAX_RVIZ_DISPLACEMENT) pPose.pose.position.z = 0.0;
    
 	//printf("%s << QUAT = (%f, %f, %f, %f)", __FUNCTION__, Q.x(), Q.y(), Q.z(), Q.w());
    
 	// tried x,y,z,w
 	
 	if (mode == MAPPER_ASSIGN_MODE) {
-		pPose.pose.orientation.x = Q.x();
-		pPose.pose.orientation.y = Q.y();
-		pPose.pose.orientation.z = Q.z();
-		pPose.pose.orientation.w = Q.w();
+		pPose.pose.orientation.x = float(Q.x());
+		pPose.pose.orientation.y = float(Q.y());
+		pPose.pose.orientation.z = float(Q.z());
+		pPose.pose.orientation.w = float(Q.w());
 	} else {
-		pPose.pose.orientation.x = Q.z();
-		pPose.pose.orientation.y = -Q.x();
-		pPose.pose.orientation.z = -Q.y();
-		pPose.pose.orientation.w = Q.w();
+		pPose.pose.orientation.x = float(Q.z());
+		pPose.pose.orientation.y = float(-Q.x());
+		pPose.pose.orientation.z = float(-Q.y());
+		pPose.pose.orientation.w = float(Q.w());
 	}
 }
 
 void convertPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose) {
 	
-	pose.position.x = t.at<double>(0,0);
-	pose.position.y = t.at<double>(1,0);
-	pose.position.z = t.at<double>(2,0);
+	pose.position.x = float(t.at<double>(0,0));
+	pose.position.y = float(t.at<double>(1,0));
+	pose.position.z = float(t.at<double>(2,0));
 	
-	pose.orientation.w = Q.w();
-	pose.orientation.x = Q.x();
-	pose.orientation.y = Q.y();
-	pose.orientation.z = Q.z();
+	pose.orientation.w = float(Q.w());
+	pose.orientation.x = float(Q.x());
+	pose.orientation.y = float(Q.y());
+	pose.orientation.z = float(Q.z());
 	
 }
 
@@ -229,17 +220,16 @@ void convertAndShiftPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eige
 
 void convertAndShiftPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose) {
 	
-	pose.position.x = t.at<double>(2,0);
-	pose.position.y = -t.at<double>(0,0);
-	pose.position.z = -t.at<double>(1,0);
+	pose.position.x = float(t.at<double>(2,0));
+	pose.position.y = float(-t.at<double>(0,0));
+	pose.position.z = float(-t.at<double>(1,0));
 	
-	pose.orientation.x = Q.z();
-	pose.orientation.y = -Q.x();
-	pose.orientation.z = -Q.y();
-	pose.orientation.w = Q.w();
+	pose.orientation.x = float(Q.z());
+	pose.orientation.y = float(-Q.x());
+	pose.orientation.z = float(-Q.y());
+	pose.orientation.w = float(Q.w());
 	
 }
-#endif
 
 void convertRmatTo3frm(const cv::Mat& R_src, Matrix3frm& R_dst) {
 	R_dst(0,0) = float(R_src.at<double>(0,0));
@@ -840,6 +830,84 @@ void convertVec4dToMat(const Vector4d& vec4, cv::Mat& mat) {
 	mat.at<double>(0,0) = vec4.x();
 	mat.at<double>(1,0) = vec4.y();
 	mat.at<double>(2,0) = vec4.z();
+	
+}
+
+bool interpolatePose(const geometry_msgs::Pose& pose1, ros::Time time1, const geometry_msgs::Pose& pose2, ros::Time time2, geometry_msgs::Pose& finalPose, ros::Time time3) {
+	
+	double time_gap = time2.toSec() - time1.toSec();
+	double prediction_gap = time3.toSec() - time1.toSec();
+	
+	double biasFactor = prediction_gap / time_gap;
+	
+	if (0) { ROS_INFO("times = (%f, %f, %f) : (%f, %f)", time1.toSec(), time2.toSec(), time3.toSec(), time_gap, prediction_gap); }
+	if (0) { ROS_INFO("biasFactor = (%f)", biasFactor); }
+	
+	if ( (abs(time_gap) > MAX_TIME_GAP_FOR_INTERP) || (abs(prediction_gap) > MAX_TIME_GAP_FOR_INTERP) ) {
+		return false;
+	}
+	
+	finalPose.position.x = float((1.0 - biasFactor) * pose1.position.x + biasFactor * pose2.position.x);
+	finalPose.position.y = float((1.0 - biasFactor) * pose1.position.y + biasFactor * pose2.position.y);
+	finalPose.position.z = float((1.0 - biasFactor) * pose1.position.z + biasFactor * pose2.position.z);
+	
+	
+	QuaternionDbl quat_1, quat_2, quat_i;
+	
+	quat_1 = QuaternionDbl(pose1.orientation.w, pose1.orientation.x, pose1.orientation.y, pose1.orientation.z);
+	quat_2 = QuaternionDbl(pose2.orientation.w, pose2.orientation.x, pose2.orientation.y, pose2.orientation.z);
+	
+	quat_i = quat_2.slerp(biasFactor, quat_1);
+	
+	finalPose.orientation.x = float(quat_i.x());
+	finalPose.orientation.y = float(quat_i.y());
+	finalPose.orientation.z = float(quat_i.z());
+	finalPose.orientation.w = float(quat_i.w());
+	
+	return true;
+}
+
+void shiftPose(const geometry_msgs::Pose& pose_src, geometry_msgs::Pose& pose_dst, cv::Mat transformation) {
+	
+	//ROS_ERROR("Transforming from (%f, %f, %f) (%f, %f, %f, %f)...", pose_src.position.x, pose_src.position.y, pose_src.position.z, pose_src.orientation.w, pose_src.orientation.x, pose_src.orientation.y, pose_src.orientation.z);
+	
+	// pose_dst = pose_src;
+	
+	QuaternionDbl quat_src;
+	quat_src = QuaternionDbl(pose_src.orientation.w, pose_src.orientation.x, pose_src.orientation.y, pose_src.orientation.z);
+	
+	//cout << "transformation = " << transformation << endl;
+	
+	cv::Mat src_T, src_R, src_P;
+	
+	quaternionToMatrix(quat_src, src_R);
+	
+	src_T = cv::Mat::zeros(3,1,CV_64FC1);
+	src_T.at<double>(0,0) = pose_src.position.x;
+	src_T.at<double>(1,0) = pose_src.position.y;
+	src_T.at<double>(2,0) = pose_src.position.z;
+	
+	composeTransform(src_R, src_T, src_P);
+
+	cv::Mat dst_P, dst_R, dst_T;
+	
+	dst_P = src_P * transformation;
+
+	decomposeTransform(dst_P, dst_R, dst_T);
+	
+	QuaternionDbl quat_dst;
+	matrixToQuaternion(dst_R, quat_dst);
+	
+	pose_dst.orientation.w = float(quat_dst.w());
+	pose_dst.orientation.x = float(quat_dst.x());
+	pose_dst.orientation.y = float(quat_dst.y());
+	pose_dst.orientation.z = float(quat_dst.z());
+	
+	pose_dst.position.x = float(dst_T.at<double>(0,0));
+	pose_dst.position.y = float(dst_T.at<double>(1,0));
+	pose_dst.position.z = float(dst_T.at<double>(2,0));
+	
+	//ROS_ERROR("Transforming _to_ (%f, %f, %f) (%f, %f, %f, %f)...", pose_dst.position.x, pose_dst.position.y, pose_dst.position.z, pose_dst.orientation.w, pose_dst.orientation.x, pose_dst.orientation.y, pose_dst.orientation.z);
 	
 }
 	

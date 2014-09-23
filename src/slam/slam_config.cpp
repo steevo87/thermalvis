@@ -1,6 +1,7 @@
 #include "../../include/slam/slam_config.hpp"
 
-slamSharedData::slamSharedData()
+slamSharedData::slamSharedData() :
+	maxInitializationFrames(MAX_INITIALIZATION_FRAMES)
 { }
 
 slamRealtimeOnlyData::slamRealtimeOnlyData() :

@@ -394,7 +394,6 @@ void findTriangulatableTracks3(vector<featureTrack>& tracks, vector<unsigned int
 	
 }
 
-#ifdef _BUILD_FOR_ROS_
 int initialTrackTriangulationDummy(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation, double maxSeparation, int minEstimates, double maxStandardDev, bool handedness, int xCode) {
 	
 	int lim = 10; // 10
@@ -580,7 +579,6 @@ int initialTrackTriangulationDummy(vector<featureTrack>& tracks, vector<unsigned
 	return lim;
 	
 }
-#endif
 
 void filterNearPoints(vector<featureTrack>& featureTrackVector, double x, double y, double z, double limit) {
 	
@@ -598,7 +596,6 @@ void filterNearPoints(vector<featureTrack>& featureTrackVector, double x, double
 	
 }
 
-#ifdef _BUILD_FOR_ROS_
 int initialTrackTriangulation(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation, double maxSeparation, int minEstimates, double maxStandardDev, double maxReprojectionDisparity) {
 	
 	cv::Point3d pt3d, mean3d(0.0, 0.0, 0.0), stddev3d(0.0, 0.0, 0.0);
@@ -864,7 +861,15 @@ int initialTrackTriangulation(vector<featureTrack>& tracks, vector<unsigned int>
 	return triangulatedCounter;
 	
 }
-#endif
+
+bool pointIsInFront(const cv::Mat& C, const cv::Point3d& pt) {
+	
+	cv::Point3d p1;
+	transfer3dPoint(pt, p1, C);
+
+	if (p1.z > 0) return true;
+	return false;
+}
 
 int TriangulateNewTracks(vector<featureTrack>& trackVector, const int index1, const int index2, const cv::Mat& K, const cv::Mat& K_inv, const cv::Mat& P0, const cv::Mat& P1, bool initializeOnFocalPlane) {
 	

@@ -20,7 +20,7 @@ class GenericOptions {
 
 protected:
 	int FrameCounter1, LastFrameCounter, FC0, FC1;
-	bool pauseMode, isValid;
+	bool pauseMode, isValid, wantsToShutdown;
 	bool debugMode, wantsToOutput, writeInColor;
 	cv::Mat *displayImage;
 	char *output_directory;

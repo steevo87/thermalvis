@@ -43,7 +43,7 @@ ros::Time findAverageTime(ros::Time time1, ros::Time time2);
 static void connected(const ros::SingleSubscriberPublisher&) {}
 static void disconnected(const ros::SingleSubscriberPublisher&) {}
 
-#define MAX_RVIZ_DISPLACEMENT 	1000
+
 
 #endif
 #endif

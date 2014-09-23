@@ -2864,7 +2864,7 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
     // Search for best matches between src and found
     for (unsigned int i = 0; i < src.size(); i++)
     {
-        bestDist = 9e99;
+        bestDist = std::numeric_limits<double>::max();
         for (unsigned int j = 0; j < foundCorners.size(); j++)
         {
             currDist = pow(pow(double(src.at(i).x) - double(foundCorners.at(j).x), 2.0) + pow(double(src.at(i).y) - double(foundCorners.at(j).y), 2.0), 0.5);
@@ -2880,7 +2880,7 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
     // Check if these best matches are reversed
     for (unsigned int i = 0; i < src.size(); i++)
     {
-        bestDist = 9e99;
+        bestDist = std::numeric_limits<double>::max();
         for (unsigned int k = 0; k < src.size(); k++)
         {
             // Distance between src.at(i)'s best match, and all other src elements

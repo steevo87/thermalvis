@@ -859,7 +859,7 @@ float streamerNode::getThermistorReading() {
 	sprintf(localCommand, "THERM");
 	if (!sendSerialCommand(localCommand, configData.serialWriteAttempts)) {
 		if (configData.verboseMode) { ROS_WARN("Serial command (%s) failed after (%d) attempts", localCommand, configData.serialWriteAttempts); }
-		return -9e99;
+		return -std::numeric_limits<float>::max();
 	}
 	
 	char buff[SERIAL_BUFF_SIZE];
@@ -879,7 +879,7 @@ float streamerNode::getThermistorReading() {
 		ROS_WARN("Zero characters returned from attempted thermistor reading.");
 	} else readSucceeded = true;
 	
-	if (!readSucceeded) return -9e99;
+	if (!readSucceeded) return -std::numeric_limits<float>::max();
 	
 	for (unsigned int iii = 0; iii < 512; iii++) {
 		if (buff[iii] == '\r') buff[iii] = '-';

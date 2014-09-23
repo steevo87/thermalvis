@@ -7,10 +7,13 @@
 
 #include "core/tracks.hpp"
 #include "slam/geometry.hpp"
+#include "slam/cloudproc.hpp"
 
 #define MIN_PAIRS_OF_PROJECTIONS_FOR_TRIANGULATION 10
 #define DEFAULT_NEAR_RADIUS 0.3
 #define EPSILON 0.00001
+#define MAX_REPROJECTION_DISPARITY	20.0
+
 
 /// \brief 		Determine 3D position estimates for tracks with provided indices
 void triangulateTracks(std::vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, cv::Mat *cameras, unsigned int earliest_index, unsigned int latest_index);
@@ -30,12 +33,10 @@ void findTriangulatableTracks3(std::vector<featureTrack>& tracks, std::vector<un
 /// \brief 		Removes triangulations within a specified distance of the provided 3D point (x,y,z)
 void filterNearPoints(std::vector<featureTrack>& featureTrackVector, double x, double y, double z, double limit = DEFAULT_NEAR_RADIUS);
 
-#ifdef _BUILD_FOR_ROS_
 /// \brief 		Avoids triangulating if pairs of camera views are not sufficiently spaced..
 int initialTrackTriangulation(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation = 0.2, double maxSeparation = 1.0, int minEstimates = 3, double maxStandardDev = 0.1, double maxReprojectionDisparity = MAX_REPROJECTION_DISPARITY);
 /// \brief 		Dummy version of 'initialTrackTriangulation'
 int initialTrackTriangulationDummy(vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, geometry_msgs::PoseStamped *keyframePoses, unsigned int keyframeCount, double minSeparation = 0.2, double maxSeparation = 1.0, int minEstimates = 3, double maxStandardDev = 0.1, bool handedness = false, int xCode = 0);
-#endif
 
 /// \brief 		Possible duplicate of 'triangulateTracks'
 int TriangulateNewTracks(vector<featureTrack>& trackVector, const int index1, const int index2, const cv::Mat& K, const cv::Mat& K_inv, const cv::Mat& P0, const cv::Mat& P1, bool initializeOnFocalPlane = false);
@@ -57,5 +58,7 @@ void TriangulatePoints(const vector<cv::Point2f>& pt_set1, const vector<cv::Poin
 
 // \brief		I think this will give you all of the 3D locations for points that were successfully tracked from idx1 to idx2
 void getPoints3dFromTracks(vector<featureTrack>& tracks, vector<cv::Point3d>& cloud, int idx1 = -1, int idx2 = -1);
+
+bool pointIsInFront(const cv::Mat& C, const cv::Point3d& pt);
 
 #endif // THERMALVIS_TRIANGULATION_H

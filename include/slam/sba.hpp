@@ -8,6 +8,8 @@
 #ifndef _THERMALSFM_SBA_H_
 #define _THERMALSFM_SBA_H_
 
+#define SBA_MEMORY								134217728
+
 #include "general_resources.hpp"
 #include "opencv_resources.hpp"
 #include "ros_resources.hpp"
@@ -42,23 +44,15 @@ bool overwritePoints(const SysSBA& sys, const vector<int>& track_indices, vector
 
 void rescaleSBA(SysSBA& sba, unsigned int idx1, unsigned int idx2);
 
-void findRelevantIndices(vector<featureTrack>& tracks, vector<unsigned int>& triangulated, vector<unsigned int>& untriangulated, unsigned int last_index, unsigned int new_index);
-
 void optimizeFullSystem(vector<featureTrack>& tracks, cameraParameters& camData, cv::Mat *cameras, unsigned int last_index);
 
 void findIntermediatePoses(vector<featureTrack>& tracks, cameraParameters& camData, cv::Mat *cameras, unsigned int image_idx_1, unsigned int image_idx_2, bool fixBothEnds = true);
-
-double getFeatureMotion(vector<featureTrack>& tracks, vector<unsigned int>& indices, unsigned int idx_1, unsigned int idx_2);
 
 //void createSupersys(SysSBA &sba, vector<featureTrack>& tracks, unsigned int total_cameras);
 
 void assignFullSystem(SysSBA &sba, vector<featureTrack>& tracks, cameraParameters& camData, cv::Mat *cameras, unsigned int start_index, unsigned int finish_index, bool dummy = false);
 
 void assignPartialSystem(SysSBA &sba, vector<featureTrack>& tracks, cameraParameters& camData, cv::Mat *cameras, vector<unsigned int>& indices, bool assignProjections = true);
-
-bool reconstructFreshSubsequencePair(vector<featureTrack>& tracks, vector<cv::Point3d>& ptCloud, vector<unsigned int>& triangulatedIndices, cv::Mat& real_C0, cv::Mat& real_C1, cameraParameters camData, int idx1, int idx2);
-
-void subselectPoints(const vector<cv::Point2f>& src1, vector<cv::Point2f>& dst1, const vector<cv::Point2f>& src2, vector<cv::Point2f>& dst2);
 
 int estimatePoseBetweenCameras(cameraParameters& camData, vector<cv::Point2f>& pts1, vector<cv::Point2f>& pts2, cv::Mat& C);
 
@@ -79,8 +73,6 @@ void addPointsToSBA(SysSBA& sba, vector<cv::Point3d>& cloud);
 void addProjectionsToSBA(SysSBA& sba, vector<cv::Point2f>& loc, int idx);
 
 double optimizeKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData, int idx1, int idx2, cv::Mat *cameras);
-
-double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData, double *scorecard[], int idx1, int idx2, double *scores, cv::Mat& pose, bool evaluate = false, bool debug = false);
 
 void addProjectionToSBA(SysSBA& sba, cv::Point2f& loc, unsigned int trackNo, unsigned int camNo);
 

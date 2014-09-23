@@ -958,7 +958,7 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 
 	while (rowsStillRemain) {
 
-		double bestScore = 9e99;
+		double bestScore = std::numeric_limits<double>::max();
 		int bestRow = -1, bestCol = -1;
 
 		for (int iii = 0; iii < matchingMatrix.rows; iii++) {
@@ -971,7 +971,7 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 			}
 		}
 
-		if ((bestScore < 0) || (bestScore == 9e99)) {
+		if ((bestScore < 0) || (bestScore == std::numeric_limits<double>::max())) {
 			rowsStillRemain = false;
 			break;
 		}
@@ -984,7 +984,7 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 		currentMatch.queryIdx = bestRow;
 		currentMatch.trainIdx = bestCol;
 
-		double secondScore = 9e99;
+		double secondScore = std::numeric_limits<double>::max();
 
 		for (int iii = 0; iii < matchingMatrix.rows; iii++) {
 			if ((matchingMatrix.at<double>(iii,bestCol) <= secondScore) && (matchingMatrix.at<double>(iii,bestCol) >= 0)) {
@@ -1001,7 +1001,7 @@ void twoWayPriorityMatching(cv::Mat& matchingMatrix, vector<vector<cv::DMatch> >
 		}
 
 		// If it is literally the last match available, it won't have a second best score...
-		if (secondScore == 9e99) secondScore = bestScore;
+		if (secondScore == std::numeric_limits<double>::max()) secondScore = bestScore;
 
 		// Then normalize the "distance" based on this ratio, or can just use the ratio...
 		switch (mode) {

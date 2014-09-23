@@ -675,3 +675,107 @@ void getPointsFromTracks(vector<featureTrack>& tracks, vector<cv::Point2f>& pts1
 		}
 	}
 }
+
+double getFeatureMotion(vector<featureTrack>& tracks, vector<unsigned int>& indices, unsigned int idx_1, unsigned int idx_2) {
+
+	vector<double> distances, distances_x, distances_y;
+
+	for (unsigned int iii = 0; iii < indices.size(); iii++) {
+		
+		for (unsigned int jjj = 0; jjj < tracks.at(indices.at(iii)).locations.size()-1; jjj++) {
+			
+			if (tracks.at(indices.at(iii)).locations.at(jjj).imageIndex == int(idx_1)) {
+				
+				for (unsigned int kkk = jjj+1; kkk < tracks.at(indices.at(iii)).locations.size(); kkk++) {
+					
+					if (tracks.at(indices.at(iii)).locations.at(kkk).imageIndex == int(idx_2)) {
+						
+						double dist = distanceBetweenPoints(tracks.at(indices.at(iii)).locations.at(jjj).featureCoord, tracks.at(indices.at(iii)).locations.at(kkk).featureCoord);
+						
+						double dist_x = tracks.at(indices.at(iii)).locations.at(jjj).featureCoord.x - tracks.at(indices.at(iii)).locations.at(kkk).featureCoord.x;
+						double dist_y = tracks.at(indices.at(iii)).locations.at(jjj).featureCoord.y - tracks.at(indices.at(iii)).locations.at(kkk).featureCoord.y;
+												
+						distances_x.push_back(dist_x);
+						distances_y.push_back(dist_y);
+						distances.push_back(dist);
+						
+					}
+					
+				}
+				
+			}
+			
+			
+		}
+		
+	}
+	
+	double mean_dist = 0.00, std_dev = 0.00, mean_x = 0.00, mean_y = 0.00, std_x = 0.00, std_y = 0.00;
+	
+	for (unsigned int iii = 0; iii < distances.size(); iii++) {
+		mean_dist += (distances.at(iii) / ((double) distances.size()));
+		mean_x += (distances_x.at(iii) / ((double) distances.size()));
+		mean_y += (distances_y.at(iii) / ((double) distances.size()));
+
+
+	}
+	
+	for (unsigned int iii = 0; iii < distances.size(); iii++) {
+		std_dev += pow(distances.at(iii) - mean_dist, 2.0);
+		std_x += pow(distances_x.at(iii) - mean_x, 2.0);
+		std_y += pow(distances_y.at(iii) - mean_y, 2.0);		
+	}
+		
+	std_dev /= distances.size();
+	std_x /= distances.size();
+	std_y /= distances.size();
+
+	pow(std_dev, 0.5);
+	pow(std_x, 0.5);
+	pow(std_y, 0.5);
+
+	
+	//printf("%s << (%f, %f, %f) : (%f, %f, %f)\n", __FUNCTION__, mean_dist, mean_y, mean_x, std_dev, std_x, std_y);
+	
+	// Need to have some variation in x OR y translation, otherwise it could just be a homography
+	return ((std_x + std_y) / 2.0);
+	
+	return mean_dist;
+	
+}
+
+void findRelevantIndices(vector<featureTrack>& tracks, vector<unsigned int>& triangulated, vector<unsigned int>& untriangulated, unsigned int last_index, unsigned int new_index) {
+	
+	//unsigned int min_sightings = max(0, (((int) new_index) - ((int) last_index)) / 2);
+	
+	for (unsigned int iii = 0; iii < tracks.size(); iii++) {
+		
+		if (tracks.at(iii).isTriangulated) {
+			triangulated.push_back(iii);
+			/*
+			unsigned int sightings = 0;
+			
+			for (unsigned int jjj = 0; jjj < tracks.at(iii).locations.size(); jjj++) {
+				
+				if (tracks.at(iii).locations.at(jjj).imageIndex <= new_index) {
+					sightings++;
+				}
+				
+			}
+			* */
+			
+			/*
+			if (sightings >= min_sightings) {
+				triangulated.push_back(iii);
+			}
+			* */
+		} else {
+			untriangulated.push_back(iii);
+		}
+		
+
+		
+	}
+	
+	
+}

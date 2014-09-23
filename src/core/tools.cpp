@@ -46,7 +46,7 @@ namespace ros {
 		nsec = (long int)((input - (double(sec)))*1000000000.0);
 	}
 
-	double Time::toSec() { return (double(sec) + (double(nsec)/1000000000.0)); }
+	double Time::toSec() const { return (double(sec) + (double(nsec)/1000000000.0)); }
 
 	double Time::toNSec() { return (double(sec)*1000000000.0 + double(nsec)); }
 
@@ -89,6 +89,15 @@ namespace sensor_msgs {
 			if (iii < 9) R[iii] = 0.0;
 		}
 	}
+
+}
+
+namespace geometry_msgs {
+
+	Point::Point() : x(0.0), y(0.0), z(0.0) { }
+	Quaternion::Quaternion() : x(0.0), y(0.0), z(0.0), w(1.0) { }
+	Pose::Pose() { }
+	PoseStamped::PoseStamped() { }
 
 }
 
@@ -456,7 +465,7 @@ double findEquivalentProbabilityScore(double* values, int quantity, double prob)
     
         //printf("%s << listVector.size() = %d, prob*quantity = %d\n", __FUNCTION__, listVector.size(), int(prob*quantity));
         //cin.get();
-        min = 9e99;
+        min = std::numeric_limits<double>::max();
 
         for (unsigned int j = 0; j < listVector.size(); j++)
         {

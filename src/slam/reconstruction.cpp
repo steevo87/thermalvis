@@ -21,6 +21,435 @@ void summarizeTransformation(const cv::Mat& C, char *summary) {
 	
 }
 
+double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData, double *scorecard[], int idx1, int idx2, double *score, cv::Mat& pose, bool evaluate, bool debug) {
+	
+	//printf("%s << Entered.\n", __FUNCTION__);
+	
+	//if (debug) {
+		//printf("%s << Testing frames (%d) & (%d)\n", __FUNCTION__, idx1, idx2);
+	//}
+	
+	double keyframeScore;
+	
+	for (unsigned int iii = 0; iii < 5; iii++) {
+		score[iii] = -1.0;
+	}
+	
+	vector<cv::Point2f> pts1_, pts2_, pts1, pts2;
+	getPointsFromTracks(tracks, pts1, pts2, idx1, idx2);
+	
+	//printf("%s << A: pts1.size() = %d; pts2.size() = %d\n", __FUNCTION__, pts1.size(), pts2.size());
+	
+	subselectPoints(pts1_, pts1, pts2_, pts2);
+	
+	pts1.insert(pts1.end(), pts1_.begin(), pts1_.end());
+	pts2.insert(pts2.end(), pts2_.begin(), pts2_.end());
+	
+	//printf("%s << B: pts1.size() = %d; pts2.size() = %d\n", __FUNCTION__, pts1.size(), pts2.size());
+	
+	unsigned int min_pts = std::min(pts1.size(), pts2.size());
+	
+	if (min_pts < 16) {
+		printf("%s << Returning with (-1); insufficient points.\n", __FUNCTION__);
+		return -1.00;
+	}
+	
+	cv::Mat matchesMask_F_matrix, matchesMask_H_matrix;
+	
+	cv::Mat F = cv::findFundamentalMat(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, 0.99, matchesMask_F_matrix);
+	cv::Mat H = cv::findHomography(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, matchesMask_H_matrix);
+	
+	//int inliers_H = countNonZero(matchesMask_H_matrix);
+	//int inliers_F = countNonZero(matchesMask_F_matrix);
+	
+	//double new_F_score = calcInlierGeometryDistance(pts1, pts2, F, matchesMask_F_matrix, SAMPSON_DISTANCE);
+	//double new_H_score = calcInlierGeometryDistance(pts1, pts2, H, matchesMask_H_matrix, LOURAKIS_DISTANCE);
+	
+	//double geometryScore = calcGeometryScore(inliers_H, inliers_F, new_H_score, new_F_score);
+	
+	// gric score
+	double fGric, hGric;
+	double gricScore = normalizedGRICdifference(pts1, pts2, F, H, matchesMask_F_matrix, matchesMask_H_matrix, fGric, hGric);
+	gricScore = fGric / hGric;
+	//double gricIdeal = 2.0, gricMax = 10.0, gricMin = 1.0;
+	double nGRIC = asymmetricGaussianValue(gricScore, scorecard[1][0], scorecard[1][2], scorecard[1][2]);
+	//printf("%s << SCORES: geom (%f), conv (%f), gric (%f / [%d / %d]), pts (%f)\n", __FUNCTION__, geometryScore, twoErr, gricScore, (int) fGric, (int) hGric, infrontScore);
+	
+	score[1] = gricScore;
+	
+	//else if (geometryScore < 1.00) {
+		// geometryScore = -1.00;
+	//}
+	
+	if (nGRIC == 0.00) {
+		if (!evaluate) {
+			printf("%s << Returning with (0); nGric = 0.00.\n", __FUNCTION__);
+			return 0.00;
+		}
+	}
+
+	cv::Mat E = camData.K.t() * F * camData.K;	
+	cv::Mat CX[4], C;
+	findFourTransformations(CX, E, camData.K, pts1, pts2);
+	int validPts = findBestCandidate(CX, camData.K, pts1, pts2, C);
+	
+	// infrontScore
+	//double infrontIdeal = 1.00, infrontMax = 1.00, infrontMin = 0.90;
+	double infrontScore = ((double) validPts) / ((double) pts1.size());
+	double nIFS = asymmetricGaussianValue(infrontScore, scorecard[2][0], scorecard[2][2], scorecard[2][1]);
+	
+	score[2] = infrontScore;
+	
+	// Now correct if amt in front is greater than mean:
+	if (infrontScore >= scorecard[2][0]) {
+		nIFS = 1.00;
+	}
+	
+	if (nIFS == 0) {
+		if (!evaluate) {
+			printf("%s << Returning with (0); nIFS = 0.00.\n", __FUNCTION__);
+			return 0.00;
+		}
+	}
+	
+	cv::Mat absolute_C0, P0, P1;
+	absolute_C0 = cv::Mat::eye(4, 4, CV_64FC1);
+	
+	transformationToProjection(absolute_C0, P0);
+	transformationToProjection(C, P1);
+	//pose.copyTo(P1);
+	
+	vector<cv::Point3d> cloud;
+	vector<cv::Point2f> corresp;
+	
+	if (debug) {
+		/*
+		printf("%s << Before triangulation: \n", __FUNCTION__);
+		cout << P0 << endl;
+		cout << P1 << endl;
+		*/
+	}
+	
+	TriangulatePoints(pts1, pts2, camData.K, camData.K.inv(), P0, P1, cloud, corresp);
+	
+	//printf("%s << Before 2-frame BA: \n", __FUNCTION__);
+	//cout << P0 << endl;
+	//cout << P1 << endl;
+	
+	if (debug) {
+		/*
+		printf("%s << Before 2-frame BA: \n", __FUNCTION__);
+		cout << P0 << endl;
+		cout << P1 << endl;
+		*/
+	}
+	
+	// convergence
+	//double convIdeal = 0.30, convMax = 0.80, convMin = 0.10;
+#ifdef _USE_SBA_
+	double twoErr = twoViewBundleAdjustment(camData, P0, P1, cloud, pts1, pts2, 10);
+	
+	score[0] = twoErr;
+
+
+	if (debug) {
+		/*
+		printf("%s << After 2-frame BA: \n", __FUNCTION__);
+		cout << P0 << endl;
+		cout << P1 << endl;
+		*/
+		for (unsigned int iii = 0; iii < 10; iii++) {
+			//printf("%s << pt(%d) = (%f, %f) & (%f, %f)\n", __FUNCTION__, iii, pts1.at(iii).x, pts1.at(iii).y, pts2.at(iii).x, pts2.at(iii).y);
+		}
+	}
+	
+	double nCONV = asymmetricGaussianValue(twoErr, scorecard[0][0], scorecard[0][2], scorecard[0][1]);
+	
+	if (nCONV == 0.00) {
+		if (!evaluate) {
+			printf("%s << Returning with (0); nCONV = 0.00.\n", __FUNCTION__);
+			return 0.00;
+		}
+	}
+#endif
+
+	projectionToTransformation(P1, C);
+	
+	// break it down to get Z component and angle...
+	cv::Mat R, t;
+	decomposeTransform(C, R, t);
+	
+	// translation score
+	//double transIdeal = 3.00, transMax = 5.00, transMin = 1.00;
+	double tScore = (abs(t.at<double>(0,0)) + abs(t.at<double>(1,0))) / abs(t.at<double>(2,0));
+	
+	score[3] = tScore;
+	
+	double nTRN = asymmetricGaussianValue(tScore, scorecard[3][0], scorecard[3][2], scorecard[3][1]);
+	
+	if (nTRN == 0.00) {
+		if (!evaluate) {
+			return 0.00;
+		}
+	}
+	
+	// angle score
+	//double angleIdeal = 10.0, angleMax = 15.0, angleMin = 5.0;
+	double dScore = getRotationInDegrees(R);
+	
+	score[4] = dScore;
+	
+	double nANG = asymmetricGaussianValue(dScore, scorecard[4][0], scorecard[4][2], scorecard[4][1]);
+	
+	if (nANG == 0.00) {
+		if (!evaluate) {
+			printf("%s << Returning with (0); nANG = 0.00.\n", __FUNCTION__);
+			return 0.00;
+		}
+	}
+	
+	//double homographyScore = 0.00;	// later this will be replaced by a method for determining FOV change / rot angle
+	
+	// Followed by checks to set homography score to be less than zero (not enough view change, H-score too low etc)
+	
+	
+	
+	
+	
+	
+	
+	//cout << t << endl;
+	
+	//printf("%s << Convergence score = %f\n", __FUNCTION__, twoErr);
+	
+#ifdef _USE_SBA_
+	unsigned int numTerms = 5;
+	keyframeScore = pow(nCONV * nGRIC * nIFS * nTRN * nANG, 1.0 / ((double) numTerms));
+	printf("%s << [%f]: conv (%1.2f, %1.2f), gric (%1.2f, %1.2f), if (%1.2f, %1.2f), trans (%1.2f, %1.2f), ang (%02.1f, %1.2f)\n", __FUNCTION__, keyframeScore, twoErr, nCONV, gricScore, nGRIC, infrontScore, nIFS, tScore, nTRN, dScore, nANG);
+#else
+	unsigned int numTerms = 4;
+	keyframeScore = pow(nGRIC * nIFS * nTRN * nANG, 1.0 / ((double) numTerms));
+	printf("%s << [%f]: gric (%1.2f, %1.2f), if (%1.2f, %1.2f), trans (%1.2f, %1.2f), ang (%02.1f, %1.2f)\n", __FUNCTION__, keyframeScore, gricScore, nGRIC, infrontScore, nIFS, tScore, nTRN, dScore, nANG);
+#endif
+	//if (debug) {
+		
+	//}
+	
+	
+	P1.copyTo(pose);
+	
+	//printf("%s << Exiting.\n", __FUNCTION__);
+	
+	return keyframeScore;
+	
+}
+
+void subselectPoints(const vector<cv::Point2f>& src1, vector<cv::Point2f>& dst1, const vector<cv::Point2f>& src2, vector<cv::Point2f>& dst2) {
+	
+	vector<cv::Point2f> new_src_1, new_src_2;
+	new_src_1.insert(new_src_1.end(), src1.begin(), src1.end());
+	new_src_2.insert(new_src_2.end(), src2.begin(), src2.end());
+	
+	int aimedPoints = 48;
+	
+	if (int(src1.size()) <= aimedPoints) {
+		dst1.insert(dst1.end(), src1.begin(), src1.end());
+		dst2.insert(dst2.end(), src2.begin(), src2.end());
+		
+		return;
+	}
+	
+	// Find centroid
+	cv::Point2f centroid_1, centroid_2;
+	
+	for (unsigned int iii = 0; iii < src1.size(); iii++) {
+		centroid_1.x += src1.at(iii).x / ((float) src1.size());
+		centroid_1.y += src1.at(iii).y / ((float) src1.size());
+		
+		centroid_2.x += src2.at(iii).x / ((float) src2.size());
+		centroid_2.y += src2.at(iii).y / ((float) src2.size());
+	} 
+	
+	printf("%s << Centroids: (%f, %f) & (%f, %f)\n", __FUNCTION__, centroid_1.x, centroid_1.y, centroid_2.x, centroid_2.y);
+	
+	// First add most central point
+	int mostCentralIndex = -1;
+	float bestDistance = std::numeric_limits<float>::max();
+	
+	for (unsigned int iii = 0; iii < src1.size(); iii++) {
+		
+		float dist = float(distanceBetweenPoints(src1.at(iii), centroid_1) + distanceBetweenPoints(src2.at(iii), centroid_2));
+		
+		if ((dist < bestDistance) || (iii == 0)) {
+			bestDistance = dist;
+			mostCentralIndex = iii;
+		}
+		
+	}
+	
+	if (mostCentralIndex < 0) {
+		
+		dst1.insert(dst1.end(), src1.begin(), src1.end());
+		dst2.insert(dst2.end(), src2.begin(), src2.end());
+		
+		return;
+		
+	}
+	
+	dst1.push_back(new_src_1.at(mostCentralIndex));
+	dst2.push_back(new_src_2.at(mostCentralIndex));
+	
+	// Correct centroid by removing contribution of removed point, multiplying by old size divided by new size
+	centroid_1.x -= new_src_1.at(mostCentralIndex).x / ((float) src1.size());
+	centroid_1.x *= ((float) src1.size()) / ((float) new_src_1.size());
+	
+	centroid_2.x -= new_src_2.at(mostCentralIndex).x / ((float) src2.size());
+	centroid_2.x *= ((float) src2.size()) / ((float) new_src_2.size());
+	
+	new_src_1.erase(new_src_1.begin() + mostCentralIndex);
+	new_src_2.erase(new_src_2.begin() + mostCentralIndex);
+	
+	printf("%s << Most central index: %d\n", __FUNCTION__, mostCentralIndex);
+	
+	for (int iii = 0; iii < aimedPoints-1; iii++) {
+		
+		cv::Point2f centroid_1, centroid_2;
+		
+		float largestDist;
+		unsigned int largestIndex;
+	
+		for (unsigned int jjj = 0; jjj < new_src_1.size(); jjj++) {
+
+			float dist = float(distanceBetweenPoints(new_src_1.at(jjj), centroid_1) + distanceBetweenPoints(new_src_2.at(jjj), centroid_2));
+			
+			if ((jjj == 0) || (dist > largestDist)) {
+				largestDist = dist;
+				largestIndex = jjj;
+			}
+			
+		}
+		
+		centroid_1.x -= new_src_1.at(largestIndex).x / ((float) new_src_1.size());
+		centroid_1.x *= ((float) new_src_1.size()) / ((float) new_src_1.size() - 1);
+	
+		centroid_2.x -= new_src_2.at(mostCentralIndex).x / ((float) new_src_2.size());
+		centroid_2.x *= ((float) new_src_2.size()) / ((float) new_src_2.size() - 1);
+		
+		dst1.push_back(new_src_1.at(largestIndex));
+		dst2.push_back(new_src_2.at(largestIndex));
+		
+		new_src_1.erase(new_src_1.begin() + largestIndex);
+		new_src_2.erase(new_src_2.begin() + largestIndex);
+		
+	}
+	
+	//dst1.insert(dst1.end(), src1.begin(), src1.end());
+	//dst2.insert(dst2.end(), src2.begin(), src2.end());
+	
+}
+
+bool reconstructFreshSubsequencePair(vector<featureTrack>& tracks, vector<cv::Point3d>& ptCloud, vector<unsigned int>& triangulatedIndices, cv::Mat& real_C0, cv::Mat& real_C1, cameraParameters camData, int idx1, int idx2) {
+	
+	if ((camData.K.rows != 3) || (camData.K.cols != 3) || (camData.K_inv.rows != 3) || (camData.K_inv.cols != 3)) {
+		printf("%s << ERROR! Camera intrinsics dimensions are invalid.\n", __FUNCTION__);
+		return false;
+	}
+	
+	
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 0);
+	
+	cv::Mat real_P0, real_P1; 
+	
+	vector<cv::Point2f> pts1_, pts2_, pts1, pts2;
+	
+	printf("%s << Getting pts from tracks: (%d), (%d, %d), (%d, %d)\n", __FUNCTION__, ((int)tracks.size()), ((int)pts1_.size()), ((int)pts2_.size()), idx1, idx2);
+	getPointsFromTracks(tracks, pts1_, pts2_, idx1, idx2);
+	
+	//subselectPoints(pts1_, pts1, pts2_, pts2);
+	pts1.insert(pts1.end(), pts1_.begin(), pts1_.end());
+	pts2.insert(pts2.end(), pts2_.begin(), pts2_.end());
+	
+	printf("%s << Checking pts size... (%d)\n", __FUNCTION__, ((int)pts1.size()));
+	
+	if (pts1.size() < 8) {
+		printf("%s << ERROR! Too few corresponding points (%d)\n", __FUNCTION__, ((int)pts1.size()));
+		return false;
+	}
+	
+	vector<unsigned int> activeTrackIndices, fullSpanIndices;
+	getActiveTracks(activeTrackIndices, tracks, idx1, idx2);
+	filterToCompleteTracks(fullSpanIndices, activeTrackIndices, tracks, idx1, idx2);
+	
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 2);
+	
+	cv::Mat F, matchesMask_F_matrix;
+	F = cv::findFundamentalMat(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, 0.99, matchesMask_F_matrix);
+
+	cv::Mat E = camData.K.t() * F * camData.K;	
+	cv::Mat CX[4];
+	findFourTransformations(CX, E, camData.K, pts1, pts2);
+	
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 3);
+	
+	cv::Mat C;
+	int validPts = findBestCandidate(CX, camData.K, pts1, pts2, C);
+	
+	if (validPts < ((int) (0.5 * ((double) pts1.size())))) {
+		printf("%s << ERROR! too few tracks (%d / %d) in best transform are in front of camera.\n", __FUNCTION__, ((int)validPts), ((int)pts1.size()));
+		return false;
+	}
+		
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 4);
+	
+	cv::Mat P1, R1, t1, Rvec;
+	transformationToProjection(C, P1);
+	decomposeTransform(C, R1, t1);
+	Rodrigues(R1, Rvec);
+
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 5);
+	
+	real_C1 = C * real_C0;	// real_C1 = C * real_C0;
+	
+	//real_C1 = C.inv() * real_C0;
+	
+	transformationToProjection(real_C0, real_P0);
+	transformationToProjection(real_C1, real_P1);
+	
+	/*
+	printf("%s << Putative camera poses (%d & %d)\n", __FUNCTION__, idx1, idx2);
+	cout << "real_C0 = " << endl;
+	cout << real_C0 << endl;
+	cout << "real_C1 = " << endl;
+	cout << real_C1 << endl;
+	*/
+	
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 6);
+	
+	//cout << camData.K << endl;
+	//cout << camData.K_inv << endl;
+	
+	vector<cv::Point2f> correspPoints;
+	TriangulatePoints(pts1, pts2, camData.K, camData.K_inv, real_C0, real_C1, ptCloud, correspPoints);
+	//TriangulatePoints(pts1_, pts2_, camData.K, camData.K_inv, real_C1.inv(), real_C0.inv(), ptCloud, correspPoints);
+	//TriangulatePoints(pts1, pts2, camData.K, camData.K_inv, real_P0, real_P1, ptCloud, correspPoints);
+	//printf("%s << %d points triangulated.\n", __FUNCTION__, ptsInCloud.size());
+	
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 7);
+	
+	triangulatedIndices.clear();
+	triangulatedIndices.insert(triangulatedIndices.end(), fullSpanIndices.begin(), fullSpanIndices.end());
+	
+	//printf("%s << triangulatedIndices.size() = %d\n", __FUNCTION__, triangulatedIndices.size());
+	
+	updateTriangulatedPoints(tracks, triangulatedIndices, ptCloud);
+	
+	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 8);
+	
+	//real_C1 = real_C1.inv();
+	
+	return true;			
+}
+
 int findBestCandidate(const cv::Mat *CX, const cv::Mat& K, const vector<cv::Point2f>& pts1, const vector<cv::Point2f>& pts2, cv::Mat& C) {
 	
 	int bestScore = 0, bestCandidate = 0;
@@ -594,162 +1023,7 @@ void getTriangulatedFullSpanPoints(vector<featureTrack>& tracks, vector<cv::Poin
 	
 }
 
-bool findClusterMean(const vector<cv::Point3d>& pts, cv::Point3d& pt3d, int mode, int minEstimates, double maxStandardDev) {
-	
-	cv::Point3d mean3d = cv::Point3d(0.0, 0.0, 0.0);
-	cv::Point3d stddev3d = cv::Point3d(0.0, 0.0, 0.0);
-	
-	vector<cv::Point3d> estimatedLocations;
-	estimatedLocations.insert(estimatedLocations.end(), pts.begin(), pts.end());
-	vector<int> clusterCount;
-	
-	double outlierLimit = 3.0;
-	
-	if (mode == CLUSTER_MEAN_MODE) {
-		
-		
-		for (unsigned int iii = 0; iii < estimatedLocations.size(); iii++) {
-			clusterCount.push_back(1);
-			//printf("%s << pt(%d) = (%f, %f, %f)\n", __FUNCTION__, iii, estimatedLocations.at(iii).x, estimatedLocations.at(iii).y, estimatedLocations.at(iii).z);
-		}
-		
-		for (unsigned int iii = 0; iii < estimatedLocations.size()-1; iii++) {
-			
-			cv::Point3d basePt = estimatedLocations.at(iii);
-			
-			
-			
-			for (unsigned int jjj = iii+1; jjj < estimatedLocations.size(); jjj++) {
-				
-				double separation = pow(pow(basePt.x - estimatedLocations.at(jjj).x, 2.0) + pow(basePt.y - estimatedLocations.at(jjj).y, 2.0) + pow(basePt.z - estimatedLocations.at(jjj).z, 2.0), 0.5);
-				
-				if ( (separation < maxStandardDev) || (maxStandardDev == 0.0) ) {
-					
-					estimatedLocations.at(iii) *= double(clusterCount.at(iii));
-					clusterCount.at(iii)++;
-					estimatedLocations.at(iii) += estimatedLocations.at(jjj);
-					estimatedLocations.at(iii).x /= double(clusterCount.at(iii));
-					estimatedLocations.at(iii).y /= double(clusterCount.at(iii));
-					estimatedLocations.at(iii).z /= double(clusterCount.at(iii));
-					
-					estimatedLocations.erase(estimatedLocations.begin() + jjj);
-					clusterCount.erase(clusterCount.begin() + jjj);
-					jjj--;
-					
-				}
-				
-			}
-		}
-		
-		int maxClusterSize = 0, maxClusterIndex = -1;
-		
-		for (unsigned int iii = 0; iii < estimatedLocations.size(); iii++) {
 
-			if (clusterCount.at(iii) >= maxClusterSize) {
-				maxClusterSize = clusterCount.at(iii);
-				maxClusterIndex = iii;
-			}
-
-			//printf("%s << cluster(%d) = (%f, %f, %f) [%d]\n", __FUNCTION__, iii, estimatedLocations.at(iii).x, estimatedLocations.at(iii).y, estimatedLocations.at(iii).z, clusterCount.at(iii));
-		}
-		
-		if (maxClusterSize >= minEstimates) {
-			pt3d = estimatedLocations.at(maxClusterIndex);
-		} else {
-			return false;
-		}
-		
-	} else {
-		//printf("%s << A; estimatedLocations.size() = (%d)\n", __FUNCTION__, estimatedLocations.size());
-		
-		for (unsigned int qqq = 0; qqq < estimatedLocations.size(); qqq++) {
-			
-			//printf("%s << pt(%d) = (%f, %f, %f)\n", __FUNCTION__, qqq, estimatedLocations.at(qqq).x, estimatedLocations.at(qqq).y, estimatedLocations.at(qqq).z); /* , separationsVector.at(qqq) */
-			
-			mean3d.x += (estimatedLocations.at(qqq).x / ((double) estimatedLocations.size()));
-			mean3d.y += (estimatedLocations.at(qqq).y / ((double) estimatedLocations.size()));
-			mean3d.z += (estimatedLocations.at(qqq).z / ((double) estimatedLocations.size()));
-			
-		}
-		
-		//printf("%s << mean = (%f, %f, %f)\n", __FUNCTION__, mean3d.x, mean3d.y, mean3d.z);
-		
-		//printf("%s << mean point = (%f, %f, %f)\n", __FUNCTION__, mean3d.x, mean3d.y, mean3d.z);
-		
-		// Calculate initial standard deviation
-		for (unsigned int qqq = 0; qqq < estimatedLocations.size(); qqq++) {
-			
-			stddev3d.x += (pow((estimatedLocations.at(qqq).x - mean3d.x), 2.0) / ((double) estimatedLocations.size()));
-			stddev3d.y += (pow((estimatedLocations.at(qqq).y - mean3d.y), 2.0) / ((double) estimatedLocations.size()));
-			stddev3d.z += (pow((estimatedLocations.at(qqq).z - mean3d.z), 2.0) / ((double) estimatedLocations.size()));
-			
-		}
-		
-		stddev3d.x = pow(stddev3d.x, 0.5);
-		stddev3d.y = pow(stddev3d.y, 0.5);
-		stddev3d.z = pow(stddev3d.z, 0.5);
-		
-		//printf("%s << stddev3d = (%f, %f, %f)\n", __FUNCTION__, stddev3d.x, stddev3d.y, stddev3d.z);
-		
-		//printf("%s << Point triangulated from (%d) view pairs: (%f, %f, %f) / (%f, %f, %f)\n", __FUNCTION__, estimatedLocations.size(), mean3d.x, mean3d.y, mean3d.z, stddev3d.x, stddev3d.y, stddev3d.z);
-		
-		// Reject projections that are more than X standard deviations away
-		for (int qqq = estimatedLocations.size()-1; qqq >= 0; qqq--) {
-			
-			double abs_diff_x = abs(estimatedLocations.at(qqq).x - mean3d.x);
-			double abs_diff_y = abs(estimatedLocations.at(qqq).y - mean3d.y); 
-			double abs_diff_z = abs(estimatedLocations.at(qqq).z - mean3d.z); 
-			
-			if ((abs_diff_x > outlierLimit*stddev3d.x) || (abs_diff_y > outlierLimit*stddev3d.y) || (abs_diff_z > outlierLimit*stddev3d.z)) {
-				estimatedLocations.erase(estimatedLocations.begin() + qqq);
-			}
-
-		}
-		
-		//printf("%s << B: estimatedLocations.size() = (%d)\n", __FUNCTION__, estimatedLocations.size());
-
-		// Recalculate the standard deviation
-		stddev3d.x = 0.0;
-		stddev3d.y = 0.0;
-		stddev3d.z = 0.0;
-		
-		for (unsigned int qqq = 0; qqq < estimatedLocations.size(); qqq++) {
-			
-			stddev3d.x += (pow((estimatedLocations.at(qqq).x - mean3d.x), 2.0) / ((double) estimatedLocations.size()));
-			stddev3d.y += (pow((estimatedLocations.at(qqq).y - mean3d.y), 2.0) / ((double) estimatedLocations.size()));
-			stddev3d.z += (pow((estimatedLocations.at(qqq).z - mean3d.z), 2.0) / ((double) estimatedLocations.size()));
-			
-		}
-		
-		stddev3d.x = pow(stddev3d.x, 0.5);
-		stddev3d.y = pow(stddev3d.y, 0.5);
-		stddev3d.z = pow(stddev3d.z, 0.5);
-		
-		//printf("%s << stddev3d = (%f, %f, %f) [%d]\n", __FUNCTION__, stddev3d.x, stddev3d.y, stddev3d.z, minEstimates);
-		
-		// Reject track if the standard deviation is still too high, or not enough rays remain
-		if ( ((stddev3d.x > maxStandardDev) || (stddev3d.y > maxStandardDev) || (stddev3d.z > maxStandardDev) || (((int)estimatedLocations.size()) < minEstimates)) && (maxStandardDev != 0.0) ) { 
-			return false;
-		}
-		
-		//printf("%s << C: estimatedLocations.size() = (%d)\n", __FUNCTION__, estimatedLocations.size());
-		
-		// Final calculation of average point location
-		pt3d.x = 0.0;
-		pt3d.y = 0.0;
-		pt3d.z = 0.0;
-		
-		for (unsigned int qqq = 0; qqq < estimatedLocations.size(); qqq++) {
-				
-			pt3d.x += (estimatedLocations.at(qqq).x / ((double) estimatedLocations.size()));
-			pt3d.y += (estimatedLocations.at(qqq).y / ((double) estimatedLocations.size()));
-			pt3d.z += (estimatedLocations.at(qqq).z / ((double) estimatedLocations.size()));
-			
-		}
-	}
-	
-	return true;
-}
 
 void obtainAppropriateBaseTransformation(cv::Mat& C0, vector<featureTrack>& tracks) {
 	
@@ -961,14 +1235,7 @@ void findFourTransformations(cv::Mat *C, const cv::Mat& E, const cv::Mat& K, con
 
 }
 
-bool pointIsInFront(const cv::Mat& C, const cv::Point3d& pt) {
-	
-	cv::Point3d p1;
-	transfer3dPoint(pt, p1, C);
 
-	if (p1.z > 0) return true;
-	return false;
-}
 
 int pointsInFront(const cv::Mat& C1, const cv::Mat& C2, const vector<cv::Point3d>& pts) {
 	int retVal = 0;

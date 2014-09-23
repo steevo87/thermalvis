@@ -7,6 +7,8 @@
 #ifndef THERMALVIS_GEOMETRY_H
 #define THERMALVIS_GEOMETRY_H
 
+#include "core/tools.hpp"
+
 #include "core/general_resources.hpp"
 #include "core/opencv_resources.hpp"
 #include "core/ros_resources.hpp"
@@ -29,13 +31,15 @@ typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vector4d;
 #define DEFAULT_ASSIGN_MODE			0
 #define MAPPER_ASSIGN_MODE			1
 
-#ifdef _BUILD_FOR_ROS_
+#define MAX_TIME_GAP_FOR_INTERP					0.5
+
+#define MAX_RVIZ_DISPLACEMENT 					1000
+
 void assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C, int idx, ros::Time timestamp, int mode = DEFAULT_ASSIGN_MODE);
 void convertPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q);
 void convertPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose);
 void convertAndShiftPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q);
 void convertAndShiftPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose);
-#endif
 
 /// \brief 		Converts translation vector from OpenCV to Eigen format
 void convertTvecToEigenvec(const cv::Mat& T_src, Eigen::Vector3f& T_dst);
@@ -139,6 +143,9 @@ void compileTransform(cv::Mat& c, const cv::Mat& R, const cv::Mat& t);
 void combineTransforms(cv::Mat& CN, const cv::Mat& C0, const cv::Mat& C1);
 void decomposeTransform(const cv::Mat& c, cv::Mat& R, cv::Mat& t);
 */
+
+bool interpolatePose(const geometry_msgs::Pose& pose1, ros::Time time1, const geometry_msgs::Pose& pose2, ros::Time time2, geometry_msgs::Pose& finalPose, ros::Time time3);
+void shiftPose(const geometry_msgs::Pose& pose_src, geometry_msgs::Pose& pose_dst, cv::Mat transformation);
 
 #endif // THERMALVIS_GEOMETRY_H
 

@@ -37,9 +37,6 @@ using namespace sba;
 
 #define POSITION_LIMIT				1000
 #define DEFAULT_MEAN_MAX_DIST		0.20
-#define DEFAULT_MEAN_MODE			0
-#define CLUSTER_MEAN_MODE			1
-#define MAX_REPROJECTION_DISPARITY	20.0
 
 // #define __SFM__DEBUG__
 
@@ -59,9 +56,6 @@ double calcGeometryDistance(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& mat, in
 
 /// \brief		http://www.ics.forth.gr/~lourakis/homest/
 double lourakisSampsonError(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& H);
-
-/// \brief		Find the average point position of the dominant cluster
-bool findClusterMean(const vector<cv::Point3d>& estimatedLocations, cv::Point3d& pt3d, int mode = DEFAULT_MEAN_MODE, int minEstimates = 3, double maxStandardDev = 0.1);
 
 /// \brief		Extract the triangulated 3D points from the tracking vector
 void ExtractPointCloud(vector<cv::Point3d>& cloud, vector<featureTrack>& trackVector);
@@ -134,8 +128,6 @@ void reverseTranslation(cv::Mat& C);
 
 void removeShortTracks(vector<featureTrack>& tracks, int idx1, int idx2);
 
-bool pointIsInFront(const cv::Mat& C, const cv::Point3d& pt);
-
 void getIndicesForTriangulation(vector<unsigned int>& dst, vector<unsigned int>& src, vector<unsigned int>& already_triangulated);
 
 void reconstructSubsequence(vector<featureTrack>& tracks, vector<cv::Point3d>& ptCloud, int idx1, int idx2);
@@ -149,6 +141,12 @@ void getTriangulatedFullSpanPoints(vector<featureTrack>& tracks, vector<cv::Poin
 
 bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<featureTrack>& tracks, unsigned int index, const cv::Mat& guide, unsigned minAppearances = 1, unsigned int iterCount = 100, double maxReprojErr = 4.0, double inliersPercentage = 0.9, double *reprojError = 0, double *pnpInlierProp = 0, bool debug = false);
 	
+double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData, double *scorecard[], int idx1, int idx2, double *scores, cv::Mat& pose, bool evaluate = false, bool debug = false);
+
+bool reconstructFreshSubsequencePair(vector<featureTrack>& tracks, vector<cv::Point3d>& ptCloud, vector<unsigned int>& triangulatedIndices, cv::Mat& real_C0, cv::Mat& real_C1, cameraParameters camData, int idx1, int idx2);
+
+void subselectPoints(const vector<cv::Point2f>& src1, vector<cv::Point2f>& dst1, const vector<cv::Point2f>& src2, vector<cv::Point2f>& dst2);
+
 #endif // THERMALVIS_RECONSTRUCTION_H
 
 #endif // _USE_PCL_
