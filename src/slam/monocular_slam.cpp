@@ -131,6 +131,33 @@ void slamNode::serverCallback(slamConfig &config) {
 
 }
 
+bool slamNode::isCurrentFramePotentialInitializor() {
+	// This is based on minimum amount of feature motion from ALL other collected frames in the potential startup set. 
+	// This will be used to prevent testing of frames that are very similar to existing ones, which is particularly important if the 
+	// camera is staying in the same place, or undergoing a very limited motion that is not providing enough viewpoint variation. 
+	// In this case, if you don't ignore redundant frames, you risk "randomly" selecting potential frames from a very long frame history 
+	// that is near-identical. You did something similar for the videoslam keyframe selection system, right?
+
+	// May also want to hard-code a maximum number of these potential frames to store for ongoing structure initialization tests, 
+	// so that even if motion is sufficient, the oldest test frames (except if they constitute the top scoring pair so far) drop 
+	// off as new ones are accumulated - especially since it is likely that they don't contain common points anyway.
+	
+	return false;
+}
+
+void slamNode::testInitializationWithCurrentFrame() {
+	// based partially on: performKeyframeEvaluation
+
+	// For real-time implementation, for each new potential keyframe it does as many tests with random preceding potential frames 
+	// as it can fit in until next frame arrives.
+	
+	// For offline implementation, should for the moment do a fixed number of maximum tests, based on what is not too sluggish.
+}
+
+void slamNode::selectBestInitializationPair() {
+
+}
+
 #ifdef _BUILD_FOR_ROS_
 void slamNode::main_loop(const ros::TimerEvent& event) {
 #else
@@ -159,28 +186,32 @@ void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg) {
 		handle_info(info_msg);
 #endif
 	}
-	if (!structureValid) {
-		if ((!configData.keyframeEvaluationMode) || (latestFrame >= configData.maxInitializationFrames)) {
+
+	if (configData.keyframeEvaluationMode) {
+		if (latestFrame >= configData.maxInitializationFrames) {
 			main_mutex.lock();
-			structureValid = findStartingFrames();
+			performKeyframeEvaluation();
 			main_mutex.unlock();
-			return;
-		} else if (!f1 && configData.keyframeEvaluationMode) {
-			f1 = true;
-			ROS_INFO("Waiting for sufficient frames for evaluation...");
+			wantsToShutdown = true;
 		}
-	}
-	
-	if (!structureValid) return;
-	
-	if (!structureFormed) {
-		main_mutex.lock();
-		structureFormed = formInitialStructure();
-		putativelyEstimatedFrames = currentPoseIndex-1;
-		main_mutex.unlock();
+		return;
 	}
 
-	if (!structureFormed) return;
+	if (!structureFormed) {
+		
+		if (isCurrentFramePotentialInitializor()) testInitializationWithCurrentFrame();
+
+		if ((latestFrame >= configData.maxInitializationFrames) || (bestInitializationScore >= configData.minInitializationConfidence)) { // elapsedTime > configData.maxInitializationSeconds
+			// select best pair
+			selectBestInitializationPair();
+			main_mutex.lock();
+			structureFormed = formInitialStructure();
+			putativelyEstimatedFrames = currentPoseIndex-1;
+			main_mutex.unlock();
+		}
+
+		if (!structureFormed) return;
+	}
 		
 	//while ((currentPoseIndex < latestFrame) && (keyframe_store.keyframes.size() <= 7)) {
 	while (currentPoseIndex < latestFrame) {
@@ -204,7 +235,7 @@ slamNode::slamNode(slamData startupData) :
 	baseConnectionNum(0),
 	lastBasePose(-1),
 	latestFrame(-1),
-	structureValid(false),
+	bestInitializationScore(0.0),
 	structureFormed(false), 
 	infoProcessed(false),
 	framesArrived(0),
@@ -1542,7 +1573,11 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 	} 
 }
 
-bool slamNode::findStartingFrames() {
+bool slamNode::performKeyframeEvaluation() {
+
+	if (latestFrame >= configData.maxInitializationFrames) { // OR if time has reached maximum
+		// Will need to select the best frame so far
+	}
 	
 	bool foundStartingPair = false;
 	
@@ -1705,6 +1740,9 @@ double slamNode::assignStartingFrames(unsigned int best_iii, unsigned int best_j
 }
 
 bool slamNode::formInitialStructure() {
+
+	// In terms of selecting the arbitary scale, you should make it so that the centroid of the 
+	// 3D points in front of the camera (those used for initial structure) are 1m in front of the first camera (in terms of their Z coordinates).
 	
 	//ROS_INFO("Entered <formInitialStructure> (%d).", baseConnectionNum);
 	

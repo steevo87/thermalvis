@@ -95,13 +95,13 @@ private:
 	ofstream error_file;
 	char error_filename[256];
 
-	
+	double bestInitializationScore; //!< Stores the best initialization score achieved between potential initialization frames so far
 	
 	bool firstIteration;
 	
 	cv::Mat blank;
 	
-	bool structureValid, structureFormed;
+	bool structureFormed;
 	
 	int latestFrame;
 	
@@ -265,7 +265,7 @@ public:
 
 	// Routines
 	bool formInitialStructure();
-	bool findStartingFrames();
+	bool performKeyframeEvaluation();
 	void refreshPoses();
 	bool checkForKeyframe();
 	void processNextFrame();
@@ -275,6 +275,15 @@ public:
 	double assignStartingFrames(unsigned int best_iii, unsigned int best_jjj, double* keyframe_scores, cv::Mat& startingTrans);
 	
 	void getGuidingPose(cv::Mat *srcs, cv::Mat& dst, unsigned int idx);
+
+	///brief	Tests whether latest received frame has sufficient motion from other potential initialization frames to also be considered
+	bool isCurrentFramePotentialInitializor();
+
+	///brief	Using current frame, test initialization performance with existing potential initialization frames
+	void testInitializationWithCurrentFrame();
+
+	///brief	Chooses the indices of the best frames for structure initialization that have so far been found
+	void selectBestInitializationPair();
 	
 	void clearSystem();
 	
