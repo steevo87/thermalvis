@@ -106,7 +106,7 @@ void triangulateTracks(vector<featureTrack>& tracks, vector<unsigned int>& indic
 			stddev3d.y = pow(stddev3d.y, 0.5);
 			stddev3d.z = pow(stddev3d.z, 0.5);
 			
-			for (int qqq = estimatedLocations.size()-1; qqq >= 0; qqq--) {
+			for (int qqq = int(estimatedLocations.size())-1; qqq >= 0; qqq--) {
 				
 				double abs_diff_x = abs(estimatedLocations.at(qqq).x - mean3d.x);
 				double abs_diff_y = abs(estimatedLocations.at(qqq).y - mean3d.y); 

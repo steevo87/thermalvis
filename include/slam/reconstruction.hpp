@@ -2,8 +2,6 @@
  *  \brief	Declarations for establishing 3D structure of scene.
 */
 
-#ifdef _USE_PCL_
-
 #ifndef THERMALVIS_RECONSTRUCTION_H
 #define THERMALVIS_RECONSTRUCTION_H
 
@@ -149,4 +147,3 @@ void subselectPoints(const vector<cv::Point2f>& src1, vector<cv::Point2f>& dst1,
 
 #endif // THERMALVIS_RECONSTRUCTION_H
 
-#endif // _USE_PCL_

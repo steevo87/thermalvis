@@ -2,8 +2,6 @@
  *  \brief	Definitions for recovering 3D structure from camera poses and projections.
 */
 
-#ifdef _USE_PCL_
-
 #include "slam/reconstruction.hpp"
 
 void summarizeTransformation(const cv::Mat& C, char *summary) {
@@ -47,7 +45,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	//printf("%s << B: pts1.size() = %d; pts2.size() = %d\n", __FUNCTION__, pts1.size(), pts2.size());
 	
-	unsigned int min_pts = std::min(pts1.size(), pts2.size());
+	unsigned int min_pts = int(std::min(pts1.size(), pts2.size()));
 	
 	if (min_pts < 16) {
 		printf("%s << Returning with (-1); insufficient points.\n", __FUNCTION__);
@@ -591,7 +589,7 @@ void removeShortTracks(vector<featureTrack>& tracks, int idx1, int idx2) {
 	int minLength = (idx2 - idx1) / 2;
 	
 	for (unsigned int iii = 0; iii < tracks.size(); iii++) {
-		int trackLength = tracks.at(iii).locations.size();
+		int trackLength = int(tracks.at(iii).locations.size());
 		if (trackLength < minLength) {
 			int final_image = tracks.at(iii).locations.at(trackLength-1).imageIndex;
 			
@@ -826,7 +824,7 @@ bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<
 		
 	}
 	
-	unsigned int utilizedPointsCount = points_3d.size();
+	unsigned int utilizedPointsCount = ((unsigned int)points_3d.size());
 	
 	cv::Mat Rvec, R, t;
 	bool guided = false;
@@ -1806,7 +1804,7 @@ void estimateNewPose(vector<featureTrack>& tracks, cv::Mat& K, int idx, cv::Mat&
 	for (unsigned int iii = 0; iii < tracks.size(); iii++) {
 		if (tracks.at(iii).locations.size() >= 2) {
 			
-			int finalIndex = tracks.at(iii).locations.size()-1;
+			int finalIndex = int(tracks.at(iii).locations.size())-1;
 			
 			if (((int)tracks.at(iii).locations.at(finalIndex).imageIndex) == idx) {
 				//Point3d tmpPt(tracks.at(iii).xyzEstimate.x, tracks.at(iii).xyzEstimate.y, tracks.at(iii).xyzEstimate.z);
@@ -2171,5 +2169,3 @@ void findCentroid(vector<featureTrack>& tracks, cv::Point3d& centroid, cv::Point
 	stdDeviation.z = pow(stdDeviation.z, 0.5);
 	
 }
-
-#endif

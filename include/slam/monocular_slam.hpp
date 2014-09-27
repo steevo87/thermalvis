@@ -16,6 +16,7 @@
 #include "core/launch.hpp"
 #include "core/timing.hpp"
 
+#include "slam/geometry.hpp"
 #include "slam/keyframes.hpp"
 #include "slam/reconstruction.hpp"
 #include "slam/visualization.hpp"
@@ -230,7 +231,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void main_loop(const ros::TimerEvent& event);
 #else
-	bool main_loop();
+	void main_loop(sensor_msgs::CameraInfo *info_msg);
 #endif
 	
 	///brief	Prepares node for termination.
@@ -243,14 +244,21 @@ public:
 	void getBasisNodes(vector<unsigned int>& basisNodes, unsigned int idx);
 	
 #ifdef _BUILD_FOR_ROS_
-	// Callbacks
 	void handle_tracks(const thermalvis::feature_tracksConstPtr& msg);
-	void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
-	
-	void integrateNewTrackMessage(const thermalvis::feature_tracksConstPtr& msg);
-	
+#else
+	void handle_tracks();
 #endif
 
+#ifdef _BUILD_FOR_ROS_
+	void integrateNewTrackMessage(const thermalvis::feature_tracksConstPtr& msg);
+#endif
+
+#ifdef _BUILD_FOR_ROS_
+	void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
+#else
+	void handle_info(sensor_msgs::CameraInfo *info_msg);
+#endif
+	
 	void handle_pose(const geometry_msgs::PoseStamped& pose_msg);
 
 	bool updateKeyframePoses(const geometry_msgs::PoseStamped& pose_msg, bool fromICP = true);

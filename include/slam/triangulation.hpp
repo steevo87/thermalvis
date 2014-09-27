@@ -14,7 +14,6 @@
 #define EPSILON 0.00001
 #define MAX_REPROJECTION_DISPARITY	20.0
 
-
 /// \brief 		Determine 3D position estimates for tracks with provided indices
 void triangulateTracks(std::vector<featureTrack>& tracks, vector<unsigned int>& indices, cameraParameters& cameraData, cv::Mat *cameras, unsigned int earliest_index, unsigned int latest_index);
 

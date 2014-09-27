@@ -134,18 +134,16 @@ void slamNode::serverCallback(slamConfig &config) {
 #ifdef _BUILD_FOR_ROS_
 void slamNode::main_loop(const ros::TimerEvent& event) {
 #else
-bool slamNode::main_loop() {
+void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg) {
 #endif
 
 #ifndef _BUILD_FOR_ROS_
-	if (featureTrackVector == NULL) return false;
+	handle_tracks();
+	if (featureTrackVector == NULL) return;
 	ROS_INFO("featureTrackVector.size() = (%d)", featureTrackVector->size());
-	return true;
-#else
-	
-	if (configData.keyframeEvaluationMode && evaluationCompleted) {
-		return;
-	}
+#endif
+
+	if (configData.keyframeEvaluationMode && evaluationCompleted) return;
 	
 	if (firstIteration) {
 		main_mutex.lock();
@@ -155,10 +153,12 @@ bool slamNode::main_loop() {
 	}
 	
 	if (!infoProcessed) {
-		//printf("%s << info not processed!", __FUNCTION__);
+#ifdef _BUILD_FOR_ROS_		
 		return;
+#else
+		handle_info(info_msg);
+#endif
 	}
-	
 	if (!structureValid) {
 		if ((!configData.keyframeEvaluationMode) || (latestFrame >= configData.maxInitializationFrames)) {
 			main_mutex.lock();
@@ -169,148 +169,25 @@ bool slamNode::main_loop() {
 			f1 = true;
 			ROS_INFO("Waiting for sufficient frames for evaluation...");
 		}
-		
 	}
 	
-	if (!structureValid) {
-		return;
-	} else if (!structureFormed) {
+	if (!structureValid) return;
+	
+	if (!structureFormed) {
 		main_mutex.lock();
 		structureFormed = formInitialStructure();
 		putativelyEstimatedFrames = currentPoseIndex-1;
 		main_mutex.unlock();
 	}
 
-	if (!structureFormed) {
-		return;
-	}
-	
-	
-	
+	if (!structureFormed) return;
 		
 	//while ((currentPoseIndex < latestFrame) && (keyframe_store.keyframes.size() <= 7)) {
 	while (currentPoseIndex < latestFrame) {
 		main_mutex.lock();
-		
 		processNextFrame();
-		
-		if (currentPoseIndex == ((int) keyframe_store.keyframes.at(keyframe_store.keyframes.size()-1).idx)) {
-			//refreshPoses();
-		}
-		
-		/*
-		if (keyframe_store.keyframes.size() == 3) {
-			adjustFullSystem(featureTrackVector, configData.cameraData, ACM, currentPoseIndex, 20);
-		} else if (keyframe_store.keyframes.size() == 4) {
-			adjustFullSystem(featureTrackVector, configData.cameraData, ACM, currentPoseIndex, 10);
-		} else if (keyframe_store.keyframes.size() == 5) {
-			adjustFullSystem(featureTrackVector, configData.cameraData, ACM, currentPoseIndex, 5);
-		} else {
-			adjustFullSystem(featureTrackVector, configData.cameraData, ACM, currentPoseIndex, 3);
-		}
-		*/
-		
-		//update_display();
-		
-		//show_poses();
-		
 		main_mutex.unlock();
 	}
-	
-	if (keyframe_store.keyframes.size() > 3) {
-		
-		//update_cameras_to_pnp();
-		
-	}
-	
-	//bool doneRefinement = false;
-	
-	//while (0) {
-	//while (currentPoseIndex == latestFrame) {
-	//if ((keyframe_store.keyframes.size() > 3) && (!doneRefinement)) {
-	//printf("%s << currentPoseIndex = %d (%d)", __FUNCTION__, currentPoseIndex, latestFrame);
-	if (0) { // ((elapsedTime > 5000.0) && (currentPoseIndex == latestFrame)) {
-		
-		//main_mutex.lock();
-		
-		if (keyframe_store.keyframes.size() > 2) {
-			
-			unsigned int starting_cam = keyframe_store.keyframes.at(0).idx; //((unsigned int) max(0, ((int) currentPoseIndex-50)));
-			
-			vector<unsigned int> allIndices;
-			for (int iii = starting_cam; iii <= currentPoseIndex; iii++) {
-				if (ACM[iii].rows == 4) {
-					allIndices.push_back(iii);
-				}
-			}
-			
-			double avgError;
-			
-			ROS_INFO("About to full-system adjust (%d)", currentPoseIndex);
-			
-			avgError = keyframeBundleAdjustment(configData.cameraData, featureTrackVector, ACM, allIndices, 5, true);
-
-			ROS_INFO("Full-system (%d) adjustment error = %f (k = %d)", currentPoseIndex, avgError, ((int)allIndices.size()));
-	
-			//avgError = adjustFullSystem(featureTrackVector, configData.cameraData, ACM, starting_cam, currentPoseIndex, 1);
-			
-			//retrieveFullSystem(fullsys, ACM, featureTrackVector, currentPoseIndex);
-			//printf("%s::%s << Full-sys can be optimized to: %f", __PROGRAM__, __FUNCTION__, avgError);
-			
-			update_display();
-			
-			//doneRefinement = true;
-			
-			/*
-			// optimizeFullSystem(sys, featureTrackVector, configData.cameraData, ACM, currentPoseIndex);
-			
-			//keyframes_sem.lock();
-			vector<unsigned int> keyframeIndices;
-			for (unsigned int iii = 0; iii < keyframe_store.keyframes.size(); iii++) {
-				keyframeIndices.push_back(keyframe_store.keyframes.at(iii).idx);
-				
-			}
-			
-			//printf("%s << keyframeIndices.size() = %d", __FUNCTION__, keyframeIndices.size());
-			
-			//keyframes_sem.unlock();
-			double avgError;
-			
-			
-			assignPartialSystem(sys, featureTrackVector, configData.cameraData, ACM, keyframeIndices, true);
-			
-			printf("%s << sys.nodes() = %d; sys.tracks() = %d", __FUNCTION__, sys.nodes.size(), sys.tracks.size());
-			
-			avgError = optimizeSystem(sys, 1e-4, 1 );
-			retrievePartialSystem(sys, ACM, featureTrackVector, keyframeIndices);
-			
-			
-			//retrieveFullSystem(sys, ACM, featureTrackVector, keyframe_store.keyframes.at(0).idx);
-			printf("%s::%s << Optimizing full system while waiting... (%f)", __PROGRAM__, __FUNCTION__, avgError);
-			*/
-		}
-		
-		//main_mutex.unlock();
-
-		
-	}
-	
-	/*
-	if (currentPoseIndex < latestFrame) {
-		printf("%s << DEBUG [%d]", __FUNCTION__, 12);
-		repetitionNoted = false;
-		processNextFrame();
-		printf("%s << DEBUG [%d]", __FUNCTION__, 13);
-	} else {
-		if (!repetitionNoted) {
-			printf("%s << CurrentPose at latestFrame [%d]", __FUNCTION__, latestFrame);
-		} else {
-			repetitionNoted = true;
-		}
-		
-	}
-	*/
-#endif
 }
 
 #ifdef _BUILD_FOR_ROS_
@@ -661,13 +538,13 @@ bool slamNode::checkForKeyframe() {
 		double motionScore = getFeatureMotion(*featureTrackVector, maintainedIndices, previousKeyframe, image_idx_2);		
 		
 		vector<unsigned int> untriangulatedIndices;
-		unsigned int trackedSinceLast = maintainedIndices.size();
+		int trackedSinceLast = int(maintainedIndices.size());
 		reduceActiveToTriangulated(*featureTrackVector, maintainedIndices, untriangulatedIndices);
 		
 		//printf("%s::%s << Tracked since last keyframe (%d, %d): %d / %d", __PROGRAM__, __FUNCTION__, previousKeyframe, image_idx_2, trackedSinceLast, startingTracksCount);
 		
 		bool lowProportionTracked = false;
-		if (trackedSinceLast < ((unsigned int) (((double) startingTracksCount) * configData.requiredTrackFrac))) {
+		if (trackedSinceLast < ((int) (((double) startingTracksCount) * configData.requiredTrackFrac))) {
 			lowProportionTracked = true;
 			//printf("%s::%s << Low proportion tracked: (%d / %d).", __PROGRAM__, __FUNCTION__, trackedSinceLast, startingTracksCount);
 		}
@@ -1063,8 +940,12 @@ void slamNode::update_cameras_to_pnp() {
 	
 }
 
+#ifdef NOT_RECOMBINED_YET
 #ifdef _BUILD_FOR_ROS_
 void slamNode::handle_tracks(const thermalvis::feature_tracksConstPtr& msg) { // FROM VIDEOSLAM
+#else
+void slamNode::handle_tracks() {
+#endif
 	
 	if ((msg->header.seq % 4) != 0) {
 		//return;
@@ -1162,118 +1043,61 @@ void slamNode::handle_tracks(const thermalvis::feature_tracksConstPtr& msg) { //
 	
 	
 }
+#endif
 
+#ifdef _BUILD_FOR_ROS_
 void slamNode::handle_tracks(const thermalvis::feature_tracksConstPtr& msg) { // FROM MONOSLAM
-	
-	if (configData.verboseMode) { ROS_INFO("Handling projections (%d)...", msg->projection_count); }
-	
-	if (!infoProcessed) {
-		//return;
-	}
-	
-	if (msg->indices.size() == 0) {
-		ROS_WARN("No new tracks.");
-		return;
-	}
-        
-	//ROS_WARN("XY (%d)", 0);
-	
+#else
+void slamNode::handle_tracks() {
+#endif
+
 	if (configData.timeDebug) trackHandlingTime.startRecording();
 	
+#ifdef _BUILD_FOR_ROS_
 	main_mutex.lock();
-	
+	if (msg->indices.size() == 0) return;
+
 	featureTrack blankTrack;
-	
-	//ROS_WARN("XY (%d)", 1);
-	
 	unsigned int newest_track = 0;	
 	
-	for (unsigned int iii = 0; iii < msg->projection_count; iii++) {
-		
-		//ROS_WARN("XY [%d] (%d)", iii, 0);
-		
-		if (msg->indices[iii] > newest_track) {
-			newest_track = msg->indices[iii];
-		}
-		
+	for (unsigned int iii = 0; iii < msg->projection_count; iii++) if (msg->indices[iii] > newest_track) newest_track = msg->indices[iii];
+
+	if (newest_track >= featureTrackVector->size()) {
+		for (unsigned int iii = featureTrackVector->size(); iii <= newest_track; iii++) featureTrackVector->push_back(blankTrack);
 	}
-	
-	//ROS_INFO("Newest track = (%d)", newest_track);
-	
-	if (newest_track >= featureTrackVector.size()) {
-		for (unsigned int iii = featureTrackVector.size(); iii <= newest_track; iii++) {
-			featureTrackVector.push_back(blankTrack);
-		}
-	}
-	
-	//ROS_INFO("Active tracks = (%d)", featureTrackVector.size());
-	
+
 	for (unsigned int iii = 0; iii < msg->projection_count; iii++) {
-		
+		int idx = ((int) msg->cameras.at(iii));
+#else
+	for (unsigned int iii = 0; iii < featureTrackVector->size(); iii++) {
+		int idx = featureTrackVector->at(iii).locations.at(featureTrackVector->at(iii).locations.size()-1).imageIndex;
+#endif
+		if (idx > latestFrame) latestFrame = idx;
+
+#ifdef _BUILD_FOR_ROS_
 		bool alreadyAdded = false;
 		
-		//ROS_INFO("%d vs %d", msg->cameras.at(iii), latestFrame);
-		
-		if (((int) msg->cameras.at(iii)) > latestFrame) {
-			latestFrame = msg->cameras.at(iii);
-		}
-		
-		
-		//ROS_INFO("Checking projection (%d) = (index: %d / %d)", iii, msg->indices.at(iii), featureTrackVector.size());
-	
-		for (unsigned int jjj = 0; jjj < featureTrackVector.at(msg->indices.at(iii)).locations.size(); jjj++) {
-				
-			//ROS_INFO("Checking feature track loc (%d)", jjj);
-				
+		for (unsigned int jjj = 0; jjj < featureTrackVector->at(msg->indices.at(iii)).locations.size(); jjj++) {
 			if (featureTrackVector.at(msg->indices.at(iii)).locations.at(jjj).imageIndex == ((int) msg->cameras.at(iii))) {
-				//ROS_WARN("Already exists");
 				alreadyAdded = true;
 				break;
 			}
-			
-			
-			
 		}
 		
 		if (!alreadyAdded) {
-			//ROS_WARN("Adding...");
-			
 			cv::Point2f proj(((float) msg->projections_x.at(iii)), ((float) msg->projections_y.at(iii)));
-			
 			indexedFeature newFeature(msg->cameras.at(iii), proj);
-			
 			featureTrackVector.at(msg->indices.at(iii)).addFeature(newFeature);
-			
-			//ROS_WARN("Added.");
 		}
-		
+#endif
 	}
 	
-	cv::Mat trackMatrix;
-	
-	if (0) {
-		if (featureTrackVector.size() > 0) {
-			// ROS_WARN("Creating track matrix...");
-			if (createTrackMatrix(featureTrackVector, trackMatrix)) {
-				//ROS_WARN("Track matrix created.");
-				cv::imshow("trackMatrix_received", trackMatrix);
-				cv::waitKey(1);
-			}
-			
-		}
-	}
-	
-
-	
-
 	if (configData.timeDebug) trackHandlingTime.stopRecording();
 
-	
-	//elapsedTime = timeElapsedMS(cycle_timer);
-	
+#ifdef _BUILD_FOR_ROS_
 	main_mutex.unlock();
-}
 #endif
+}
 
 void slamNode::processNextFrame() {
 	
@@ -1577,8 +1401,12 @@ void slamNode::processNextFrame() {
 	currentPoseIndex++;
 }
 
+#ifdef TEMPORARILY_DEACTIVATED
 #ifdef _BUILD_FOR_ROS_
-void videoslamNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg) { // FROM VIDEOSLAM
+void slamNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg) { // FROM VIDEOSLAM
+#else
+void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
+#endif
 	
 	if (wantsToShutdown) return;
 	
@@ -1642,58 +1470,47 @@ void videoslamNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg)
 	} 
 	
 }
+#endif
 
+#ifdef _BUILD_FOR_ROS_
 void slamNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg) { // FROM MONOSLAM
-	
-	//printf("%s::%s << Entered.", __PROGRAM__, __FUNCTION__);
-	
+#else
+void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
+#endif
+
+#ifdef _USE_SBA_
 	drawGraph2(display_sys, camera_pub, points_pub, path_pub, decimation, bicolor);
-	
+#endif
+
 	if (!infoProcessed) {
-		
 		ROS_INFO("Handling camera info.");
-		
 		try	{
 			
 			configData.cameraData.K = cv::Mat::eye(3, 3, CV_64FC1);
 			
 			for (unsigned int mmm = 0; mmm < 3; mmm++) {
-				for (unsigned int nnn = 0; nnn < 3; nnn++) {
-					configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
-				}
+				for (unsigned int nnn = 0; nnn < 3; nnn++) configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
 			}
 			
 			cout << configData.cameraData.K << endl;
-			
-			
-			
-			configData.cameraData.K_inv = configData.cameraData.K.inv();
-			
 
-			
+			configData.cameraData.K_inv = configData.cameraData.K.inv();
+
 			configData.cameraData.cameraSize.width = info_msg->width;
 			configData.cameraData.cameraSize.height = info_msg->height;
 		
-			//printf("%s << (%d, %d)", __FUNCTION__, configData.cameraData.cameraSize.width, configData.cameraData.cameraSize.height);
-			
 			unsigned int maxDistortionIndex;
 			if (info_msg->distortion_model == "plumb_bob") {
 				maxDistortionIndex = 5;
 			} else {
-				
-				if (info_msg->distortion_model != "rational_polynomial") {
-					ROS_ERROR("Unfamiliar with <info_msg->distortion_model> of (%s)", info_msg->distortion_model.c_str());
-				}
-				
+				if (info_msg->distortion_model != "rational_polynomial") ROS_ERROR("Unfamiliar with <info_msg->distortion_model> of (%s)", info_msg->distortion_model.c_str());
 				maxDistortionIndex = 8;
 			}
 			
 			configData.cameraData.distCoeffs = cv::Mat::zeros(1, maxDistortionIndex, CV_64FC1);
 			configData.cameraData.blankCoeffs = cv::Mat::zeros(1, maxDistortionIndex, CV_64FC1);
 			
-			for (unsigned int iii = 0; iii < maxDistortionIndex; iii++) {
-				configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg->D[iii];
-			}
+			for (unsigned int iii = 0; iii < maxDistortionIndex; iii++) configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg->D[iii];
 			
 			cout << configData.cameraData.distCoeffs << endl;
 			
@@ -1706,44 +1523,30 @@ void slamNode::handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg) { //
 			
 			configData.cameraData.newCamMat = getOptimalNewCameraMatrix(configData.cameraData.K, configData.cameraData.distCoeffs, configData.cameraData.cameraSize, alpha, configData.cameraData.cameraSize, validPixROI, centerPrincipalPoint);
 			
-			//(configData.cameraData.newCamMat).copyTo(configData.cameraData.K);
-			
 			cout << configData.cameraData.newCamMat << endl;
 			
 			infoProcessed = true;
 			
+#ifdef _USE_SBA_
 			addFixedCamera(display_sys, configData.cameraData, eye4);
-			
 			drawGraph2(display_sys, camera_pub, points_pub, path_pub, decimation, bicolor);
-			
-			assignPose(currentPose, eye4);
-			pose_pub.publish(currentPose);
-			
-		} catch (...) /*(sensor_msgs::CvBridgeException& e)*/ {
-			ROS_ERROR("Some failure in reading in the camera parameters...");
-		}
-		
-		ROS_INFO("Camera information processed.");
-		
-	} 
-	
-	
-
-	
-}
 #endif
+			assignPose(currentPose, eye4);
+
+#ifdef _BUILD_FOR_ROS_
+			pose_pub.publish(currentPose);
+#endif
+		} catch (...) { ROS_ERROR("Some failure in reading in the camera parameters..."); }
+		
+		ROS_INFO("Camera information processed.");	
+	} 
+}
 
 bool slamNode::findStartingFrames() {
 	
-	//ROS_INFO("Finding initial keyframes (latest frame = %d)", latestFrame);
-	
-	//printf("%s::%s << Finding initial keyframes...", __PROGRAM__, __FUNCTION__);
-	
 	bool foundStartingPair = false;
 	
-	if (latestFrame < 1) {
-		return foundStartingPair;
-	}
+	if (latestFrame < 1) return foundStartingPair;
 
 	double keyframe_scores[5];
 	cv::Mat startingTrans;
@@ -1757,29 +1560,19 @@ bool slamNode::findStartingFrames() {
 
 	for (int jjj = configData.minStartingSeparation; jjj < min(latestFrame+1, configData.maxInitializationFrames); jjj++) {
 		
-		//ROS_INFO("Checking up to frame (%d) : (%d /%d)", jjj, latestFrame+1, configData.maxInitializationFrames);
-		
 		vector<unsigned int> startersToTest;
 		
-		for (int iii = max(0, ((int)jjj)-configData.maxStartingSeparation); iii < jjj-configData.minStartingSeparation; iii++) {
-			startersToTest.push_back(iii);
-		}
-		
+		for (int iii = max(0, ((int)jjj)-configData.maxStartingSeparation); iii < jjj-configData.minStartingSeparation; iii++) startersToTest.push_back(iii);
 		
 		while (((int)startersToTest.size()) > configData.maxTestsPerFrame) {
-			
 			unsigned int randIndex = rand() % startersToTest.size();
 			startersToTest.erase(startersToTest.begin() + randIndex);
-			
 		}
-		
 		
 		//#pragma omp parallel for
 		for (unsigned int iii = 0; iii < startersToTest.size(); iii++) {
 			
-			if ((foundStartingPair) && (!configData.keyframeEvaluationMode)) {
-				break;
-			}
+			if ((foundStartingPair) && (!configData.keyframeEvaluationMode)) break;
 			
 			if (keyframeTestFlags.at<unsigned char>(startersToTest.at(iii),jjj) == 0) {
 
@@ -1790,10 +1583,6 @@ bool slamNode::findStartingFrames() {
 				startingTrans = cv::Mat();
 				keyframeTestScores.at<double>(startersToTest.at(iii),jjj) = testKeyframePair(*featureTrackVector, configData.cameraData, scorecardParams, startersToTest.at(iii), jjj, keyframe_scores, startingTrans, true /*configData.keyframeEvaluationMode*/, true);
 				//ROS_INFO("Frames tested");
-				
-				if (keyframeTestScores.at<double>(startersToTest.at(iii),jjj) > 0.0) {
-					//ROS_INFO("score (%d) -> (%d) = (%f)", startersToTest.at(iii), jjj, keyframeTestScores.at<double>(startersToTest.at(iii),jjj));
-				}
 				
 				if (configData.keyframeEvaluationMode) {
 					
@@ -1827,54 +1616,28 @@ bool slamNode::findStartingFrames() {
 						cv::imshow("readybar", blankMat);
 						cv::waitKey(1);
 						
-						if (response == 'y') {
-							result = true;
-						} else {
-							result = false;
-						}
+						(response == 'y') ? result = true: result = false;
+						
 					} else {
 						ROS_INFO("Initial starting transformation invalid, returning failure.");
 						result = false;
 					}
 					
-					
-					
 					ROS_INFO("Preparing string...");
 					sprintf(outputString, "%06d %06d %+02.2f %+02.2f %+02.2f %+02.2f %+02.2f %1.2f %d", startersToTest.at(iii), jjj, keyframe_scores[0], keyframe_scores[1], keyframe_scores[2], keyframe_scores[3], keyframe_scores[4], keyframeTestScores.at<double>(startersToTest.at(iii),jjj), (result ? 1 : 0));
 					ROS_INFO("String written.");
-					/*
-					evaluationStream << startersToTest.at(iii) << " " << jjj;
-					evaluationStream << " " << keyframe_scores[0];
-					evaluationStream << " " << keyframe_scores[1];
-					evaluationStream << " " << keyframe_scores[2];
-					evaluationStream << " " << keyframe_scores[3];
-					evaluationStream << " " << keyframe_scores[4];
-					evaluationStream << " " << 1 << endl;
-					*/
-					
 					evaluationStream << outputString << endl;
 				}
 				
 				
 				keyframeTestFlags.at<unsigned char>(startersToTest.at(iii),jjj) = 1;
 
-				if (keyframeTestScores.at<double>(startersToTest.at(iii),jjj) >= configData.minStartupScore) {
-					//ROS_INFO("Valid keyframe pair found at (%d, %d) [%f] > [%f]", startersToTest.at(iii), jjj, keyframeTestScores.at<double>(startersToTest.at(iii),jjj), configData.minStartupScore);
-					
-					foundStartingPair = true;
-
-				} 
-				
+				if (keyframeTestScores.at<double>(startersToTest.at(iii),jjj) >= configData.minStartupScore) foundStartingPair = true;
 				ROS_INFO("Keyframe pair (%03d, %03d) initialization score = [%f] {%1.2f, %1.2f, %1.2f, %1.2f, %1.2f}", startersToTest.at(iii), jjj, keyframeTestScores.at<double>(startersToTest.at(iii),jjj), keyframe_scores[0], keyframe_scores[1], keyframe_scores[2], keyframe_scores[3], keyframe_scores[4]);
-				
 			}
-
 		}
 		
-		if ((foundStartingPair) && (!configData.keyframeEvaluationMode)) {
-			break;
-		}
-		
+		if ((foundStartingPair) && (!configData.keyframeEvaluationMode)) break;
 	}
 	
 	if (configData.keyframeEvaluationMode) {
@@ -1899,13 +1662,9 @@ bool slamNode::findStartingFrames() {
 		best_jjj = max_coord.x;
 		
 		assignStartingFrames(best_iii, best_jjj, keyframe_scores, startingTrans);
-		
-		//nextFrame = best_jjj+1;
 	}
 	
 	return foundStartingPair;
-	
-	
 }
 
 void slamNode::clearSystem() {
@@ -1914,21 +1673,13 @@ void slamNode::clearSystem() {
 	keyframe_store.keyframes.clear();
 	//keyframe_store.count = 0;
 	
-	for (unsigned int iii = 0; iii < featureTrackVector->size(); iii++) {
-		featureTrackVector->at(iii).isTriangulated = false;
-	}
+	for (unsigned int iii = 0; iii < featureTrackVector->size(); iii++) featureTrackVector->at(iii).isTriangulated = false;
 	
 	int finalIndex;
 	
-	if (configData.keyframeEvaluationMode) {
-		finalIndex = configData.maxInitializationFrames + 1;
-	} else {
-		finalIndex = latestFrame + 1;
-	}
-	for (int iii = 0; iii < finalIndex; iii++) {
-		ACM[iii] = cv::Mat();
-	}
+	(configData.keyframeEvaluationMode) ? finalIndex = configData.maxInitializationFrames + 1 : finalIndex = latestFrame + 1;
 	
+	for (int iii = 0; iii < finalIndex; iii++) ACM[iii] = cv::Mat();
 }
 
 double slamNode::assignStartingFrames(unsigned int best_iii, unsigned int best_jjj, double* keyframe_scores, cv::Mat& startingTrans) {
@@ -1947,9 +1698,7 @@ double slamNode::assignStartingFrames(unsigned int best_iii, unsigned int best_j
 	cout << ACM[best_iii] << endl;
 	cout << ACM[best_jjj] << endl;
 	
-	//while (1) {}
-	
-	keyframe_store.addConnection(keyframe_store.keyframes.size()-2, keyframe_store.keyframes.size()-1, KF_CONNECTION_GEOMETRIC, F_arr[best_iii]);
+	keyframe_store.addConnection(int(keyframe_store.keyframes.size())-2, int(keyframe_store.keyframes.size())-1, KF_CONNECTION_GEOMETRIC, F_arr[best_iii]);
 	
 	return kfScore;
 	
@@ -1985,7 +1734,7 @@ bool slamNode::formInitialStructure() {
 	getActiveTracks(activeTrackIndices, *featureTrackVector, image_idx_1, image_idx_2);
 	filterToCompleteTracks(fullSpanIndices, activeTrackIndices, *featureTrackVector, image_idx_1, image_idx_2);
 	
-	startingTracksCount = fullSpanIndices.size();
+	startingTracksCount = (unsigned int)(fullSpanIndices.size());
 	
 	//printf("%s << Active indices for this subsequence: %d", __FUNCTION__, activeTrackIndices.size());
 	//printf("%s << Full-span indices for this subsequence: %d", __FUNCTION__, fullSpanIndices.size());
@@ -2337,9 +2086,9 @@ void slamNode::assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C) {
 	// tried: 1,0,2; 1,2,0; 0,2,1; 2,0,1; 2,1,0; 0,1,2
 	// x-corresponds to graph -x; y to graph -z; z to graph -y
 	
-	pPose.pose.position.x = t.at<double>(2,0); //;
-	pPose.pose.position.y = -t.at<double>(0,0); //t.at<double>(1,0);
-	pPose.pose.position.z = -t.at<double>(1,0); //t.at<double>(2,0);
+	pPose.pose.position.x = float(t.at<double>(2,0)); //;
+	pPose.pose.position.y = float(-t.at<double>(0,0)); //t.at<double>(1,0);
+	pPose.pose.position.z = float(-t.at<double>(1,0)); //t.at<double>(2,0);
 	
 	if (abs(pPose.pose.position.x) > MAX_RVIZ_DISPLACEMENT) {
 		pPose.pose.position.x = 0.0;
@@ -2356,10 +2105,10 @@ void slamNode::assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C) {
 	//printf("%s << QUAT = (%f, %f, %f, %f)", __FUNCTION__, Q.x(), Q.y(), Q.z(), Q.w());
 	
 	// tried x,y,z,w
-	pPose.pose.orientation.x = Q.z();
-	pPose.pose.orientation.y = -Q.x();
-	pPose.pose.orientation.z = -Q.y();
-	pPose.pose.orientation.w = Q.w();
+	pPose.pose.orientation.x = float(Q.z());
+	pPose.pose.orientation.y = float(-Q.x());
+	pPose.pose.orientation.z = float(-Q.y());
+	pPose.pose.orientation.w = float(Q.w());
 }
 
 

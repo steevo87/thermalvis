@@ -159,7 +159,7 @@ void ProcessingThread::run() {
 
 			if (wantsSlam && (featureTracks != NULL)) {
 				_slamNode->serverCallback(*_slamData);
-				_slamNode->main_loop();
+				_slamNode->main_loop(&camInfo);
 			}
 		}
 		

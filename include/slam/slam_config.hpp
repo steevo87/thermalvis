@@ -11,6 +11,8 @@
 
 // Hard Limits
 #define MAX_INITIALIZATION_FRAMES				30
+#define MAX_INITIALIZATION_SECONDS				5  
+#define	MIN_INITIALIZATION_CONFIDENCE			0.9
 #define MAX_FRAMES								1000
 #define MAX_TRACKS 								10000
 #define MAX_SEGMENTS							16
@@ -30,6 +32,7 @@ struct slamSharedData {
 
 	// Initialization
 	int maxInitializationFrames, minStartingSeparation, maxStartingSeparation, maxTestsPerFrame;
+	int maxInitializationSeconds, minInitializationConfidence;
 	double minStartupScore;
 	int initialStructureIterations;
 	

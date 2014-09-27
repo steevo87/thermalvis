@@ -35,6 +35,9 @@ typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vector4d;
 
 #define MAX_RVIZ_DISPLACEMENT 					1000
 
+#define CLUSTER_MEAN_MODE			1
+#define DEFAULT_MEAN_MODE			0
+
 void assignPose(geometry_msgs::PoseStamped& pPose, cv::Mat& C, int idx, ros::Time timestamp, int mode = DEFAULT_ASSIGN_MODE);
 void convertPoseFormat(const geometry_msgs::Pose& pose, cv::Mat& t, Eigen::Quaternion<double>& Q);
 void convertPoseFormat(const cv::Mat& t, const Eigen::Quaternion<double>& Q, geometry_msgs::Pose& pose);
@@ -55,6 +58,9 @@ void convert3frmToRmat(const Matrix3frm& R_src, cv::Mat& R_dst);
 
 /// \brief 		Splits OpenCV transformation matrix into rotation matrix and translation vector
 void decomposeTransform(const cv::Mat& c, cv::Mat& R, cv::Mat& t);
+
+/// \brief		Find the average point position of the dominant cluster
+bool findClusterMean(const vector<cv::Point3d>& estimatedLocations, cv::Point3d& pt3d, int mode = DEFAULT_MEAN_MODE, int minEstimates = 3, double maxStandardDev = 0.1);
 
 /// \brief 		Possible duplicate of 'composeTransform'
 void findP1Matrix(cv::Mat& P1, const cv::Mat& R, const cv::Mat& t);
