@@ -1131,9 +1131,9 @@ void LinearLSTriangulation(cv::Mat& dst, const cv::Point3d& u1, const cv::Mat& P
 	cv::Mat B(4, 1, CV_64FC1);
 	
 	B.at<double>(0,0) = -((double) u1.x * P1.at<double>(2,3) - P1.at<double>(0,3));
-	B.at<double>(0,1) = -((double) u1.y * P1.at<double>(2,3) - P1.at<double>(1,3));
-	B.at<double>(0,2) = -((double) u2.x * P2.at<double>(2,3) - P2.at<double>(0,3));
-	B.at<double>(0,3) = -((double) u2.y * P2.at<double>(2,3) - P2.at<double>(1,3));
+	B.at<double>(1,0) = -((double) u1.y * P1.at<double>(2,3) - P1.at<double>(1,3));
+	B.at<double>(2,0) = -((double) u2.x * P2.at<double>(2,3) - P2.at<double>(0,3));
+	B.at<double>(3,0) = -((double) u2.y * P2.at<double>(2,3) - P2.at<double>(1,3));
  
     cv::solve(A, B, dst, cv::DECOMP_SVD);
 
