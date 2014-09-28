@@ -161,15 +161,17 @@ void slamNode::selectBestInitializationPair() {
 #ifdef _BUILD_FOR_ROS_
 void slamNode::main_loop(const ros::TimerEvent& event) {
 #else
-void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg) {
+void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg, const vector<featureTrack>* msg) {
 #endif
 
-#ifndef _BUILD_FOR_ROS_
-	handle_tracks();
-	if (featureTrackVector == NULL) return;
+#ifdef _BUILD_FOR_ROS_	
+	if (!infoProcessed) return;
+#else
+	if (!infoProcessed) handle_info(info_msg);
+	handle_tracks(msg);
 	ROS_INFO("featureTrackVector.size() = (%d)", featureTrackVector->size());
 #endif
-
+	
 	if (configData.keyframeEvaluationMode && evaluationCompleted) return;
 	
 	if (firstIteration) {
@@ -179,13 +181,7 @@ void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg) {
 		firstIteration = false;
 	}
 	
-	if (!infoProcessed) {
-#ifdef _BUILD_FOR_ROS_		
-		return;
-#else
-		handle_info(info_msg);
-#endif
-	}
+	
 
 	if (configData.keyframeEvaluationMode) {
 		if (latestFrame >= configData.maxInitializationFrames) {
@@ -250,6 +246,8 @@ slamNode::slamNode(slamData startupData) :
 	extrinsicCalib_T(cv::Mat::zeros(3,1,CV_64FC1))
 {
 	configData = startupData;
+
+	featureTrackVector = new std::vector<featureTrack>;
 
 	scorecardParams = new double*[INITIALIZATION_SCORING_PARAMETERS];
 	
@@ -971,20 +969,8 @@ void slamNode::update_cameras_to_pnp() {
 	
 }
 
-#ifdef NOT_RECOMBINED_YET
+bool slamNode::evaluationSummaryAndTermination() {
 #ifdef _BUILD_FOR_ROS_
-void slamNode::handle_tracks(const thermalvis::feature_tracksConstPtr& msg) { // FROM VIDEOSLAM
-#else
-void slamNode::handle_tracks() {
-#endif
-	
-	if ((msg->header.seq % 4) != 0) {
-		//return;
-	}
-	
-	
-	if (wantsToShutdown) return;
-	
 	if ((configData.evaluateParameters > 0) && (msg->header.seq > configData.evaluateParameters)) {
 		// print summary
 		ROS_ERROR("Reached evaluation frame (%d/%d), shutting down...", msg->header.seq, configData.evaluateParameters);
@@ -994,140 +980,82 @@ void slamNode::handle_tracks() {
 		wantsToShutdown = true;
 		mySigintHandler(1);
 		
-		return;
+		return true;
 	}
-	
-	if (!infoProcessed) {
-		return;
-	}
-	
-	framesArrived++;
-	
-	
-	
-	if (msg->indices.size() == 0) {
-		ROS_WARN("No tracks in message.");
-		return;
-	}
-	
-	latestTracksTime = msg->header.stamp.toSec();
-	
-	
-	if (configData.verboseMode) { ROS_WARN("Handling new tracks seq (%d) at (%f)", msg->header.seq, latestTracksTime); }
-	
-	frameHeaderHistoryBuffer[frameHeaderHistoryCounter % MAX_HISTORY] = msg->header;
-	frameHeaderHistoryCounter++;
-        	
-	main_mutex.lock();
-	integrateNewTrackMessage(msg);
-	main_mutex.unlock();
-	
-	//latestHandledTracks = msg->header.seq;
-	
-	main_mutex.lock();
-	//ROS_INFO("[pre-trimming] featureTrackVector.size() = (%d)", featureTrackVector.size());
-	if (configData.trimFeatureTracks) trimFeatureTrackVector(); 
-	//ROS_INFO("[post-trimming] featureTrackVector.size() = (%d)", featureTrackVector.size());
-	main_mutex.unlock();
-	
-	if (determinePose()) {
-		
-		
-		
-		publishPose();
-		
-		if (configData.publishPoints) {	publishPoints(currentPose.header.stamp, currentPose.header.seq); }
-		
-		double elapsed = latestTracksTime - poseHistoryBuffer[(poseHistoryCounter-1) % MAX_HISTORY].header.stamp.toSec();
-		
-		//ROS_INFO("elapsed = (%f) vs (%f) & (%f)", elapsed, latestTracksTime, poseHistoryBuffer[(poseHistoryCounter-1) % MAX_HISTORY].header.stamp.toSec());
-		
-		if (elapsed > configData.maxPoseDelay) {
+#endif
+	return false;
+}
 
-			if (configData.verboseMode) { ROS_INFO("Considering video-based pose estimate as a keyframe..."); }
+void slamNode::videoslamPoseProcessing() {
+#ifdef _BUILD_FOR_ROS_
+	publishPose();
+		
+	if (configData.publishPoints) {	publishPoints(currentPose.header.stamp, currentPose.header.seq); }
+		
+	double elapsed = latestTracksTime - poseHistoryBuffer[(poseHistoryCounter-1) % MAX_HISTORY].header.stamp.toSec();
+		
+	//ROS_INFO("elapsed = (%f) vs (%f) & (%f)", elapsed, latestTracksTime, poseHistoryBuffer[(poseHistoryCounter-1) % MAX_HISTORY].header.stamp.toSec());
+		
+	if (elapsed > configData.maxPoseDelay) {
+
+		if (configData.verboseMode) { ROS_INFO("Considering video-based pose estimate as a keyframe..."); }
 			
+			
+		main_mutex.lock();
+		bool updated = updateKeyframePoses(currentPose, false);
+		lastTestedFrame = currentPose.header.seq;
+		if (configData.publishKeyframes) { drawKeyframes(camera_pub, keyframePoses, storedPosesCount); }
+		main_mutex.unlock();
+			
+		if (updated) {
 			
 			main_mutex.lock();
-			bool updated = updateKeyframePoses(currentPose, false);
-			lastTestedFrame = currentPose.header.seq;
-			if (configData.publishKeyframes) { drawKeyframes(camera_pub, keyframePoses, storedPosesCount); }
-			main_mutex.unlock();
-			
-			if (updated) {
-			
-				main_mutex.lock();
-				if (configData.clearTriangulations) {
-					for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
-						featureTrackVector.at(iii).isTriangulated = false;
-					}
+			if (configData.clearTriangulations) {
+				for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
+					featureTrackVector.at(iii).isTriangulated = false;
 				}
-				triangulatePoints();
-				main_mutex.unlock();
-				
 			}
-			
+			triangulatePoints();
+			main_mutex.unlock();
+				
 		}
-		
-		
+			
 	}
-	
-	
-	
-}
 #endif
+}
 
 #ifdef _BUILD_FOR_ROS_
 void slamNode::handle_tracks(const thermalvis::feature_tracksConstPtr& msg) { // FROM MONOSLAM
 #else
-void slamNode::handle_tracks() {
+void slamNode::handle_tracks(const vector<featureTrack>* msg) {
 #endif
 
-	if (configData.timeDebug) trackHandlingTime.startRecording();
-	
+	if (wantsToShutdown) return;
+	if (evaluationSummaryAndTermination()) return;
+	if (!infoProcessed) return;
+	framesArrived++;
+
 #ifdef _BUILD_FOR_ROS_
-	main_mutex.lock();
 	if (msg->indices.size() == 0) return;
-
-	featureTrack blankTrack;
-	unsigned int newest_track = 0;	
-	
-	for (unsigned int iii = 0; iii < msg->projection_count; iii++) if (msg->indices[iii] > newest_track) newest_track = msg->indices[iii];
-
-	if (newest_track >= featureTrackVector->size()) {
-		for (unsigned int iii = featureTrackVector->size(); iii <= newest_track; iii++) featureTrackVector->push_back(blankTrack);
-	}
-
-	for (unsigned int iii = 0; iii < msg->projection_count; iii++) {
-		int idx = ((int) msg->cameras.at(iii));
+	latestTracksTime = msg->header.stamp.toSec();
+	frameHeaderHistoryBuffer[frameHeaderHistoryCounter % MAX_HISTORY] = msg->header;
+	frameHeaderHistoryCounter++;
 #else
-	for (unsigned int iii = 0; iii < featureTrackVector->size(); iii++) {
-		int idx = featureTrackVector->at(iii).locations.at(featureTrackVector->at(iii).locations.size()-1).imageIndex;
-#endif
-		if (idx > latestFrame) latestFrame = idx;
-
-#ifdef _BUILD_FOR_ROS_
-		bool alreadyAdded = false;
-		
-		for (unsigned int jjj = 0; jjj < featureTrackVector->at(msg->indices.at(iii)).locations.size(); jjj++) {
-			if (featureTrackVector.at(msg->indices.at(iii)).locations.at(jjj).imageIndex == ((int) msg->cameras.at(iii))) {
-				alreadyAdded = true;
-				break;
-			}
-		}
-		
-		if (!alreadyAdded) {
-			cv::Point2f proj(((float) msg->projections_x.at(iii)), ((float) msg->projections_y.at(iii)));
-			indexedFeature newFeature(msg->cameras.at(iii), proj);
-			featureTrackVector.at(msg->indices.at(iii)).addFeature(newFeature);
-		}
-#endif
-	}
-	
-	if (configData.timeDebug) trackHandlingTime.stopRecording();
-
-#ifdef _BUILD_FOR_ROS_
+	if (msg->size() == 0) return;
+#endif	
+        	
+	if (configData.timeDebug) trackHandlingTime.startRecording();
+	main_mutex.lock();
+	integrateNewTrackMessage(msg);
 	main_mutex.unlock();
-#endif
+
+	main_mutex.lock();
+	if (configData.trimFeatureTracks) trimFeatureTrackVector(); 	
+	main_mutex.unlock();
+
+	if (determinePose()) videoslamPoseProcessing();
+
+	if (configData.timeDebug) trackHandlingTime.stopRecording();
 }
 
 void slamNode::processNextFrame() {
@@ -2961,86 +2889,85 @@ void slamNode::handle_pose(const geometry_msgs::PoseStamped& pose_msg) {
 
 #ifdef _BUILD_FOR_ROS_
 void slamNode::integrateNewTrackMessage(const thermalvis::feature_tracksConstPtr& msg) {
-	
-	//ROS_WARN("Entered <%s>", __FUNCTION__);
-	
+#else
+void slamNode::integrateNewTrackMessage(const vector<featureTrack>* msg) {
+#endif
+
 	featureTrack blankTrack;
-	
 	unsigned int addedTracks = 0, addedProjections = 0;
 	
+#ifdef _BUILD_FOR_ROS_
 	for (unsigned int iii = 0; iii < msg->projection_count; iii++) {
-		
-		//ROS_WARN("Searching for track index of (%d)..", msg->indices[iii]);
-		int trackPos = findTrackPosition(featureTrackVector, msg->indices[iii]);
-		
-		//ROS_WARN("For projection (%d), found track (%d) at vector position (%d)", ((int)iii), ((int)msg->indices[iii]), trackPos);
-		
-		if (trackPos == -1) {
-			
-			// Put the track in, but at the correct spot..
-			unsigned int jjj = 0;
-			
-			if (featureTrackVector.size() > 0) {
-				while (featureTrackVector->at(jjj).trackIndex < msg->indices[iii]) {
-					jjj++;
-					
-					if (jjj >= featureTrackVector->size()) {
-						break;
-					}
-					
-				}
-			}			
-			
-			blankTrack.trackIndex = msg->indices[iii];
-			featureTrackVector->insert(featureTrackVector->begin()+jjj, blankTrack);
-			addedTracks++;
-			
-			trackPos = jjj;
-			
-		}
-		
-		//ROS_INFO("Got here - position now (%d).", trackPos);
-		
-		// Now you have the track in place for this projection...
-		bool alreadyAdded = false;
-		for (unsigned int jjj = 0; jjj < featureTrackVector.at(trackPos).locations.size(); jjj++) {
-								
-			if (featureTrackVector.at(trackPos).locations.at(jjj).imageIndex == ((int) msg->cameras.at(iii))) {
-				alreadyAdded = true;
-				//ROS_INFO("Point already added...");
-				break;
-			}		
+#else
+	for (unsigned int iii = 0; iii < msg->size(); iii++) {
+		for (unsigned int jjj = 0; jjj < msg->at(iii).locations.size(); jjj++) {
+#endif
 
-		}
+#ifdef _BUILD_FOR_ROS_
+			int track_idx = msg->indices[iii];
+			int camera_idx = msg->cameras.at(iii);
+			float proj_x = msg->projections_x.at(iii);
+			float proj_y = msg->projections_y.at(iii);
+#else
+			int track_idx = msg->at(iii).trackIndex;
+			int camera_idx = msg->at(iii).locations.at(jjj).imageIndex;
+			float proj_x = msg->at(iii).locations.at(jjj).featureCoord.x;
+			float proj_y = msg->at(iii).locations.at(jjj).featureCoord.y;
+#endif
 		
-		if (!alreadyAdded) {
-			cv::Point2f proj(((float) msg->projections_x.at(iii)), ((float) msg->projections_y.at(iii)));		
-			indexedFeature newFeature(msg->cameras.at(iii), proj);
+			int trackPos = findTrackPosition(*featureTrackVector, track_idx);
+
+			if (trackPos == -1) {
 			
-			//ROS_INFO("Adding point...");
-			featureTrackVector.at(trackPos).addFeature(newFeature);
-			addedProjections++;
+				// Put the track in, but at the correct spot..
+				unsigned int jjj = 0;
 			
+				if (featureTrackVector->size() > 0) {
+
+					while (featureTrackVector->at(jjj).trackIndex < track_idx) {
+						jjj++;
+						if (jjj >= featureTrackVector->size()) break;
+					}
+				}			
 			
-		}
+				blankTrack.trackIndex = track_idx;
+				featureTrackVector->insert(featureTrackVector->begin()+jjj, blankTrack);
+				addedTracks++;
+			
+				trackPos = jjj;
+			}
+
+			// Now you have the track in place for this projection...
+			bool alreadyAdded = false;
+			for (unsigned int jjj = 0; jjj < featureTrackVector->at(trackPos).locations.size(); jjj++) {
+								
+				if (featureTrackVector->at(trackPos).locations.at(jjj).imageIndex == camera_idx) {
+					alreadyAdded = true;
+					break;
+				}		
+			}
 		
+			if (!alreadyAdded) {
+				cv::Point2f proj(proj_x, proj_y);		
+				indexedFeature newFeature(camera_idx, proj);
+			
+				//ROS_INFO("Adding point...");
+				featureTrackVector->at(trackPos).addFeature(newFeature);
+				addedProjections++;
+			}
+#ifndef _BUILD_FOR_ROS_
+		}
+#endif
 	}
-	
-	if (0) { ROS_INFO("Integrating (%d), Added (%d) new tracks and (%d) new projections", msg->header.seq, addedTracks, addedProjections); }
-	
-	//checkConnectivity(msg->header.seq);
 	
 	if (configData.debugMode) {
 		cv::Mat trackMatrix;
-		
-		if (createTrackMatrix(featureTrackVector, trackMatrix)) {
+		if (createTrackMatrix(*featureTrackVector, trackMatrix)) {
 			cv::imshow("trackMatrix", trackMatrix);
 			cv::waitKey(1);
 		}		
 	}
-	
 }
-#endif
 
 #ifdef _BUILD_FOR_ROS_
 void slamNode::publishPose() {

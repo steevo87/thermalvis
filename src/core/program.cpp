@@ -4,7 +4,14 @@
 
 #include "core/program.hpp"
 
-GenericOptions::GenericOptions() : pauseMode(false), isValid(true), wantsToOutput(false), FrameCounter1(0), writeInColor(true) {
+GenericOptions::GenericOptions() : 
+	pauseMode(false), 
+	isValid(true), 
+	wantsToOutput(false), 
+	FrameCounter1(0), 
+	writeInColor(true),
+	wantsToShutdown(false)
+{
 	output_directory = new char[MAX_INPUT_ARG_LENGTH];
 	displayImage = new cv::Mat();
 }

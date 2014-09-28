@@ -36,8 +36,7 @@ public:
 		output_directory(NULL), 
 		xmlAddress(NULL), 
 		wantsFlow(true),
-		wantsSlam(true),
-		featureTracks(NULL)
+		wantsSlam(true)
 	{ 
 		scData = new streamerConfig;
 		streamerStartupData = new streamerData;
@@ -65,7 +64,6 @@ private:
 	xmlParameters xP;
 	sensor_msgs::CameraInfo camInfo;
 	cv::Mat workingFrame;
-	std::vector<featureTrack> *featureTracks;
 
 	bool streamerIsLinked;
 	streamerConfig *scData;
@@ -157,9 +155,9 @@ void ProcessingThread::run() {
 			fM->handle_camera(workingFrame, &camInfo);
 			fM->features_loop();
 
-			if (wantsSlam && (featureTracks != NULL)) {
+			if (wantsSlam && (&fM->featureTrackVector != NULL)) {
 				_slamNode->serverCallback(*_slamData);
-				_slamNode->main_loop(&camInfo);
+				_slamNode->main_loop(&camInfo, &fM->featureTrackVector);
 			}
 		}
 		
@@ -247,9 +245,6 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	_slamNode = new slamNode(*slamStartupData);
 	_slamNode->initializeOutput(output_directory);
-	//if (!fM->getFeatureTracks(featureTracks)) return false;
-	featureTracks = &fM->featureTrackVector;
-	_slamNode->featureTrackVector = featureTracks;
 
 	return true;
 }
