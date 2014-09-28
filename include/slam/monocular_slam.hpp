@@ -40,6 +40,9 @@
 #include <pcl/point_types.h>
 #endif
 
+#define MIN_FEATURE_MOTION_THRESHOLD	3.0
+#define MAX_INITIALIZATION_CANDIDATES	20
+
 /// \brief		Stores configuration information for the monocular slam routine
 class slamData : public slamSharedData, public commonData, public slamLaunchOnlyData {
 	friend class xmlParameters;
@@ -95,6 +98,7 @@ private:
 	ofstream error_file;
 	char error_filename[256];
 
+	int bestInitializationIndices[2];
 	double bestInitializationScore; //!< Stores the best initialization score achieved between potential initialization frames so far
 	
 	bool firstIteration;
@@ -137,7 +141,7 @@ private:
 #endif
 	
 	cv::Point3d cloudCentroid[MAX_SEGMENTS], cloudStdDeviation[MAX_SEGMENTS];
-	keyframeStore keyframe_store;
+	keyframeStore initialization_store, keyframe_store;
 	cv::Mat F_arr[MAX_FRAMES], H_arr[MAX_FRAMES];
 	
 	cv::Mat ACM[MAX_FRAMES], ACM2[MAX_FRAMES];
@@ -264,6 +268,8 @@ public:
 #else
 	void handle_info(sensor_msgs::CameraInfo *info_msg);
 #endif
+
+	bool sufficientMotionForInitializationFrame();
 	
 	void handle_pose(const geometry_msgs::PoseStamped& pose_msg);
 
@@ -283,7 +289,7 @@ public:
 	void getGuidingPose(cv::Mat *srcs, cv::Mat& dst, unsigned int idx);
 
 	///brief	Tests whether latest received frame has sufficient motion from other potential initialization frames to also be considered
-	bool isCurrentFramePotentialInitializor();
+	bool updatePotentialInitializationFrames();
 
 	///brief	Using current frame, test initialization performance with existing potential initialization frames
 	void testInitializationWithCurrentFrame();

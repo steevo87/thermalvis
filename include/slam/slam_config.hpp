@@ -18,6 +18,7 @@
 #define MAX_SEGMENTS							16
 #define MAX_HISTORY								10
 #define MAX_POSES_TO_STORE						100
+#define MAX_TESTS_PER_FRAME						3
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for slam
 struct slamSharedData {
@@ -31,9 +32,8 @@ struct slamSharedData {
 	double maxPoseDelay;
 
 	// Initialization
-	int maxInitializationFrames, minStartingSeparation, maxStartingSeparation, maxTestsPerFrame;
-	int maxInitializationSeconds, minInitializationConfidence;
-	double minStartupScore;
+	int maxInitializationFrames, minStartingSeparation, maxStartingSeparation, maxTestsPerFrame, maxInitializationSeconds;
+	double minInitializationConfidence;
 	int initialStructureIterations;
 	
 

@@ -3,7 +3,8 @@
 slamSharedData::slamSharedData() :
 	maxInitializationFrames(MAX_INITIALIZATION_FRAMES),
 	maxInitializationSeconds(MAX_INITIALIZATION_SECONDS),  
-	minInitializationConfidence(MIN_INITIALIZATION_CONFIDENCE)
+	minInitializationConfidence(MIN_INITIALIZATION_CONFIDENCE),
+	maxTestsPerFrame(MAX_TESTS_PER_FRAME)
 { }
 
 slamRealtimeOnlyData::slamRealtimeOnlyData() :

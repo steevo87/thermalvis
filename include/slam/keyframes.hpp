@@ -70,7 +70,7 @@ struct keyframeStore {
 	bool getBestPair(int& idx1, int& idx2);
 	
 	/// \brief      Adds a keyframe to the store
-	void addKeyframe(int idx, cv::Mat& image);
+	void addKeyframe(int idx, cv::Mat& image = cv::Mat());
 	
 	/// \brief      Adds a connection between keyframes to the store
 	void addConnection(int idx1, int idx2, int type = KF_CONNECTION_WEAK, cv::Mat rel = cv::Mat());

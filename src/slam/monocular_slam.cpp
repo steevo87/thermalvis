@@ -87,7 +87,7 @@ void slamNode::serverCallback(slamConfig &config) {
     configData.verboseMode = config.verboseMode;
     configData.timeSpacing = config.timeSpacing;
     configData.poseEstimateIterations = config.poseEstimateIterations;
-    configData.minStartupScore = config.minStartupScore;
+    configData.minInitializationConfidence = config.minInitializationConfidence;
     configData.adjustmentFrames = config.adjustmentFrames;
     configData.motionThreshold = config.motionThreshold;
     configData.timeDebug = config.timeDebug;
@@ -131,31 +131,90 @@ void slamNode::serverCallback(slamConfig &config) {
 
 }
 
-bool slamNode::isCurrentFramePotentialInitializor() {
+bool slamNode::updatePotentialInitializationFrames() {
 	// This is based on minimum amount of feature motion from ALL other collected frames in the potential startup set. 
 	// This will be used to prevent testing of frames that are very similar to existing ones, which is particularly important if the 
 	// camera is staying in the same place, or undergoing a very limited motion that is not providing enough viewpoint variation. 
 	// In this case, if you don't ignore redundant frames, you risk "randomly" selecting potential frames from a very long frame history 
 	// that is near-identical. You did something similar for the videoslam keyframe selection system, right?
 
-	// May also want to hard-code a maximum number of these potential frames to store for ongoing structure initialization tests, 
-	// so that even if motion is sufficient, the oldest test frames (except if they constitute the top scoring pair so far) drop 
-	// off as new ones are accumulated - especially since it is likely that they don't contain common points anyway.
-	
+	if (initialization_store.keyframes.size() == 0) {
+		initialization_store.addKeyframe(latestFrame);
+		return false;
+	}
+
+	if (sufficientMotionForInitializationFrame()) {
+
+		// May also want to hard-code a maximum number of these potential frames to store for ongoing structure initialization tests, 
+		// so that even if motion is sufficient, the oldest test frames (except if they constitute the top scoring pair so far) drop 
+		// off as new ones are accumulated - especially since it is likely that they don't contain common points anyway.
+		int idx = 0;
+		while (initialization_store.keyframes.size() >= MAX_INITIALIZATION_CANDIDATES) {
+			if (initialization_store.keyframes.at(idx).idx == bestInitializationIndices[0]) {
+				idx++;
+				continue;
+			} else if (initialization_store.keyframes.at(idx).idx == bestInitializationIndices[1]) {
+				idx++;
+				continue;
+			}
+			initialization_store.keyframes.erase(initialization_store.keyframes.begin()+idx);
+		}
+
+		initialization_store.addKeyframe(latestFrame);
+		return true;
+	}
+
 	return false;
 }
 
+bool slamNode::sufficientMotionForInitializationFrame() {
+
+	// For each frame already in the initialization store...
+	for (int iii = 0; iii < initialization_store.keyframes.size(); iii++) {
+		// Find all common features shared with the current frame...
+		vector<unsigned int> shared_track_indices;
+		getActiveTracks(shared_track_indices, *featureTrackVector, initialization_store.keyframes.at(iii).idx, latestFrame);
+
+		double featureMotion = getFeatureMotion(*featureTrackVector, shared_track_indices, initialization_store.keyframes.at(iii).idx, latestFrame);
+		if (featureMotion < MIN_FEATURE_MOTION_THRESHOLD) return false;
+	}
+	
+	return true;
+}
+
 void slamNode::testInitializationWithCurrentFrame() {
-	// based partially on: performKeyframeEvaluation
 
 	// For real-time implementation, for each new potential keyframe it does as many tests with random preceding potential frames 
 	// as it can fit in until next frame arrives.
 	
 	// For offline implementation, should for the moment do a fixed number of maximum tests, based on what is not too sluggish.
+
+	double keyframe_scores[5];
+	cv::Mat startingTrans;
+	cv::Mat blankMat = cv::Mat::zeros(80, 640, CV_8UC3);
+	
+	vector<int> startersToTest;
+	for (int iii = 0; iii < initialization_store.keyframes.size()-1; iii++) startersToTest.push_back(initialization_store.keyframes.at(iii).idx);
+		
+	while (((int)startersToTest.size()) > configData.maxTestsPerFrame) {
+		unsigned int randIndex = rand() % startersToTest.size();
+		startersToTest.erase(startersToTest.begin() + randIndex);
+	}
+		
+	for (unsigned int iii = 0; iii < startersToTest.size(); iii++) {
+			
+		vector<unsigned int> activeTracks;
+		getActiveTracks(activeTracks, *featureTrackVector, startersToTest.at(iii), latestFrame);
+
+		startingTrans = cv::Mat();
+		double score = testKeyframePair(*featureTrackVector, configData.cameraData, scorecardParams, startersToTest.at(iii), latestFrame, keyframe_scores, startingTrans, true /*configData.keyframeEvaluationMode*/, true);
+				
+		ROS_INFO("Keyframe pair (%03d, %03d) initialization score = [%f] {%1.2f, %1.2f, %1.2f, %1.2f, %1.2f}", startersToTest.at(iii), latestFrame, score, keyframe_scores[0], keyframe_scores[1], keyframe_scores[2], keyframe_scores[3], keyframe_scores[4]);
+	}
 }
 
 void slamNode::selectBestInitializationPair() {
-
+	// assignStartingFrames(best_iii, best_jjj, keyframe_scores, startingTrans); ??
 }
 
 #ifdef _BUILD_FOR_ROS_
@@ -195,7 +254,7 @@ void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg, const vector<feature
 
 	if (!structureFormed) {
 		
-		if (isCurrentFramePotentialInitializor()) testInitializationWithCurrentFrame();
+		if (updatePotentialInitializationFrames()) testInitializationWithCurrentFrame();
 
 		if ((latestFrame >= configData.maxInitializationFrames) || (bestInitializationScore >= configData.minInitializationConfidence)) { // elapsedTime > configData.maxInitializationSeconds
 			// select best pair
@@ -248,6 +307,9 @@ slamNode::slamNode(slamData startupData) :
 	configData = startupData;
 
 	featureTrackVector = new std::vector<featureTrack>;
+
+	bestInitializationIndices[0] = -1;
+	bestInitializationIndices[1] = -1;
 
 	scorecardParams = new double*[INITIALIZATION_SCORING_PARAMETERS];
 	
@@ -1503,10 +1565,6 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 
 bool slamNode::performKeyframeEvaluation() {
 
-	if (latestFrame >= configData.maxInitializationFrames) { // OR if time has reached maximum
-		// Will need to select the best frame so far
-	}
-	
 	bool foundStartingPair = false;
 	
 	if (latestFrame < 1) return foundStartingPair;
@@ -1595,7 +1653,7 @@ bool slamNode::performKeyframeEvaluation() {
 				
 				keyframeTestFlags.at<unsigned char>(startersToTest.at(iii),jjj) = 1;
 
-				if (keyframeTestScores.at<double>(startersToTest.at(iii),jjj) >= configData.minStartupScore) foundStartingPair = true;
+				if (keyframeTestScores.at<double>(startersToTest.at(iii),jjj) >= configData.minInitializationConfidence) foundStartingPair = true;
 				ROS_INFO("Keyframe pair (%03d, %03d) initialization score = [%f] {%1.2f, %1.2f, %1.2f, %1.2f, %1.2f}", startersToTest.at(iii), jjj, keyframeTestScores.at<double>(startersToTest.at(iii),jjj), keyframe_scores[0], keyframe_scores[1], keyframe_scores[2], keyframe_scores[3], keyframe_scores[4]);
 			}
 		}
@@ -2323,38 +2381,42 @@ bool slamNode::updateKeyframePoses(const geometry_msgs::PoseStamped& pose_msg, b
 void slamNode::trimFeatureTrackVector() {
 	
 	unsigned int jjj;
-	
 	int preservationBuffer = 0;
-	
 	int newestSafeIndex = max(lastTestedFrame-preservationBuffer, 0);
-
-	// ROS_ERROR("Features trimmed for cameras below (%d)", newestSafeIndex);
 	
 	for (int iii = 0; iii < ((int)featureTrackVector->size()); iii++) {
-		
 		jjj = 0;
 		
 		while (jjj < featureTrackVector->at(iii).locations.size()) {
 			
 			bool validImage = false;
-			
 			if (((int)featureTrackVector->at(iii).locations.at(jjj).imageIndex) >= newestSafeIndex) {
 				validImage = true;
-			} else {
-				
-				for (unsigned int kkk = 0; kkk < storedPosesCount; kkk++) {
-					if (keyframePoses[kkk].header.seq == featureTrackVector->at(iii).locations.at(jjj).imageIndex) {
-						validImage = true;
-						break;
-					} 
-				}
+				jjj++;
+				continue;
+			} 
+			
+			
+			for (unsigned int kkk = 0; kkk < storedPosesCount; kkk++) {
+				if (keyframePoses[kkk].header.seq == featureTrackVector->at(iii).locations.at(jjj).imageIndex) {
+					validImage = true;
+					jjj++;
+					break;
+				} 
 			}
 			
-			if (!validImage) {
-				featureTrackVector->at(iii).locations.erase(featureTrackVector->at(iii).locations.begin()+jjj);
-			} else {
-				jjj++;
+			if (validImage) continue;
+
+			for (unsigned int kkk = 0; kkk < initialization_store.keyframes.size(); kkk++) {
+				if (initialization_store.keyframes.at(kkk).idx == featureTrackVector->at(iii).locations.at(jjj).imageIndex) {
+					validImage = true;
+					jjj++;
+					break;
+				} 
 			}
+			
+			// If image is invalid (not needed)
+			featureTrackVector->at(iii).locations.erase(featureTrackVector->at(iii).locations.begin()+jjj);
 		}
 
 		if (featureTrackVector->at(iii).locations.size() == 0) {
@@ -2363,8 +2425,6 @@ void slamNode::trimFeatureTrackVector() {
 		}
 
 	}
-
-	//ROS_ERROR("featureTrackVector.size() = (%d)", featureTrackVector.size());
 }
 
 
@@ -2914,6 +2974,8 @@ void slamNode::integrateNewTrackMessage(const vector<featureTrack>* msg) {
 			float proj_x = msg->at(iii).locations.at(jjj).featureCoord.x;
 			float proj_y = msg->at(iii).locations.at(jjj).featureCoord.y;
 #endif
+
+			latestFrame = max(latestFrame, camera_idx);
 		
 			int trackPos = findTrackPosition(*featureTrackVector, track_idx);
 

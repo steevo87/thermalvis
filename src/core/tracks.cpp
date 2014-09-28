@@ -746,36 +746,7 @@ double getFeatureMotion(vector<featureTrack>& tracks, vector<unsigned int>& indi
 
 void findRelevantIndices(vector<featureTrack>& tracks, vector<unsigned int>& triangulated, vector<unsigned int>& untriangulated, unsigned int last_index, unsigned int new_index) {
 	
-	//unsigned int min_sightings = max(0, (((int) new_index) - ((int) last_index)) / 2);
-	
 	for (unsigned int iii = 0; iii < tracks.size(); iii++) {
-		
-		if (tracks.at(iii).isTriangulated) {
-			triangulated.push_back(iii);
-			/*
-			unsigned int sightings = 0;
-			
-			for (unsigned int jjj = 0; jjj < tracks.at(iii).locations.size(); jjj++) {
-				
-				if (tracks.at(iii).locations.at(jjj).imageIndex <= new_index) {
-					sightings++;
-				}
-				
-			}
-			* */
-			
-			/*
-			if (sightings >= min_sightings) {
-				triangulated.push_back(iii);
-			}
-			* */
-		} else {
-			untriangulated.push_back(iii);
-		}
-		
-
-		
+		(tracks.at(iii).isTriangulated) ? triangulated.push_back(iii) : untriangulated.push_back(iii);
 	}
-	
-	
 }

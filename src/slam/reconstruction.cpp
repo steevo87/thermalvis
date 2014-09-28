@@ -21,70 +21,36 @@ void summarizeTransformation(const cv::Mat& C, char *summary) {
 
 double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData, double *scorecard[], int idx1, int idx2, double *score, cv::Mat& pose, bool evaluate, bool debug) {
 	
-	//printf("%s << Entered.\n", __FUNCTION__);
-	
-	//if (debug) {
-		//printf("%s << Testing frames (%d) & (%d)\n", __FUNCTION__, idx1, idx2);
-	//}
-	
 	double keyframeScore;
 	
-	for (unsigned int iii = 0; iii < 5; iii++) {
-		score[iii] = -1.0;
-	}
+	for (unsigned int iii = 0; iii < 5; iii++) score[iii] = -1.0;
 	
 	vector<cv::Point2f> pts1_, pts2_, pts1, pts2;
 	getPointsFromTracks(tracks, pts1, pts2, idx1, idx2);
-	
-	//printf("%s << A: pts1.size() = %d; pts2.size() = %d\n", __FUNCTION__, pts1.size(), pts2.size());
 	
 	subselectPoints(pts1_, pts1, pts2_, pts2);
 	
 	pts1.insert(pts1.end(), pts1_.begin(), pts1_.end());
 	pts2.insert(pts2.end(), pts2_.begin(), pts2_.end());
 	
-	//printf("%s << B: pts1.size() = %d; pts2.size() = %d\n", __FUNCTION__, pts1.size(), pts2.size());
-	
 	unsigned int min_pts = int(std::min(pts1.size(), pts2.size()));
 	
-	if (min_pts < 16) {
-		printf("%s << Returning with (-1); insufficient points.\n", __FUNCTION__);
-		return -1.00;
-	}
+	if (min_pts < 16) return -1.00;
 	
 	cv::Mat matchesMask_F_matrix, matchesMask_H_matrix;
 	
 	cv::Mat F = cv::findFundamentalMat(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, 0.99, matchesMask_F_matrix);
 	cv::Mat H = cv::findHomography(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, matchesMask_H_matrix);
 	
-	//int inliers_H = countNonZero(matchesMask_H_matrix);
-	//int inliers_F = countNonZero(matchesMask_F_matrix);
-	
-	//double new_F_score = calcInlierGeometryDistance(pts1, pts2, F, matchesMask_F_matrix, SAMPSON_DISTANCE);
-	//double new_H_score = calcInlierGeometryDistance(pts1, pts2, H, matchesMask_H_matrix, LOURAKIS_DISTANCE);
-	
-	//double geometryScore = calcGeometryScore(inliers_H, inliers_F, new_H_score, new_F_score);
-	
 	// gric score
 	double fGric, hGric;
 	double gricScore = normalizedGRICdifference(pts1, pts2, F, H, matchesMask_F_matrix, matchesMask_H_matrix, fGric, hGric);
 	gricScore = fGric / hGric;
-	//double gricIdeal = 2.0, gricMax = 10.0, gricMin = 1.0;
 	double nGRIC = asymmetricGaussianValue(gricScore, scorecard[1][0], scorecard[1][2], scorecard[1][2]);
-	//printf("%s << SCORES: geom (%f), conv (%f), gric (%f / [%d / %d]), pts (%f)\n", __FUNCTION__, geometryScore, twoErr, gricScore, (int) fGric, (int) hGric, infrontScore);
 	
 	score[1] = gricScore;
 	
-	//else if (geometryScore < 1.00) {
-		// geometryScore = -1.00;
-	//}
-	
-	if (nGRIC == 0.00) {
-		if (!evaluate) {
-			printf("%s << Returning with (0); nGric = 0.00.\n", __FUNCTION__);
-			return 0.00;
-		}
-	}
+	if ((nGRIC == 0.00) && (!evaluate)) return 0.00;
 
 	cv::Mat E = camData.K.t() * F * camData.K;	
 	cv::Mat CX[4], C;
@@ -92,83 +58,35 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	int validPts = findBestCandidate(CX, camData.K, pts1, pts2, C);
 	
 	// infrontScore
-	//double infrontIdeal = 1.00, infrontMax = 1.00, infrontMin = 0.90;
 	double infrontScore = ((double) validPts) / ((double) pts1.size());
 	double nIFS = asymmetricGaussianValue(infrontScore, scorecard[2][0], scorecard[2][2], scorecard[2][1]);
 	
 	score[2] = infrontScore;
 	
 	// Now correct if amt in front is greater than mean:
-	if (infrontScore >= scorecard[2][0]) {
-		nIFS = 1.00;
-	}
+	if (infrontScore >= scorecard[2][0]) nIFS = 1.00;
 	
-	if (nIFS == 0) {
-		if (!evaluate) {
-			printf("%s << Returning with (0); nIFS = 0.00.\n", __FUNCTION__);
-			return 0.00;
-		}
-	}
+	if ((nIFS == 0) && (!evaluate)) return 0.00;
 	
 	cv::Mat absolute_C0, P0, P1;
 	absolute_C0 = cv::Mat::eye(4, 4, CV_64FC1);
 	
 	transformationToProjection(absolute_C0, P0);
 	transformationToProjection(C, P1);
-	//pose.copyTo(P1);
 	
 	vector<cv::Point3d> cloud;
 	vector<cv::Point2f> corresp;
 	
-	if (debug) {
-		/*
-		printf("%s << Before triangulation: \n", __FUNCTION__);
-		cout << P0 << endl;
-		cout << P1 << endl;
-		*/
-	}
-	
 	TriangulatePoints(pts1, pts2, camData.K, camData.K.inv(), P0, P1, cloud, corresp);
-	
-	//printf("%s << Before 2-frame BA: \n", __FUNCTION__);
-	//cout << P0 << endl;
-	//cout << P1 << endl;
-	
-	if (debug) {
-		/*
-		printf("%s << Before 2-frame BA: \n", __FUNCTION__);
-		cout << P0 << endl;
-		cout << P1 << endl;
-		*/
-	}
-	
-	// convergence
-	//double convIdeal = 0.30, convMax = 0.80, convMin = 0.10;
+
 #ifdef _USE_SBA_
 	double twoErr = twoViewBundleAdjustment(camData, P0, P1, cloud, pts1, pts2, 10);
 	
 	score[0] = twoErr;
 
-
-	if (debug) {
-		/*
-		printf("%s << After 2-frame BA: \n", __FUNCTION__);
-		cout << P0 << endl;
-		cout << P1 << endl;
-		*/
-		for (unsigned int iii = 0; iii < 10; iii++) {
-			//printf("%s << pt(%d) = (%f, %f) & (%f, %f)\n", __FUNCTION__, iii, pts1.at(iii).x, pts1.at(iii).y, pts2.at(iii).x, pts2.at(iii).y);
-		}
-	}
-	
 	double nCONV = asymmetricGaussianValue(twoErr, scorecard[0][0], scorecard[0][2], scorecard[0][1]);
 	
-	if (nCONV == 0.00) {
-		if (!evaluate) {
-			printf("%s << Returning with (0); nCONV = 0.00.\n", __FUNCTION__);
-			return 0.00;
-		}
-	}
+	if ((nCONV == 0.00) && (!evaluate)) return 0.00;
 #endif
 
 	projectionToTransformation(P1, C);
@@ -178,47 +96,22 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	decomposeTransform(C, R, t);
 	
 	// translation score
-	//double transIdeal = 3.00, transMax = 5.00, transMin = 1.00;
 	double tScore = (abs(t.at<double>(0,0)) + abs(t.at<double>(1,0))) / abs(t.at<double>(2,0));
 	
 	score[3] = tScore;
 	
 	double nTRN = asymmetricGaussianValue(tScore, scorecard[3][0], scorecard[3][2], scorecard[3][1]);
 	
-	if (nTRN == 0.00) {
-		if (!evaluate) {
-			return 0.00;
-		}
-	}
+	if ((nTRN == 0.00) && (!evaluate)) return 0.00;
 	
 	// angle score
-	//double angleIdeal = 10.0, angleMax = 15.0, angleMin = 5.0;
 	double dScore = getRotationInDegrees(R);
 	
 	score[4] = dScore;
 	
 	double nANG = asymmetricGaussianValue(dScore, scorecard[4][0], scorecard[4][2], scorecard[4][1]);
 	
-	if (nANG == 0.00) {
-		if (!evaluate) {
-			printf("%s << Returning with (0); nANG = 0.00.\n", __FUNCTION__);
-			return 0.00;
-		}
-	}
-	
-	//double homographyScore = 0.00;	// later this will be replaced by a method for determining FOV change / rot angle
-	
-	// Followed by checks to set homography score to be less than zero (not enough view change, H-score too low etc)
-	
-	
-	
-	
-	
-	
-	
-	//cout << t << endl;
-	
-	//printf("%s << Convergence score = %f\n", __FUNCTION__, twoErr);
+	if ((nANG == 0.00) && (!evaluate)) return 0.00;
 	
 #ifdef _USE_SBA_
 	unsigned int numTerms = 5;
@@ -229,17 +122,10 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	keyframeScore = pow(nGRIC * nIFS * nTRN * nANG, 1.0 / ((double) numTerms));
 	printf("%s << [%f]: gric (%1.2f, %1.2f), if (%1.2f, %1.2f), trans (%1.2f, %1.2f), ang (%02.1f, %1.2f)\n", __FUNCTION__, keyframeScore, gricScore, nGRIC, infrontScore, nIFS, tScore, nTRN, dScore, nANG);
 #endif
-	//if (debug) {
-		
-	//}
-	
 	
 	P1.copyTo(pose);
 	
-	//printf("%s << Exiting.\n", __FUNCTION__);
-	
 	return keyframeScore;
-	
 }
 
 void subselectPoints(const vector<cv::Point2f>& src1, vector<cv::Point2f>& dst1, const vector<cv::Point2f>& src2, vector<cv::Point2f>& dst2) {
@@ -725,49 +611,23 @@ void filterToCompleteTracks(vector<unsigned int>& dst, vector<unsigned int>& src
 
 void getActiveTracks(vector<unsigned int>& indices, vector<featureTrack>& tracks, int idx1, int idx2) {
 	
-	//printf("%s << Entered.\n", __FUNCTION__);
-	
-	// Should only consider a track active if it contains at least two projections in the subsequence
-	
 	indices.clear();
 	
 	for (unsigned int iii = 0; iii < tracks.size(); iii++) {
-		
-		//printf("%s << DEBUG [%d]\n", __FUNCTION__, iii);
-		
-		if (tracks.at(iii).locations.size() < 2) {
-			continue;
-		}
+		if (tracks.at(iii).locations.size() < 2) continue;
 		
 		for (unsigned int jjj = 0; jjj < tracks.at(iii).locations.size()-1; jjj++) {
-			
-			//printf("%s << DEBUG [%d][%d]\n", __FUNCTION__, iii, jjj);
-		
 			if ((((int)tracks.at(iii).locations.at(jjj).imageIndex) >= idx1) && (((int)tracks.at(iii).locations.at(jjj).imageIndex) <= idx2)) {
-				
 				for (unsigned int kkk = jjj+1; kkk < tracks.at(iii).locations.size(); kkk++) {
-					
 					if ((((int)tracks.at(iii).locations.at(kkk).imageIndex) >= idx1) && (((int)tracks.at(iii).locations.at(kkk).imageIndex) <= idx2)) {
 						indices.push_back(iii);
 						break;
 					}
-					
 				}
-				
 				break;
 			}
-			
-			
 		}
-		
-		
-		
-		
-		
 	}
-	
-	//printf("%s << Exiting.\n", __FUNCTION__);
-	
 }
 
 bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<featureTrack>& tracks, unsigned int index, const cv::Mat& guide, unsigned int minAppearances, unsigned int iterCount, double maxReprojErr, double inliersPercentage, double *reprojError, double *pnpInlierProp, bool debug) {
