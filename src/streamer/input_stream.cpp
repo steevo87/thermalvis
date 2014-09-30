@@ -650,6 +650,7 @@ void streamerNode::assignDefaultCameraInfo(int rows, int cols, bool guessIntrins
 	
 	globalCameraInfo.imageSize.at<unsigned short>(0, 1) = rows;
 	globalCameraInfo.imageSize.at<unsigned short>(0, 0) = cols;
+	globalCameraInfo.cameraSize = cv::Size(cols, rows);
 	
 	globalCameraInfo.cameraMatrix = cv::Mat::eye(3, 3, CV_64FC1);
 	globalCameraInfo.distCoeffs = cv::Mat::zeros(1, 8, CV_64FC1);
@@ -2059,8 +2060,8 @@ bool streamerNode::run() {
 bool streamerNode::processImage() {
 	
 	if (frame.rows == 0) return false;
-
-	if (configData.cameraData.cameraSize.height == 0) assignDefaultCameraInfo(frame.rows, frame.cols, configData.guessIntrinsics);
+	
+	if (globalCameraInfo.cameraSize.height == 0) assignDefaultCameraInfo(frame.rows, frame.cols, configData.guessIntrinsics);
 	
 	if (configData.resizeImages) {
 		resize(frame, rzMat, cv::Size(configData.desiredCols, configData.desiredRows));

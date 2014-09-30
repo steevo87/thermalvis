@@ -1,5 +1,6 @@
 IF(IS_WINDOWS)
 	SET(HAS_AVLIBS_AVAILABLE FALSE)
+	SET(avutil_FOUND FALSE)
 ELSE()
 	SET(HAS_AVLIBS_AVAILABLE TRUE)
 
@@ -17,9 +18,9 @@ ELSE()
 
         IF(HAS_AVLIBS_AVAILABLE)
             SET(avutil_FOUND TRUE)
-        ENDIF()
-	
-
+        ELSE()
+			SET(avutil_FOUND FALSE)
+		ENDIF()
 ENDIF()
 
 IF(avutil_FOUND)

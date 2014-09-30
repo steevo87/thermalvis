@@ -40,6 +40,10 @@
 #include <pcl/point_types.h>
 #endif
 
+#ifdef _USE_OPENCV_VIZ_
+#include <opencv2/viz.hpp>
+#endif
+
 #define MIN_FEATURE_MOTION_THRESHOLD	3.0
 #define MAX_INITIALIZATION_CANDIDATES	20
 

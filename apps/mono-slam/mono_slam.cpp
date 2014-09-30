@@ -35,8 +35,8 @@ public:
 		writeMode(false), 
 		output_directory(NULL), 
 		xmlAddress(NULL), 
-		wantsFlow(true),
-		wantsSlam(true)
+		wantsFlow(false),
+		wantsSlam(false)
 	{ 
 		scData = new streamerConfig;
 		streamerStartupData = new streamerData;
@@ -222,6 +222,8 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 	// Real-time changeable variables
 	if (!fcData->assignStartingData(*trackerStartupData)) return false;
 
+	wantsFlow = true;
+
 	#ifdef _DEBUG
 	if (
 		((fcData->getDetector1() != DETECTOR_FAST) && (fcData->getDetector1() != DETECTOR_OFF)) || 
@@ -243,6 +245,7 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 	// Real-time changeable variables
 	if (!_slamData->assignStartingData(*slamStartupData)) return false;
 
+	wantsSlam = true;
 	_slamNode = new slamNode(*slamStartupData);
 	_slamNode->initializeOutput(output_directory);
 

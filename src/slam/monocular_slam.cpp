@@ -287,14 +287,16 @@ void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg, const vector<feature
 		}
 
 		if (!structureFormed) return;
+	} else {
+		//while ((currentPoseIndex < latestFrame) && (keyframe_store.keyframes.size() <= 7)) {
+		while (currentPoseIndex < latestFrame) {
+			main_mutex.lock();
+			processNextFrame();
+			main_mutex.unlock();
+		}
 	}
 		
-	//while ((currentPoseIndex < latestFrame) && (keyframe_store.keyframes.size() <= 7)) {
-	while (currentPoseIndex < latestFrame) {
-		main_mutex.lock();
-		processNextFrame();
-		main_mutex.unlock();
-	}
+	
 }
 
 #ifdef _BUILD_FOR_ROS_
@@ -1913,6 +1915,10 @@ bool slamNode::formInitialStructure() {
 	//printf("%s << ptsInCloud.size() (pre-update) = %d", __FUNCTION__, ptsInCloud.size());
 	getActive3dPoints(*featureTrackVector, triangulatedIndices, ptsInCloud);
 	//printf("%s << ptsInCloud.size() (post-update) = %d", __FUNCTION__, ptsInCloud.size());
+
+#ifdef _USE_OPENCV_VIZ_
+	cv::viz::Viz3d viz("debug 3d win");
+#endif
 	
 	ROS_INFO("Points acquired. GT.");
 	
@@ -2159,7 +2165,9 @@ bool slamNode::formInitialStructure() {
 	}
 												
 	//while (1) { }
-#endif													
+#else
+	formedInitialStructure = true;
+#endif
 												
 	return formedInitialStructure;	
 							

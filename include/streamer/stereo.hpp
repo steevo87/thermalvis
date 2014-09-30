@@ -2,8 +2,8 @@
  *  \brief	Declarations for depth from stereo related functions.
 */
 
-#ifndef _THERMALVIS_STEREO_H_
-#define _THERMALVIS_STEREO_H_
+#ifndef THERMALVIS_STEREO_H
+#define THERMALVIS_STEREO_H
 
 #include "core/general_resources.hpp"
 #include "core/opencv_resources.hpp"
@@ -33,4 +33,4 @@ void findRadiometricMapping2(const cv::Mat& im1, const cv::Mat& im2, const cv::M
 
 void plotPoints(cv::Mat& dispMat, vector<unsigned short>& i1, vector<unsigned short>& i2, unsigned short median_1 = 0, unsigned short median_2 = 0, double grad = 1.0, double shift = 0.0);
 
-#endif
+#endif // THERMALVIS_STEREO_H
