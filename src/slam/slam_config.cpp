@@ -16,6 +16,7 @@ slamLaunchOnlyData::slamLaunchOnlyData() :
 	displayDebug(false),
 	displayGUI(false),
 #endif
+	inspectInitialization(false),
 	keyframeEvaluationMode(false),
 	specialMode(false),
 	logErrors(false),

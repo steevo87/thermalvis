@@ -4,6 +4,22 @@
 
 #include "slam/monocular_slam.hpp"
 
+void keyboard_callback (const cv::viz::KeyboardEvent &e, void *cookie) {
+	
+	keyboardCommands* kC = reinterpret_cast<keyboardCommands*> (cookie);
+
+	unsigned char key = e.code;
+
+	// Known reserved letters:
+	// Q (exit) - causes crash
+  
+	switch (key) {
+		case (int)'t': case (int)'T': kC->toggleCamera = true; break;
+		case (int)'e': case (int)'E': kC->exit = true; break;
+		default: break;
+	}    
+}
+
 #ifndef _BUILD_FOR_ROS_
 bool slamConfig::assignStartingData(slamData& startupData) {
 
@@ -55,6 +71,7 @@ bool slamData::assignFromXml(xmlParameters& xP) {
 
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("inspectInitialization")) inspectInitialization = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			
         }
 
@@ -218,7 +235,7 @@ void slamNode::testInitializationWithCurrentFrame() {
 	}
 }
 
-void slamNode::selectBestInitializationPair() {
+bool slamNode::selectBestInitializationPair() {
 
 	int best_idx1 = -1, best_idx2 = -1;
 	cv::Mat best_trans;
@@ -233,9 +250,14 @@ void slamNode::selectBestInitializationPair() {
 		}
 	}
 
-	ROS_INFO("Best startup pair found: score = (%f), indices = (%d, %d)", bestScore, best_idx1, best_idx2);
+	if (bestScore <= 0.0) {
+		ROS_ERROR("No suitable startup pair was found, so structure cannot be initialized.");
+		return false;
+	}
 
+	ROS_INFO("Best startup pair found: score = (%f), indices = (%d, %d)", bestScore, best_idx1, best_idx2);
 	assignStartingFrames(best_idx1, best_idx2, best_trans);
+	return true;
 }
 
 #ifdef _BUILD_FOR_ROS_
@@ -279,7 +301,7 @@ void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg, const vector<feature
 
 		if ((latestFrame >= configData.maxInitializationFrames) || (bestInitializationScore >= configData.minInitializationConfidence)) { // elapsedTime > configData.maxInitializationSeconds
 			// select best pair
-			selectBestInitializationPair();
+			if (!selectBestInitializationPair()) return;
 			main_mutex.lock();
 			structureFormed = formInitialStructure();
 			putativelyEstimatedFrames = currentPoseIndex-1;
@@ -325,7 +347,8 @@ slamNode::slamNode(slamData startupData) :
 	hasTerminatedFeed(false),	
 	latestReceivedPoseProcessed(false),
 	extrinsicCalib_R(cv::Mat::eye(3,3,CV_64FC1)),
-	extrinsicCalib_T(cv::Mat::zeros(3,1,CV_64FC1))
+	extrinsicCalib_T(cv::Mat::zeros(3,1,CV_64FC1)),
+	current_view_index(-1)
 {
 	configData = startupData;
 
@@ -622,7 +645,7 @@ bool slamData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<int>("maxTestsPerFrame", maxTestsPerFrame, 10);
 	
-	nh.param<int>("maxInitializationFrames", maxInitializationFrames, 30);
+	nh.param<int>("maxInitializationFrames", maxInitializationFrames, 50);
 	
 	nh.param<int>("minStartingSeparation", minStartingSeparation, 4);
 	nh.param<int>("maxStartingSeparation", maxStartingSeparation, 12);
@@ -1917,7 +1940,87 @@ bool slamNode::formInitialStructure() {
 	//printf("%s << ptsInCloud.size() (post-update) = %d", __FUNCTION__, ptsInCloud.size());
 
 #ifdef _USE_OPENCV_VIZ_
-	cv::viz::Viz3d viz("debug 3d win");
+	if (configData.inspectInitialization) {
+
+		/*
+		cv::viz::WLine x_axis(cv::Point3f(0.0f,0.0f,0.0f), cv::Point3f(1.0f,0.0f,0.0f));
+		x_axis.setRenderingProperty(cv::viz::LINE_WIDTH, 2.0);
+		cv::viz::WLine y_axis(cv::Point3f(0.0f,0.0f,0.0f), cv::Point3f(0.0f,1.0f,0.0f));
+		y_axis.setRenderingProperty(cv::viz::LINE_WIDTH, 1.0);
+		cv::viz::WLine z_axis(cv::Point3f(0.0f,0.0f,0.0f), cv::Point3f(0.0f,0.0f,1.0f));
+		z_axis.setRenderingProperty(cv::viz::LINE_WIDTH, 4.0);
+    
+		viz.showWidget("X-Axis Widget", x_axis);
+		viz.showWidget("Y-Axis Widget", y_axis);
+		viz.showWidget("Z-Axis Widget", z_axis);
+		*/
+
+		cv::viz::WCloud ptCloud(ptsInCloud);
+		viz.showWidget("3D Cloud", ptCloud); // z flipped
+
+		/// Let's assume camera has the following properties
+		cv::Point3d cam_pos, cam_focal_point, cam_y_dir(0.0f,1.0f,0.0f);
+
+		cam_focal_point = findCentroid(ptsInCloud);
+		double cloudExtent = findPrismDiagonal(ptsInCloud);
+
+		cv::Point3d cam_pos_1(cam_pose_1.matrix(0,3), cam_pose_1.matrix(1,3), cam_pose_1.matrix(2,3));
+		cv::Point3d cam_pos_2(cam_pose_2.matrix(0,3), cam_pose_2.matrix(1,3), cam_pose_2.matrix(2,3));
+
+		cam_pos = cam_focal_point + 1.5*cloudExtent*(0.5*(cam_pos_1 + cam_pos_2) - cam_focal_point)*(1.0/norm(0.5*(cam_pos_1 + cam_pos_2) - cam_focal_point));
+		cam_pos.y -= 0.5*cloudExtent;
+
+		/// We can get the pose of the cam using makeCameraPose
+		floating_pose = cv::viz::makeCameraPose(cam_pos, cam_focal_point, cam_y_dir);
+		//cv::viz::Camera(...)
+		viz.setViewerPose(floating_pose);
+
+		convertMatToAffine(ACM[image_idx_1], cam_pose_1);
+		convertMatToAffine(ACM[image_idx_2], cam_pose_2);
+
+		/// We can get the transformation matrix from camera coordinate system to global using
+		/// - makeTransformToGlobal. We need the axes of the camera
+		cv::Affine3f transform = cv::viz::makeTransformToGlobal(cv::Vec3f(0.0f,-1.0f,0.0f), cv::Vec3d(-1.0f,0.0f,0.0f), cv::Vec3d(0.0f,0.0f,-1.0f), cam_pos);
+
+		cv::viz::WCameraPosition cpw(0.05); // Coordinate axes
+		cv::viz::WCameraPosition cpw_frustum1(cv::Vec2f(0.9, 0.5)), cpw_frustum2(cv::Vec2f(0.9, 0.5)); // Camera frustum // 0.889484, 0.523599
+    
+		//viz.showWidget("CPW_1", cpw, cam_pose_1);
+		viz.showWidget("CPW_FRUSTUM_1", cpw_frustum1, cam_pose_1);
+	
+		//viz.showWidget("CPW_2", cpw, cam_pose_2);
+		viz.showWidget("CPW_FRUSTUM_2", cpw_frustum2, cam_pose_2);
+
+		viz.registerKeyboardCallback(keyboard_callback, (void*)(&kC));
+		//cloud_viewer->registerKeyboardCallback (keyboard_callback, (void*)(&kC));
+
+		while(!viz.wasStopped()) {
+			if (kC.toggleCamera) {
+				viz.showWidget("CoordinateAxis", cv::viz::WCoordinateSystem());
+				switch (current_view_index) {
+				case -1:
+					current_view_index++;
+					viz.removeWidget("CoordinateAxis");
+					viz.setViewerPose(cam_pose_1);
+					break;
+				case 0:
+					current_view_index++;
+					viz.removeWidget("CoordinateAxis");
+					viz.setViewerPose(cam_pose_2);
+					break;
+				case 1:
+					current_view_index = -1;
+					viz.setViewerPose(floating_pose);
+					break;
+				default:
+					break;
+				}
+				kC.toggleCamera = false;
+				if (kC.exit) break;
+			}
+			viz.spinOnce(1, true);
+		}
+	}
 #endif
 	
 	ROS_INFO("Points acquired. GT.");

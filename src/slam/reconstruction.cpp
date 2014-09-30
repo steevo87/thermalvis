@@ -41,11 +41,18 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	cv::Mat F = cv::findFundamentalMat(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, 0.99, matchesMask_F_matrix);
 	cv::Mat H = cv::findHomography(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, matchesMask_H_matrix);
-	
+
 	// gric score
-	double fGric, hGric;
-	double gricScore = normalizedGRICdifference(pts1, pts2, F, H, matchesMask_F_matrix, matchesMask_H_matrix, fGric, hGric);
-	gricScore = fGric / hGric;
+	double fGric, hGric, gricScore = -1.0;
+	if ((F.rows != 0) && (H.rows == 0)) {
+		gricScore = 1.0; // Assign good score if H is so unsuitable that it wasn't able to even be estimated
+	} else if (F.rows == 0) {
+		gricScore = 0.0; // Assign bad score if F is so unsuitable that it wasn't able to even be estimated
+	} else {
+		gricScore = normalizedGRICdifference(pts1, pts2, F, H, matchesMask_F_matrix, matchesMask_H_matrix, fGric, hGric);
+		gricScore = fGric / hGric;
+	}
+	
 	double nGRIC = asymmetricGaussianValue(gricScore, scorecard[1][0], scorecard[1][2], scorecard[1][2]);
 	
 	score[1] = gricScore;
@@ -123,7 +130,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	printf("%s << [%f]: gric (%1.2f, %1.2f), if (%1.2f, %1.2f), trans (%1.2f, %1.2f), ang (%02.1f, %1.2f)\n", __FUNCTION__, keyframeScore, gricScore, nGRIC, infrontScore, nIFS, tScore, nTRN, dScore, nANG);
 #endif
 	
-	P1.copyTo(pose);
+	C.copyTo(pose);
 	
 	return keyframeScore;
 }
@@ -239,21 +246,13 @@ bool reconstructFreshSubsequencePair(vector<featureTrack>& tracks, vector<cv::Po
 		return false;
 	}
 	
-	
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 0);
-	
 	cv::Mat real_P0, real_P1; 
 	
 	vector<cv::Point2f> pts1_, pts2_, pts1, pts2;
-	
-	printf("%s << Getting pts from tracks: (%d), (%d, %d), (%d, %d)\n", __FUNCTION__, ((int)tracks.size()), ((int)pts1_.size()), ((int)pts2_.size()), idx1, idx2);
 	getPointsFromTracks(tracks, pts1_, pts2_, idx1, idx2);
 	
-	//subselectPoints(pts1_, pts1, pts2_, pts2);
 	pts1.insert(pts1.end(), pts1_.begin(), pts1_.end());
 	pts2.insert(pts2.end(), pts2_.begin(), pts2_.end());
-	
-	printf("%s << Checking pts size... (%d)\n", __FUNCTION__, ((int)pts1.size()));
 	
 	if (pts1.size() < 8) {
 		printf("%s << ERROR! Too few corresponding points (%d)\n", __FUNCTION__, ((int)pts1.size()));
@@ -264,16 +263,12 @@ bool reconstructFreshSubsequencePair(vector<featureTrack>& tracks, vector<cv::Po
 	getActiveTracks(activeTrackIndices, tracks, idx1, idx2);
 	filterToCompleteTracks(fullSpanIndices, activeTrackIndices, tracks, idx1, idx2);
 	
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 2);
-	
 	cv::Mat F, matchesMask_F_matrix;
 	F = cv::findFundamentalMat(cv::Mat(pts1), cv::Mat(pts2), cv::FM_RANSAC, 1.00, 0.99, matchesMask_F_matrix);
 
 	cv::Mat E = camData.K.t() * F * camData.K;	
 	cv::Mat CX[4];
 	findFourTransformations(CX, E, camData.K, pts1, pts2);
-	
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 3);
 	
 	cv::Mat C;
 	int validPts = findBestCandidate(CX, camData.K, pts1, pts2, C);
@@ -282,54 +277,38 @@ bool reconstructFreshSubsequencePair(vector<featureTrack>& tracks, vector<cv::Po
 		printf("%s << ERROR! too few tracks (%d / %d) in best transform are in front of camera.\n", __FUNCTION__, ((int)validPts), ((int)pts1.size()));
 		return false;
 	}
-		
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 4);
 	
 	cv::Mat P1, R1, t1, Rvec;
 	transformationToProjection(C, P1);
 	decomposeTransform(C, R1, t1);
 	Rodrigues(R1, Rvec);
-
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 5);
 	
-	real_C1 = C * real_C0;	// real_C1 = C * real_C0;
-	
-	//real_C1 = C.inv() * real_C0;
+	real_C1 = C * real_C0;
 	
 	transformationToProjection(real_C0, real_P0);
 	transformationToProjection(real_C1, real_P1);
 	
-	/*
-	printf("%s << Putative camera poses (%d & %d)\n", __FUNCTION__, idx1, idx2);
-	cout << "real_C0 = " << endl;
-	cout << real_C0 << endl;
-	cout << "real_C1 = " << endl;
-	cout << real_C1 << endl;
-	*/
-	
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 6);
-	
-	//cout << camData.K << endl;
-	//cout << camData.K_inv << endl;
-	
 	vector<cv::Point2f> correspPoints;
 	TriangulatePoints(pts1, pts2, camData.K, camData.K_inv, real_C0, real_C1, ptCloud, correspPoints);
-	//TriangulatePoints(pts1_, pts2_, camData.K, camData.K_inv, real_C1.inv(), real_C0.inv(), ptCloud, correspPoints);
-	//TriangulatePoints(pts1, pts2, camData.K, camData.K_inv, real_P0, real_P1, ptCloud, correspPoints);
-	//printf("%s << %d points triangulated.\n", __FUNCTION__, ptsInCloud.size());
-	
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 7);
+
+	// Find median
+	cv::Point3d centroidPt = findCentroid(ptCloud);
+	cv::Point3d cam2Pos = cv::Point3d(C.at<double>(0,3), C.at<double>(1,3), C.at<double>(2,3));
+	cv::Point3d meanPos;
+	meanPos.x = cam2Pos.x / 2;
+	meanPos.y = cam2Pos.y / 2;
+	meanPos.z = cam2Pos.z / 2;
+	double camSep = cv::norm(cam2Pos);
+	double cloudDist = cv::norm(centroidPt - meanPos);
+
+	ROS_INFO("Centroid = (%f, %f, %f); Cam Separation = (%f); Cloud Distance = (%f)", centroidPt.x, centroidPt.y, centroidPt.z, camSep, cloudDist);
+
+	// Get cloud dist to 1m?
 	
 	triangulatedIndices.clear();
 	triangulatedIndices.insert(triangulatedIndices.end(), fullSpanIndices.begin(), fullSpanIndices.end());
 	
-	//printf("%s << triangulatedIndices.size() = %d\n", __FUNCTION__, triangulatedIndices.size());
-	
 	updateTriangulatedPoints(tracks, triangulatedIndices, ptCloud);
-	
-	//printf("%s << DEBUG [%d]\n", __FUNCTION__, 8);
-	
-	//real_C1 = real_C1.inv();
 	
 	return true;			
 }
@@ -1226,6 +1205,8 @@ void convertPoint3dToMat(const cv::Point3d& src, cv::Mat& dst) {
 
 
 double calcGeometryDistance(cv::Point2f& pt1, cv::Point2f& pt2, cv::Mat& mat, int distMethod) {
+
+	if (mat.rows == 0) return std::numeric_limits<double>::max();
 	
 	cv::Mat p1, p2;
 	p1 = cv::Mat::ones(3,1,CV_64FC1);

@@ -13,6 +13,45 @@ int minProjections(int pairs) {
 	return int(ceil(retVal+1.0));
 }
 
+#ifdef _USE_OPENCV_VIZ_
+void convertMatToAffine(const cv::Mat mat, cv::Affine3f& affine) {
+	if ((mat.rows < 3) || (mat.cols != 4)) return;
+
+	for (int iii = 0; iii < 4; iii++) {
+		for (int jjj = 0; jjj < 4; jjj++) {
+			if (mat.rows < 4) { (iii == 3) ? affine.matrix(iii,jjj) = 1.0 : affine.matrix(iii,jjj) = 0.0; }
+			affine.matrix(iii,jjj) =float( mat.at<double>(iii,jjj));
+		}
+	}
+}
+#endif
+
+cv::Point3d findCentroid(vector<cv::Point3d>& cloud) {
+	cv::Point3d retVal(0.0,0.0,0.0);
+	for (int iii = 0; iii < cloud.size(); iii++) {
+		retVal.x += cloud.at(iii).x/double(cloud.size());
+		retVal.y += cloud.at(iii).y/double(cloud.size());
+		retVal.z += cloud.at(iii).z/double(cloud.size());
+	}
+	return retVal;
+}
+
+double findPrismDiagonal(vector<cv::Point3d>& cloud) {
+	double min_x = numeric_limits<double>::max(), min_y = numeric_limits<double>::max(), min_z = numeric_limits<double>::max();
+	double max_x = -numeric_limits<double>::max(), max_y = -numeric_limits<double>::max(), max_z = -numeric_limits<double>::max();
+	for (int iii = 0; iii < cloud.size(); iii++) {
+		min_x = min(min_x, cloud.at(iii).x);
+		min_y = min(min_y, cloud.at(iii).y);
+		min_z = min(min_z, cloud.at(iii).z);
+		max_x = max(max_x, cloud.at(iii).x);
+		max_y = max(max_y, cloud.at(iii).y);
+		max_z = max(max_z, cloud.at(iii).z);
+	}
+	cv::Point3d extremeMin = cv::Point3d(min_x, min_y, min_z);
+	cv::Point3d extremeMax = cv::Point3d(max_x, max_y, max_z);
+	return norm(extremeMax-extremeMin);
+}
+
 bool findClusterMean(const vector<cv::Point3d>& pts, cv::Point3d& pt3d, int mode, int minEstimates, double maxStandardDev) {
 	
 	cv::Point3d mean3d = cv::Point3d(0.0, 0.0, 0.0);

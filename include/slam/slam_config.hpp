@@ -10,7 +10,7 @@
 #define INITIALIZATION_SCORING_PARAMETERS		5
 
 // Hard Limits
-#define MAX_INITIALIZATION_FRAMES				30
+#define MAX_INITIALIZATION_FRAMES				50
 #define MAX_INITIALIZATION_SECONDS				5  
 #define	MIN_INITIALIZATION_CONFIDENCE			0.9
 #define MAX_FRAMES								1000
@@ -63,7 +63,7 @@ struct slamRealtimeOnlyData {
 
 /// \brief		Parameters that are only changeable from launch interface
 struct slamLaunchOnlyData {
-	bool specialMode, logErrors, keyframeEvaluationMode, writePoses;
+	bool specialMode, logErrors, keyframeEvaluationMode, writePoses, inspectInitialization;
 	std::string initializationScorecard, evaluationFile, flowSource, mapperSource, extrinsicsFile;
 	int baMode, evaluateParameters;
 #ifndef _BUILD_FOR_ROS_

@@ -78,6 +78,15 @@ public:
 };
 #endif
 
+/// \brief		Manages keyboard instructions for OpenCV cloud display
+struct keyboardCommands {
+	bool toggleCamera, exit;
+	keyboardCommands() : 
+		toggleCamera(false),
+		exit(false)
+	{ }
+};
+
 /// \brief		Manages the monocular slam procedure
 class slamNode : public GenericOptions {
 private:
@@ -214,6 +223,13 @@ private:
 	double predictiveError, bundleTransShift, bundleRotShift;
 	
 	bool latestReceivedPoseProcessed;
+
+#ifdef _USE_OPENCV_VIZ_
+	keyboardCommands kC;
+	cv::viz::Viz3d viz;
+	cv::Affine3f floating_pose, cam_pose_1, cam_pose_2;
+#endif
+	int current_view_index; // -1 reserved for floating, -2 for auto view, 0 -> max for camera (or keyframe?) indices
 	
 public:
 
@@ -308,7 +324,7 @@ public:
 	void testInitializationWithCurrentFrame();
 
 	///brief	Chooses the indices of the best frames for structure initialization that have so far been found
-	void selectBestInitializationPair();
+	bool selectBestInitializationPair();
 	
 	void clearSystem();
 	
@@ -337,12 +353,14 @@ public:
 	
 
 	bool checkConnectivity(unsigned int seq);
-	
-	
-	
+
 	void trimFeatureTrackVector();
 
 	
+
+	
 };
+
+void keyboard_callback (const cv::viz::KeyboardEvent &e, void *cookie);
 
 #endif

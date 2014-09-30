@@ -13,6 +13,10 @@
 #include "core/opencv_resources.hpp"
 #include "core/ros_resources.hpp"
 
+#ifdef _USE_OPENCV_VIZ_
+#include <opencv2/viz.hpp>
+#endif
+
 #include <Eigen/Geometry>
 
 typedef Eigen::Matrix<float, 3, 3, Eigen::RowMajor> Matrix3frm;
@@ -52,6 +56,17 @@ void convertRmatTo3frm(const cv::Mat& R_src, Matrix3frm& R_dst);
 
 /// \brief 		Converts translation vector from Eigen to OpenCV format
 void convertEigenvecToTvec(const Eigen::Vector3f& T_src, cv::Mat& T_dst);
+
+#ifdef _USE_OPENCV_VIZ_
+/// \brief 		Converts from 4x4 OpenCV matrix to 3x4 Affine representation
+void convertMatToAffine(const cv::Mat mat, cv::Affine3f& affine);
+#endif
+
+/// \brief 		Finds centroid of 3D cloud
+cv::Point3d findCentroid(vector<cv::Point3d>& cloud);
+
+/// \brief 		Finds the length of the diagonal from extreme corners of minimum enclosing prism (perpendicular do X,Y,Z axes)
+double findPrismDiagonal(vector<cv::Point3d>& cloud);
 
 /// \brief 		Converts rotation matrix from Eigen to OpenCV format
 void convert3frmToRmat(const Matrix3frm& R_src, cv::Mat& R_dst);
