@@ -28,7 +28,7 @@ void convertMatToAffine(const cv::Mat mat, cv::Affine3f& affine) {
 
 cv::Point3d findCentroid(vector<cv::Point3d>& cloud) {
 	cv::Point3d retVal(0.0,0.0,0.0);
-	for (int iii = 0; iii < cloud.size(); iii++) {
+	for (unsigned int iii = 0; iii < cloud.size(); iii++) {
 		retVal.x += cloud.at(iii).x/double(cloud.size());
 		retVal.y += cloud.at(iii).y/double(cloud.size());
 		retVal.z += cloud.at(iii).z/double(cloud.size());
@@ -39,7 +39,7 @@ cv::Point3d findCentroid(vector<cv::Point3d>& cloud) {
 double findPrismDiagonal(vector<cv::Point3d>& cloud) {
 	double min_x = numeric_limits<double>::max(), min_y = numeric_limits<double>::max(), min_z = numeric_limits<double>::max();
 	double max_x = -numeric_limits<double>::max(), max_y = -numeric_limits<double>::max(), max_z = -numeric_limits<double>::max();
-	for (int iii = 0; iii < cloud.size(); iii++) {
+	for (unsigned int iii = 0; iii < cloud.size(); iii++) {
 		min_x = min(min_x, cloud.at(iii).x);
 		min_y = min(min_y, cloud.at(iii).y);
 		min_z = min(min_z, cloud.at(iii).z);

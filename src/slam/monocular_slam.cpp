@@ -4,6 +4,7 @@
 
 #include "slam/monocular_slam.hpp"
 
+#ifdef _USE_OPENCV_VIZ_
 void keyboard_callback (const cv::viz::KeyboardEvent &e, void *cookie) {
 	
 	keyboardCommands* kC = reinterpret_cast<keyboardCommands*> (cookie);
@@ -19,6 +20,7 @@ void keyboard_callback (const cv::viz::KeyboardEvent &e, void *cookie) {
 		default: break;
 	}    
 }
+#endif
 
 #ifndef _BUILD_FOR_ROS_
 bool slamConfig::assignStartingData(slamData& startupData) {
@@ -187,7 +189,7 @@ bool slamNode::updatePotentialInitializationFrames() {
 bool slamNode::sufficientMotionForInitializationFrame() {
 
 	// For each frame already in the initialization store...
-	for (int iii = 0; iii < initialization_store.keyframes.size(); iii++) {
+	for (unsigned int iii = 0; iii < initialization_store.keyframes.size(); iii++) {
 		// Find all common features shared with the current frame...
 		vector<unsigned int> shared_track_indices;
 		getActiveTracks(shared_track_indices, *featureTrackVector, initialization_store.keyframes.at(iii).idx, latestFrame);
@@ -211,7 +213,7 @@ void slamNode::testInitializationWithCurrentFrame() {
 	cv::Mat blankMat = cv::Mat::zeros(80, 640, CV_8UC3);
 	
 	vector<int> startersToTest;
-	for (int iii = 0; iii < initialization_store.keyframes.size()-1; iii++) startersToTest.push_back(initialization_store.keyframes.at(iii).idx);
+	for (unsigned int iii = 0; iii < initialization_store.keyframes.size()-1; iii++) startersToTest.push_back(initialization_store.keyframes.at(iii).idx);
 		
 	while (((int)startersToTest.size()) > configData.maxTestsPerFrame) {
 		unsigned int randIndex = rand() % startersToTest.size();
@@ -1983,7 +1985,7 @@ bool slamNode::formInitialStructure() {
 		cv::Affine3f transform = cv::viz::makeTransformToGlobal(cv::Vec3f(0.0f,-1.0f,0.0f), cv::Vec3d(-1.0f,0.0f,0.0f), cv::Vec3d(0.0f,0.0f,-1.0f), cam_pos);
 
 		cv::viz::WCameraPosition cpw(0.05); // Coordinate axes
-		cv::viz::WCameraPosition cpw_frustum1(cv::Vec2f(0.9, 0.5)), cpw_frustum2(cv::Vec2f(0.9, 0.5)); // Camera frustum // 0.889484, 0.523599
+		cv::viz::WCameraPosition cpw_frustum1(cv::Vec2f(0.9f, 0.5f)), cpw_frustum2(cv::Vec2f(0.9f, 0.5f)); // Camera frustum // 0.889484, 0.523599
     
 		//viz.showWidget("CPW_1", cpw, cam_pose_1);
 		viz.showWidget("CPW_FRUSTUM_1", cpw_frustum1, cam_pose_1);
@@ -2807,7 +2809,7 @@ void slamNode::triangulatePoints() {
 		
 		int minimumlyProjectedTracks = 0;
 		for (unsigned int zzz = 0; zzz < featureTrackVector->size(); zzz++) {
-			if (featureTrackVector->at(zzz).locations.size() >= minProjections_) { minimumlyProjectedTracks++; }
+			if (int(featureTrackVector->at(zzz).locations.size()) >= minProjections_) { minimumlyProjectedTracks++; }
 		}
 		
 		unsigned int actuallyTriangulated = 0;

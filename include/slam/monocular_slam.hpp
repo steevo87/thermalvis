@@ -361,6 +361,8 @@ public:
 	
 };
 
+#ifdef _USE_OPENCV_VIZ_
 void keyboard_callback (const cv::viz::KeyboardEvent &e, void *cookie);
+#endif
 
 #endif
