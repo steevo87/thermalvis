@@ -483,9 +483,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	//nh.param<bool>("extremes", extremes, true);
 	nh.param<std::string>("intrinsics", intrinsics, "intrinsics");
 	
-	nh.param<int>("inputWidth", inputWidth, 0);
-	nh.param<int>("inputHeight", inputHeight, 0);
-	
 	nh.param<std::string>("extrinsics", extrinsics, "extrinsics");
 	
 	//nh.param<int>("inputDatatype", inputDatatype, 1);
@@ -558,6 +555,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	} else dumpTimestamps = false;
 	
 	nh.param<bool>("resizeMode", wantsToResize, false);
+	nh.param<bool>("guessIntrinsics", guessIntrinsics, false);
 	
 	nh.param<int>("syncMode", syncMode, SYNCMODE_HARD);
 
@@ -668,22 +666,9 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	if (loopMode == true) ROS_INFO("Option to loop has been selected.");
 	
-	if (intrinsics != "intrinsics") {
-		intrinsicsProvided = true;
-		if (verboseMode) { ROS_INFO("Intrinsics at (%s) selected.", intrinsics.c_str()); }
-		
-		if ((inputWidth != 0) && (inputHeight != 0)) ROS_WARN("Provided image dimensions will be ignored because of provided intrinsics file.");
-	} else {
-		
-		if ((inputWidth != 0) && (inputHeight != 0)) {
-			ROS_INFO("Provided image dimensions (%d, %d) will be used.", inputWidth, inputHeight);
-			imageDimensionsSpecified = true;
-		} else ROS_WARN("No intrinsics or image dimensions provided. Will attempt to estimate camera size...");
-		
-		//intrinsics = read_addr + "data/calibration/csiro-aslab/miricle-1.yml";
-		//ROS_ERROR("No intrinsics supplied. Defaulting to (%s)", intrinsics.c_str());
+	if ((intrinsics != "intrinsics") && (verboseMode)) ROS_INFO("Intrinsics at (%s) selected.", intrinsics.c_str());
 	}
-	
+
 	if (extrinsics != "extrinsics") {
 		ROS_INFO("Extrinsics at %s selected.", extrinsics.c_str());
 

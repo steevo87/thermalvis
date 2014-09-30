@@ -10,6 +10,7 @@ cameraParameters::cameraParameters() {
 	cameraMatrix = cv::Mat::eye(3, 3, CV_64FC1);
 	distCoeffs = cv::Mat::zeros(1, 5, CV_64FC1);
 	blankCoeffs = cv::Mat::zeros(1, 5, CV_64FC1);
+	newCamMat = cv::Mat::eye(3, 3, CV_64FC1);
 
 	double alpha = 0.00;
 	bool centerPrincipalPoint = true;

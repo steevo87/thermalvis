@@ -46,5 +46,6 @@ streamerLaunchOnlyData::streamerLaunchOnlyData() :
     extremes(true),
 	wantsToEncode(false),
 	wantsToKeepNames(false),
-	wantsToResize(false)
+	wantsToResize(false),
+	guessIntrinsics(false)
 { }

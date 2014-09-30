@@ -1,5 +1,9 @@
 #include "streamer/input_stream.hpp"
 
+camData_::camData_() {
+	imageSize = cv::Mat(1, 2, CV_16UC1);
+}
+
 #ifndef _BUILD_FOR_ROS_
 bool streamerConfig::assignStartingData(streamerData& startupData) {
 
@@ -177,16 +181,7 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 		startupData.dataValid = false;
 	}
 	
-	if (startupData.intrinsics != "intrinsics") {
-		startupData.intrinsicsProvided = true;
-		if (verboseMode) { ROS_INFO("Intrinsics at (%s) selected.", startupData.intrinsics.c_str()); }
-		if ((startupData.inputWidth != 0) && (startupData.inputHeight != 0)) ROS_WARN("Provided image dimensions will be ignored because of provided intrinsics file.");
-	} else {
-		if ((startupData.inputWidth != 0) && (startupData.inputHeight != 0)) {
-			ROS_INFO("Provided image dimensions (%d, %d) will be used.", startupData.inputWidth, startupData.inputHeight);
-			startupData.imageDimensionsSpecified = true;
-		} ROS_WARN("No intrinsics or image dimensions provided. Will attempt to estimate camera size...");
-	}
+	if ((startupData.intrinsics != "intrinsics") && (verboseMode)) ROS_INFO("Intrinsics at (%s) selected.", startupData.intrinsics.c_str());
 
 	if (startupData.extrinsics != "extrinsics") {
 		ROS_INFO("Extrinsics at %s selected.", startupData.extrinsics.c_str());
@@ -281,9 +276,7 @@ streamerData::streamerData() :
 	intrinsics("intrinsics"), 
 	extrinsics("extrinsics"), 
 	addExtrinsics(false),
-	imageDimensionsSpecified(false),
 	topicname("/thermalvis/streamer/image_raw"), 
-	intrinsicsProvided(false), 
 	timeStampsAddress(""), 
 	republishTopic("specifyTopic/image_raw"), 
 	frameID(""), 
@@ -329,8 +322,6 @@ streamerData::streamerData() :
 	radiometricBias(0), 
 	calibrationMode(CALIBMODE_OFF), 
 	alternatePeriod(5), 
-	inputWidth(0), 
-	inputHeight(0), 
 	serialCommsConfigurationCode(SERIAL_COMMS_CONFIG_DEFAULT), 
 	serialWriteAttempts(1), 
 	republishSource(NO_REPUBLISH_CODE), 
@@ -485,6 +476,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("extremes")) extremes = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("stepChangeTempScale")) stepChangeTempScale = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("guessIntrinsics")) guessIntrinsics = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("rectifyImages")) rectifyImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("writeImages")) writeImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("keepOriginalNames")) keepOriginalNames = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -497,8 +489,6 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("radiometricBias")) radiometricBias = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("calibrationMode")) calibrationMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("alternatePeriod")) alternatePeriod = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputWidth")) inputWidth = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
-			if (!v2.second.get_child("<xmlattr>.name").data().compare("inputHeight")) inputHeight = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialCommsConfigurationCode")) serialCommsConfigurationCode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxNucInterval")) maxNucInterval = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("serialWriteAttempts")) serialWriteAttempts = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
@@ -655,21 +645,57 @@ bool inputStream::writeImageToDisk() {
 	return false;
 }
 
-void streamerNode::assignDefaultCameraInfo() {
-	
-	if (configData.verboseMode) { ROS_INFO("Entered.."); }
 
-	globalCameraInfo.imageSize = cv::Mat(1, 2, CV_16UC1);
-	globalCameraInfo.imageSize.at<unsigned short>(0, 1) = DEFAULT_IMAGE_HEIGHT;
-	globalCameraInfo.imageSize.at<unsigned short>(0, 0) = DEFAULT_IMAGE_WIDTH;
+void streamerNode::assignDefaultCameraInfo(int rows, int cols, bool guessIntrinsics) {
+	
+	globalCameraInfo.imageSize.at<unsigned short>(0, 1) = rows;
+	globalCameraInfo.imageSize.at<unsigned short>(0, 0) = cols;
 	
 	globalCameraInfo.cameraMatrix = cv::Mat::eye(3, 3, CV_64FC1);
 	globalCameraInfo.distCoeffs = cv::Mat::zeros(1, 8, CV_64FC1);
-	globalCameraInfo.newCamMat = cv::Mat::eye(3, 3, CV_64FC1);
+	
 	globalCameraInfo.cameraSize = cv::Size(globalCameraInfo.imageSize.at<unsigned short>(0, 0), globalCameraInfo.imageSize.at<unsigned short>(0, 1));
 
-	if (configData.verboseMode) { ROS_INFO("globalCameraInfo.cameraSize = (%d, %d)", globalCameraInfo.cameraSize.width, globalCameraInfo.cameraSize.height); }
+	if (guessIntrinsics) {
+		if ((rows == 288) && (cols == 382)) {
+			ROS_INFO("Image appears to be from Optris PI450: using default intrinsics for this camera.");
+			
+			globalCameraInfo.cameraMatrix.at<double>(0,0) = 377.322276;
+			globalCameraInfo.cameraMatrix.at<double>(1,1) = 378.275185;
+			globalCameraInfo.cameraMatrix.at<double>(0,2) = 190.986704;
+			globalCameraInfo.cameraMatrix.at<double>(1,2) = 148.903288;
+
+			globalCameraInfo.distCoeffs = cv::Mat::zeros(1, 8, CV_64FC1);
+			globalCameraInfo.distCoeffs.at<double>(0,0) = -1.9666214082095448e-01;
+			globalCameraInfo.distCoeffs.at<double>(0,1) = -1.8316527667010765e+00;
+			globalCameraInfo.distCoeffs.at<double>(0,2) =  4.1488627740748603e-05;
+			globalCameraInfo.distCoeffs.at<double>(0,3) = -4.4570296532033367e-04;
+			globalCameraInfo.distCoeffs.at<double>(0,4) =  5.4319165007572279e+00;
+			globalCameraInfo.distCoeffs.at<double>(0,5) =  2.7619863555564450e-01;
+			globalCameraInfo.distCoeffs.at<double>(0,6) = -2.4816640836747377e+00;
+			globalCameraInfo.distCoeffs.at<double>(0,7) =  6.6678487615602311e+00;
+
+		} else if ((rows == 480) && (cols == 640)) {
+			ROS_INFO("Image appears to be from Optris PI450: using default intrinsics for this camera.");
+
+			globalCameraInfo.cameraMatrix.at<double>(0,0) = 608.531001;
+			globalCameraInfo.cameraMatrix.at<double>(1,1) = 609.758295;
+			globalCameraInfo.cameraMatrix.at<double>(0,2) = 312.179048;
+			globalCameraInfo.cameraMatrix.at<double>(1,2) = 241.456892;
+
+			globalCameraInfo.distCoeffs = cv::Mat::zeros(1, 5, CV_64FC1);
+			globalCameraInfo.distCoeffs.at<double>(0,0) = -6.0328230064941279e-01;
+			globalCameraInfo.distCoeffs.at<double>(0,1) =  3.6493169971715977e-01;
+			globalCameraInfo.distCoeffs.at<double>(0,2) =  1.6199665380664232e-04;
+			globalCameraInfo.distCoeffs.at<double>(0,3) =  1.1992419059299049e-03;
+			globalCameraInfo.distCoeffs.at<double>(0,4) = -1.1563600377591987e-01;
+
+		} else {
+			ROS_WARN("Image resolution doesn't match a known camera: unable to estimate intrinsics.");
+		}
+	}
 	
+	assignCameraInfo();
 }
 
 #ifdef _BUILD_FOR_ROS_
@@ -817,7 +843,7 @@ streamerNode::streamerNode(streamerData startupData) :
 	
 	if (configData.dumpTimestamps) ofs.open(configData.outputTimeFile.c_str());
 	
-	if (configData.intrinsicsProvided) {
+	if (configData.intrinsics != "intrinsics") {
 		
 		if (configData.verboseMode) { ROS_INFO("Reading in calibration data"); }
 		
@@ -846,25 +872,12 @@ streamerNode::streamerNode(streamerData startupData) :
 		if (configData.verboseMode) { ROS_INFO("globalCameraInfo.cameraSize = (%d, %d)", globalCameraInfo.cameraSize.width, globalCameraInfo.cameraSize.height); }
 		if (configData.verboseMode) { ROS_INFO("Global params determined."); }
 
-	} else if (configData.imageDimensionsSpecified) {
-		
-		if (configData.verboseMode) { ROS_INFO("Assigning default intrinsics but with specified image size"); }
-		
-		assignDefaultCameraInfo();
-
-		globalCameraInfo.imageSize.at<unsigned short>(0, 1) = configData.inputHeight;
-		globalCameraInfo.imageSize.at<unsigned short>(0, 0) = configData.inputWidth;
-		globalCameraInfo.cameraSize = cv::Size(globalCameraInfo.imageSize.at<unsigned short>(0, 0), globalCameraInfo.imageSize.at<unsigned short>(0, 1));
-		if (configData.verboseMode) { ROS_INFO("A: globalCameraInfo.cameraSize = (%d, %d)", globalCameraInfo.cameraSize.width, globalCameraInfo.cameraSize.height); }
-		
-		if (configData.verboseMode) { ROS_INFO("Assigned."); }
-		
-	} else assignDefaultCameraInfo();
+	}
 	
 	//HGH
 	if (configData.autoAlpha) {
 		
-		if (configData.intrinsicsProvided) {
+		if (configData.intrinsics != "intrinsics") {
 			if (configData.verboseMode) { ROS_INFO("Finding auto alpha..."); }
 			configData.alpha = findBestAlpha(globalCameraInfo.cameraMatrix, globalCameraInfo.distCoeffs, globalCameraInfo.cameraSize);
 			//HGH
@@ -917,8 +930,10 @@ streamerNode::streamerNode(streamerData startupData) :
 		globalCameraInfo.T = cv::Mat::zeros(3, 1, CV_64FC1);
 	}
 
-	if (configData.verboseMode) { ROS_INFO("calling assignCameraInfo() from streamerNode()..."); }
-	assignCameraInfo();
+	if (configData.intrinsics != "intrinsics") {
+		if (configData.verboseMode) { ROS_INFO("calling assignCameraInfo() from streamerNode()..."); }
+		assignCameraInfo();
+	}
 
 	if (configData.verboseMode) { ROS_INFO("Initializing video source..."); }
 
@@ -1913,7 +1928,7 @@ bool streamerNode::setupDevice() {
 		
 		// Now use this opportunity to test/correct?
 		
-		if ((!configData.imageDimensionsSpecified) && (!configData.intrinsicsProvided)) {
+		if (configData.intrinsics == "intrinsics") {
 			// Use these values..
 			ROS_INFO("Using image size learned from device initialization (%d, %d)", deviceWidth, deviceHeight);
 			globalCameraInfo.imageSize.at<unsigned short>(0, 0) = deviceWidth;
@@ -2044,6 +2059,8 @@ bool streamerNode::run() {
 bool streamerNode::processImage() {
 	
 	if (frame.rows == 0) return false;
+
+	if (configData.cameraData.cameraSize.height == 0) assignDefaultCameraInfo(frame.rows, frame.cols, configData.guessIntrinsics);
 	
 	if (configData.resizeImages) {
 		resize(frame, rzMat, cv::Size(configData.desiredCols, configData.desiredRows));

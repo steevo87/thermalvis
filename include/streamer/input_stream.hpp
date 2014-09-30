@@ -58,8 +58,8 @@
 #define MAX_READ_RATE 							100.0
 #define FASTEST_READ_RATE 						1000.0
 
-#define DEFAULT_IMAGE_WIDTH 					640
-#define DEFAULT_IMAGE_HEIGHT 					480
+#define DEFAULT_IMAGE_WIDTH 					288 // 288 for Optris PI450, 480 for Miricle 307K
+#define DEFAULT_IMAGE_HEIGHT 					382 // 382 for Optris PI450, 640 for Miricle 307K
 
 #define MAX_ROWS 								1920
 #define MAX_COLS 								2560
@@ -131,12 +131,12 @@ protected:
 	string timeStampsAddress, republishTopic, frameID, outputFormatString, outputTimeFile, outputVideo, videoType, outputTypeString;
 
 	bool radiometricCorrection, radiometricRaw, serialFeedback, useCurrentRosTime, alreadyCorrected, markDuplicates, outputDuplicates, smoothThermistor;
-	bool radiometricInterpolation, imageDimensionsSpecified, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;
+	bool radiometricInterpolation, displayThermistor, serialComms, readThermistor, forceInputGray, fixDudPixels, disableSkimming;
 	
 	bool loopMode, resizeImages, removeDuplicates, temporalSmoothing, pauseMode, stepChangeTempScale, readTimestamps;
-	bool intrinsicsProvided, rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
+	bool rectifyImages, writeImages, keepOriginalNames, writeVideo, addExtrinsics, republishNewTimeStamp, drawReticle, autoAlpha;
 
-	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, inputWidth, inputHeight, serialCommsConfigurationCode, serialWriteAttempts;
+	int filterMode, radiometricBias, calibrationMode, alternatePeriod, dummy, serialCommsConfigurationCode, serialWriteAttempts;
 	int republishSource, outputFormat, device_num, maxIntensityChange;
 	double filterParam, thermistorWindow, syncDiff, writeQuality, maxThermistorDiff, alpha;
 	
@@ -176,6 +176,8 @@ struct camData_ {
 	cv::Mat newCamMat;
 	
 	cv::Mat R, T;
+
+	camData_();
 };
 
 /// \brief		Stores some basic extrinsic camera information in OpenCV format
@@ -383,7 +385,7 @@ public:
 	bool get8bitImage(cv::Mat& img, sensor_msgs::CameraInfo& info);
 #endif
 
-	void assignDefaultCameraInfo();
+	void assignDefaultCameraInfo(int rows = DEFAULT_IMAGE_HEIGHT, int cols = DEFAULT_IMAGE_WIDTH, bool guessIntrinsics = false);
 	
 	bool isVideoValid();
 	

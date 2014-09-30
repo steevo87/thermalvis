@@ -1,0 +1,29 @@
+%YAML:1.0
+imageSize: !!opencv-matrix
+   rows: 1
+   cols: 2
+   dt: w
+   data: [ 640, 480 ]
+cameraMatrix: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 6.0853100149145962e+02, 0., 3.1217904867692613e+02, 0.,
+       6.0975829566496054e+02, 2.4145689262578708e+02, 0., 0., 1. ]
+distCoeffs: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [ -6.0328230064941279e-01, 3.6493169971715977e-01,
+       1.6199665380664232e-04, 1.1992419059299049e-03,
+       -1.1563600377591987e-01 ]
+newCamMat: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 5.5206656655838685e+02, 0., 3.1950000000000000e+02, 0.,
+       5.5317998243836848e+02, 2.3950000000000000e+02, 0., 0., 1. ]
+alpha: -2.0000000000000000e-02
+reprojectionError: 2.8087728191669309e-01
+generalisedError: 2.3570138183773379e-01
+patternsUsed: 10

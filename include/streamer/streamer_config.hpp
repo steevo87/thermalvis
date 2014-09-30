@@ -26,7 +26,7 @@ struct streamerRealtimeOnlyData {
 
 /// \brief		Parameters that are only changeable from launch interface
 struct streamerLaunchOnlyData {
-    bool specialMode, dumpTimestamps, extremes, wantsToEncode, wantsToKeepNames, wantsToResize;
+    bool specialMode, dumpTimestamps, extremes, wantsToEncode, wantsToKeepNames, wantsToResize, guessIntrinsics;
 #ifndef _BUILD_FOR_ROS_
 	bool display8bit, display16bit, displayColour, displayGUI;
 #endif
