@@ -211,6 +211,11 @@ bool keyframeStore::getBestPair(int& idx1, int& idx2) {
 	
 }
 
+void keyframeStore::clearAll() {
+	keyframes.clear();
+	connections.clear();
+}
+
 void keyframeStore::addKeyframe(int idx, cv::Mat& image) {
 	
 	keyframe newFrame;

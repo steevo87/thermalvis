@@ -80,6 +80,9 @@ struct keyframeStore {
 	
 	/// \brief      Finds all matches between weak keyframes
 	void findMatches();
+
+	/// \brief		Clear all data (ready to restart)
+	void clearAll();
 	
 };
 

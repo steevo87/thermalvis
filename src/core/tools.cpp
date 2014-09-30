@@ -312,24 +312,17 @@ void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsig
 
 double asymmetricGaussianValue(double score, double mean, double loVar, double hiVar) {
 
-	double zScore, sigma = 1.0, retVal;
+	double zScore, sigma = 1.0;
 
-	if (score == mean) {
-		return 1.00;
-	} else if (score > mean+3*hiVar) {
-		return 0.00;
-	} else if (score < mean-3*loVar) {
-		return 0.00;
-	} else if (score > mean) {
-		sigma = abs(hiVar - mean);
-	} else if (score < mean) {
-		sigma = abs(loVar - mean);
-	}
+	if (score == mean) return 1.00; 
+	if (score > mean+3*hiVar) return 0.00;
+	if (score < mean-3*loVar) return 0.00;
+	
+	(score > mean) ? sigma = abs(hiVar - mean) : sigma = abs(loVar - mean);
 
 	zScore = (score - mean) / sigma;
-	retVal = exp(-pow(zScore, 2.0)/2.0);
 
-	return retVal;
+	return exp(-pow(zScore, 2.0)/2.0);
 
 }
 

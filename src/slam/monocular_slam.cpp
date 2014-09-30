@@ -210,11 +210,32 @@ void slamNode::testInitializationWithCurrentFrame() {
 		double score = testKeyframePair(*featureTrackVector, configData.cameraData, scorecardParams, startersToTest.at(iii), latestFrame, keyframe_scores, startingTrans, true /*configData.keyframeEvaluationMode*/, true);
 				
 		ROS_INFO("Keyframe pair (%03d, %03d) initialization score = [%f] {%1.2f, %1.2f, %1.2f, %1.2f, %1.2f}", startersToTest.at(iii), latestFrame, score, keyframe_scores[0], keyframe_scores[1], keyframe_scores[2], keyframe_scores[3], keyframe_scores[4]);
+
+		startupVector_score.push_back(score);
+		startupVector_idx1.push_back(startersToTest.at(iii));
+		startupVector_idx2.push_back(latestFrame);
+		startupVector_trans.push_back(startingTrans);
 	}
 }
 
 void slamNode::selectBestInitializationPair() {
-	// assignStartingFrames(best_iii, best_jjj, keyframe_scores, startingTrans); ??
+
+	int best_idx1 = -1, best_idx2 = -1;
+	cv::Mat best_trans;
+
+	double bestScore = -1.0;
+	for (unsigned int iii = 0; iii < startupVector_score.size(); iii++) {
+		if (startupVector_score.at(iii) > bestScore) {
+			bestScore = startupVector_score.at(iii);
+			best_idx1 = startupVector_idx1.at(iii);
+			best_idx2 = startupVector_idx2.at(iii);
+			best_trans = startupVector_trans.at(iii);
+		}
+	}
+
+	ROS_INFO("Best startup pair found: score = (%f), indices = (%d, %d)", bestScore, best_idx1, best_idx2);
+
+	assignStartingFrames(best_idx1, best_idx2, best_trans);
 }
 
 #ifdef _BUILD_FOR_ROS_
@@ -534,19 +555,49 @@ slamNode::slamNode(slamData startupData) :
 
 bool slamNode::processScorecard() {
 	
-	if ((configData.initializationScorecard[0] == '.') && (configData.initializationScorecard[1] == '.')) {
-		configData.initializationScorecard = configData.read_addr + "nodes/monoslam/config/" + configData.initializationScorecard;
-	}
-	
-	ifstream ifs(configData.initializationScorecard.c_str());
+	if (configData.initializationScorecard == "") {
 
-	if (!ifs.is_open()) return false;
+		// Convergence
+		scorecardParams[0][0] = 1.67;
+		scorecardParams[0][1] = 1.25;
+		scorecardParams[0][2] = 4.34;
 
-	for (int jjj = 0; jjj < 2; jjj++) {
-		for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ifs >> scorecardParams[iii][jjj];
-	}
+		// GRIC Ratio
+		scorecardParams[1][0] = 1.32;
+		scorecardParams[1][1] = 0.18;
+		scorecardParams[1][2] = 10.0;
+
+		// Points in front
+		scorecardParams[2][0] = 1.00;
+		scorecardParams[2][1] = 0.08;
+		scorecardParams[2][2] = 1.00;
+
+		// Translation score
+		scorecardParams[3][0] = 27.3;
+		scorecardParams[3][1] = 13.6;
+		scorecardParams[3][2] = 9.70;
+
+		// Translation score
+		scorecardParams[4][0] = 8.64;
+		scorecardParams[4][1] = 2.67;
+		scorecardParams[4][2] = 9.70;
+
+	} else {
+		if ((configData.initializationScorecard[0] == '.') && (configData.initializationScorecard[1] == '.')) {
+			configData.initializationScorecard = configData.read_addr + "nodes/monoslam/config/" + configData.initializationScorecard;
+		}
 	
-	ifs.close();
+		ifstream ifs(configData.initializationScorecard.c_str());
+
+		if (!ifs.is_open()) return false;
+
+		for (int jjj = 0; jjj < 2; jjj++) {
+			for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ifs >> scorecardParams[iii][jjj];
+		}
+	
+		ifs.close();
+	}
+
 	for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ROS_INFO("Criteria (%d) = (%f, %f, %f)", iii, scorecardParams[iii][0], scorecardParams[iii][1], scorecardParams[iii][2]);
 	return true;
 }
@@ -1703,6 +1754,23 @@ void slamNode::clearSystem() {
 	for (int iii = 0; iii < finalIndex; iii++) ACM[iii] = cv::Mat();
 }
 
+void slamNode::assignStartingFrames(unsigned int idx1, unsigned int idx2, cv::Mat trans) {
+
+	keyframe_store.clearAll();
+
+	keyframe_store.addKeyframe(idx1, blank);
+	keyframe_store.addKeyframe(idx2, blank);
+
+	ACM[idx1] = cv::Mat::eye(4, 4, CV_64FC1);
+	trans.copyTo(ACM[idx2]);
+
+	cout << ACM[idx1] << endl;
+	cout << ACM[idx2] << endl;
+	
+	keyframe_store.addConnection(0, 1, KF_CONNECTION_GEOMETRIC, F_arr[idx1]);
+}
+
+
 double slamNode::assignStartingFrames(unsigned int best_iii, unsigned int best_jjj, double* keyframe_scores, cv::Mat& startingTrans) {
 	
 	printf("%s << Adding (%d) & (%d) to keyframe store... (already (%d) large)", __FUNCTION__, best_iii, best_jjj, ((int)keyframe_store.keyframes.size()));
@@ -2324,7 +2392,7 @@ bool slamNode::updateKeyframePoses(const geometry_msgs::PoseStamped& pose_msg, b
 	
 	while (((int)storedPosesCount) >= ((int)configData.adjustmentFrames)) {
 		
-		double minDistance = std::numeric_limits<double>::max();;
+		double minDistance = std::numeric_limits<double>::max();
 		unsigned int minIndex = 0;
 		
 		for (unsigned int iii = 0; iii < storedPosesCount; iii++) {

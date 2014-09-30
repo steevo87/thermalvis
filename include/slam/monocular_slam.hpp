@@ -148,6 +148,10 @@ private:
 	
 	cv::Mat keyframeTestScores, keyframeTestFlags;
 
+	vector<int> startupVector_idx1, startupVector_idx2;
+	vector<double> startupVector_score;
+	vector<cv::Mat> startupVector_trans;
+
 	int currentPoseIndex;
 	
 	double minimumKeyframeScore;
@@ -284,7 +288,12 @@ public:
 	void update_display();
 	void show_poses();
 	void update_cameras_to_pnp();
+	
+	///brief	Old function for assigning up initial structure with pre-tested and selected starting frames
 	double assignStartingFrames(unsigned int best_iii, unsigned int best_jjj, double* keyframe_scores, cv::Mat& startingTrans);
+
+	///brief	Assigns specified (pre-tested) frames for further initial structure routines
+	void assignStartingFrames(unsigned int idx1, unsigned int idx2, cv::Mat trans);
 	
 	void getGuidingPose(cv::Mat *srcs, cv::Mat& dst, unsigned int idx);
 
