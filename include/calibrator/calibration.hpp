@@ -20,7 +20,8 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
-#include "cvaux.h"
+#include "core/opencv_redefinitions.hpp"
+//#include "cvaux.h"
 
 #include <sys/stat.h>
 #include <stdio.h>
@@ -76,7 +77,7 @@
 
 #define MINIMUM_MSER_AREA		50
 
-#define PATCH_CORRECTION_INTRINSICS_FLAGS CV_CALIB_RATIONAL_MODEL
+#define PATCH_CORRECTION_INTRINSICS_FLAGS cv::CALIB_RATIONAL_MODEL
 
 using namespace std;
 using namespace cv;

@@ -1630,8 +1630,8 @@ void featureTrackerNode::handle_camera(cv::Mat& inputImage, sensor_msgs::CameraI
 
 void trackerData::initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom) {
 #ifdef _OPENCV_VERSION_3_PLUS_
-	desc[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::BriefDescriptorExtractor());
-	hom[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::BriefDescriptorExtractor());
+	desc[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::OrbDescriptorExtractor());
+	hom[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::OrbDescriptorExtractor());
 #else
 	desc[0] = new cv::BriefDescriptorExtractor();
 	hom[0] = new cv::BriefDescriptorExtractor();
@@ -1656,7 +1656,7 @@ bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr
 #endif	
 		} else if ((detector[iii] == "STAR") || (detector[iii] == "star")) {
 #ifdef _OPENCV_VERSION_3_PLUS_
-			det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::StarFeatureDetector( 16, int(sensitivity[iii]) ));
+			ROS_ERROR("STAR may not yet be implemented in OpenCV-3 trunk!");
 #else
 			det[iii] = new cv::StarFeatureDetector( 16, int(sensitivity[iii]) );
 #endif	

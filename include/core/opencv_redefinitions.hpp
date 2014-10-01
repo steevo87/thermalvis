@@ -23,6 +23,8 @@
 #define EVENT_LBUTTONDOWN cv::EVENT_LBUTTONDOWN
 #define EVENT_RBUTTONDOWN cv::EVENT_RBUTTONDOWN
 #define CV_RGB cv::Scalar
+#define CV_TERMCRIT_EPS cv::TermCriteria::EPS
+#define CV_TERMCRIT_ITER cv::TermCriteria::COUNT
 #else
 #define RGB2GRAY CV_RGB2GRAY
 #define BGR2GRAY CV_BGR2GRAY
