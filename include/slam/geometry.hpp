@@ -12,6 +12,8 @@
 #include "core/general_resources.hpp"
 #include "core/ros_resources.hpp"
 
+#include <opencv2/core/core.hpp>
+
 #ifdef _USE_OPENCV_VIZ_
 #include <opencv2/viz.hpp>
 #endif

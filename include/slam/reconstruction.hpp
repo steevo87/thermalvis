@@ -5,8 +5,8 @@
 #ifndef THERMALVIS_RECONSTRUCTION_H
 #define THERMALVIS_RECONSTRUCTION_H
 
-#include <opencv2/calib3d.hpp>
-#include <opencv2/highgui.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #include "core/tools.hpp"
 #include "core/opencv_redefinitions.hpp"
