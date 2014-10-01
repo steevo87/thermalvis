@@ -242,7 +242,7 @@ void addProjectionsToVector(vector<featureTrack>& featureTrackVector, unsigned i
 
 	for (int iii = 0; iii < int(points.size()-1); iii++) {
 		for (int jjj = iii+1; jjj < int(points.size()); jjj++) {
-			double dist = pow(pow(points.at(iii).x - points.at(jjj).x, 2.0)+pow(points.at(iii).x - points.at(jjj).x, 2.0),0.5);
+			double dist = pow(pow(points.at(iii).x - points.at(jjj).x, 2.0)+pow(points.at(iii).y - points.at(jjj).y, 2.0),0.5);
 			if (dist < minSeparation) {
 				points.erase(points.begin()+iii);
 				iii--;
