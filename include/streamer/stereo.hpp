@@ -6,7 +6,6 @@
 #define THERMALVIS_STEREO_H
 
 #include "core/general_resources.hpp"
-#include "core/opencv_resources.hpp"
 
 #include "core/improc.hpp"
 #include "core/tools.hpp"

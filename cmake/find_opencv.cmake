@@ -90,7 +90,7 @@ LIST(APPEND OpenCV_DLLs_List "opencv_imgproc" "opencv_flann" "opencv_features2d"
 
 IF(OpenCV_VERSION_MAJOR GREATER 2)
 	add_definitions(-D_OPENCV_VERSION_3_PLUS_)
-	LIST(APPEND OpenCV_DLLs_List "opencv_imgcodecs" "opencv_videoio")
+	# LIST(APPEND OpenCV_DLLs_List "opencv_imgcodecs" "opencv_videoio")
 ENDIF()
 
 IF(OPENCV_GPU_FOUND)

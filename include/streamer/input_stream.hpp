@@ -25,8 +25,6 @@
 #include "video.hpp"
 #endif
 
-#include "core/opencv_resources.hpp"
-
 //#include <opencv2/videoio/videoio.hpp>
 	
 #include "core/launch.hpp"

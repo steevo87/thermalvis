@@ -7,14 +7,28 @@
 
 #include "opencv2/opencv.hpp"
 
-#include "tools.hpp"
+#include "core/tools.hpp"
+#include "core/opencv_redefinitions.hpp"
+
+#ifdef _OPENCV_VERSION_3_PLUS_
+#define CV_COLOR_RED		RGB_(0,		0,		255)
+#define CV_COLOR_GREEN		RGB_(0,		255,	0)
+#define CV_COLOR_BLUE		RGB_(255,	0,		0)
+#define CV_COLOR_LRED		RGB_(128,	128,	255)
+#define CV_COLOR_YELLOW		RGB_(0,		255,	255)
+#define CV_COLOR_PURPLE		RGB_(255,	0,		255)
+#else
+#define CV_COLOR_RED		RGB_(255,	0,		0)
+#define CV_COLOR_GREEN		RGB_(0,		255,	0)
+#define CV_COLOR_BLUE		RGB_(0,		0,		255)
+#define CV_COLOR_LRED		RGB_(255,	128,	128)
+#define CV_COLOR_YELLOW		RGB_(255,	255,	0)
+#define CV_COLOR_PURPLE		RGB_(255,	0,		255)
+#endif
 
 #include "streamer/streamer_defines.hpp"
-//#include "input_stream_config.hpp"
 
 #define MIN_PIXELS_PER_AXIS_FOR_DISPLAY 400
-
-#include "core/opencv_redefinitions.hpp"
 
 void fadeImage(const cv::Mat& src, cv::Mat& dst, double frac = 0.65);
 

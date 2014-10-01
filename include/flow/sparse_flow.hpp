@@ -8,11 +8,11 @@
 #define MINIMUM_MATCHING_RANK	10
 #define DEFAULT_DESCRIPTOR_AREA	3.0
 
+#include "core/tools.hpp"
 #include "core/program.hpp"
 
 #include "core/general_resources.hpp"
 #include "core/ros_resources.hpp"
-#include "core/opencv_resources.hpp"
 	
 #include "core/launch.hpp"
 #include "core/improc.hpp"

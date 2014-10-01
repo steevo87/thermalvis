@@ -1,7 +1,7 @@
 <launch>
 	<node name="streamer" pkg="thermalvis" type="streamer">
 		<param name="source" value="directory" />
-		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" />
+		<param name="directory" value="C:\Users\Stephen\Documents\Data\miricle\icarcv\sequence-3" />
 		<param name="markDuplicates" value="true" />
 		<param name="loopMode" value="true" />
 		<param name="output8bit" value="true" />
@@ -17,6 +17,7 @@
 	
 	<node name="slam" pkg="thermalvis" type="slam" output="screen">
 		<param name="inspectInitialization" value="true" />
+		<param name="maxInitializationFrames" value="20" />
 	</node>
 	
 	<node name="image_view" pkg="image_view" type="image_view" output="screen">

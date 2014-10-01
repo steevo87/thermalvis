@@ -6,7 +6,6 @@
 #define THERMALVIS_KEYFRAMES_H
 
 #include "core/general_resources.hpp"
-#include "core/opencv_resources.hpp"
 #include "core/features.hpp"
 
 #define KF_CONNECTION_WEAK			0

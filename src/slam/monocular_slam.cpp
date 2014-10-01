@@ -74,7 +74,8 @@ bool slamData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("inspectInitialization")) inspectInitialization = !v2.second.get_child("<xmlattr>.value").data().compare("true");
-			
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxInitializationFrames")) maxInitializationFrames = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
         }
 
 		// Substitute tildes if in Windows
@@ -584,6 +585,33 @@ bool slamNode::processScorecard() {
 	
 	if (configData.initializationScorecard == "") {
 
+		// MODIFIED
+		// Convergence
+		scorecardParams[0][0] = 1.67;
+		scorecardParams[0][1] = 1.25;
+		scorecardParams[0][2] = 4.34;
+
+		// GRIC Ratio
+		scorecardParams[1][0] = 2.00;
+		scorecardParams[1][1] = 0.33;
+		scorecardParams[1][2] = 0.25*numeric_limits<double>::max();
+
+		// Points in front
+		scorecardParams[2][0] = 1.00;
+		scorecardParams[2][1] = 0.08;
+		scorecardParams[2][2] = 0.25*numeric_limits<double>::max();
+
+		// Translation score
+		scorecardParams[3][0] = 1.00;
+		scorecardParams[3][1] = 0.25*numeric_limits<double>::max();
+		scorecardParams[3][2] = 0.25*numeric_limits<double>::max();
+
+		// Angle score
+		scorecardParams[4][0] = 1.00;
+		scorecardParams[4][1] = 0.25*numeric_limits<double>::max();
+		scorecardParams[4][2] = 0.25*numeric_limits<double>::max();
+
+		/*
 		// Convergence
 		scorecardParams[0][0] = 1.67;
 		scorecardParams[0][1] = 1.25;
@@ -592,23 +620,23 @@ bool slamNode::processScorecard() {
 		// GRIC Ratio
 		scorecardParams[1][0] = 1.32;
 		scorecardParams[1][1] = 0.18;
-		scorecardParams[1][2] = 10.0;
+		scorecardParams[1][2] = 0.10;
 
 		// Points in front
 		scorecardParams[2][0] = 1.00;
 		scorecardParams[2][1] = 0.08;
-		scorecardParams[2][2] = 1.00;
+		scorecardParams[2][2] = 0.00;
 
 		// Translation score
 		scorecardParams[3][0] = 27.3;
 		scorecardParams[3][1] = 13.6;
-		scorecardParams[3][2] = 9.70;
+		scorecardParams[3][2] = 35.7;
 
-		// Translation score
+		// Angle score
 		scorecardParams[4][0] = 8.64;
 		scorecardParams[4][1] = 2.67;
 		scorecardParams[4][2] = 9.70;
-
+		*/
 	} else {
 		if ((configData.initializationScorecard[0] == '.') && (configData.initializationScorecard[1] == '.')) {
 			configData.initializationScorecard = configData.read_addr + "nodes/monoslam/config/" + configData.initializationScorecard;
@@ -617,15 +645,11 @@ bool slamNode::processScorecard() {
 		ifstream ifs(configData.initializationScorecard.c_str());
 
 		if (!ifs.is_open()) return false;
-
-		for (int jjj = 0; jjj < 2; jjj++) {
-			for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ifs >> scorecardParams[iii][jjj];
-		}
-	
+		for (int jjj = 0; jjj < 2; jjj++) { for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ifs >> scorecardParams[iii][jjj]; }
 		ifs.close();
 	}
 
-	for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ROS_INFO("Criteria (%d) = (%f, %f, %f)", iii, scorecardParams[iii][0], scorecardParams[iii][1], scorecardParams[iii][2]);
+	for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ROS_INFO("Criteria (%d) = (%1.2f, %1.2f, %1.2f)", iii, scorecardParams[iii][0], scorecardParams[iii][1], scorecardParams[iii][2]);
 	return true;
 }
 
@@ -1703,7 +1727,7 @@ bool slamNode::performKeyframeEvaluation() {
 						
 						char response = ' ';
 						
-						blankMat = cv::Mat(blankMat.size(), blankMat.type(), CV_RGB(0,255,0));
+						blankMat = cv::Mat(blankMat.size(), blankMat.type(), CV_COLOR_GREEN);
 						
 						//while (0) {
 						while ((response != 'y') && (response != 'n')) {
@@ -1711,7 +1735,7 @@ bool slamNode::performKeyframeEvaluation() {
 							response = cv::waitKey();
 						}
 						
-						blankMat = cv::Mat(blankMat.size(), blankMat.type(), CV_RGB(255,0,0));
+						blankMat = cv::Mat(blankMat.size(), blankMat.type(), CV_COLOR_RED);
 						cv::imshow("readybar", blankMat);
 						cv::waitKey(1);
 						
@@ -1744,7 +1768,7 @@ bool slamNode::performKeyframeEvaluation() {
 		evaluationCompleted = true;
 		ROS_INFO("Keyframe evaluation results finalize. (CTRL + C) to terminate.");
 		
-		blankMat = cv::Mat(blankMat.size(), blankMat.type(), CV_RGB(0,0,255));
+		blankMat = cv::Mat(blankMat.size(), blankMat.type(), CV_COLOR_BLUE);
 		cv::imshow("readybar", blankMat);
 		cv::waitKey();
 		return false;

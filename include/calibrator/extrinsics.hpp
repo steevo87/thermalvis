@@ -12,22 +12,22 @@
 
 /// \brief      Calculate the Extended Reprojection Error for the extrinsic case.
 double calculateExtrinsicERE(int nCams,
-                             std::vector<Point3f>& physicalPoints,
-                             std::vector< std::vector<Point2f> > *corners,
-                             Mat *cameraMatrix,
-                             Mat *distCoeffs,
-                             Mat *R,
-                             Mat *T);
+                             std::vector<cv::Point3f>& physicalPoints,
+                             std::vector< std::vector<cv::Point2f> > *corners,
+                             cv::Mat *cameraMatrix,
+                             cv::Mat *distCoeffs,
+                             cv::Mat *R,
+                             cv::Mat *T);
 
 /// \brief      Cut down the given vectors of pointsets to those optimal for extrinsic calibration
-void optimizeCalibrationSets(std::vector<Size> imSize,
+void optimizeCalibrationSets(std::vector<cv::Size> imSize,
                              int nCams,
-                             Mat *cameraMatrix,
-                             Mat *distCoeffs,
-                             std::vector<Mat>& distributionMap,
-                             std::vector< std::vector<Point2f> > *candidateCorners,
-                             std::vector< std::vector<Point2f> > *testCorners,
-                             std::vector<Point3f> row,
+                             cv::Mat *cameraMatrix,
+                             cv::Mat *distCoeffs,
+                             std::vector<cv::Mat>& distributionMap,
+                             std::vector< std::vector<cv::Point2f> > *candidateCorners,
+                             std::vector< std::vector<cv::Point2f> > *testCorners,
+                             std::vector<cv::Point3f> row,
                              int selection,
                              int num,
                              std::vector<std::vector<int> >& tagNames,
@@ -36,10 +36,10 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
 
 /// \brief      Calculate the scores for a set if pointsets in terms of their contribution to extrinsic calibration
 double obtainMultisetScore(int nCams,
-                           vector<Mat>& distributionMap,
-                           vector<Mat>& binMap,
+                           vector<cv::Mat>& distributionMap,
+                           vector<cv::Mat>& binMap,
                            vector<vector<double> >& distances,
-                           std::vector<std::vector<Point2f> > *corners,
+                           std::vector<std::vector<cv::Point2f> > *corners,
                            int index);
 
 #endif

@@ -6,7 +6,6 @@
 #define _THERMALVIS_TRACKS_H_
 
 #include "general_resources.hpp"
-#include "opencv_resources.hpp"
 #include "camera.hpp"
 #include "tools.hpp"
 #include "improc.hpp"

@@ -11,13 +11,9 @@ void generateRandomIndexArray(int * randomArray, int maxElements, int maxVal)
 
     vector<int> validValuesVector, randomSelection;
 
-    for (int iii = 0; iii < maxVal; iii++)
-    {
-        validValuesVector.push_back(iii);
-    }
+    for (int iii = 0; iii < maxVal; iii++) validValuesVector.push_back(iii);
 
-    for (int iii = 0; iii < maxElements; iii++)
-    {
+    for (int iii = 0; iii < maxElements; iii++) {
         int currIndex = rand() % validValuesVector.size();
 
         randomSelection.push_back(validValuesVector.at(currIndex));
@@ -26,10 +22,7 @@ void generateRandomIndexArray(int * randomArray, int maxElements, int maxVal)
 
     sort(randomSelection.begin(), randomSelection.end());
 
-    for (unsigned int iii = 0; iii < randomSelection.size(); iii++)
-    {
-        randomArray[iii] = randomSelection.at(iii);
-    }
+    for (unsigned int iii = 0; iii < randomSelection.size(); iii++) randomArray[iii] = randomSelection.at(iii);
 }
 
 mserPatch::mserPatch()
@@ -37,7 +30,7 @@ mserPatch::mserPatch()
 
 }
 
-mserPatch::mserPatch(vector<Point>& inputHull, const Mat& image)
+mserPatch::mserPatch(vector<cv::Point>& inputHull, const cv::Mat& image)
 {
     double dbx, dby;
     int x, y, division = 0;
@@ -46,31 +39,28 @@ mserPatch::mserPatch(vector<Point>& inputHull, const Mat& image)
     copyContour(inputHull, hull);
 
     // get moments
-    momentSet = moments(Mat(hull));
+    momentSet = moments(cv::Mat(hull));
 
     // get centroid
     dbx = (momentSet.m10/momentSet.m00);
     dby = (momentSet.m01/momentSet.m00);
     x = (int) dbx;
     y = (int) dby;
-    centroid = Point(x,y);
-    centroid2f = Point2f(float(dbx), float(dby));
+    centroid = cv::Point(x,y);
+    centroid2f = cv::Point2f(float(dbx), float(dby));
 
     // get area
-    area = contourArea(Mat(hull));
+    area = contourArea(cv::Mat(hull));
 
     int searchDist = 15;
 
     // get mean pixel intensity
-    for (int i = x-searchDist; i < x+searchDist+1; i++)
-    {
-        for (int j = y-searchDist; j < y+searchDist+1; j++)
-        {
+    for (int i = x-searchDist; i < x+searchDist+1; i++) {
+        for (int j = y-searchDist; j < y+searchDist+1; j++) {
 
-            if (pointPolygonTest(Mat(hull), Point2f(float(i),float(j)), false) > 0.0)
-            {
+            if (pointPolygonTest(cv::Mat(hull), cv::Point2f(float(i),float(j)), false) > 0.0) {
                 //printf("%s << (j, i) = (%d, %d)\n", __FUNCTION__, j, i);
-                meanIntensity = meanIntensity + double(image.at<Vec3b>(j,i)[0]);
+                meanIntensity = meanIntensity + double(image.at<cv::Vec3b>(j,i)[0]);
                 division++;
             }
         }
@@ -81,64 +71,19 @@ mserPatch::mserPatch(vector<Point>& inputHull, const Mat& image)
     // get variance
     varIntensity = 0.0;
 
-    for (int i = x-searchDist; i < x+searchDist+1; i++)
-    {
-        for (int j = y-searchDist; j < y+searchDist+1; j++)
-        {
-
-            if (pointPolygonTest(Mat(hull), Point2f(float(i),float(j)), false) > 0.0)
-            {
-                //printf("%s << (j, i) = (%d, %d)\n", __FUNCTION__, j, i);
-                varIntensity += pow((meanIntensity - double(image.at<Vec3b>(j,i)[0])), 2);
-            }
+    for (int i = x-searchDist; i < x+searchDist+1; i++) {
+        for (int j = y-searchDist; j < y+searchDist+1; j++) {
+            if (pointPolygonTest(cv::Mat(hull), cv::Point2f(float(i),float(j)), false) > 0.0) varIntensity += pow((meanIntensity - double(image.at<cv::Vec3b>(j,i)[0])), 2);
         }
     }
 
     varIntensity /= division;
-
-    //printf("%s << variance = %f\n", __FUNCTION__, varIntensity);
-
-    // get mean pixel intensity
-    /*
-    for (int i = x-7; i < x+8; i++) {
-        if ((i < 0) || (i >= image.cols)) {
-            i++;
-        } else {
-            for (int j = y-7; j < y+8; j++) {
-                if ((j < 0) || (j >= image.rows)) {
-                    j++;
-                } else {
-                    //printf("center: %d, %d\n", x, y);
-    				//printf("%s << j = %d; i = %d\n", __FUNCTION__, j, i);
-                    meanIntensity = meanIntensity + double(image.at<Vec3b>(j,i)[0]);
-                    //printf("in loop: %d, %d\n", i, j);
-                    //cin.get();
-                    division++;
-                }
-
-            }
-        }
-    }
-    */
-
-
-
-    // get variance of pixel intensity
 }
 
-bool findMaskCorners(const Mat& image, Size patternSize, vector<Point2f>& corners, int detector, int mserDelta, float max_var, float min_diversity, double area_threshold)
+bool findMaskCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int detector, int mserDelta, float max_var, float min_diversity, double area_threshold)
 {
-        Mat grayIm;
-        if (image.channels() > 1) {
-				#ifdef _OPENCV_VERSION_3_PLUS_
-                cvtColor(image, grayIm, COLOR_RGB2GRAY);
-				#else
-				cvtColor(image, grayIm, CV_RGB2GRAY);
-				#endif
-        } else {
-                grayIm = Mat(image);
-        }
-        //cout << "ALPHA" << endl;
+	cv::Mat grayIm;
+	(image.channels() > 1) ? cvtColor(image, grayIm, RGB2GRAY) : grayIm = cv::Mat(image);
      return findPatternCorners(grayIm, patternSize, corners, 1, detector, mserDelta, max_var, min_diversity, area_threshold);
 }
 
@@ -150,7 +95,7 @@ bool checkAcutance()
     return retVal;
 }
 
-void determinePatchDistribution(Size patternSize, int mode, int &rows, int &cols, int &quant)
+void determinePatchDistribution(cv::Size patternSize, int mode, int &rows, int &cols, int &quant)
 {
     if (mode == 0)
     {
@@ -167,12 +112,12 @@ void determinePatchDistribution(Size patternSize, int mode, int &rows, int &cols
 
 }
 
-void findAllPatches(const Mat& image, Size patternSize, vector<vector<Point> >& msers, int delta, float max_var, float min_diversity, double area_threshold)
+void findAllPatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv::Point> >& msers, int delta, float max_var, float min_diversity, double area_threshold)
 {
 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 0);
 
-    int64 t = getTickCount();
+    int64 t = cv::getTickCount();
 
     int imWidth = image.size().width;
     int imHeight = image.size().height;
@@ -183,13 +128,13 @@ void findAllPatches(const Mat& image, Size patternSize, vector<vector<Point> >& 
 
     int X = patternSize.width/2, Y = patternSize.height/2;
 
-    Mat displayMat(image);
-    Mat mask = Mat::ones(image.rows, image.cols, CV_8U);
+    cv::Mat displayMat(image);
+    cv::Mat mask = cv::Mat::ones(image.rows, image.cols, CV_8U);
 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 1);
 
     // 15
-    MSER mserExtractor(delta, minArea, maxArea, max_var, min_diversity, 200, area_threshold, 0.003, 5); // delta = 8, max var = 0.1
+    cv::MSER mserExtractor(delta, minArea, maxArea, max_var, min_diversity, 200, area_threshold, 0.003, 5); // delta = 8, max var = 0.1
     /*
     cvMSERParams(int delta = 5, int min_area = 60, int max_area = 14400, \n"
         "    float max_variation = .25, float min_diversity = .2, \n"
@@ -201,36 +146,36 @@ void findAllPatches(const Mat& image, Size patternSize, vector<vector<Point> >& 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 2);
 
     // Copy image but into greyscale
-    Mat imGrey;
+    cv::Mat imGrey;
     (image.channels() > 1) ? cvtColor(image, imGrey, RGB2GRAY) : image.copyTo(imGrey);
 
     // Blur image a bit...
     int kernelSize = min(imWidth, imHeight) / (5*max(patternSize.width, patternSize.height));
     kernelSize = kernelSize + 1 + (kernelSize % 2);
     //printf("%s << kernelSize = %d\n", __FUNCTION__, kernelSize);
-    GaussianBlur(imGrey, imGrey, Size(kernelSize,kernelSize), 0,0);
+    GaussianBlur(imGrey, imGrey, cv::Size(kernelSize,kernelSize), 0,0);
 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 3);
 
     //printf("%s << imGrey.size() = (%d,%d)\n", __FUNCTION__, imGrey.rows, imGrey.cols);
 
     //imshow("blurred", imGrey);
-    //waitKey(0);
+    //cv::waitKey(0);
 
 
     // Processing of greyscale version
     // thresholding?
 
 
-    // Extract MSER features
+    // Extract cv::MSER features
     mserExtractor(imGrey, msers, mask);
 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 4);
 
-    // Clean up MSER features by putting them in a convex hull
+    // Clean up cv::MSER features by putting them in a convex hull
     for (unsigned int i = 0; i < msers.size(); i++)
     {
-        convexHull(Mat(msers[i]), msers[i]);
+        convexHull(cv::Mat(msers[i]), msers[i]);
     }
 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 5);
@@ -242,8 +187,8 @@ void findAllPatches(const Mat& image, Size patternSize, vector<vector<Point> >& 
 
     if (DEBUG_MODE > 0)
     {
-        t = getTickCount() - t;
-        printf("%s << Algorithm duration: %fms\n", __FUNCTION__, t*1000/getTickFrequency());
+        t = cv::getTickCount() - t;
+        printf("%s << Algorithm duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
     }
 
     // Extract SURF features
@@ -274,7 +219,7 @@ void randomCulling(vector<std::string> &inputList, int maxSearch)
     }
 }
 
-void randomCulling(vector<std::string> &inputList, int maxSearch, vector<vector<Point2f> >& patterns)
+void randomCulling(vector<std::string> &inputList, int maxSearch, vector<vector<cv::Point2f> >& patterns)
 {
 
     srand ( (unsigned int)(time(NULL)) );
@@ -289,7 +234,7 @@ void randomCulling(vector<std::string> &inputList, int maxSearch, vector<vector<
     }
 }
 
-void randomCulling(vector<string>& inputList, int maxSearch, vector<vector<vector<Point2f> > >& patterns)
+void randomCulling(vector<string>& inputList, int maxSearch, vector<vector<vector<cv::Point2f> > >& patterns)
 {
     srand ( (unsigned int)(time(NULL)) );
 
@@ -314,11 +259,11 @@ void randomCulling(vector<string>& inputList, int maxSearch, vector<vector<vecto
     //cin.get();
 }
 
-void debugDisplayPatches(const Mat& image, vector<vector<Point> >& msers)
+void debugDisplayPatches(const cv::Mat& image, vector<vector<cv::Point> >& msers)
 {
 
-    Scalar color(0, 0, 255);
-    Mat dispMat;
+    cv::Scalar color(0, 0, 255);
+    cv::Mat dispMat;
 
     image.copyTo(dispMat);
 
@@ -326,8 +271,8 @@ void debugDisplayPatches(const Mat& image, vector<vector<Point> >& msers)
 
     if (image.cols > 640)
     {
-        Mat dispMat2;
-        resize(dispMat, dispMat2, Size(0,0), 0.5, 0.5);
+        cv::Mat dispMat2;
+        resize(dispMat, dispMat2, cv::Size(0,0), 0.5, 0.5);
         imshow("mainWin", dispMat2);
     }
     else
@@ -335,10 +280,10 @@ void debugDisplayPatches(const Mat& image, vector<vector<Point> >& msers)
         imshow("mainWin", dispMat);
     }
 
-    waitKey(0);
+    cv::waitKey(0);
 }
 
-void determineFindablePatches(Size patternSize, int mode, int *XVec, int *YVec)
+void determineFindablePatches(cv::Size patternSize, int mode, int *XVec, int *YVec)
 {
     int X, Y;
 
@@ -418,24 +363,24 @@ void determineFindablePatches(Size patternSize, int mode, int *XVec, int *YVec)
     }
 }
 
-void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, int *YVec, vector<Point2f>& patchCentres, vector<Point2f>& remainingPatches)
+void findCornerPatches(cv::Size imageSize, cv::Size patternSize, int mode, int *XVec, int *YVec, vector<cv::Point2f>& patchCentres, vector<cv::Point2f>& remainingPatches)
 {
 
-    Point2f center;
+    cv::Point2f center;
     float angle;
-    Size2f size;
-    vector<vector<Point> > sideCenters(1);
-    vector<vector<Point> > fourCorners(1);
-    vector<Point> orderedCorners;
-    vector<vector<Point> > orderedForDisplay;
+    cv::Size2f size;
+    vector<vector<cv::Point> > sideCenters(1);
+    vector<vector<cv::Point> > fourCorners(1);
+    vector<cv::Point> orderedCorners;
+    vector<vector<cv::Point> > orderedForDisplay;
     double x,y,X,Y;
-    //vector<Point> wrapperHull;
+    //vector<cv::Point> wrapperHull;
 
-    //convexHull(Mat(remainingPatches), wrapperHull);
+    //convexHull(cv::Mat(remainingPatches), wrapperHull);
 
-    RotatedRect wrapperRectangle;
+    cv::RotatedRect wrapperRectangle;
 
-    wrapperRectangle = fitEllipse(Mat(remainingPatches));
+    wrapperRectangle = fitEllipse(cv::Mat(remainingPatches));
 
     center = wrapperRectangle.center;
     angle = wrapperRectangle.angle;
@@ -443,27 +388,27 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
 
     //printf("%s << Wrapper Rectangle params: center = [%f, %f]; angle = %f; size = [%f, %f]\n", __FUNCTION__, center.x, center.y, angle, size.width, size.height);
 
-    //vertices.push_back(Point2f(center.x - size.height*cos(angle), center.y - size.width*sin(angle)));
-    //vertices.push_back(Point2f(center.x + size.height*cos(angle), center.y + size.width*sin(angle)));
+    //vertices.push_back(cv::Point2f(center.x - size.height*cos(angle), center.y - size.width*sin(angle)));
+    //vertices.push_back(cv::Point2f(center.x + size.height*cos(angle), center.y + size.width*sin(angle)));
 
     x = center.x;
     y = center.y;
     X = (size.width / 2) * 1.2;     // dilate the elipse otherwise it might
     Y = (size.height / 2) * 1.2;
 
-    //sideCenters.at(0).push_back(Point(x-X*cos((3.14/180)*angle),y+X*sin((3.14/180)*angle)));
-    //sideCenters.at(0).push_back(Point(x, y));
+    //sideCenters.at(0).push_back(cv::Point(x-X*cos((3.14/180)*angle),y+X*sin((3.14/180)*angle)));
+    //sideCenters.at(0).push_back(cv::Point(x, y));
     /*
-    sideCenters.at(0).push_back(Point(x-Y*sin((3.14/180)*angle),y+Y*cos((3.14/180)*angle)));
-    sideCenters.at(0).push_back(Point(x+X*cos((3.14/180)*angle),y+X*sin((3.14/180)*angle)));
-    sideCenters.at(0).push_back(Point(x+Y*sin((3.14/180)*angle),y-Y*cos((3.14/180)*angle)));
-    sideCenters.at(0).push_back(Point(x-X*cos((3.14/180)*angle),y-X*sin((3.14/180)*angle)));
+    sideCenters.at(0).push_back(cv::Point(x-Y*sin((3.14/180)*angle),y+Y*cos((3.14/180)*angle)));
+    sideCenters.at(0).push_back(cv::Point(x+X*cos((3.14/180)*angle),y+X*sin((3.14/180)*angle)));
+    sideCenters.at(0).push_back(cv::Point(x+Y*sin((3.14/180)*angle),y-Y*cos((3.14/180)*angle)));
+    sideCenters.at(0).push_back(cv::Point(x-X*cos((3.14/180)*angle),y-X*sin((3.14/180)*angle)));
     */
 
-    fourCorners.at(0).push_back(Point(int(x-X*cos((3.14/180)*angle)-Y*sin((3.14/180)*angle)), int(y-X*sin((3.14/180)*angle)+Y*cos((3.14/180)*angle))));
-    fourCorners.at(0).push_back(Point(int(x+Y*sin((3.14/180)*angle)-X*cos((3.14/180)*angle)), int(y-Y*cos((3.14/180)*angle)-X*sin((3.14/180)*angle))));
-    fourCorners.at(0).push_back(Point(int(x+X*cos((3.14/180)*angle)+Y*sin((3.14/180)*angle)), int(y+X*sin((3.14/180)*angle)-Y*cos((3.14/180)*angle))));
-    fourCorners.at(0).push_back(Point(int(x-Y*sin((3.14/180)*angle)+X*cos((3.14/180)*angle)), int(y+Y*cos((3.14/180)*angle)+X*sin((3.14/180)*angle))));
+    fourCorners.at(0).push_back(cv::Point(int(x-X*cos((3.14/180)*angle)-Y*sin((3.14/180)*angle)), int(y-X*sin((3.14/180)*angle)+Y*cos((3.14/180)*angle))));
+    fourCorners.at(0).push_back(cv::Point(int(x+Y*sin((3.14/180)*angle)-X*cos((3.14/180)*angle)), int(y-Y*cos((3.14/180)*angle)-X*sin((3.14/180)*angle))));
+    fourCorners.at(0).push_back(cv::Point(int(x+X*cos((3.14/180)*angle)+Y*sin((3.14/180)*angle)), int(y+X*sin((3.14/180)*angle)-Y*cos((3.14/180)*angle))));
+    fourCorners.at(0).push_back(cv::Point(int(x-Y*sin((3.14/180)*angle)+X*cos((3.14/180)*angle)), int(y+Y*cos((3.14/180)*angle)+X*sin((3.14/180)*angle))));
 
 
     for (int i = 0; i < 4; i++)
@@ -471,21 +416,21 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
         //printf("x = %d, y = %d\n", fourCorners.at(0).at(i).x, fourCorners.at(0).at(i).y);
     }
 
-    //waitKey(0);
+    //cv::waitKey(0);
 
-    Mat imCpy(imageSize, CV_8UC3);
+    cv::Mat imCpy(imageSize, CV_8UC3);
     imCpy.setTo(0);
-    Scalar color( rand()&255, rand()&255, rand()&255 );
+    cv::Scalar color( rand()&255, rand()&255, rand()&255 );
 
     ellipse(imCpy, wrapperRectangle, color);
 
-    color = Scalar(rand()&255, rand()&255, rand()&255);
+    color = cv::Scalar(rand()&255, rand()&255, rand()&255);
 
 
     //drawContours(imCpy, fourCorners, -1, color, 3);
     //rectangle(imCpy, vertices.at(0), vertices.at(1), color, 2);
     //imshow("testWin", imCpy);
-    //waitKey(0);
+    //cv::waitKey(0);
 
 
     // Now re-order these points according to which one is closest to each image corner:
@@ -495,7 +440,7 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
     int distIndex[4] = {0, 0, 0, 0};
     float extremesX[4] = {0.0, float(imageSize.width), float(imageSize.width), 0.0}; // TL, TR, BR, BL
     float extremesY[4] = {0.0, 0.0, float(imageSize.height), float(imageSize.height)};
-    Point tmpPoint;
+    cv::Point tmpPoint;
     double minDist;
     int minIndex = 0;
     double sumDist;
@@ -511,7 +456,7 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
         // For each of the remaining rectangle corners
         for (int i = 0; i < 4; i++)
         {
-            tmpPoint = Point(int(extremesX[i]), int(extremesY[i]));
+            tmpPoint = cv::Point(int(extremesX[i]), int(extremesY[i]));
             dist = distBetweenPts(fourCorners.at(0).at((k+i)%4), tmpPoint);
             //printf("dist[%d,%d] = %f\n", k, i, dist);
 
@@ -540,17 +485,17 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
         //printf("x = %d, y = %d\n", orderedCorners.at(i).x, orderedCorners.at(i).y);
     }
 
-    //waitKey(0);
+    //cv::waitKey(0);
 
     /*
     orderedForDisplay.push_back(orderedCorners);
     drawContours(imCpy, orderedForDisplay, -1, color, 3);
     //rectangle(imCpy, vertices.at(0), vertices.at(1), color, 2);
     imshow("testWin", imCpy);
-    waitKey(40);
+    cv::waitKey(40);
     */
 
-    vector<Point> pointPair;
+    vector<cv::Point> pointPair;
 
     // go thru remaining points and add the ones that are closest to these
     for (int k = 0; k < 4; k++)
@@ -564,7 +509,7 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
             pointPair.clear();
             pointPair.push_back(orderedCorners.at(k));
             pointPair.push_back(remainingPatches.at(i));
-            dist = arcLength(Mat(pointPair), false); // total distance to extremes
+            dist = arcLength(cv::Mat(pointPair), false); // total distance to extremes
 
             //printf("distance for point [%d] to corner [%d] = %f\n", i, k, dist);
 
@@ -623,9 +568,9 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
     //int cornerIndex[4] = {0, 1, 2, 3};
 
 
-    Point intermediatePt;
+    cv::Point intermediatePt;
 
-    Point tempPt;
+    cv::Point tempPt;
 
     //printf("%s << DEBUG 000\n", __FUNCTION__);
 
@@ -645,9 +590,9 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
             //printf("%s << remainingPatches.at(%d) = (%f, %f)\n", __FUNCTION__, i, remainingPatches.at(i).x, remainingPatches.at(i).y);
 
             pointPair.clear();
-            pointPair.push_back(Point(int(extremesX[k]), int(extremesY[k])));
+            pointPair.push_back(cv::Point(int(extremesX[k]), int(extremesY[k])));
             pointPair.push_back(remainingPatches.at(i));
-            dist = arcLength(Mat(pointPair), false); // total distance to extremes
+            dist = arcLength(cv::Mat(pointPair), false); // total distance to extremes
 
             //printf("distance for point [%d] to corner [%d] = %f\n", i, k, dist);
 
@@ -665,7 +610,7 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
         transferElement(patchCentres, remainingPatches, minIndex);
 
         //imshow("MSERwin", imCpy);
-        //waitKey(0);
+        //cv::waitKey(0);
     }
 
     if (DEBUG_MODE > 3)
@@ -681,12 +626,12 @@ void findCornerPatches(Size imageSize, Size patternSize, int mode, int *XVec, in
 
 }
 
-void findEdgePatches(Size patternSize, int mode, int *XVec, int *YVec, vector<Point2f>& patchCentres, vector<Point2f>& remainingPatches)
+void findEdgePatches(cv::Size patternSize, int mode, int *XVec, int *YVec, vector<cv::Point2f>& patchCentres, vector<cv::Point2f>& remainingPatches)
 {
     int minDist, minIndex, sortedIndex = int(patchCentres.size());
     double dist;
-    vector<Point2f> patchString;  // to store some patches before you splice stuff inside
-    Point2f interPoint;
+    vector<cv::Point2f> patchString;  // to store some patches before you splice stuff inside
+    cv::Point2f interPoint;
 
     //printf("sizes: %d, %d, %d\n", patchCentres.size(), patchString.size(), remainingPatches.size());
 
@@ -895,15 +840,15 @@ void findEdgePatches(Size patternSize, int mode, int *XVec, int *YVec, vector<Po
     }
 }
 
-void findInteriorPatches(Size patternSize, int mode, int *XVec, int *YVec, vector<Point2f>& patchCentres, vector<Point2f>& remainingPatches)
+void findInteriorPatches(cv::Size patternSize, int mode, int *XVec, int *YVec, vector<cv::Point2f>& patchCentres, vector<cv::Point2f>& remainingPatches)
 {
     // Temporary:
 
     int minDist, minIndex = 0, sortedIndex = int(patchCentres.size());
     double dist;
 
-    vector<Point2f> patchString;  // to store some patches before you splice stuff inside
-    Point2f interPoint;
+    vector<cv::Point2f> patchString;  // to store some patches before you splice stuff inside
+    cv::Point2f interPoint;
 
     int nRows;
 
@@ -1112,7 +1057,7 @@ void findInteriorPatches(Size patternSize, int mode, int *XVec, int *YVec, vecto
 
 }
 
-void sortPatches(Size imageSize, Size patternSize, vector<Point2f>& patchCentres, int mode)
+void sortPatches(cv::Size imageSize, cv::Size patternSize, vector<cv::Point2f>& patchCentres, int mode)
 {
     // TODO:
     // See the corresponding sections.
@@ -1154,7 +1099,7 @@ void sortPatches(Size imageSize, Size patternSize, vector<Point2f>& patchCentres
     determineFindablePatches(patternSize, mode, XVec, YVec);
 
     // Copy input patchCentres to remainingPatches vector, and clear patchCentres
-    vector<Point2f> remainingPatches;
+    vector<cv::Point2f> remainingPatches;
     remainingPatches.clear();
     patchCentres.swap(remainingPatches);
 
@@ -1187,7 +1132,7 @@ void sortPatches(Size imageSize, Size patternSize, vector<Point2f>& patchCentres
         // temp for testing:
         while (patchCentres.size() < (unsigned int)(desiredPatchCount))
         {
-            patchCentres.push_back(Point(0,0));
+            patchCentres.push_back(cv::Point(0,0));
         }
 
         delete[] XVec;
@@ -1202,7 +1147,7 @@ void sortPatches(Size imageSize, Size patternSize, vector<Point2f>& patchCentres
     delete[] XVec;
 }
 
-void reorderPatches(Size patternSize, int mode, int *XVec, int *YVec, vector<Point2f>& patchCentres)
+void reorderPatches(cv::Size patternSize, int mode, int *XVec, int *YVec, vector<cv::Point2f>& patchCentres)
 {
     // TODO:
     // Nothing much.
@@ -1210,7 +1155,7 @@ void reorderPatches(Size patternSize, int mode, int *XVec, int *YVec, vector<Poi
     //printf("GWanGLE!!!\n");
 
     //int X = patternSize.width/2, Y = patternSize.height/2;
-    vector<Point2f> reSortedCorners;
+    vector<cv::Point2f> reSortedCorners;
 
     int nRows, nCols, nOffset;
 
@@ -1290,8 +1235,8 @@ void reorderPatches(Size patternSize, int mode, int *XVec, int *YVec, vector<Poi
 
 }
 
-void debugDisplayPattern(const Mat& image, Size patternSize, Mat& corners, bool mode, double delay) {
-    Mat tmpMat, dispMat;
+void debugDisplayPattern(const cv::Mat& image, cv::Size patternSize, cv::Mat& corners, bool mode, double delay) {
+    cv::Mat tmpMat, dispMat;
 
     mode = false;
 
@@ -1300,17 +1245,17 @@ void debugDisplayPattern(const Mat& image, Size patternSize, Mat& corners, bool 
     drawChessboardCorners(dispMat, patternSize, corners, mode);
 
     if (image.cols > 640) {
-        Mat dispMat2;
-        resize(dispMat, dispMat2, Size(0,0), 0.5, 0.5);
+        cv::Mat dispMat2;
+        resize(dispMat, dispMat2, cv::Size(0,0), 0.5, 0.5);
         imshow("mainWin", dispMat2);
     } else imshow("mainWin", dispMat);
-    waitKey(int(delay));
+    cv::waitKey(int(delay));
 }
 
-bool findPatternCorners(const Mat& image, Size patternSize, vector<Point2f>& corners, int mode, int detector, int mserDelta, float max_var, float min_div, double area_threshold)
+bool findPatternCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int mode, int detector, int mserDelta, float max_var, float min_div, double area_threshold)
 {
-    // mode 0: MSER chessboard finder
-    // mode 1: MSER mask finder
+    // mode 0: cv::MSER chessboard finder
+    // mode 1: cv::MSER mask finder
 
     if (!checkAcutance())
     {
@@ -1320,7 +1265,7 @@ bool findPatternCorners(const Mat& image, Size patternSize, vector<Point2f>& cor
     int patchCols, patchRows, desiredPatchQuantity;
     determinePatchDistribution(patternSize, mode, patchRows, patchCols, desiredPatchQuantity);
 
-    vector<vector<Point> > msers;
+    vector<vector<cv::Point> > msers;
     //cout << "BETA" << endl;
     findAllPatches(image, patternSize, msers, mserDelta, max_var, min_div, area_threshold);
         //cout << "GAMMA" << endl;
@@ -1342,7 +1287,7 @@ bool findPatternCorners(const Mat& image, Size patternSize, vector<Point2f>& cor
 
 
 
-    vector<Point2f> patchCentres2f;
+    vector<cv::Point2f> patchCentres2f;
     bool found = refinePatches(image, patternSize, msers, patchCentres2f, mode);
 
 
@@ -1391,7 +1336,7 @@ bool findPatternCorners(const Mat& image, Size patternSize, vector<Point2f>& cor
 
     if (DEBUG_MODE > 2)
     {
-        Mat patchCentres_(patchCentres2f);
+        cv::Mat patchCentres_(patchCentres2f);
         debugDisplayPattern(image, cv::Size(patchCols, patchRows), patchCentres_);
     }
 
@@ -1414,11 +1359,11 @@ bool findPatternCorners(const Mat& image, Size patternSize, vector<Point2f>& cor
 
     if (DEBUG_MODE > 2)
     {
-        Mat patchCentres_(patchCentres2f);
+        cv::Mat patchCentres_(patchCentres2f);
         debugDisplayPattern(image, cv::Size(patchCols, patchRows), patchCentres_);
     }
 
-    Mat homography;
+    cv::Mat homography;
     found = findPatchCorners(image, patternSize, homography, corners, patchCentres2f, mode, detector);
 
     // refineCornerPositions
@@ -1452,7 +1397,7 @@ bool findPatternCorners(const Mat& image, Size patternSize, vector<Point2f>& cor
     }
 
     if (DEBUG_MODE > 2) {
-        Mat cornersMat(corners);
+        cv::Mat cornersMat(corners);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersMat, true, 1.0);
     }
 
@@ -1460,13 +1405,10 @@ bool findPatternCorners(const Mat& image, Size patternSize, vector<Point2f>& cor
 }
 
 
-void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, vector<Point2f>& vCentres, vector<Point2f>& vCorners)
+void interpolateCornerLocations2(const cv::Mat& image, int mode, cv::Size patternSize, vector<cv::Point2f>& vCentres, vector<cv::Point2f>& vCorners)
 {
 
-    if (DEBUG_MODE > 2)
-    {
-        printf("%s << Entered function...\n", __FUNCTION__);
-    }
+    if (DEBUG_MODE > 2) printf("%s << Entered function...\n", __FUNCTION__);
 
     double minDimension = findMinimumSeparation(vCentres);
 
@@ -1474,7 +1416,7 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
 
     //printf("%s << minDimension = %f, correctionDistance = %d\n", __FUNCTION__, minDimension, correctionDistance);
 
-    Mat imGrey;
+    cv::Mat imGrey;
 
     (image.channels() > 1) ? cvtColor(image, imGrey, RGB2GRAY) : image.copyTo(imGrey);
 
@@ -1483,48 +1425,43 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
     X = patternSize.width/2;
     Y = patternSize.height/2;
 
-    vector<Point2f> fullCentroidGrid;
+    vector<cv::Point2f> fullCentroidGrid;
 
     // Sets up all centroid grid points
-    for (int i = 0; i < Y; i++)
-    {
-        for (int j = 0; j < X; j++)
-        {
-            Point2f pt;
+    for (int i = 0; i < Y; i++) {
+        for (int j = 0; j < X; j++) {
+            cv::Point2f pt;
 
-            pt = Point2f(float(j), float(i));
+            pt = cv::Point2f(float(j), float(i));
             fullCentroidGrid.push_back(pt);
 
         }
     }
 
-    vector<Point2f> fullCornerGrid;
+    vector<cv::Point2f> fullCornerGrid;
 
     // Sets up all corner grid points
-    for (int i = 0; i < Y; i++)
-    {
-        for (int j = 0; j < X; j++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
-                Point2f pt;
+    for (int i = 0; i < Y; i++) {
+        for (int j = 0; j < X; j++) {
+            for (int k = 0; k < 4; k++) {
+                cv::Point2f pt;
 
-                if (k == 0)
-                {
-                    pt = Point2f(float(j-0.25), float(i-0.25));
-                }
-                else if (k == 1)
-                {
-                    pt = Point2f(float(j+0.25), float(i-0.25));
-                }
-                else if (k == 2)
-                {
-                    pt = Point2f(float(j-0.25), float(i+0.25));
-                }
-                else if (k == 3)
-                {
-                    pt = Point2f(float(j+0.25), float(i+0.25));
-                }
+				switch (k) {
+				case 0:
+					pt = cv::Point2f(float(j-0.25), float(i-0.25));
+					break;
+				case 1:
+					pt = cv::Point2f(float(j+0.25), float(i-0.25));
+					break;
+				case 2:
+					pt = cv::Point2f(float(j-0.25), float(i+0.25));
+					break;
+				case 3:
+					 pt = cv::Point2f(float(j+0.25), float(i+0.25));
+					break;
+				default:
+					break;
+				}
 
                 fullCornerGrid.push_back(pt);
             }
@@ -1532,15 +1469,15 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
         }
     }
 
-    vector<Point2f> patchNeighbourhood;
-    vector<Point2f> patchArrangement;
-    vector<Point2f> newCorners, bestCorners;
-    vector<Point2f> cornerArrangement;
-    Mat cornerLocs(2, 2, CV_32FC2);
-    //Point2f *neighbourhoodArray;
-    //Point2f* arrangementArray;
+    vector<cv::Point2f> patchNeighbourhood;
+    vector<cv::Point2f> patchArrangement;
+    vector<cv::Point2f> newCorners, bestCorners;
+    vector<cv::Point2f> cornerArrangement;
+    cv::Mat cornerLocs(2, 2, CV_32FC2);
+    //cv::Point2f *neighbourhoodArray;
+    //cv::Point2f* arrangementArray;
 
-    Mat homography;
+    cv::Mat homography;
 
     // Depending on the location of the patch, a different number of neighbouring patches
     // are used to determine an approximate homography
@@ -1549,16 +1486,14 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
     int index = 0;
 
     // Initial estimate of all corners
-    for (int i = 0; i < Y; i++)
-    {
-        for (int j = 0; j < X; j++)
-        {
+    for (int i = 0; i < Y; i++) {
+        for (int j = 0; j < X; j++) {
 
             if (0)   //((i == 0) || (i == Y-1) || (j == 0) || (j == X-1)) {
             {
                 for (int k = 0; k < 4; k++)
                 {
-                    newCorners.push_back(Point2f(0.0, 0.0));    // skip corners and edges
+                    newCorners.push_back(cv::Point2f(0.0, 0.0));    // skip corners and edges
                     index++;
                 }
 
@@ -1578,14 +1513,14 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
                         // Add patch to patch vector
                         patchNeighbourhood.push_back(vCentres.at(k*X+l));
                         // Add co-ordinate to arbitrary map vector
-                        patchArrangement.push_back(Point2f((float)l, (float)k));
+                        patchArrangement.push_back(cv::Point2f((float)l, (float)k));
 
                         neighbourhoodCount++;
                     }
                 }
 
-                //neighbourhoodArray = new Point2f[neighbourhoodCount];
-                //arrangementArray = new Point2f[neighbourhoodCount];
+                //neighbourhoodArray = new cv::Point2f[neighbourhoodCount];
+                //arrangementArray = new cv::Point2f[neighbourhoodCount];
 
                 /*
                 for (int k = 0; k < neighbourhoodCount; k++) {
@@ -1595,7 +1530,7 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
                 */
 
                 // find homography
-                homography = findHomography(Mat(patchArrangement), Mat(patchNeighbourhood));
+                homography = findHomography(cv::Mat(patchArrangement), cv::Mat(patchNeighbourhood));
 
                 cornerArrangement.clear();
 
@@ -1604,20 +1539,20 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
                 {
                     for (int l = 0; l < 2; l++)
                     {
-                        cornerArrangement.push_back(Point2f((float)(j-0.25+0.5*l), (float)(i-0.25+0.5*k)));
+                        cornerArrangement.push_back(cv::Point2f((float)(j-0.25+0.5*l), (float)(i-0.25+0.5*k)));
                     }
                 }
 
 
                 // apply homography to these co-ordinates
-                Mat tmpMat1 = Mat(cornerArrangement);
+                cv::Mat tmpMat1 = cv::Mat(cornerArrangement);
 
                 perspectiveTransform(tmpMat1, cornerLocs, homography);
 
                 for (int k = 0; k < 4; k++)
                 {
                     //printf("%s << adding..\n", __FUNCTION__);
-                    newCorners.push_back(Point2f(cornerLocs.at<Vec3f>(k,0)[0], cornerLocs.at<Vec3f>(k,0)[1]));
+                    newCorners.push_back(cv::Point2f(cornerLocs.at<cv::Vec3f>(k,0)[0], cornerLocs.at<cv::Vec3f>(k,0)[1]));
                 }
 
             }
@@ -1630,20 +1565,20 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
 
     /*
     if (DEBUG_MODE > 2) {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         debugDisplayPattern(image, cvSize(patternSize.width, patternSize.height), cornersForDisplay);
         printf("%s << DONE.\n", __FUNCTION__);
     }
     */
     //printf("%s << pre cSP\n", __FUNCTION__);
-    //cornerSubPix(imGrey, newCorners, Size(correctionDistance, correctionDistance), Size(-1,-1), cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+    //cornerSubPix(imGrey, newCorners, cv::Size(correctionDistance, correctionDistance), cv::Size(-1,-1), cvTermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
 
 
     if (DEBUG_MODE > 2)
     {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay);
         printf("%s << DONE.\n", __FUNCTION__);
     }
@@ -1654,7 +1589,7 @@ void interpolateCornerLocations2(const Mat& image, int mode, Size patternSize, v
 
 }
 
-void addToBinMap(Mat& binMap, std::vector<Point2f>& cornerSet, Size imSize) {
+void addToBinMap(cv::Mat& binMap, std::vector<cv::Point2f>& cornerSet, cv::Size imSize) {
     int x, y;
     for (unsigned int i = 0; i < cornerSet.size(); i++) {
         // Determine Bin Index for this specific corner
@@ -1666,38 +1601,38 @@ void addToBinMap(Mat& binMap, std::vector<Point2f>& cornerSet, Size imSize) {
     }
 }
 
-void prepForDisplay(const Mat& distributionMap, Mat& distributionDisplay) {
+void prepForDisplay(const cv::Mat& distributionMap, cv::Mat& distributionDisplay) {
     cv::Mat distMapCpy(distributionMap.size(), CV_8UC3), distMapCpyGray(distributionMap.size(), CV_8UC1);
     distributionDisplay = cv::Mat(distributionMap.size(), CV_8UC1);
     
     distMapCpy = cv::Mat::zeros(distributionMap.size(), CV_8UC3);
 	
-	Scalar markerColor(0,0,0);
+	cv::Scalar markerColor(0,0,0);
 	
     for (int iii = 0; iii < distributionMap.rows; iii++) {
 		for (int jjj = 0; jjj < distributionMap.cols; jjj++) {
 
-			distMapCpy.at<Vec3b>(iii,jjj)[0] = 255;
-			distMapCpy.at<Vec3b>(iii,jjj)[1] = 255;
-            distMapCpy.at<Vec3b>(iii,jjj)[2] = 255;
+			distMapCpy.at<cv::Vec3b>(iii,jjj)[0] = 255;
+			distMapCpy.at<cv::Vec3b>(iii,jjj)[1] = 255;
+            distMapCpy.at<cv::Vec3b>(iii,jjj)[2] = 255;
 			
 			if (distributionMap.at<unsigned char>(iii,jjj) > 0) {
 				unsigned char val = 0; // max(0, 255-10*int(distributionMap.at<unsigned char>(iii,jjj)));
-				markerColor = Scalar(val,val,val);
-				circle(distMapCpy, Point(jjj,iii), 0, markerColor, 5, AA, 0);
+				markerColor = cv::Scalar(val,val,val);
+				circle(distMapCpy, cv::Point(jjj,iii), 0, markerColor, 5, AA, 0);
 			}
 		}
 	}
 	
     cvtColor(distMapCpy, distMapCpyGray, RGB2GRAY);
     equalizeHist(distMapCpyGray, distributionDisplay);  // distDisplay should be 0s and 255s
-    GaussianBlur(distributionDisplay, distMapCpyGray, Size(11, 11), 1.0, 1.0); // distMapCpy should range from 0 to 255
-    normalize(distMapCpyGray, distributionDisplay, 0,255, NORM_MINMAX);
+    GaussianBlur(distributionDisplay, distMapCpyGray, cv::Size(11, 11), 1.0, 1.0); // distMapCpy should range from 0 to 255
+    normalize(distMapCpyGray, distributionDisplay, 0,255, cv::NORM_MINMAX);
 }
 
-void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& cornerSet, Size imSize) {
+void addToRadialDistribution(double *radialDistribution, std::vector<cv::Point2f>& cornerSet, cv::Size imSize) {
 
-    Point2f center((float)((double(imSize.height-1))/2), (float)((double(imSize.width-1))/2));
+    cv::Point2f center((float)((double(imSize.height-1))/2), (float)((double(imSize.width-1))/2));
     double dist, maxDist;
     int index;
 
@@ -1721,37 +1656,37 @@ void addToRadialDistribution(double *radialDistribution, std::vector<Point2f>& c
 
 }
 
-void addToDistributionMap(Mat& distributionMap, vector<Point2f>& corners) {
+void addToDistributionMap(cv::Mat& distributionMap, vector<cv::Point2f>& corners) {
     for (unsigned int i = 0; i < corners.size(); i++) distributionMap.at<unsigned char>((int)corners.at(i).y, (int)corners.at(i).x) += (unsigned char) 1;
 }
 
-double obtainSetScore(Mat& distributionMap,
-                      Mat& binMap,
-                      Mat& gaussianMat,
-                      std::vector<Point2f>& cornerSet,
+double obtainSetScore(cv::Mat& distributionMap,
+                      cv::Mat& binMap,
+                      cv::Mat& gaussianMat,
+                      std::vector<cv::Point2f>& cornerSet,
                       double *radialDistribution)
 {
     double score = 1.0;
     double mean = 0.0, variance = 0.0;
     int count = 0;
     double area = 0.0;
-    Point centroid, center;
+    cv::Point centroid, center;
     double centrality = 0.0;
 
-    Mat distributionDisplay(distributionMap.size(), CV_8UC1);
-    Mat binTemp(binMap.size(), CV_8UC1);
+    cv::Mat distributionDisplay(distributionMap.size(), CV_8UC1);
+    cv::Mat binTemp(binMap.size(), CV_8UC1);
 
-    center = Point(distributionMap.size().width/2 - 1, distributionMap.size().height/2 - 1);
+    center = cv::Point(distributionMap.size().width/2 - 1, distributionMap.size().height/2 - 1);
 
-    std::vector<Point> fullHull, simplifiedHull;
+    std::vector<cv::Point> fullHull, simplifiedHull;
 
     for (unsigned int i = 0; i < cornerSet.size(); i++)
     {
-        fullHull.push_back(Point(int(cornerSet.at(i).x), int(cornerSet.at(i).y)));
+        fullHull.push_back(cv::Point(int(cornerSet.at(i).x), int(cornerSet.at(i).y)));
     }
 
     // Create a copy of bin Map
-    Mat binMapCpy;
+    cv::Mat binMapCpy;
     binMap.copyTo(binMapCpy);
 
     // Add corners to copy binMap
@@ -1761,9 +1696,9 @@ double obtainSetScore(Mat& distributionMap,
 
     // SCORING CONTRIBUTIONS
     // Area as Fraction of FOV:
-    convexHull(Mat(fullHull), simplifiedHull);
+    convexHull(cv::Mat(fullHull), simplifiedHull);
 
-    area = contourArea(Mat(simplifiedHull));
+    area = contourArea(cv::Mat(simplifiedHull));
 
     area /= (distributionMap.size().width * distributionMap.size().height);
 
@@ -1846,7 +1781,7 @@ double obtainSetScore(Mat& distributionMap,
     // NEW
     // ===================
     // Add the test points to a double precision copy of the distribution map
-    Mat distMapCpy(distributionMap.size(), CV_64FC1);
+    cv::Mat distMapCpy(distributionMap.size(), CV_64FC1);
 
     for (int i = 0; i < distMapCpy.size().width; i++)
     {
@@ -1917,7 +1852,7 @@ double obtainSetScore(Mat& distributionMap,
     return score;
 }
 
-bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vector<Point2f>& corners, vector<Point2f>& patchCentres2f, int mode, int detector)
+bool findPatchCorners(const cv::Mat& image, cv::Size patternSize, cv::Mat& homography, vector<cv::Point2f>& corners, vector<cv::Point2f>& patchCentres2f, int mode, int detector)
 {
 
     if (DEBUG_MODE > 2)
@@ -1925,10 +1860,10 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
         printf("%s << Entered function...\n", __FUNCTION__);
     }
 
-    Mat inputDisp;
+    cv::Mat inputDisp;
 
-    vector<Point2f> cornerEstimates;
-    vector<vector<Point2f> > vvOriginalCentres;
+    vector<cv::Point2f> cornerEstimates;
+    vector<vector<cv::Point2f> > vvOriginalCentres;
     vvOriginalCentres.push_back(patchCentres2f);
 
     interpolateCornerLocations2(image, mode, patternSize, vvOriginalCentres.at(0), cornerEstimates);
@@ -1937,7 +1872,7 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
 
     if (DEBUG_MODE > 2)
     {
-        Mat cornersForDisplay(cornerEstimates);
+        cv::Mat cornersForDisplay(cornerEstimates);
         printf("%s << Step 3: cornerEstimates.size() = %lu\n", __FUNCTION__, cornerEstimates.size());
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay);
         printf("%s << DONE.\n", __FUNCTION__);
@@ -1945,7 +1880,7 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
 
     corners.clear();
 
-    //vector<Point2f> innerCornerEstimates;
+    //vector<cv::Point2f> innerCornerEstimates;
     //cornerEstimates.copyTo(innerCornerEstimates);
 
     sortCorners(image.size(), patternSize, cornerEstimates);
@@ -1956,7 +1891,7 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
 
     if (DEBUG_MODE > 3)
     {
-        Mat cornersForDisplay(corners);
+        cv::Mat cornersForDisplay(corners);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay);
     }
 
@@ -1976,7 +1911,7 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
     
     if (DEBUG_MODE > 3) {
 		printf("%s << Displaying corners after grouping...\n", __FUNCTION__);
-        Mat cornersForDisplay(corners);
+        cv::Mat cornersForDisplay(corners);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay, true, 50.0);
     }
     
@@ -1984,7 +1919,7 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
     
     if (DEBUG_MODE > 3) {
 		printf("%s << Displaying corners after refinement...\n", __FUNCTION__);
-        Mat cornersForDisplay(corners);        
+        cv::Mat cornersForDisplay(corners);        
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay, true, 50.0);
     }
     
@@ -1992,7 +1927,7 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
     
     if (DEBUG_MODE > 3) {
 		printf("%s << Displaying corners after sorting...\n", __FUNCTION__);
-        Mat cornersForDisplay(corners);        
+        cv::Mat cornersForDisplay(corners);        
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay, true, 50.0);
     }
 
@@ -2013,35 +1948,35 @@ bool findPatchCorners(const Mat& image, Size patternSize, Mat& homography, vecto
 
 }
 
-bool verifyCorners(Size imSize, Size patternSize, vector<Point2f>& patternPoints, double minDist, double maxDist)
+bool verifyCorners(cv::Size imSize, cv::Size patternSize, vector<cv::Point2f>& patternPoints, double minDist, double maxDist)
 {
-    vector<Point2f> simplePoints;
+    vector<cv::Point2f> simplePoints;
 
     for (unsigned int i = 0; i < patternPoints.size(); i++)
     {
-        simplePoints.push_back(Point(int(patternPoints.at(i).x), int(patternPoints.at(i).y)));
+        simplePoints.push_back(cv::Point(int(patternPoints.at(i).x), int(patternPoints.at(i).y)));
     }
 
     return verifyPattern(imSize, patternSize, simplePoints, minDist, maxDist);
 }
 
-void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& vCorners)
+void refineCornerPositions(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& vCorners)
 {
 
-    Mat imGrey;
+    cv::Mat imGrey;
 
-    vector<Point2f> targetCorner;
+    vector<cv::Point2f> targetCorner;
 
 	(image.channels() > 1) ? cvtColor(image, imGrey, RGB2GRAY) : image.copyTo(imGrey);
 
-    vector<Point2f> neighbouringPts;
+    vector<cv::Point2f> neighbouringPts;
 
     int X, Y;
 
     X = patternSize.width/2;
     Y = patternSize.height/2;
 
-    vector<Point2f> fullCornerGrid;
+    vector<cv::Point2f> fullCornerGrid;
 
     double minDimension = findMinimumSeparation(vCorners);
 
@@ -2056,23 +1991,23 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
         {
             for (int k = 0; k < 4; k++)
             {
-                Point2f pt;
+                cv::Point2f pt;
 
                 if (k == 0)
                 {
-                    pt = Point2f(float(j-0.25), float(i-0.25));
+                    pt = cv::Point2f(float(j-0.25), float(i-0.25));
                 }
                 else if (k == 1)
                 {
-                    pt = Point2f(float(j+0.25), float(i-0.25));
+                    pt = cv::Point2f(float(j+0.25), float(i-0.25));
                 }
                 else if (k == 2)
                 {
-                    pt = Point2f(float(j-0.25), float(i+0.25));
+                    pt = cv::Point2f(float(j-0.25), float(i+0.25));
                 }
                 else if (k == 3)
                 {
-                    pt = Point2f(float(j+0.25), float(i+0.25));
+                    pt = cv::Point2f(float(j+0.25), float(i+0.25));
                 }
 
                 fullCornerGrid.push_back(pt);
@@ -2081,15 +2016,15 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
         }
     }
 
-    vector<Point2f> patchNeighbourhood;
-    vector<Point2f> patchArrangement;
-    vector<Point2f> newCorners, bestCorners;
-    vector<Point2f> cornerArrangement;
-    Mat cornerLocs(2, 2, CV_32FC2);
-    //Point2f *neighbourhoodArray;
-    //Point2f* arrangementArray;
+    vector<cv::Point2f> patchNeighbourhood;
+    vector<cv::Point2f> patchArrangement;
+    vector<cv::Point2f> newCorners, bestCorners;
+    vector<cv::Point2f> cornerArrangement;
+    cv::Mat cornerLocs(2, 2, CV_32FC2);
+    //cv::Point2f *neighbourhoodArray;
+    //cv::Point2f* arrangementArray;
 
-    Mat homography;
+    cv::Mat homography;
 
     // Depending on the location of the patch, a different number of neighbouring patches
     // are used to determine an approximate homography
@@ -2103,8 +2038,8 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
 
     if (DEBUG_MODE > 2)
     {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         printf("%s << Initial corners.\n", __FUNCTION__);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay);
 
@@ -2196,7 +2131,7 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
 
                 // find homography
                 //printf("%s << Finding homography...\n", __FUNCTION__);
-                homography = findHomography(Mat(patchArrangement), Mat(patchNeighbourhood));
+                homography = findHomography(cv::Mat(patchArrangement), cv::Mat(patchNeighbourhood));
                 //printf("%s << Homography found!\n", __FUNCTION__);
 
                 cornerArrangement.clear();
@@ -2204,11 +2139,11 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
                 cornerArrangement.push_back(fullCornerGrid.at(groupedIndex));
 
                 // apply homography to these co-ordinates
-                Mat tmpMat1 = Mat(cornerArrangement);
+                cv::Mat tmpMat1 = cv::Mat(cornerArrangement);
 
                 perspectiveTransform(tmpMat1, cornerLocs, homography);
 
-                newCorners.at(groupedIndex) = Point2f(cornerLocs.at<Vec3f>(0,0)[0], cornerLocs.at<Vec3f>(0,0)[1]);
+                newCorners.at(groupedIndex) = cv::Point2f(cornerLocs.at<cv::Vec3f>(0,0)[0], cornerLocs.at<cv::Vec3f>(0,0)[1]);
 
                 // Calculate maximum search distance for correcting this local point
                 minDimension = findMinimumSeparation(patchNeighbourhood);
@@ -2219,7 +2154,7 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
                 // Implement search for just this point
                 targetCorner.clear();
                 targetCorner.push_back(newCorners.at(groupedIndex));
-                cornerSubPix(imGrey, targetCorner, Size(correctionDistance, correctionDistance), Size(-1,-1), cv::TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+                cornerSubPix(imGrey, targetCorner, cv::Size(correctionDistance, correctionDistance), cv::Size(-1,-1), cv::TermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
                 newCorners.at(groupedIndex) = targetCorner.at(0);
 
             }
@@ -2228,20 +2163,20 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
 
     /*
     if (DEBUG_MODE > 2) {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         printf("%s << Fixing the edges...\n", __FUNCTION__);
         debugDisplayPattern(image, cvSize(patternSize.width, patternSize.height), cornersForDisplay);
     }
 
     printf("%s << pre cSP\n", __FUNCTION__);
-    cornerSubPix(imGrey, newCorners, Size(correctionDistance, correctionDistance), Size(-1,-1), cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+    cornerSubPix(imGrey, newCorners, cv::Size(correctionDistance, correctionDistance), cv::Size(-1,-1), cvTermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
     */
 
     if (DEBUG_MODE > 2)
     {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         printf("%s << Refinement of edges.\n", __FUNCTION__);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay, false);
 
@@ -2365,7 +2300,7 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
 
                 // find homography
                 //printf("%s << Finding homography...\n", __FUNCTION__);
-                homography = findHomography(Mat(patchArrangement), Mat(patchNeighbourhood));
+                homography = findHomography(cv::Mat(patchArrangement), cv::Mat(patchNeighbourhood));
                 //printf("%s << Homography found!\n", __FUNCTION__);
 
                 cornerArrangement.clear();
@@ -2373,11 +2308,11 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
                 cornerArrangement.push_back(fullCornerGrid.at(groupedIndex));
 
                 // apply homography to these co-ordinates
-                Mat tmpMat1 = Mat(cornerArrangement);
+                cv::Mat tmpMat1 = cv::Mat(cornerArrangement);
 
                 perspectiveTransform(tmpMat1, cornerLocs, homography);
 
-                newCorners.at(groupedIndex) = Point2f(cornerLocs.at<Vec3f>(0,0)[0], cornerLocs.at<Vec3f>(0,0)[1]);
+                newCorners.at(groupedIndex) = cv::Point2f(cornerLocs.at<cv::Vec3f>(0,0)[0], cornerLocs.at<cv::Vec3f>(0,0)[1]);
 
 
                 // Calculate maximum search distance for correcting this local point
@@ -2389,7 +2324,7 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
                 // Implement search for just this point
                 targetCorner.clear();
                 targetCorner.push_back(newCorners.at(groupedIndex));
-                cornerSubPix(imGrey, targetCorner, Size(correctionDistance, correctionDistance), Size(-1,-1), cv::TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+                cornerSubPix(imGrey, targetCorner, cv::Size(correctionDistance, correctionDistance), cv::Size(-1,-1), cv::TermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
                 newCorners.at(groupedIndex) = targetCorner.at(0);
 
             }
@@ -2399,21 +2334,21 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
     /*
 
     if (DEBUG_MODE > 2) {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         printf("%s << Fixing the pseudocorners...\n", __FUNCTION__);
         debugDisplayPattern(image, cvSize(patternSize.width, patternSize.height), cornersForDisplay);
     }
 
     printf("%s << pre cSP\n", __FUNCTION__);
-    cornerSubPix(imGrey, newCorners, Size(correctionDistance, correctionDistance), Size(-1,-1), cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+    cornerSubPix(imGrey, newCorners, cv::Size(correctionDistance, correctionDistance), cv::Size(-1,-1), cvTermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
 
     */
 
     if (DEBUG_MODE > 2)
     {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         printf("%s << Refinement of psuedocorners.\n", __FUNCTION__);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay, false);
     }
@@ -2508,7 +2443,7 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
 
                 // find homography
                 //printf("%s << Finding homography...\n", __FUNCTION__);
-                homography = findHomography(Mat(patchArrangement), Mat(patchNeighbourhood));
+                homography = findHomography(cv::Mat(patchArrangement), cv::Mat(patchNeighbourhood));
                 //printf("%s << Homography found!\n", __FUNCTION__);
 
                 cornerArrangement.clear();
@@ -2516,11 +2451,11 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
                 cornerArrangement.push_back(fullCornerGrid.at(groupedIndex));
 
                 // apply homography to these co-ordinates
-                Mat tmpMat1 = Mat(cornerArrangement);
+                cv::Mat tmpMat1 = cv::Mat(cornerArrangement);
 
                 perspectiveTransform(tmpMat1, cornerLocs, homography);
 
-                newCorners.at(groupedIndex) = Point2f(cornerLocs.at<Vec3f>(0,0)[0], cornerLocs.at<Vec3f>(0,0)[1]);
+                newCorners.at(groupedIndex) = cv::Point2f(cornerLocs.at<cv::Vec3f>(0,0)[0], cornerLocs.at<cv::Vec3f>(0,0)[1]);
 
                 // Calculate maximum search distance for correcting this local point
                 minDimension = findMinimumSeparation(patchNeighbourhood);
@@ -2531,7 +2466,7 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
                 // Implement search for just this point
                 targetCorner.clear();
                 targetCorner.push_back(newCorners.at(groupedIndex));
-                cornerSubPix(imGrey, targetCorner, Size(correctionDistance, correctionDistance), Size(-1,-1), cv::TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+                cornerSubPix(imGrey, targetCorner, cv::Size(correctionDistance, correctionDistance), cv::Size(-1,-1), cv::TermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
                 newCorners.at(groupedIndex) = targetCorner.at(0);
 
             }
@@ -2540,20 +2475,20 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
 
     /*
     if (DEBUG_MODE > 2) {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         printf("%s << Fixing the true corners...\n", __FUNCTION__);
         debugDisplayPattern(image, cvSize(patternSize.width, patternSize.height), cornersForDisplay);
     }
 
     printf("%s << pre cSP\n", __FUNCTION__);
-    cornerSubPix(imGrey, newCorners, Size(correctionDistance/2, correctionDistance/2), Size(-1,-1), cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+    cornerSubPix(imGrey, newCorners, cv::Size(correctionDistance/2, correctionDistance/2), cv::Size(-1,-1), cvTermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
     */
 
     if (DEBUG_MODE > 2)
     {
-        vector<Point2f> redistorted;
-        Mat cornersForDisplay(newCorners);
+        vector<cv::Point2f> redistorted;
+        cv::Mat cornersForDisplay(newCorners);
         printf("%s << Refinement of true corners.\n", __FUNCTION__);
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay, false);
 
@@ -2566,9 +2501,9 @@ void refineCornerPositions(const Mat& image, Size patternSize, vector<Point2f>& 
 
 }
 
-void groupPointsInQuads(Size patternSize, vector<Point2f>& corners)
+void groupPointsInQuads(cv::Size patternSize, vector<cv::Point2f>& corners)
 {
-    vector<Point2f> newCorners;
+    vector<cv::Point2f> newCorners;
 
     int id1, id2, id3, id4;
 
@@ -2593,14 +2528,14 @@ void groupPointsInQuads(Size patternSize, vector<Point2f>& corners)
     corners.assign(newCorners.begin(), newCorners.end());
 }
 
-int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst, Size patternSize, int detector, int searchDist)
+int findBestCorners(const cv::Mat& image, vector<cv::Point2f>& src, vector<cv::Point2f>& dst, cv::Size patternSize, int detector, int searchDist)
 {
     //goodFeaturesToTrack(image, retCorner, 1, 0.05, 1.0, mask, 3, true, 0.04);
     int successfulMappings = 0;
 
     double maxDist = 0.0;
 
-    vector<Point2f> foundCorners;
+    vector<cv::Point2f> foundCorners;
     int maxCorners = 4*int(src.size());
 
     unsigned int *srcBestMatches;
@@ -2608,23 +2543,23 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
     double bestDist, currDist;
 
     /*
-    Mat inputDisp;
+    cv::Mat inputDisp;
     image.copyTo(inputDisp);
-    drawChessboardCorners(inputDisp, cvSize(12, 8), Mat(src), true);
+    drawChessboardCorners(inputDisp, cvSize(12, 8), cv::Mat(src), true);
     imshow("debugWin", inputDisp);
-    waitKey(500);
+    cv::waitKey(500);
     */
 
-    vector<KeyPoint> keypoints;
+    vector<cv::KeyPoint> keypoints;
 
     //printf("%s << About to grayify.\n", __FUNCTION__);
 
 
-    Mat imGrey, tmpMat;
+    cv::Mat imGrey, tmpMat;
     (image.channels() > 1) ? cvtColor(image, imGrey, RGB2GRAY) : image.copyTo(imGrey);
 
-	Mat imageCopy(480, 640, CV_8UC1);
-    Mat inputDisp;
+	cv::Mat imageCopy(480, 640, CV_8UC1);
+    cv::Mat inputDisp;
 
 #ifdef _WIN32
     /*
@@ -2650,11 +2585,11 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
         // ==================================================
 
         // Blur
-        //GaussianBlur(imGrey, tmpMat, Size(21,21), 5.0);
+        //GaussianBlur(imGrey, tmpMat, cv::Size(21,21), 5.0);
         //tmpMat.copyTo(imGrey);
 
         // Sets maximum number of corners to 4 times the actual number
-        goodFeaturesToTrack(imGrey, foundCorners, maxCorners, 0.001, 5.0, Mat(), 11, true, 0.04);		// 3rd last should be small to limit scale...
+        goodFeaturesToTrack(imGrey, foundCorners, maxCorners, 0.001, 5.0, cv::Mat(), 11, true, 0.04);		// 3rd last should be small to limit scale...
 
         //printf("%s << foundCorners.size() = %d\n", __FUNCTION__, foundCorners.size());
 
@@ -2665,14 +2600,14 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
 #ifdef _WIN32
         /*
         // Copy from cv::Mat to vil_image view
-        imageCopy.data = vByteImage.top_left_ptr();		// Point imageCopy data to vByteImage
+        imageCopy.data = vByteImage.top_left_ptr();		// cv::Point imageCopy data to vByteImage
 
 
         imGrey.copyTo(imageCopy);						// Copy image data to this location
         //vByteImage.top_left_ptr() = image.data;
 
         imshow("copiedImage", imageCopy);
-        waitKey(50);
+        cv::waitKey(50);
         //printf("%s << imageCopy.rows = %d; imageCopy.cols = %d\n", __FUNCTION__, imageCopy.rows, imageCopy.cols);
 
         // Convert to double
@@ -2708,10 +2643,7 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
         // Sets maximum number of corners to 4 times the actual number
         FAST(imGrey, keypoints, 16);
 
-        for (unsigned int i = 0; i < keypoints.size(); i++)
-        {
-            foundCorners.push_back(keypoints.at(i).pt);
-        }
+        for (unsigned int i = 0; i < keypoints.size(); i++) foundCorners.push_back(keypoints.at(i).pt);
 
         //printf("%s << foundCorners.size() = %d\n", __FUNCTION__, foundCorners.size());
 
@@ -2733,9 +2665,9 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
         if (DEBUG_MODE > 3)
         {
             image.copyTo(inputDisp);
-            drawChessboardCorners(inputDisp, cv::Size(12, 8), Mat(dst), true);
+            drawChessboardCorners(inputDisp, cv::Size(12, 8), cv::Mat(dst), true);
             imshow("mainWin", inputDisp);
-            waitKey(0);
+            cv::waitKey(0);
         }
 
         return 0;
@@ -2743,21 +2675,21 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
         // ==================================================
     case 5:     //        cornerSubPix() + BIPOLAR HESSIAN DETECTOR
         // ==================================================
-        cornerSubPix(image, src, Size(searchDist*2, searchDist*2), Size(-1,-1), cv::TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+        cornerSubPix(image, src, cv::Size(searchDist*2, searchDist*2), cv::Size(-1,-1), cv::TermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
 
         maxDist = 0.5;	// reduce searchDist for using bipolar hessian to refine the cornerSubPix() values slightly, but not radically..
 
 #ifdef _WIN32
         /*
         // Copy from cv::Mat to vil_image view
-        imageCopy.data = vByteImage.top_left_ptr();		// Point imageCopy data to vByteImage
+        imageCopy.data = vByteImage.top_left_ptr();		// cv::Point imageCopy data to vByteImage
 
 
         imGrey.copyTo(imageCopy);						// Copy image data to this location
         //vByteImage.top_left_ptr() = image.data;
 
         imshow("copiedImage", imageCopy);
-        waitKey(50);
+        cv::waitKey(50);
         //printf("%s << imageCopy.rows = %d; imageCopy.cols = %d\n", __FUNCTION__, imageCopy.rows, imageCopy.cols);
 
         // Convert to double
@@ -2793,23 +2725,23 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
 
     // Display raw corners detected:
     //printf("%s << A...\n", __FUNCTION__);
-    Mat imCpy(imGrey.rows, imGrey.cols, CV_8UC3);
-    Mat imCpy2;
+    cv::Mat imCpy(imGrey.rows, imGrey.cols, CV_8UC3);
+    cv::Mat imCpy2;
     //printf("%s << Trying to convert...\n", __FUNCTION__);
     cvtColor(imGrey, imCpy, GRAY2RGB);
     //printf("%s << Converted.\n", __FUNCTION__);
-    resize(imCpy, imCpy2, Size(), 2.0, 2.0);
+    resize(imCpy, imCpy2, cv::Size(), 2.0, 2.0);
 
-    Scalar color;
+    cv::Scalar color;
 
     for (unsigned int i = 0; i < foundCorners.size(); i++)
     {
-        color = Scalar( rand()&255, rand()&255, rand()&255 );
-        circle(imCpy2, Point2f(foundCorners.at(i).x * float(2.0), foundCorners.at(i).y * float(2.0)), 4, color, 2);
+        color = cv::Scalar( rand()&255, rand()&255, rand()&255 );
+        circle(imCpy2, cv::Point2f(foundCorners.at(i).x * float(2.0), foundCorners.at(i).y * float(2.0)), 4, color, 2);
     }
 
     imshow("rawCorners", imCpy2);
-    waitKey(20);
+    cv::waitKey(20);
 
     srcBestMatches = new unsigned int[src.size()];
 
@@ -2874,19 +2806,19 @@ int findBestCorners(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst
     return successfulMappings;
 }
 
-void initialRefinementOfCorners(const Mat& imGrey, vector<Point2f>& src, Size patternSize)
+void initialRefinementOfCorners(const cv::Mat& imGrey, vector<cv::Point2f>& src, cv::Size patternSize)
 {
     // ...
 
     int correctionDistance;
     double minDimension;
 
-    Mat imDisplay;
+    cv::Mat imDisplay;
     imGrey.copyTo(imDisplay);
 
-    Mat forDisplay(src);
+    cv::Mat forDisplay(src);
 
-    Mat forDisp2;
+    cv::Mat forDisp2;
 
     if (DEBUG_MODE > 2)
     {
@@ -2894,7 +2826,7 @@ void initialRefinementOfCorners(const Mat& imGrey, vector<Point2f>& src, Size pa
     }
 
 
-    vector<Point2f> ptNeighbourhood, targetCorner, dst;
+    vector<cv::Point2f> ptNeighbourhood, targetCorner, dst;
 
     dst.assign(src.begin(), src.end());
 
@@ -2930,11 +2862,11 @@ void initialRefinementOfCorners(const Mat& imGrey, vector<Point2f>& src, Size pa
 
             imGrey.copyTo(imDisplay);
 
-            forDisp2 = Mat(ptNeighbourhood);
+            forDisp2 = cv::Mat(ptNeighbourhood);
 
             if (DEBUG_MODE > 2)
             {
-                //debugDisplayPattern(imDisplay, Size(2, 2), forDisp2, true);
+                //debugDisplayPattern(imDisplay, cv::Size(2, 2), forDisp2, true);
             }
 
 
@@ -2949,14 +2881,14 @@ void initialRefinementOfCorners(const Mat& imGrey, vector<Point2f>& src, Size pa
             targetCorner.clear();
             targetCorner.push_back(src.at(j*patternSize.width+i));
 
-            cornerSubPix(imGrey, targetCorner, Size(correctionDistance, correctionDistance), Size(-1,-1), cv::TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+            cornerSubPix(imGrey, targetCorner, cv::Size(correctionDistance, correctionDistance), cv::Size(-1,-1), cv::TermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
 
             dst.at(j*patternSize.width+i) = targetCorner.at(0);
 
         }
     }
 
-    Mat imCol;
+    cv::Mat imCol;
 
     cvtColor(imDisplay, imCol, GRAY2RGB);
 
@@ -2969,7 +2901,7 @@ void initialRefinementOfCorners(const Mat& imGrey, vector<Point2f>& src, Size pa
         drawLinesBetweenPoints(imCol, src, dst);
 
         imshow("lineDrawing", imCol);
-        waitKey(0);
+        cv::waitKey(0);
     }
 	*/
 
@@ -2983,9 +2915,9 @@ void initialRefinementOfCorners(const Mat& imGrey, vector<Point2f>& src, Size pa
 
 }
 
-void sortCorners(Size imageSize, Size patternSize, vector<Point2f>& corners)
+void sortCorners(cv::Size imageSize, cv::Size patternSize, vector<cv::Point2f>& corners)
 {
-    vector<Point2f> newCorners;
+    vector<cv::Point2f> newCorners;
 
     int X = patternSize.width/2;
     int Y = patternSize.height/2;
@@ -3025,7 +2957,7 @@ void sortCorners(Size imageSize, Size patternSize, vector<Point2f>& corners)
     }
 }
 
-bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& patchCentres, int mode)
+bool correctPatchCentres(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& patchCentres, int mode)
 {
 
     bool found = true;
@@ -3034,11 +2966,11 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
 
     printf("%s << Entering...\n", __FUNCTION__);
 
-    Mat imGrey;
+    cv::Mat imGrey;
     (image.channels() > 1) ? cvtColor(image, imGrey, RGB2GRAY) : image.copyTo(imGrey);
 
-    Point3f newPoint;
-    std::vector<Point3f> row;
+    cv::Point3f newPoint;
+    std::vector<cv::Point3f> row;
 
     //printf("%s << patternSize = (%d, %d)\n", __FUNCTION__, patternSize.width, patternSize.height);
 
@@ -3048,7 +2980,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
         {
             for (int j = 0; j < patternSize.width/2; j++)
             {
-                newPoint = Point3f(float(i), float(j), 0.0);
+                newPoint = cv::Point3f(float(i), float(j), 0.0);
                 row.push_back(newPoint);
             }
 
@@ -3060,7 +2992,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
         {
             for (int j = 0; j < patternSize.width+1; j++)
             {
-                newPoint = Point3f(float(i), float(j), 0.0);
+                newPoint = cv::Point3f(float(i), float(j), 0.0);
                 row.push_back(newPoint);
             }
 
@@ -3069,7 +3001,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
 
     if (DEBUG_MODE > 2)
     {
-        Mat cornersMat(patchCentres);
+        cv::Mat cornersMat(patchCentres);
         debugDisplayPattern(image, cv::Size(patternSize.width/2, patternSize.height/2), cornersMat);
     }
 
@@ -3077,29 +3009,29 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
 
     //printf("%s << STEP 1a...\n", __FUNCTION__);
 
-    std::vector< std::vector<Point3f> > objectPoints;
+    std::vector< std::vector<cv::Point3f> > objectPoints;
     objectPoints.push_back(row);
 
-    vector<vector<Point2f> > vvOriginalCentres;
+    vector<vector<cv::Point2f> > vvOriginalCentres;
     vvOriginalCentres.push_back(patchCentres);
 
     //printf("%s << STEP 1b...\n", __FUNCTION__);
 
-    Mat cameraMatrix, distCoeffs, newCamMat;
+    cv::Mat cameraMatrix, distCoeffs, newCamMat;
 
-    std::vector<Mat> rvecs, tvecs;
+    std::vector<cv::Mat> rvecs, tvecs;
 
     calibrateCamera(objectPoints, vvOriginalCentres, image.size(), cameraMatrix, distCoeffs, rvecs, tvecs, PATCH_CORRECTION_INTRINSICS_FLAGS);
 
     double alpha = 0.5;
 
-    Rect validROI;
+    cv::Rect validROI;
     newCamMat = getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, image.size(), alpha, image.size(), &validROI);
 
-    Mat undistortedImage;
+    cv::Mat undistortedImage;
     undistort(image, undistortedImage, cameraMatrix, distCoeffs, newCamMat);
 
-    vector<Point2f> newCentres;
+    vector<cv::Point2f> newCentres;
     found = findPatternCentres(undistortedImage, patternSize, newCentres, mode);
 
     if (!found)
@@ -3109,7 +3041,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
         return found;
     }
 
-    printf("%s << Redistorting MSER centroids...\n", __FUNCTION__);
+    printf("%s << Redistorting cv::MSER centroids...\n", __FUNCTION__);
     //patchCentres.clear();
     redistortPoints(newCentres, patchCentres, cameraMatrix, distCoeffs, newCamMat);
     printf("%s << newCentres.size() = %lu\n", __FUNCTION__, newCentres.size());
@@ -3118,7 +3050,7 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
 
     if (DEBUG_MODE > 2)
     {
-        Mat cornersMat(patchCentres);
+        cv::Mat cornersMat(patchCentres);
         debugDisplayPattern(image, cv::Size(patternSize.width/2, patternSize.height/2), cornersMat);
     }
 
@@ -3142,20 +3074,20 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
 
     printf("%s << meanVal = %f\n", __FUNCTION__, meanVal);
 
-    Mat enhancedImage(imGrey.size(), imGrey.type());
+    cv::Mat enhancedImage(imGrey.size(), imGrey.type());
 
     //imshow("correcting", imGrey);
-    //waitKey(0);
+    //cv::waitKey(0);
 
     //imGrey.copyTo(enhancedImage);
     contrastEnhance(imGrey, enhancedImage, int(0.5*meanVal), int(meanVal + 0.5*(255 - meanVal)));    // int(meanVal*6)
 
     imshow("correcting", enhancedImage);
-    waitKey(40);
+    cv::waitKey(40);
 
-    vector<Point2f> newCentres;
+    vector<cv::Point2f> newCentres;
 
-    Mat enhancedCol;
+    cv::Mat enhancedCol;
     cvtColor(enhancedImage, enhancedCol, CV_GRAY2RGB);
 
 
@@ -3176,10 +3108,10 @@ bool correctPatchCentres(const Mat& image, Size patternSize, vector<Point2f>& pa
     return found;
 }
 
-bool findPatternCentres(const Mat& image, Size patternSize, vector<Point2f>& centres, int mode)
+bool findPatternCentres(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& centres, int mode)
 {
-    // mode 0: MSER chessboard finder
-    // mode 1: MSER mask finder
+    // mode 0: cv::MSER chessboard finder
+    // mode 1: cv::MSER mask finder
 
     if (!checkAcutance())
     {
@@ -3189,7 +3121,7 @@ bool findPatternCentres(const Mat& image, Size patternSize, vector<Point2f>& cen
     int patchCols, patchRows, desiredPatchQuantity;
     determinePatchDistribution(patternSize, mode, patchRows, patchCols, desiredPatchQuantity);
 
-    vector<vector<Point> > msers;
+    vector<vector<cv::Point> > msers;
     findAllPatches(image, patternSize, msers);
 
     if (DEBUG_MODE > 3)
@@ -3237,7 +3169,7 @@ bool findPatternCentres(const Mat& image, Size patternSize, vector<Point2f>& cen
 
     if (DEBUG_MODE > 3)
     {
-        Mat patchCentres_(centres);
+        cv::Mat patchCentres_(centres);
         debugDisplayPattern(image, cv::Size(patchCols, patchRows), patchCentres_);
     }
 
@@ -3258,7 +3190,7 @@ bool findPatternCentres(const Mat& image, Size patternSize, vector<Point2f>& cen
     return found;
 }
 
-bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints, double minDist, double maxDist)
+bool verifyPattern(cv::Size imSize, cv::Size patternSize, vector<cv::Point2f>& patternPoints, double minDist, double maxDist)
 {
 
     // Check that all points are within the image view:
@@ -3283,8 +3215,8 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
 
     int index;
 
-    Mat blackImage = Mat::zeros(imSize, CV_8UC3);
-    Scalar blue(255, 0, 0), green(0, 255, 0), red(0, 0, 255);
+    cv::Mat blackImage = cv::Mat::zeros(imSize, CV_8UC3);
+    cv::Scalar blue(255, 0, 0), green(0, 255, 0), red(0, 0, 255);
 
 
     // STRAIGHTNESS TEST
@@ -3305,7 +3237,7 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
                 circle(blackImage, patternPoints.at(index + 1), 5, green, 3);
                 circle(blackImage, patternPoints.at(index + 2), 5, blue, 3);
                 imshow("testImage", blackImage);
-                waitKey(0);
+                cv::waitKey(0);
             }
             */
 
@@ -3324,7 +3256,7 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
                     printf("%s << Row out of alignment.\n", __FUNCTION__);
                 }
 
-                //waitKey(0);
+                //cv::waitKey(0);
                 return false;
             }
 
@@ -3335,13 +3267,13 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
                     printf("%s << Row factor is out.\n", __FUNCTION__);
                     printf("%s << factor / [dist1, dist2] = %f / [%f, %f].\n", __FUNCTION__, factor, dist1, dist2);
                 }
-                //waitKey(0);
+                //cv::waitKey(0);
                 return false;
             }
         }
     }
 
-    //waitKey(0);
+    //cv::waitKey(0);
 
     // For each column
     for (int i = 0; i < patternSize.height-2; i++)
@@ -3361,7 +3293,7 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
                 {
                     printf("%s << Column out of alignment.\n", __FUNCTION__);
                 }
-                //waitKey(0);
+                //cv::waitKey(0);
                 return false;
             }
 
@@ -3371,7 +3303,7 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
                 {
                     printf("%s << Column out of scale. 1\n", __FUNCTION__);
                 }
-                //waitKey(0);
+                //cv::waitKey(0);
                 return false;
             }
         }
@@ -3397,24 +3329,24 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
             
 					if ((dist > maxDist) && (a >= i-1) && (a <= i+1) && (b >= j-1) && (b <= j+1)) {
 						if (DEBUG_MODE > 0)	{
-							printf("%s << Point (%d, %d) failed adjacent test (%f) [%d, %d] vs [%f, %f].\n", __FUNCTION__, i, j, dist, a, b, minDist, maxDist);
+							printf("%s << cv::Point (%d, %d) failed adjacent test (%f) [%d, %d] vs [%f, %f].\n", __FUNCTION__, i, j, dist, a, b, minDist, maxDist);
 						}
-						//waitKey(0);
+						//cv::waitKey(0);
 						return false;
 					}
             
 					if (dist <= minDist) {
 						
 						if (DEBUG_MODE > 0)	{
-							printf("%s << Point (%d, %d) failed closeness test (%f) [%d, %d] vs [%f, %f].\n", __FUNCTION__, i, j, dist, a, b, minDist, maxDist);
+							printf("%s << cv::Point (%d, %d) failed closeness test (%f) [%d, %d] vs [%f, %f].\n", __FUNCTION__, i, j, dist, a, b, minDist, maxDist);
 						}
-						//waitKey(0);
+						//cv::waitKey(0);
 						return false;
 						
 					}
 					
 					if ((DEBUG_MODE > 0) && (dist < 1.0))	{
-						printf("%s << Point (%d, %d) has distance of (%f) to [%d, %d] vs [%f, %f].\n", __FUNCTION__, i, j, dist, a, b, minDist, maxDist);
+						printf("%s << cv::Point (%d, %d) has distance of (%f) to [%d, %d] vs [%f, %f].\n", __FUNCTION__, i, j, dist, a, b, minDist, maxDist);
 					}
 				}
 					
@@ -3430,24 +3362,24 @@ bool verifyPattern(Size imSize, Size patternSize, vector<Point2f>& patternPoints
     return true;
 }
 
-bool verifyPatches(Size imSize, Size patternSize, vector<Point2f>& patchCentres, int mode, double minDist, double maxDist)
+bool verifyPatches(cv::Size imSize, cv::Size patternSize, vector<cv::Point2f>& patchCentres, int mode, double minDist, double maxDist)
 {
 
-    Size newPatternSize;
+    cv::Size newPatternSize;
 
     if (mode == 0)
     {
-        newPatternSize = Size(patternSize.width+1, patternSize.height+1);
+        newPatternSize = cv::Size(patternSize.width+1, patternSize.height+1);
     }
     else
     {
-        newPatternSize = Size(patternSize.width/2, patternSize.height/2);
+        newPatternSize = cv::Size(patternSize.width/2, patternSize.height/2);
     }
 
     return verifyPattern(imSize, newPatternSize, patchCentres, minDist, maxDist);
 
     // old stuff..
-    int64 t = getTickCount();
+    int64 t = cv::getTickCount();
 
     // Some kind of big loop test, and if a failure is found return false immediately
     for (unsigned int i = 0; i < 10; i++)
@@ -3456,8 +3388,8 @@ bool verifyPatches(Size imSize, Size patternSize, vector<Point2f>& patchCentres,
         {
             if (DEBUG_MODE > 0)
             {
-                t = getTickCount() - t;
-                printf("%s << Algorithm duration: %fms\n", __FUNCTION__, t*1000/getTickFrequency());
+                t = cv::getTickCount() - t;
+                printf("%s << Algorithm duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
             }
             return false;
         }
@@ -3465,14 +3397,14 @@ bool verifyPatches(Size imSize, Size patternSize, vector<Point2f>& patchCentres,
 
     if (DEBUG_MODE > 0)
     {
-        t = getTickCount() - t;
-        printf("%s << Algorithm duration: %fms\n", __FUNCTION__, t*1000/getTickFrequency());
+        t = cv::getTickCount() - t;
+        printf("%s << Algorithm duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
     }
 
     return true;
 }
 
-bool patternInFrame(Size imSize, vector<Point2f>& patternPoints, int minBorder)
+bool patternInFrame(cv::Size imSize, vector<cv::Point2f>& patternPoints, int minBorder)
 {
 
     // Check that all points are within the image view:
@@ -3492,7 +3424,7 @@ bool patternInFrame(Size imSize, vector<Point2f>& patternPoints, int minBorder)
 
 }
 
-void shapeFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
+void shapeFilter(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers)
 {
     // TODO:
     // Improve height/width measurement so that it more accurately detects skinniness, since
@@ -3501,7 +3433,7 @@ void shapeFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
     // the pattern when it is at a significant angle to the camera.
 
     vector<mserPatch> newPatches;
-    vector<vector<Point> > newMsers;
+    vector<vector<cv::Point> > newMsers;
 
     // Any MSERs that have a height/width ratio within the acceptableFactor are accepted
     double cWidth, cHeight;
@@ -3533,10 +3465,10 @@ void shapeFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
 
 }
 
-void varianceFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
+void varianceFilter(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers)
 {
     vector<mserPatch> newPatches;
-    vector<vector<Point> > newMsers;
+    vector<vector<cv::Point> > newMsers;
 
     //double maxAcceptableVariance = 256.0;   // 16 squared...
     double maxAcceptableVariance = 1024.0;   // 32 squared...
@@ -3561,7 +3493,7 @@ void varianceFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
 
 }
 
-void enclosureFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
+void enclosureFilter(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers)
 {
 
     unsigned int i = 0, j = 0;
@@ -3591,8 +3523,8 @@ void enclosureFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
                     //printf("%s << j = %d\n", __FUNCTION__, j);
 
                     //printf("%s << i area is larger than j.\n", __FUNCTION__);
-                    // Check if the first MSER is within the second MSER
-                    enclosureScore = pointPolygonTest(Mat(patches.at(i).hull), patches.at(j).centroid, false);
+                    // Check if the first cv::MSER is within the second cv::MSER
+                    enclosureScore = pointPolygonTest(cv::Mat(patches.at(i).hull), patches.at(j).centroid, false);
 
                     //printf("%s << enclosureScore = %f\n", __FUNCTION__, enclosureScore);
 
@@ -3628,14 +3560,14 @@ void enclosureFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
 
     //printf("patches.at(0).hull.size() = %d\n", patches.at(0).hull.size());
     vector<mserPatch> newPatches;
-    vector<vector<Point> > newMsers;
+    vector<vector<cv::Point> > newMsers;
     double enclosed = -1.0;
-    Point avCenter(0, 0);
+    cv::Point avCenter(0, 0);
     unsigned int accumulatedCount = 0;
 
     for (unsigned int i = 0; i < patches.size()-1; i++)
     {
-        // Assumed it's not 'enclosed' by another MSER
+        // Assumed it's not 'enclosed' by another cv::MSER
         enclosed = -1.0;
 
         // First point will always be the smallest in a series
@@ -3652,8 +3584,8 @@ void enclosureFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
         // If the area of the 2nd one is greater
         if (patches.at(i).area < patches.at(i+1).area)
         {
-            // Check if the first MSER is within the second MSER
-            enclosed = pointPolygonTest(Mat(patches.at(i+1).hull), patches.at(i).centroid, false);
+            // Check if the first cv::MSER is within the second cv::MSER
+            enclosed = pointPolygonTest(cv::Mat(patches.at(i+1).hull), patches.at(i).centroid, false);
         }
 
 
@@ -3665,14 +3597,14 @@ void enclosureFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
             // Want to correct the last added point to be the mean of all of the 'series'
 
             //printf("%s << Changing centroid: (%d, %d) to ", __FUNCTION__, newPatches.at(newPatches.size()-1).centroid.x, newPatches.at(newPatches.size()-1).centroid.y);
-            //newPatches.at(newPatches.size()-1).centroid = Point(avCenter.x/accumulatedCount, avCenter.y/accumulatedCount);
+            //newPatches.at(newPatches.size()-1).centroid = cv::Point(avCenter.x/accumulatedCount, avCenter.y/accumulatedCount);
             //newPatches.at(newPatches.size()-1).centroid = patches.at(i).centroid;
             //printf("(%d, %d)\n", newPatches.at(newPatches.size()-1).centroid.x, newPatches.at(newPatches.size()-1).centroid.y);
             //cin.get();
 
 
             accumulatedCount = 0;
-            avCenter = Point(0, 0);
+            avCenter = cv::Point(0, 0);
 
             newPatches.push_back(patches.at(i+1));
             newMsers.push_back(msers.at(i+1));
@@ -3694,7 +3626,7 @@ void enclosureFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers)
 
 }
 
-void reduceCluster(vector<mserPatch>& patches, vector<vector<Point> >& msers, int totalPatches)
+void reduceCluster(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers, int totalPatches)
 {
 	
     // While the number of patches is larger than totalPatches, this function will
@@ -3717,9 +3649,9 @@ void reduceCluster(vector<mserPatch>& patches, vector<vector<Point> >& msers, in
 	//		detecting a pattern, than to incorrectly return the pattern location (rather than relying 
 	//		on all the verification so much).
 
-    vector<Point> pointsForArea;
-    RotatedRect wrapperRectangle;
-    Point2f circleCenter;
+    vector<cv::Point> pointsForArea;
+    cv::RotatedRect wrapperRectangle;
+    cv::Point2f circleCenter;
     float radius;
 
     double totalArea;
@@ -3740,10 +3672,10 @@ void reduceCluster(vector<mserPatch>& patches, vector<vector<Point> >& msers, in
             pointsForArea.push_back(patches.at(i).centroid);
         }
 
-        wrapperRectangle = fitEllipse(Mat(pointsForArea));
-        minEnclosingCircle(Mat(pointsForArea), circleCenter, radius);
+        wrapperRectangle = fitEllipse(cv::Mat(pointsForArea));
+        minEnclosingCircle(cv::Mat(pointsForArea), circleCenter, radius);
 
-        // totalArea = contourArea(Mat(pointsForArea));
+        // totalArea = contourArea(cv::Mat(pointsForArea));
         // totalArea = (wrapperRectangle.size.width) * (wrapperRectangle.size.height);
         totalArea = radius;
 
@@ -3763,10 +3695,10 @@ void reduceCluster(vector<mserPatch>& patches, vector<vector<Point> >& msers, in
                 }
             }
 
-            wrapperRectangle = fitEllipse(Mat(pointsForArea));
-            minEnclosingCircle(Mat(pointsForArea), circleCenter, radius);
+            wrapperRectangle = fitEllipse(cv::Mat(pointsForArea));
+            minEnclosingCircle(cv::Mat(pointsForArea), circleCenter, radius);
 
-            //newArea = contourArea(Mat(pointsForArea));
+            //newArea = contourArea(cv::Mat(pointsForArea));
             //newArea = (wrapperRectangle.size.width) * (wrapperRectangle.size.height);
             newArea = radius;
 
@@ -3794,7 +3726,7 @@ void reduceCluster(vector<mserPatch>& patches, vector<vector<Point> >& msers, in
     
 }
 
-void clusterFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers, int totalPatches)
+void clusterFilter(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers, int totalPatches)
 {
 	// Suggested improvements:
 	//		At the moment, only the patch area is considered. Should re-introduce looking at other 
@@ -3919,13 +3851,13 @@ void clusterFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers, in
     // get it to take into account colour if it's a multiple channel image
 
     vector<mserPatch> newPatches;
-    vector<vector<Point> > newMsers;
+    vector<vector<cv::Point> > newMsers;
 
     bool clusterFound = false;
     unsigned int ii = 0, jj = 0;
     double minDist, maxDist;
     double minArea, maxArea;
-    Point centroidA, centroidB;
+    cv::Point centroidA, centroidB;
     double intensityA, intensityB;
     double areaA, areaB;
     double areaVar = 1.0;				// 0.5
@@ -3979,7 +3911,7 @@ void clusterFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers, in
                 /*
                 if (DEBUG_MODE > 3) {
                 	printf("%s << test pt area = %f; test pt intensity = %f\n", __FUNCTION__, areaB, intensityB);
-                	waitKey(0);
+                	cv::waitKey(0);
                 }
                 */
 
@@ -4019,7 +3951,7 @@ void clusterFilter(vector<mserPatch>& patches, vector<vector<Point> >& msers, in
 
         if (DEBUG_MODE > 1)
         {
-            printf("%s << Cluster Size = %lu\n", __FUNCTION__, newMsers.size());
+            printf("%s << Cluster cv::Size = %lu\n", __FUNCTION__, newMsers.size());
         }
 
         // Test
@@ -4084,7 +4016,7 @@ void transferPatchElement(vector<mserPatch>& dst, vector<mserPatch>& src, int in
     src.pop_back();
 }
 
-void transferMserElement(vector<vector<Point> >& dst, vector<vector<Point> >& src, int index)
+void transferMserElement(vector<vector<cv::Point> >& dst, vector<vector<cv::Point> >& src, int index)
 {
     // Move from old one to new one
     dst.push_back(src.at(index));
@@ -4096,7 +4028,7 @@ void transferMserElement(vector<vector<Point> >& dst, vector<vector<Point> >& sr
     src.pop_back();
 }
 
-bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& msers, vector<Point2f>& patchCentres, int mode)
+bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv::Point> >& msers, vector<cv::Point2f>& patchCentres, int mode)
 {
     // TODO:
     // Lots of room for improvement here, in terms of both accuracy and speed.
@@ -4104,27 +4036,27 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
     // ensure that colour filter selects the darker of the two “modal” colours
     // (since a fair few will be white as well)
     // How about some kind of convex vs concave hull comparison? there shouldn't be much difference in area
-    //      between these two for a sold square MSER.
+    //      between these two for a sold square cv::MSER.
     // More specific "TODO"s are included throught this function.
     
-    Mat colorImage;
+    cv::Mat colorImage;
     
     if (DEBUG_MODE > 3) { (image.channels() == 1) ? cvtColor(image, colorImage, GRAY2RGB) : image.copyTo(colorImage); }
 
-    int64 t = getTickCount();
+    int64 t = cv::getTickCount();
 
     vector<mserPatch> patches;
-    vector<vector<Point> > newMsers, newerMsers, tmpMsers;
+    vector<vector<cv::Point> > newMsers, newerMsers, tmpMsers;
     //int j = 0;
     //double area1, area2;
-    vector<Point> hull;
-    vector<Point> hull1, hull2;
-    vector<Point> centroids;
-    vector<Point> centroids2f;
-    Moments moments1, moments2;
+    vector<cv::Point> hull;
+    vector<cv::Point> hull1, hull2;
+    vector<cv::Point> centroids;
+    vector<cv::Point> centroids2f;
+    cv::Moments moments1, moments2;
     //double x1c, y1c, x2c, y2c;
-    Mat imCpy, dispMat;
-    Scalar color(0, 0, 255);
+    cv::Mat imCpy, dispMat;
+    cv::Scalar color(0, 0, 255);
 
     int x = patternSize.width, y = patternSize.height;
     double Xdb = double(x)/2, Ydb = double(y)/2;
@@ -4160,11 +4092,11 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
     {
         printf("%s << Patches found before filtering = %lu\n", __FUNCTION__, msers.size());
 
-        //color = Scalar(255, 255, 0);
+        //color = cv::Scalar(255, 255, 0);
         colorImage.copyTo(imCpy);
         drawContours(imCpy, msers, -1, color, 2);
         imshow("mainWin", imCpy);
-        waitKey(0);
+        cv::waitKey(0);
     }
 
     // ==============================SHAPE FILTER
@@ -4175,14 +4107,14 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
     // Other option is to create an arbitrary square contour and compare other contours with it using
     // that OpenCV function
 
-    t = getTickCount();
+    t = cv::getTickCount();
 
     shapeFilter(patches, msers);
     
     if (DEBUG_MODE > 0)
     {
-        t = getTickCount() - t;
-        printf("%s << Shape Filter duration: %fms\n", __FUNCTION__, t*1000/getTickFrequency());
+        t = cv::getTickCount() - t;
+        printf("%s << Shape Filter duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
         printf("%s << Patches found after shape filter = %lu\n", __FUNCTION__, msers.size());
     }
 
@@ -4191,7 +4123,7 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
         colorImage.copyTo(imCpy);
         drawContours(imCpy, msers, -1, color, 2);
         imshow("mainWin", imCpy);
-        waitKey(0);
+        cv::waitKey(0);
     }
 
     
@@ -4199,39 +4131,39 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
 
     // ==============================VARIANCE FILTER
 	/*
-    t = getTickCount();
+    t = cv::getTickCount();
 
     varianceFilter(patches, msers);
 
     if (DEBUG_MODE > 6)
     {
 
-        //color = Scalar(255, 255, 0);
+        //color = cv::Scalar(255, 255, 0);
         image.copyTo(imCpy);
         drawContours(imCpy, msers, -1, color, 2);
         if (image.cols > 640)
         {
-            resize(imCpy, dispMat, Size(0,0), 0.5, 0.5);
+            resize(imCpy, dispMat, cv::Size(0,0), 0.5, 0.5);
             imshow("mainWin", dispMat);
         }
         else
         {
             imshow("mainWin", imCpy);
         }
-        waitKey(0);
+        cv::waitKey(0);
     }
 
     if (DEBUG_MODE > 0)
     {
-        t = getTickCount() - t;
-        printf("%s << Variance Filter duration: %fms\n", __FUNCTION__, t*1000/getTickFrequency());
+        t = cv::getTickCount() - t;
+        printf("%s << Variance Filter duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
         printf("%s << Patches found after variance filter = %d\n", __FUNCTION__, msers.size());
     }
     */
     // ==============================END OF VARIANCE FILTER
 
     // ==============================ENCLOSURE FILTER
-    t = getTickCount();
+    t = cv::getTickCount();
 
     enclosureFilter(patches, msers);
 
@@ -4254,16 +4186,16 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
     if (DEBUG_MODE > 6)
     {
         colorImage.copyTo(imCpy);
-        color = Scalar(0, 255, 0);
+        color = cv::Scalar(0, 255, 0);
         drawContours(imCpy, msers, -1, color, 2);
         imshow("mainWin", imCpy);
-        waitKey(0);
+        cv::waitKey(0);
     }
 
     if (DEBUG_MODE > 0)
     {
-        t = getTickCount() - t;
-        printf("%s << Enclosure Filter duration: %fms\n", __FUNCTION__, t*1000/getTickFrequency());
+        t = cv::getTickCount() - t;
+        printf("%s << Enclosure Filter duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
     }
     // ==============================END OF ENCLOSURE FILTER
 
@@ -4288,7 +4220,7 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
         previousPatches = int(msers.size());
 
         // ==============================CLUSTER FILTER
-        t = getTickCount();
+        t = cv::getTickCount();
         clusterFilter(patches, msers, totalPatches);
 
         if (DEBUG_MODE > 1)
@@ -4298,11 +4230,11 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
 
         if (DEBUG_MODE > 6)
         {
-            //color = Scalar(0, 255, 0);
+            //color = cv::Scalar(0, 255, 0);
             colorImage.copyTo(imCpy);
             drawContours(imCpy, msers, -1, color, 2);
             imshow("mainWin", imCpy);
-            waitKey(0);
+            cv::waitKey(0);
         }
 
         // If the cluster was larger than m x n (probably (m x n)+1)
@@ -4322,25 +4254,25 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
 
         if (DEBUG_MODE > 6)
         {
-            //color = Scalar(0, 255, 0);
+            //color = cv::Scalar(0, 255, 0);
             colorImage.copyTo(imCpy);
             drawContours(imCpy, msers, -1, color, 2);
             if (image.cols > 640)
             {
-                resize(imCpy, dispMat, Size(0,0), 0.5, 0.5);
+                resize(imCpy, dispMat, cv::Size(0,0), 0.5, 0.5);
                 imshow("mainWin", dispMat);
             }
             else
             {
                 imshow("mainWin", imCpy);
             }
-            waitKey(0);
+            cv::waitKey(0);
         }
 
         if (DEBUG_MODE > 0)
         {
-            t = getTickCount() - t;
-            printf("%s << Cluster Filter duration: %fms\n", __FUNCTION__, t*1000/getTickFrequency());
+            t = cv::getTickCount() - t;
+            printf("%s << Cluster Filter duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
         }
 
 
@@ -4352,19 +4284,19 @@ bool refinePatches(const Mat& image, Size patternSize, vector<vector<Point> >& m
 
     if (DEBUG_MODE > 3)
     {
-        color = Scalar(255, 0, 0);
+        color = cv::Scalar(255, 0, 0);
         colorImage.copyTo(imCpy);
         drawContours(imCpy, msers, -1, color, 2);
         if (colorImage.cols > 640)
         {
-            resize(imCpy, dispMat, Size(0,0), 0.5, 0.5);
+            resize(imCpy, dispMat, cv::Size(0,0), 0.5, 0.5);
             imshow("mainWin", dispMat);
         }
         else
         {
             imshow("mainWin", imCpy);
         }
-        waitKey(0);
+        cv::waitKey(0);
     }
 
     //bool acceptable = false;

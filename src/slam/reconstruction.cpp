@@ -53,7 +53,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 		gricScore = fGric / hGric;
 	}
 	
-	double nGRIC = asymmetricGaussianValue(gricScore, scorecard[1][0], scorecard[1][2], scorecard[1][2]);
+	double nGRIC = asymmetricGaussianValue(gricScore, scorecard[1][0], scorecard[1][1], scorecard[1][2]);
 	
 	score[1] = gricScore;
 	
@@ -66,7 +66,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	// infrontScore
 	double infrontScore = ((double) validPts) / ((double) pts1.size());
-	double nIFS = asymmetricGaussianValue(infrontScore, scorecard[2][0], scorecard[2][2], scorecard[2][1]);
+	double nIFS = asymmetricGaussianValue(infrontScore, scorecard[2][0], scorecard[2][1], scorecard[2][2]);
 	
 	score[2] = infrontScore;
 	
@@ -91,7 +91,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	score[0] = twoErr;
 
-	double nCONV = asymmetricGaussianValue(twoErr, scorecard[0][0], scorecard[0][2], scorecard[0][1]);
+	double nCONV = asymmetricGaussianValue(twoErr, scorecard[0][0], scorecard[0][1], scorecard[0][2]);
 	
 	if ((nCONV == 0.00) && (!evaluate)) return 0.00;
 #endif
@@ -107,7 +107,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	score[3] = tScore;
 	
-	double nTRN = asymmetricGaussianValue(tScore, scorecard[3][0], scorecard[3][2], scorecard[3][1]);
+	double nTRN = asymmetricGaussianValue(tScore, scorecard[3][0], scorecard[3][1], scorecard[3][2]);
 	
 	if ((nTRN == 0.00) && (!evaluate)) return 0.00;
 	
@@ -116,7 +116,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	score[4] = dScore;
 	
-	double nANG = asymmetricGaussianValue(dScore, scorecard[4][0], scorecard[4][2], scorecard[4][1]);
+	double nANG = asymmetricGaussianValue(dScore, scorecard[4][0], scorecard[4][1], scorecard[4][2]);
 	
 	if ((nANG == 0.00) && (!evaluate)) return 0.00;
 	
@@ -127,7 +127,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 #else
 	unsigned int numTerms = 4;
 	keyframeScore = pow(nGRIC * nIFS * nTRN * nANG, 1.0 / ((double) numTerms));
-	printf("%s << [%f]: gric (%1.2f, %1.2f), if (%1.2f, %1.2f), trans (%1.2f, %1.2f), ang (%02.1f, %1.2f)\n", __FUNCTION__, keyframeScore, gricScore, nGRIC, infrontScore, nIFS, tScore, nTRN, dScore, nANG);
+	printf("%s << [%f]: g(%1.2f -> %1.1f), f(%1.2f -> %1.1f), t(%1.2f -> %1.1f), a(%2.1f -> %1.1f)\n", __FUNCTION__, keyframeScore, gricScore, nGRIC, infrontScore, nIFS, tScore, nTRN, dScore, nANG);
 #endif
 	
 	C.copyTo(pose);
@@ -687,7 +687,7 @@ bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<
 		return false;
 	}
 	
-	solvePnPRansac(points_3d, points_2d, camData.K, camData.blankCoeffs, Rvec, t, guided, iterCount, float(maxReprojErr), ((unsigned int) (((double) points_2d.size()) * inliersPercentage)), inlierPts, CV_EPNP); // ITERATIVE, CV_P3P#else
+	solvePnPRansac(points_3d, points_2d, camData.K, camData.blankCoeffs, Rvec, t, guided, iterCount, float(maxReprojErr), ((unsigned int) (((double) points_2d.size()) * inliersPercentage)), inlierPts, EPNP); // ITERATIVE, CV_P3P#else
 	
 	//if ( ((unsigned int) inlierPts.size()) < ((unsigned int) (((double) points_2d.size()) * inliersPercentage)) ) {
 	if ( inlierPts.size() < 8 ) {

@@ -8,7 +8,6 @@
 #include <algorithm>
 
 #include "core/general_resources.hpp"
-#include "core/opencv_resources.hpp"
 #include "core/improc.hpp"
 #include "core/tools.hpp"
 #include "core/camera.hpp"

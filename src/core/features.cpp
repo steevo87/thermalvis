@@ -597,7 +597,7 @@ void extendKeyPoints(cv::Mat& img, vector<cv::KeyPoint>& pts, bool updateStrengt
 		#ifdef _OPENCV_VERSION_3_PLUS_
 		cv::cornerSubPix(img, candidates, cv::Size(1,1), cv::Size(-1,-1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 15, 0.1));
 		#else
-		cv::cornerSubPix(img, candidates, cv::Size(1,1), cv::Size(-1,-1), cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+		cv::cornerSubPix(img, candidates, cv::Size(1,1), cv::Size(-1,-1), cvTermCriteria(TERMCRIT_EPS+TERMCRIT_ITER, 15, 0.1));
 		#endif
 
 		#pragma omp parallel for

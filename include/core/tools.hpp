@@ -220,4 +220,5 @@ void convert_byte_to_binary_string(void* src, char* dst);
 	double round(double d);
 #endif
 
+
 #endif

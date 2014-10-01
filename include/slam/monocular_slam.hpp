@@ -5,11 +5,11 @@
 #ifndef _THERMALVIS_MONOCULAR_SLAM_H_
 #define _THERMALVIS_MONOCULAR_SLAM_H_
 
+#include "core/tools.hpp"
 #include "core/program.hpp"
 
 #include "core/general_resources.hpp"
 #include "core/ros_resources.hpp"
-#include "core/opencv_resources.hpp"
 
 #include "core/tracks.hpp"
 	

@@ -10,7 +10,6 @@
 #include "core/tools.hpp"
 
 #include "core/general_resources.hpp"
-#include "core/opencv_resources.hpp"
 #include "core/ros_resources.hpp"
 
 #ifdef _USE_OPENCV_VIZ_

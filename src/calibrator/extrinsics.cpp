@@ -5,26 +5,26 @@
 #include "calibrator/extrinsics.hpp"
 
 double calculateExtrinsicERE(int nCams,
-                             std::vector<Point3f>& physicalPoints,
-                             std::vector< std::vector<Point2f> > *corners,
-                             Mat *cameraMatrix,
-                             Mat *distCoeffs,
-                             Mat *R,
-                             Mat *T)
+                             std::vector<cv::Point3f>& physicalPoints,
+                             std::vector< std::vector<cv::Point2f> > *corners,
+                             cv::Mat *cameraMatrix,
+                             cv::Mat *distCoeffs,
+                             cv::Mat *R,
+                             cv::Mat *T)
 {
 
     int ptsPerSet = int(physicalPoints.size());
     int numFrames = int(corners[0].size());
 
-    Mat *fsRvec, *fsTvec, *esRvec, *esTvec;
-    fsRvec = new Mat[nCams];
-    fsTvec = new Mat[nCams];
-    esRvec = new Mat[nCams];
-    esTvec = new Mat[nCams];
+    cv::Mat *fsRvec, *fsTvec, *esRvec, *esTvec;
+    fsRvec = new cv::Mat[nCams];
+    fsTvec = new cv::Mat[nCams];
+    esRvec = new cv::Mat[nCams];
+    esTvec = new cv::Mat[nCams];
 
-    std::vector<Point2f> *estimatedPattern, *projectedPattern;
-    estimatedPattern = new std::vector<Point2f>[nCams];
-    projectedPattern = new std::vector<Point2f>[nCams];
+    std::vector<cv::Point2f> *estimatedPattern, *projectedPattern;
+    estimatedPattern = new std::vector<cv::Point2f>[nCams];
+    projectedPattern = new std::vector<cv::Point2f>[nCams];
 
     for (int k = 0; k < nCams; k++)
     {
@@ -42,8 +42,8 @@ double calculateExtrinsicERE(int nCams,
 
     errors = new double[maxCapacity];
 
-    Mat physPtsMat = Mat(physicalPoints);
-    Mat cornersMat;
+    cv::Mat physPtsMat = cv::Mat(physicalPoints);
+    cv::Mat cornersMat;
 
     int index = 0;
 
@@ -53,17 +53,17 @@ double calculateExtrinsicERE(int nCams,
         for (int k = 0; k < nCams; k++)
         {
 
-            cornersMat = Mat(corners[k].at(i));
+            cornersMat = cv::Mat(corners[k].at(i));
 
             solvePnP(physPtsMat, cornersMat, cameraMatrix[k], distCoeffs[k], fsRvec[k], fsTvec[k], false);
 
-            projectPoints(Mat(physicalPoints), fsRvec[k], fsTvec[k], cameraMatrix[k], distCoeffs[k], estimatedPattern[k]);
+            projectPoints(cv::Mat(physicalPoints), fsRvec[k], fsTvec[k], cameraMatrix[k], distCoeffs[k], estimatedPattern[k]);
 
             esRvec[k] = R[k] * fsRvec[0];
 
             esTvec[k] = fsTvec[0] + T[k];
 
-            projectPoints(Mat(physicalPoints), esRvec[k], esTvec[k], cameraMatrix[k], distCoeffs[k], projectedPattern[k]);
+            projectPoints(cv::Mat(physicalPoints), esRvec[k], esTvec[k], cameraMatrix[k], distCoeffs[k], projectedPattern[k]);
 
             for (unsigned int j = 0; j < estimatedPattern[k].size(); j++)
             {
@@ -99,20 +99,20 @@ double calculateExtrinsicERE(int nCams,
 
 }
 
-double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>& binMap, vector<vector<double> >& distances, std::vector<std::vector<Point2f> > *corners, int index)
+double obtainMultisetScore(int nCams, vector<cv::Mat>& distributionMap, vector<cv::Mat>& binMap, vector<vector<double> >& distances, std::vector<std::vector<cv::Point2f> > *corners, int index)
 {
     double score = 0.0;
     double *viewScore;
     viewScore = new double[nCams];
 
-    std::vector<Point> hull;
-    std::vector<Point2f> hull2;
+    std::vector<cv::Point> hull;
+    std::vector<cv::Point2f> hull2;
     double area;
     std::vector<std::vector<double> > distancesCpy;
 
     //distances.copyTo(distancesCpy);   // why the fuck won't this work??
 
-    Point centroid, center;
+    cv::Point centroid, center;
 
     double *distFromCenter, *proportionOfView;
     distFromCenter = new double[nCams];         // delete
@@ -124,11 +124,11 @@ double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>&
     for (int k = 0; k < nCams; k++)
     {
         std::printf("K00\n");
-        center = Point((distributionMap.at(k).size().width-1)/2, (distributionMap.at(k).size().height-1)/2);
+        center = cv::Point((distributionMap.at(k).size().width-1)/2, (distributionMap.at(k).size().height-1)/2);
 
         std::printf("K01\n");
         // obtain a convex hull around the points
-        convexHull(Mat(corners[k].at(index)), hull2);
+        convexHull(cv::Mat(corners[k].at(index)), hull2);
 
         convertVectorToPoint(hull2, hull);
 
@@ -139,7 +139,7 @@ double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>&
 
         std::printf("K03\n");
         // measure the convex hull's proportional coverage from the centre of the image
-        area = contourArea(Mat(hull));
+        area = contourArea(cv::Mat(hull));
         proportionOfView[k] = area;
 
         // this shit won't work either :P
@@ -166,14 +166,14 @@ double obtainMultisetScore(int nCams, vector<Mat>& distributionMap, vector<Mat>&
     return score;
 }
 
-void optimizeCalibrationSets(std::vector<Size> imSize,
+void optimizeCalibrationSets(std::vector<cv::Size> imSize,
                              int nCams,
-                             Mat *cameraMatrix,
-                             Mat *distCoeffs,
-                             std::vector<Mat>& distributionMap,
-                             std::vector< std::vector<Point2f> > *candidateCorners,
-                             std::vector< std::vector<Point2f> > *testCorners,
-                             std::vector<Point3f> row,
+                             cv::Mat *cameraMatrix,
+                             cv::Mat *distCoeffs,
+                             std::vector<cv::Mat>& distributionMap,
+                             std::vector< std::vector<cv::Point2f> > *candidateCorners,
+                             std::vector< std::vector<cv::Point2f> > *testCorners,
+                             std::vector<cv::Point3f> row,
                              int selection, int num,
                              std::vector<std::vector<int> >& tagNames,
                              std::vector<std::vector<int> >& selectedTags, 
@@ -199,9 +199,9 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
     char windowName[20];
 
     int randomNum = 0;
-    std::vector<Mat> distributionDisplay(nCams);
-    std::vector<Mat> binMap(nCams);
-    std::vector<Mat> binTemp(nCams);
+    std::vector<cv::Mat> distributionDisplay(nCams);
+    std::vector<cv::Mat> binMap(nCams);
+    std::vector<cv::Mat> binTemp(nCams);
     std::vector<std::vector<double> > distances(nCams);
 
     // Scoring Variables
@@ -223,12 +223,12 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
 
     double testingProbability = 1.00;
 
-    std::vector< std::vector<Point3f> > objectPoints;
+    std::vector< std::vector<cv::Point3f> > objectPoints;
 
-    std::vector< std::vector< std::vector<Point2f> > > originalFramesCpy;
-    std::vector< std::vector< std::vector<Point2f> > > selectedFrames;
-    std::vector< std::vector< std::vector<Point2f> > > tempFrameTester;
-    std::vector< std::vector< std::vector<Point2f> > > newCorners;
+    std::vector< std::vector< std::vector<cv::Point2f> > > originalFramesCpy;
+    std::vector< std::vector< std::vector<cv::Point2f> > > selectedFrames;
+    std::vector< std::vector< std::vector<cv::Point2f> > > tempFrameTester;
+    std::vector< std::vector< std::vector<cv::Point2f> > > newCorners;
 
     originalFramesCpy.resize(nCams);
     selectedFrames.resize(nCams);
@@ -244,9 +244,9 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
 
         imSize.at(i) = distributionMap.at(i).size();
 
-        distributionDisplay.at(i) = Mat(distributionMap.at(i).size(), CV_8UC1);
-        binMap.at(i) = Mat(30, 40, CV_32SC1);
-        binTemp.at(i) = Mat(binMap.at(i).size(), CV_8UC1);
+        distributionDisplay.at(i) = cv::Mat(distributionMap.at(i).size(), CV_8UC1);
+        binMap.at(i) = cv::Mat(30, 40, CV_32SC1);
+        binTemp.at(i) = cv::Mat(binMap.at(i).size(), CV_8UC1);
         binMap.at(i).setTo(0);
 
 
@@ -255,13 +255,13 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
 
     }
 
-    Mat E[MAX_CAMS], F[MAX_CAMS], Q;      // Between first camera and all other cameras
-    Mat R[MAX_CAMS], T[MAX_CAMS];         // Rotations/translations between first camera and all other cameras
-    // Mat R2[MAX_CAMS], T2[MAX_CAMS];       // Rotations/translations between all other cameras
-    // Mat R_[MAX_CAMS], P_[MAX_CAMS];
+    cv::Mat E[MAX_CAMS], F[MAX_CAMS], Q;      // Between first camera and all other cameras
+    cv::Mat R[MAX_CAMS], T[MAX_CAMS];         // Rotations/translations between first camera and all other cameras
+    // cv::Mat R2[MAX_CAMS], T2[MAX_CAMS];       // Rotations/translations between all other cameras
+    // cv::Mat R_[MAX_CAMS], P_[MAX_CAMS];
 
-    TermCriteria term_crit;
-    term_crit = TermCriteria(TermCriteria::COUNT+ TermCriteria::EPS, 30, 1e-6);
+    cv::TermCriteria term_crit;
+    term_crit = cv::TermCriteria(cv::TermCriteria::COUNT+ cv::TermCriteria::EPS, 30, 1e-6);
 
     bool alreadyAdded = false;
 
@@ -343,7 +343,7 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
                 //printf("DEBUG Q_009\n");
 
 
-                simpleResize(binTemp.at(k), distributionDisplay.at(k), Size(480, 640));
+                simpleResize(binTemp.at(k), distributionDisplay.at(k), cv::Size(480, 640));
 
                 //printf("DEBUG Q_010\n");
                 equalizeHist(distributionDisplay.at(k), distributionDisplay.at(k));
@@ -455,7 +455,7 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
 
 			//printf("%s << Looping N=(%d)\n", __FUNCTION__, N);
 
-			Mat iterationBest_cameraMatrix[MAX_CAMS], iterationBest_distCoeffs[MAX_CAMS];
+			cv::Mat iterationBest_cameraMatrix[MAX_CAMS], iterationBest_distCoeffs[MAX_CAMS];
 			
 			for (int k = 0; k < nCams; k++) {
 				
@@ -491,7 +491,7 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
                 
                 //printf("%s << DEBUG [%d]\n", __FUNCTION__, 1);
                 
-                Mat working_cameraMatrix[MAX_CAMS], working_distCoeffs[MAX_CAMS];
+                cv::Mat working_cameraMatrix[MAX_CAMS], working_distCoeffs[MAX_CAMS];
 
                 // This is a better way of corrupting scores for previously added points
                 if (alreadyAdded == true) {
@@ -503,8 +503,8 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
 
                     if (randomNum > (1.0 - testingProbability)*1000.0) {
 
-                        R[0] = Mat::eye(3, 3, CV_64FC1);
-                        T[0] = Mat::zeros(3, 1, CV_64FC1);
+                        R[0] = cv::Mat::eye(3, 3, CV_64FC1);
+                        T[0] = cv::Mat::zeros(3, 1, CV_64FC1);
                         
                         
 
@@ -656,8 +656,8 @@ void optimizeCalibrationSets(std::vector<Size> imSize,
         bestSeedSet = new int[nSeeds];
         currentSeedSet = new int[nSeeds];
 
-        R[0] = Mat::eye(3, 3, CV_64FC1);
-        T[0] = Mat::zeros(3, 1, CV_64FC1);
+        R[0] = cv::Mat::eye(3, 3, CV_64FC1);
+        T[0] = cv::Mat::zeros(3, 1, CV_64FC1);
 
         //printf("%s << DEBUG %d\n", __FUNCTION__, 0);
 
