@@ -5,6 +5,7 @@
 		<param name="markDuplicates" value="true" />
 		<param name="loopMode" value="true" />
 		<param name="output8bit" value="true" />
+		<param name="guessIntrinsics" value="true" />
 	</node>
 	
 	<node name="flow" pkg="thermalvis" type="flow" output="screen">
