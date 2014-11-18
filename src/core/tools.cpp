@@ -495,3 +495,29 @@ void convert_byte_to_binary_string(void* src, char* dst) {
 	}
 	dst[8] = '\0';
 }
+
+double timeDiff(ros::Time time1, ros::Time time2) {
+	double retVal = ((double) time1.sec) - ((double) time2.sec);
+	retVal += 1e-9 * (((double) time1.nsec) - ((double) time2.nsec));
+	return retVal;
+}
+
+ros::Time findAverageTime(ros::Time time1, ros::Time time2) {
+	
+	long int sec = 0, nsec = 0;
+	nsec = (time1.nsec/2) + (time2.nsec/2);
+	
+	((time1.sec % 2) > 0) ? sec += (time1.sec-1)/2 : sec += time1.sec/2;
+	((time2.sec % 2) > 0) ? sec += (time2.sec-1)/2 : sec += time2.sec/2;
+	
+	if (((time1.sec % 2) > 0) && ((time2.sec % 2) > 0)) {
+		sec += 1;
+	} else if (((time1.sec % 2) > 0) || ((time2.sec % 2) > 0)) {
+		nsec += 500000000;
+	}
+			
+	ros::Time avTime;
+	avTime.sec = sec;
+	avTime.nsec = nsec;
+	return avTime;
+}

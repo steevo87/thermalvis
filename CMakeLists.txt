@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 SET(PROJECT_NAME "thermalvis")
 project(${PROJECT_NAME})
-LIST(APPEND SUBLIBRARY_NAMES "streamer" "flow" "slam") # "calibrator"
+LIST(APPEND SUBLIBRARY_NAMES "streamer" "flow" "slam" "calibrator")
 ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
 
 include(cmake/configure_arch.cmake)

@@ -23,3 +23,5 @@ ENDIF()
 IF(Boost_FOUND)
 	ADD_SUBDIRECTORY(mono-slam)
 ENDIF()
+
+#ADD_SUBDIRECTORY(mm-calibrator)

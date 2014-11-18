@@ -80,7 +80,7 @@ mserPatch::mserPatch(vector<cv::Point>& inputHull, const cv::Mat& image)
     varIntensity /= division;
 }
 
-bool findMaskCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int detector, int mserDelta, float max_var, float min_diversity, double area_threshold)
+bool findMaskCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int detector, int mserDelta, double max_var, double min_diversity, double area_threshold)
 {
 	cv::Mat grayIm;
 	(image.channels() > 1) ? cvtColor(image, grayIm, RGB2GRAY) : grayIm = cv::Mat(image);

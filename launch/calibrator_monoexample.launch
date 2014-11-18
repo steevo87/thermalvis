@@ -1,0 +1,78 @@
+<launch>
+
+	<rosparam command="delete" param="/calibrator" />
+
+	<node name="calibrator" pkg="thermalvis" type="calibrator" output="screen">
+		
+		<!-- INPUT -->	
+		<param name="video_stream" value="thermalvis/streamer/" />
+		<param name="video_sequence" value="image_mono" />
+		
+		<!-- PARAMETERS -->
+		<param name="calibType" value="single" />
+		<param name="patternType" value="mask" type="str" />
+		<param name="maxPatterns" value="30" type="int" />
+		<param name="maxFrames" value="200" type="int" />
+		<param name="setSize" value="10" type="int" />
+		<param name="optMethod" value="enhancedMCM" type="str" />
+		<param name="gridSize" value="10.0" type="double" />
+		<param name="xCount" value="12" type="int" />
+		<param name="yCount" value="8" type="int" />
+		<param name="candidatePatternSampleRate" value="0.2" />
+		<param name="testPatternSampleRate" value="1.0" />
+		<param name="alpha" value="1.00" type="double" />
+		<param name="autoAlpha" value="true" />
+		
+		<!-- OUTPUT -->
+		<param name="outputFolder" value="~" />
+		<param name="debug_mode" value="true" />
+		<param name="undistortImages" value="true" />
+
+	</node>
+
+	<rosparam command="delete" param="/streamer" />
+
+	<node name="streamer" pkg="thermalvis" type="streamer" output="screen">
+
+		<!-- VIDEO SOURCE -->	
+		<param name="source" value="dev" />
+		
+		<!-- SOURCE LOCATION ALTERNATIVES -->
+		<param name="dev" value="/dev/video0" />
+		<param name="file" value="~/sample.avi" />
+		<param name="folder" value="~/folder" />
+		<param name="topic" value="/thermalvis/miricle_streamer/image_raw" />
+		
+		<!-- VIDEO PROCESSING -->
+		<param name="inputDatatype" value="1" /> <!-- recommended: 1 (16-bit)-->
+		<param name="framerate" value="15.0" type="double" />
+		<param name="undistortImages" value="false" />
+		<param name="removeDuplicates" value="true" />
+		
+		<!-- VIDEO OUTPUTS -->	
+		<param name="normMode" value="0" /> --> <!-- recommended: 0 (standard)-->
+		<param name="outputColor" value="false" />
+		<param name="output16bit" value="false" />
+		<param name="output8bit" value="true" />
+
+		<!-- FALSE COLOR MAPPING -->	
+		<param name="map" value="1" /> <!-- recommended: 1 (CIECOMP2) -->
+		<param name="extremes" value="unsafe" />
+		
+		<!-- FILE OUTPUTS -->
+		<param name="writeImages" value="false" />
+		<param name="outputFolder" value="~/output" />
+		<param name="outputFormat" value="4" /> <!-- recommended: 4 (PNG) -->
+		<param name="outputType" value="2" /> <!-- recommended: 2 (CV_16UC1) -->
+		<param name="keepOriginalNames" value="false" />
+
+	</node>
+	
+	<node name="image_view" pkg="image_view" type="image_view" output="screen">
+		<remap from="image" to="/thermalvis/calibrator/image_col"/>
+		<param name="autosize" value="true" />
+	</node>
+	
+	<node name="dynamic_reconfigure" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" />
+
+</launch>

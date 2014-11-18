@@ -186,7 +186,7 @@ bool correctPatchCentres(const cv::Mat& image, cv::Size patternSize, vector<cv::
 bool findPatchCorners(const cv::Mat& image, cv::Size patternSize, cv::Mat& homography, vector<cv::Point2f>& corners, vector<cv::Point2f>& patchCentres2f, int mode, int detector = 0);
 
 /// \brief 		MSER-clustering mask corner locater
-bool findMaskCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int detector = 0, int mserDelta = 8, float max_var = 0.25, float min_div = 0.2, double area_threshold = 1.01);
+bool findMaskCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int detector = 0, int mserDelta = 8, double max_var = 0.25, double min_div = 0.2, double area_threshold = 1.01);
 
 /// \brief 		Core pattern-finding function
 bool findPatternCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int mode, int detector = 0, int mserDelta = 8, float max_var = 0.25, float min_div = 0.2, double area_threshold = 1.01);
