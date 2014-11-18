@@ -62,9 +62,9 @@ private:
 	streamerNode *sM;
 
 	bool calibratorIsLinked;
-	calibratorConfig *fcData;
+	calibratorConfig *caData;
 	calibratorData *calibratorStartupData;
-	calibratorNode *fM;
+	calibratorNode *cA;
 
 };
 
@@ -124,12 +124,9 @@ void ProcessingThread::run() {
 		if (!sM->loopCallback()) return;
 		sM->imageLoop();
 		
-		if (wantsFlow) {
-			if (!sM->get8bitImage(workingFrame, camInfo)) continue;
-			
-			cA->serverCallback(*caData);
-			cA->handle_camera(workingFrame, &camInfo);
-		}
+		if (!sM->get8bitImage(workingFrame, camInfo)) continue;
+		cA->serverCallback(*caData);
+		cA->handle_camera(workingFrame, &camInfo);
 		
 	}
 }

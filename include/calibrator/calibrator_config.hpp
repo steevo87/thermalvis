@@ -2,12 +2,19 @@
  *  \brief	Declarations for calibrator node configuration.
 */
 
-#ifndef THERMALVIS_CALIBRATOR_CONFIG_H_
-#define THERMALVIS_CALIBRATOR_CONFIG_H_
+#ifndef THERMALVIS_CALIBRATOR_CONFIG_HPP
+#define THERMALVIS_CALIBRATOR_CONFIG_HPP
 
 #include <string>
 
 #define MAX_ALLOWABLE_CAMS		2
+
+#define DEFAULT_SET_SIZE		10
+#define DEFAULT_GRID_SIZE		10 // (mm)
+#define DEFAULT_X_COUNT			12
+#define DEFAULT_Y_COUNT			8
+
+#define DEFAULT_MAX_TIME_DIFF	0.001
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for flow
 struct calibratorSharedData {

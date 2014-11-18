@@ -2,7 +2,89 @@
  *  \brief	Definitions for the CALIBRATOR node.
 */
 
-#include "../../include/calibrator/calib.hpp"
+#include "calibrator/calib.hpp"
+
+calibratorData::calibratorData()
+{
+		// ...
+}
+
+#ifndef _BUILD_FOR_ROS_
+bool calibratorConfig::assignStartingData(calibratorData& startupData) {
+
+	verboseMode = startupData.verboseMode;
+	debugMode = startupData.debugMode;
+	
+	return true;
+}
+#endif
+
+#ifdef _USE_BOOST_ 
+#ifndef _BUILD_FOR_ROS_
+bool calibratorData::assignFromXml(xmlParameters& xP) {
+
+	int countOfNodes = 0;
+
+	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) {
+		if (v.first.compare("node")) continue; // only progresses if its a "node" tag
+		if (!v.second.get_child("<xmlattr>.type").data().compare("slam")) countOfNodes++;
+	}
+
+	if (countOfNodes == 0) {
+		ROS_ERROR("No relevant nodes found in XML config!");
+		return false;
+	}
+
+	if (countOfNodes > 1) {
+		ROS_ERROR("More than 1 relevant node found in XML config! This functionality is not supported in Windows..");
+		return false;
+	}
+
+	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
+		if (v.first.compare("node")) continue;
+		if (v.second.get_child("<xmlattr>.type").data().compare("calibrator")) {
+			if ((!v.second.get_child("<xmlattr>.type").data().compare("reconfigure_gui")) || (!v.second.get_child("<xmlattr>.type").data().compare("rqt_reconfigure"))) {
+				if (!v.second.get_child("<xmlattr>.args").data().compare("calibrator")) displayGUI = true;
+				if (!v.second.get_child("<xmlattr>.args").data().compare("/calibrator")) displayGUI = true;
+			}
+			continue;
+		}
+
+		BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, v.second) { // Traverses the subtree...
+			if (v2.first.compare("param")) continue;
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+
+        }
+
+		// Substitute tildes if in Windows
+#ifdef _WIN32
+		if (outputFolder.size() > 0) {
+			if (outputFolder[0] == '~') {
+				outputFolder.erase(outputFolder.begin());
+				outputFolder = std::getenv("USERPROFILE") + outputFolder;
+			}
+		}
+#endif
+
+	}
+
+	return true;
+
+}
+#endif
+#endif
+
+#ifdef _BUILD_FOR_ROS_
+void calibratorNode::serverCallback(thermalvis::calibratorConfig &config, uint32_t level) {
+#else
+void calibratorNode::serverCallback(calibratorConfig &config) {
+#endif
+
+	configData.verboseMode = config.verboseMode;
+
+}
 
 void calibratorNode::prepareExtrinsicPatternSubsets() {
 
@@ -242,13 +324,6 @@ void calibratorNode::preparePatternSubsets() {
 
 void calibratorNode::prepareForTermination() {
 	return;	
-}
-
-void mySigintHandler(int sig) {
-	wantsToShutdown = true;
-	ROS_WARN("Requested shutdown... terminating feeds...");
-	
-	(*globalNodePtr)->prepareForTermination();
 }
 
 void calibratorNode::assignIntrinsics() {
@@ -1818,9 +1893,9 @@ void calibratorNode::updatePairs() {
 }
 
 #ifdef _BUILD_FOR_ROS_
-void calibratorNode::handle_image(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg, const unsigned int camera_index) {
+void calibratorNode::handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg, const unsigned int camera_index) {
 #else
-void calibratorNode::handle_image(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg, const unsigned int camera_index) {
+void calibratorNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg, const unsigned int camera_index) {
 #endif
 
     vacantInputTime = timeElapsedMS(vacant_timer);
@@ -2125,7 +2200,7 @@ calibratorNode::calibratorNode(calibratorData startupData) :
 		
 		image_transport::ImageTransport it(nh);
 		
-		camera_sub[0] = it.subscribeCamera(topic[0], 1, boost::bind(&calibratorNode::handle_image, this, _1, _2, 0));
+		camera_sub[0] = it.subscribeCamera(topic[0], 1, boost::bind(&calibratorNode::handle_camera, this, _1, _2, 0));
 		
 		if (configData.debugMode) {
 			debug_pub[0] = it.advertiseCamera(debug_pub_name[0], 1);
@@ -2146,8 +2221,8 @@ calibratorNode::calibratorNode(calibratorData startupData) :
 		
 		image_transport::ImageTransport it(nh);
 
-		camera_sub[0] = it.subscribeCamera(topic[0], 1, boost::bind(&calibratorNode::handle_image, this, _1, _2, 0));
-		camera_sub[1] = it.subscribeCamera(topic[1], 1, boost::bind(&calibratorNode::handle_image, this, _1, _2, 1));
+		camera_sub[0] = it.subscribeCamera(topic[0], 1, boost::bind(&calibratorNode::handle_camera, this, _1, _2, 0));
+		camera_sub[1] = it.subscribeCamera(topic[1], 1, boost::bind(&calibratorNode::handle_camera, this, _1, _2, 1));
 				
 		if (configData.verboseMode) { ROS_INFO("Subscribed to topics..."); }
 		

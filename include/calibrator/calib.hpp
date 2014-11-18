@@ -2,8 +2,10 @@
  *  \brief	Declarations for the CALIBRATOR node.
 */
 
-#ifndef _THERMALVIS_CALIB_H_
-#define _THERMALVIS_CALIB_H_
+#ifndef THERMALVIS_CALIB_HPP
+#define THERMALVIS_CALIB_HPP
+
+#include "calibrator_config.hpp"
 
 #include "core/tools.hpp"
 #include "core/program.hpp"
@@ -27,23 +29,21 @@
 #include "extrinsics.hpp"
 
 #ifdef _USE_BOOST_
+#include "boost/filesystem.hpp"  
 #include <boost/thread/thread.hpp>
+#ifndef _BUILD_FOR_ROS_
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/filesystem.hpp>
+#endif
 #endif
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include "opencv2/calib3d/calib3d.hpp"
 
-#include "calibrator_config.hpp"
-
-
-#define DEFAULT_SET_SIZE		10
-#define DEFAULT_GRID_SIZE		10 // (mm)
-#define DEFAULT_X_COUNT			12
-#define DEFAULT_Y_COUNT			8
 #define DEFAULT_TIMER_PERIOD	0.05
 
-#define DEFAULT_MAX_TIME_DIFF	0.001
+
 
 //HGH
 #define PATTERN_CODE_INVALID -1
@@ -53,13 +53,10 @@
 
 const char __PROGRAM__[] = "thermalvis-calibrator";
 
-bool wantsToShutdown = false;
-void mySigintHandler(int sig);
-
 /// \brief		Stores configuration information for the streamer/image-processing routine
 class calibratorData : public calibratorSharedData, public commonData, public calibratorLaunchOnlyData {
 	friend class xmlParameters;
-	friend class streamerNode;
+	friend class calibratorNode;
 #ifndef _BUILD_FOR_ROS_
 	friend class calibratorConfig;
 #endif
@@ -240,9 +237,9 @@ public:
 	
 	///brief	Initial receipt of an image WITHOUT camera info. 
 #ifdef _BUILD_FOR_ROS_
-	void handle_image(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg, const unsigned int camera_index = 0);
+	void handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, const sensor_msgs::CameraInfoConstPtr& info_msg, const unsigned int camera_index = 0);
 #else
-	void handle_image(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg, const unsigned int camera_index = 0);
+	void handle_camera(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg, const unsigned int camera_index = 0);
 #endif
 	
 	
@@ -316,6 +313,6 @@ public:
 
 };
 
-boost::shared_ptr < calibratorNode > *globalNodePtr;
+//boost::shared_ptr < calibratorNode > *globalNodePtr;
 
 #endif

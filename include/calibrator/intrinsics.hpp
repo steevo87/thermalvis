@@ -5,8 +5,8 @@
  * Functions required by both should be included in the "calibration.hpp/cpp" files.
  */
 
-#ifndef _THERMALVIS_INTRINSICS_HPP_
-#define _THERMALVIS_INTRINSICS_HPP_
+#ifndef THERMALVIS_INTRINSICS_HPP
+#define THERMALVIS_INTRINSICS_HPP
 
 // Restrictive: CV_CALIB_FIX_K5 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K3 + CV_CALIB_FIX_K2 + CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST
 // Rational: CV_CALIB_RATIONAL_MODEL

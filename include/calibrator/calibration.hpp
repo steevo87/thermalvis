@@ -2,8 +2,8 @@
  *  \brief	Declarations for generic geometric calibration.
 */
 
-#ifndef _THERMALVIS_CALIBRATION_HPP_
-#define _THERMALVIS_CALIBRATION_HPP_
+#ifndef THERMALVIS_CALIBRATION_HPP
+#define THERMALVIS_CALIBRATION_HPP
 
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/highgui/highgui.hpp"

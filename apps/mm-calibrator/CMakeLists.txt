@@ -16,7 +16,9 @@ FILE(GLOB LOCAL_SOURCES *.cpp)
 
 INCLUDE_DIRECTORIES(../../include)
 
-foreach(SUBLIB_NAME ${SUBLIBRARY_NAMES})
+LIST(APPEND CALIB_SUBLIBRARY_NAMES "streamer" "calibrator")
+
+foreach(SUBLIB_NAME ${CALIB_SUBLIBRARY_NAMES})
 	string(TOUPPER "${SUBLIB_NAME}" UPPERCASE_NAME)
 	INCLUDE_DIRECTORIES(../../include/${SUBLIB_NAME})
 	IF(USE_QT)
@@ -39,12 +41,12 @@ ENDIF()
 
 LIST(APPEND ADDITIONAL_LIBS thermalvis)
 
-foreach(SUBLIB_NAME ${SUBLIBRARY_NAMES})
+foreach(SUBLIB_NAME ${CALIB_SUBLIBRARY_NAMES})
 	LIST(APPEND ADDITIONAL_LIBS thermalvis-${SUBLIB_NAME})
 endforeach(SUBLIB_NAME) 
 
 IF(USE_QT)
-	foreach(SUBLIB_NAME ${SUBLIBRARY_NAMES})
+	foreach(SUBLIB_NAME ${CALIB_SUBLIBRARY_NAMES})
 		string(TOUPPER "${SUBLIB_NAME}" UPPERCASE_NAME)
 		IF(NOT EXISTS "${QT${UPPERCASE_NAME}_BUILD_PATH}/ui_mainwindow_${SUBLIB_NAME}.h")
 			MESSAGE(FATAL_ERROR "<ui_mainwindow_${SUBLIB_NAME}.h> could not be found in <${QT${UPPERCASE_NAME}_BUILD_PATH}>. Has Qt Creator been used to generate this file? Or, is the CMake variable incorrect?")

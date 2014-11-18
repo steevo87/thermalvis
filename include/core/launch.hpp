@@ -22,6 +22,7 @@ class xmlParameters {
 	friend class trackerData;
 	friend class streamerData;
 	friend class slamData;
+	friend class calibratorData;
 
 protected:
 	boost::property_tree::ptree pt;
