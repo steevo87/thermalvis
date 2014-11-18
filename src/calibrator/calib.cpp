@@ -27,7 +27,7 @@ bool calibratorData::assignFromXml(xmlParameters& xP) {
 
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) {
 		if (v.first.compare("node")) continue; // only progresses if its a "node" tag
-		if (!v.second.get_child("<xmlattr>.type").data().compare("slam")) countOfNodes++;
+		if (!v.second.get_child("<xmlattr>.type").data().compare("calibrator")) countOfNodes++;
 	}
 
 	if (countOfNodes == 0) {
@@ -70,6 +70,7 @@ bool calibratorData::assignFromXml(xmlParameters& xP) {
 
 	}
 
+	processStartingData();
 	return true;
 
 }
@@ -1200,8 +1201,22 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 
 	nh.param<std::string>("intrinsicsFile_primary", intrinsicsFiles[0], "intrinsicsFile");
 	nh.param<std::string>("intrinsicsFile_secondary", intrinsicsFiles[1], "intrinsicsFile");
-
 	
+	nh.param<double>("alpha", alpha, 0.00);
+	
+	nh.param<bool>("autoAlpha", autoAlpha, true);
+	
+	nh.param<bool>("stopCapturingAtLimit", stopCapturingAtLimit, false);
+	nh.param<std::string>("patternDetectionMode", patternDetectionMode, "find");
+
+	processStartingData();
+
+	return true;
+}
+#endif
+
+void calibratorData::processStartingData() {
+
 	if (calibType == "single") {
 		
 		if (wantsIntrinsics == false) {
@@ -1222,22 +1237,9 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 			if (intrinsicsFiles[1] == "intrinsicsFile") {
 				ROS_WARN("No intrinsics specified for secondary camera, so will attempt to use those encoded in topic header.");
 			}
-			
 		}
-		
 	}
-	
-	nh.param<double>("alpha", alpha, 0.00);
-	
-	nh.param<bool>("autoAlpha", autoAlpha, true);
-	
-	nh.param<bool>("stopCapturingAtLimit", stopCapturingAtLimit, false);
-	nh.param<std::string>("patternDetectionMode", patternDetectionMode, "find");
-
-	
-	return true;
 }
-#endif
 
 void calibratorNode::updateIntrinsicMap(unsigned int idx) {
 	

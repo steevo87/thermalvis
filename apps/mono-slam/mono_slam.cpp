@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
 	ROS_INFO("Launching Monocular SLAM Demo App!");
 
 #ifdef _USE_QT_
-	QApplication a(argc, argv);
+	QApplication a(argc, argv);run
 #endif
 
 	ProcessingThread mainThread;

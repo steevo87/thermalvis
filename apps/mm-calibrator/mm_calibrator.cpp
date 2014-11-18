@@ -180,7 +180,7 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 	if (!scData->assignStartingData(*streamerStartupData)) return false;
 
 	sM = new streamerNode(*streamerStartupData);
-	sM->initializeOutput(output_directory);
+	//sM->initializeOutput(output_directory);
 
 	// === CALIBRATOR NODE === //
 	// Preliminary settings
@@ -188,6 +188,9 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	// Real-time changeable variables
 	if (!caData->assignStartingData(*calibratorStartupData)) return false;
+
+	cA = new calibratorNode(*calibratorStartupData);
+	cA->initializeOutput(output_directory);
 
 	return true;
 }

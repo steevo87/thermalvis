@@ -7,6 +7,8 @@ LIST(APPEND OpenCV_Basic_Components_List "opencv_objdetect")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_video")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_contrib")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_legacy")
+LIST(APPEND OpenCV_Basic_Components_List "opencv_videoio")
+LIST(APPEND OpenCV_Basic_Components_List "opencv_imgcodecs")
 
 LIST(APPEND OpenCV_Advanced_Components_List "opencv_viz")
 #LIST(APPEND OpenCV_Advanced_Components_List "opencv_gpu")

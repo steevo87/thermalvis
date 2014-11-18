@@ -37,6 +37,7 @@ calibratorLaunchOnlyData::calibratorLaunchOnlyData() :
 	autoAlpha(true),
 	stopCapturingAtLimit(false),
 	patternDetectionMode("find"),
+	numCams(1),
 #endif
 	specialMode(false)
 { 

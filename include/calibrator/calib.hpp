@@ -43,8 +43,6 @@
 
 #define DEFAULT_TIMER_PERIOD	0.05
 
-
-
 //HGH
 #define PATTERN_CODE_INVALID -1
 #define PATTERN_CODE_FIND_TRACK 0
@@ -84,7 +82,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	bool obtainStartingData(ros::NodeHandle& nh);   
 #endif
-
+	void processStartingData();
 };
 
 #ifndef _BUILD_FOR_ROS_
