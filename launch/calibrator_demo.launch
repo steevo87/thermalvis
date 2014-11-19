@@ -4,7 +4,6 @@
 		
 		<!-- INPUT -->	
 		<param name="video_stream" value="thermalvis/streamer/" />
-		<param name="video_sequence" value="image_mono" />
 		
 		<!-- PARAMETERS -->
 		<param name="calibType" value="single" />
@@ -16,14 +15,12 @@
 		<param name="gridSize" value="10.0" type="double" />
 		<param name="xCount" value="12" type="int" />
 		<param name="yCount" value="8" type="int" />
-		<param name="candidatePatternSampleRate" value="0.2" />
-		<param name="testPatternSampleRate" value="1.0" />
 		<param name="alpha" value="1.00" type="double" />
 		<param name="autoAlpha" value="true" />
 		
 		<!-- OUTPUT -->
-		<param name="outputFolder" value="~" />
-		<param name="debug_mode" value="true" />
+		<param name="outputFolder" value="~/calibration_output/" />
+		<param name="debugMode" value="true" />
 		<param name="undistortImages" value="true" />
 
 	</node>
@@ -38,14 +35,6 @@
 		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\calibration" />
 		<param name="inputDatatype" value="0" />
 		<param name="markDuplicates" value="true" />
-		
-		<!-- <param name="degreesPerGraylevel" value="0.025" /> --> <!-- value of 0.025 works OK for miricle sequences.. -->
-		<!-- <param name="desiredDegreesPerGraylevel" value="0.05" /> --> <!-- can adjust this to enhance contrast -->
-		
-		<param name="normMode" value="3" />
-		<param name="outputType" value="0" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
-		<param name="writeImages" value="false" />
-		<param name="outputFolder" value="~\Documents\GitHub\thermalvis\media\output" />
 		
 		<param name="loopMode" value="true" />
 		

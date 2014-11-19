@@ -48,6 +48,7 @@ struct calibratorLaunchOnlyData {
 	bool trackingMode;
 	std::string patternDetectionMode;
 	unsigned int numCams;
+	bool  invertPrimary, invertSecondary;
 	bool fixPrincipalPoint;
 	bool fixIntrinsics;
 	bool noConstraints;

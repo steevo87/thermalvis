@@ -60,7 +60,8 @@ mserPatch::mserPatch(vector<cv::Point>& inputHull, const cv::Mat& image)
 
             if (pointPolygonTest(cv::Mat(hull), cv::Point2f(float(i),float(j)), false) > 0.0) {
                 //printf("%s << (j, i) = (%d, %d)\n", __FUNCTION__, j, i);
-                meanIntensity = meanIntensity + double(image.at<cv::Vec3b>(j,i)[0]);
+				if (image.type() == CV_8UC3) { meanIntensity = meanIntensity + double(image.at<cv::Vec3b>(j,i)[0]); }
+				else meanIntensity = meanIntensity + double(image.at<unsigned char>(j,i));
                 division++;
             }
         }
@@ -72,8 +73,12 @@ mserPatch::mserPatch(vector<cv::Point>& inputHull, const cv::Mat& image)
     varIntensity = 0.0;
 
     for (int i = x-searchDist; i < x+searchDist+1; i++) {
-        for (int j = y-searchDist; j < y+searchDist+1; j++) {
-            if (pointPolygonTest(cv::Mat(hull), cv::Point2f(float(i),float(j)), false) > 0.0) varIntensity += pow((meanIntensity - double(image.at<cv::Vec3b>(j,i)[0])), 2);
+        for (int j = y-searchDist; j < y+searchDist+1; j++) {	
+            if (pointPolygonTest(cv::Mat(hull), cv::Point2f(float(i),float(j)), false) > 0.0) {
+				if (image.type() == CV_8UC3) { varIntensity += pow((meanIntensity - double(image.at<cv::Vec3b>(j,i)[0])), 2); }
+				else varIntensity += pow((meanIntensity - double(image.at<unsigned char>(j,i))), 2);
+				
+			}
         }
     }
 
@@ -1252,7 +1257,7 @@ void debugDisplayPattern(const cv::Mat& image, cv::Size patternSize, cv::Mat& co
     cv::waitKey(int(delay));
 }
 
-bool findPatternCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int mode, int detector, int mserDelta, float max_var, float min_div, double area_threshold)
+bool findPatternCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::Point2f>& corners, int mode, int detector, int mserDelta, double max_var, double min_div, double area_threshold)
 {
     // mode 0: cv::MSER chessboard finder
     // mode 1: cv::MSER mask finder

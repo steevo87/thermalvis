@@ -43,6 +43,17 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	serialPollingRate = startupData.serialPollingRate;
 	maxNucThreshold = startupData.maxNucThreshold;
 
+	if (normMode == NORM_MODE_DEFAULT) {
+		switch (inputDatatype) {
+		case DATATYPE_RAW:
+			normMode = NORM_MODE_FIXED_TEMP_RANGE;
+			break;
+		default:
+			normMode = NORM_MODE_NONE;
+			break;
+		}
+	}
+
 	if (inputDatatype == DATATYPE_8BIT) {
 		if (normMode == NORM_MODE_FIXED_TEMP_LIMITS) {
 			ROS_WARN("Specified <normMode> of <NORM_MODE_FIXED_TEMP_LIMITS> is not compatible with 8-bit input. Resetting to <NORM_MODE_FIXED_TEMP_RANGE>");

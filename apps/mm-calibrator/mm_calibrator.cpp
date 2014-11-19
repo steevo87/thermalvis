@@ -123,11 +123,9 @@ void ProcessingThread::run() {
 		sM->serverCallback(*scData);
 		if (!sM->loopCallback()) return;
 		sM->imageLoop();
-		
 		if (!sM->get8bitImage(workingFrame, camInfo)) continue;
 		cA->serverCallback(*caData);
 		cA->handle_camera(workingFrame, &camInfo);
-		
 	}
 }
 

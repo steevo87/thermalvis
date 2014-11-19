@@ -82,7 +82,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	bool obtainStartingData(ros::NodeHandle& nh);   
 #endif
-	void processStartingData();
+	bool processStartingData();
 };
 
 #ifndef _BUILD_FOR_ROS_

@@ -55,7 +55,28 @@ bool calibratorData::assignFromXml(xmlParameters& xP) {
 
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("debugMode")) debugMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("verboseMode")) verboseMode = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("outputFolder")) outputFolder = v2.second.get_child("<xmlattr>.value").data();
 
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("autoAlpha")) autoAlpha = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("undistortImages")) undistortImages = !v2.second.get_child("<xmlattr>.value").data().compare("true");
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("video_stream")) video_stream = v2.second.get_child("<xmlattr>.value").data();
+			
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("calibType")) calibType = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("patternType")) patternType = v2.second.get_child("<xmlattr>.value").data();
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("optMethod")) optMethod = v2.second.get_child("<xmlattr>.value").data();
+
+			
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxPatterns")) maxPatterns = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxFrames")) maxFrames = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("setSize")) setSize = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("xCount")) xCount = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("yCount")) yCount = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("gridSize")) gridSize = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("alpha")) alpha = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
+			
         }
 
 		// Substitute tildes if in Windows
@@ -1074,12 +1095,7 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<std::string>("video_stream", video_stream, "video_stream");
 	
-	if (video_stream != "video_stream") {
-		ROS_INFO("<video_stream> (%s) selected.", video_stream.c_str());
-	} else {
-		ROS_ERROR("<video_stream> not specified.");
-		return false;
-	}
+	
 	
 	nh.param<bool>("ignoreDistortion", ignoreDistortion, false);
 
@@ -1087,19 +1103,7 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<bool>("useRationalModel", useRationalModel, false);
 	nh.param<std::string>("calibType", calibType, "calibType");
 	
-	if (calibType == "single") {
-		ROS_INFO("Single-camera calibration selected.");
-		numCams = 1;
-	} else if (calibType == "stereo") {
-		ROS_INFO("Stereo calibration selected.");
-		numCams = 2;
-	} else if (calibType == "calibType") {
-		ROS_WARN("No calibration type specified. Single-camera assumed.");
-		calibType = "single";
-	} else {
-		ROS_ERROR("Invalid calibration type specified. Please choose either 'single' or 'stereo'.");
-		return false;
-	}
+	
 	
 	nh.param<bool>("useUndistortedLocations", useUndistortedLocations, false);
 	nh.param<bool>("removeSpatialBias", removeSpatialBias, true);
@@ -1107,18 +1111,7 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	nh.param<std::string>("video_stream_secondary", video_stream_secondary, "video_stream_secondary");
 
-	if (numCams == 2) {
-
-		if (video_stream_secondary != "video_stream_secondary") {
-			ROS_INFO("<video_stream_secondary> = (%s).", video_stream_secondary.c_str());
-		} else {
-			ROS_ERROR("<video_stream_secondary> not specified!");
-			return false;
-		}
-
-		
-
-	}
+	
 
 	nh.param<double>("flowThreshold", flowThreshold, 1e-4);
 	nh.param<double>("maxFrac", maxFrac, 0.05);
@@ -1126,35 +1119,17 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 		
 	nh.param<std::string>("outputFolder", outputFolder, "outputFolder");
 	
-	if (outputFolder != "outputFolder") {
-		if (verboseMode) { ROS_INFO("Output folder (%s) selected.", outputFolder.c_str()); }
-	} else {
-		outputFolder = read_addr + "/../nodes/calibrator/data";
-		if (verboseMode) { ROS_INFO("No output folder supplied. Defaulting to (%s)", outputFolder.c_str()); }
-	}
+	
 	
 	
 	
 	nh.param<bool>("debugMode", debugMode, false);
 	
-	if (debugMode) {
-		if (verboseMode) { ROS_INFO("Running in DEBUG mode."); }
-	} else {
-		if (verboseMode) { ROS_INFO("Running in OPTIMIZED mode."); }
-	}
+	
 	
 	nh.param<std::string>("patternType", patternType, "mask");
 	
-	if (patternType == "mask") {
-		pattType = MASK_FINDER_CODE;
-	} else if (patternType == "chessboard") {
-		pattType = CHESSBOARD_FINDER_CODE;
-	} else if (patternType == "heated_chessboard") {
-		pattType = HEATED_CHESSBOARD_FINDER_CODE;
-	} else {
-		ROS_ERROR("<patternType> incorrectly specified (mask/chessboard/heated-chessboard)");
-		return false;
-	}
+	
 	
 	if (verboseMode) { ROS_INFO("<patternType> = (%s) [%d]", patternType.c_str(), pattType); }
 	
@@ -1170,28 +1145,6 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<int>("yCount", yCount, DEFAULT_Y_COUNT);
 	
 	nh.param<std::string>("optMethod", optMethod, "enhancedMCM");
-	
-	if (optMethod == "enhancedMCM") {
-		optimizationMethod = ENHANCED_MCM_OPTIMIZATION_CODE;
-	} else if (optMethod == "allPatterns") {
-		optimizationMethod = ALL_PATTERNS_OPTIMIZATION_CODE;
-	} else if (optMethod == "randomSet") {
-		optimizationMethod = RANDOM_SET_OPTIMIZATION_CODE;
-	} else if (optMethod == "firstN") {
-		optimizationMethod = FIRST_N_PATTERNS_OPTIMIZATION_CODE;
-	} else if (optMethod == "randomBest") {
-		optimizationMethod = BEST_OF_RANDOM_PATTERNS_OPTIMIZATION_CODE;
-	} else if (optMethod == "exhaustiveSearch") {
-		optimizationMethod = EXHAUSTIVE_SEARCH_OPTIMIZATION_CODE;
-	} else if (optMethod == "randomSeed") {
-		optimizationMethod = RANDOM_SEED_OPTIMIZATION_CODE;
-	} else if (optMethod == "scoreBased") {
-		optimizationMethod = SCORE_BASED_OPTIMIZATION_CODE;
-	} else {
-		ROS_ERROR("<optMethod> incorrectly specified...");
-		return false;
-	}
-	
 	
 	nh.param<bool>("undistortImages", undistortImages, false);
 	
@@ -1209,36 +1162,89 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 	nh.param<bool>("stopCapturingAtLimit", stopCapturingAtLimit, false);
 	nh.param<std::string>("patternDetectionMode", patternDetectionMode, "find");
 
-	processStartingData();
-
-	return true;
+	return processStartingData();
 }
 #endif
 
-void calibratorData::processStartingData() {
+bool calibratorData::processStartingData() {
+
+	if (video_stream != "video_stream") {
+		ROS_INFO("<video_stream> (%s) selected.", video_stream.c_str());
+	} else {
+		ROS_ERROR("<video_stream> not specified.");
+		return false;
+	}
+
+	invert[0] = invertPrimary;
+	invert[1] = invertSecondary;
+
+	if (numCams == 2) {
+		if (video_stream_secondary != "video_stream_secondary") {
+			ROS_INFO("<video_stream_secondary> = (%s).", video_stream_secondary.c_str());
+		} else {
+			ROS_ERROR("<video_stream_secondary> not specified!");
+			return false;
+		}
+	}
+
+	if (outputFolder != "outputFolder") {
+		if (verboseMode) { ROS_INFO("Output folder (%s) selected.", outputFolder.c_str()); }
+	} else {
+		outputFolder = read_addr + "/../nodes/calibrator/data";
+		if (verboseMode) { ROS_INFO("No output folder supplied. Defaulting to (%s)", outputFolder.c_str()); }
+	}
 
 	if (calibType == "single") {
-		
+		ROS_INFO("Single-camera calibration selected.");
+		numCams = 1;
+	} else if (calibType == "stereo") {
+		ROS_INFO("Stereo calibration selected.");
+		numCams = 2;
+	} else if (calibType == "calibType") {
+		ROS_WARN("No calibration type specified. Single-camera assumed.");
+		calibType = "single";
+	} else {
+		ROS_ERROR("Invalid calibration type specified. Please choose either 'single' or 'stereo'.");
+		return false;
+	}
+
+	if (calibType == "single") {
 		if (wantsIntrinsics == false) {
 			ROS_WARN("<single> camera mode has been selected, but <wantsIntrinsics> has not. Intrinsics WILL be calculated.");
 			wantsIntrinsics = true;
 		}
-		
 	} else if (calibType == "stereo") {
-		
-		if (wantsIntrinsics) {
-			ROS_INFO("<stereo> mode: option to also calculate intrinsics has been selected.");
-		} else {
-
-			if (intrinsicsFiles[0] == "intrinsicsFile") {
-				ROS_WARN("No intrinsics specified for primary camera, so will attempt to use those encoded in topic header.");
-			}
-			
-			if (intrinsicsFiles[1] == "intrinsicsFile") {
-				ROS_WARN("No intrinsics specified for secondary camera, so will attempt to use those encoded in topic header.");
-			}
+		if (wantsIntrinsics) { ROS_INFO("<stereo> mode: option to also calculate intrinsics has been selected.");	} 
+		else {
+			if (intrinsicsFiles[0] == "intrinsicsFile") ROS_WARN("No intrinsics specified for primary camera, so will attempt to use those encoded in topic header.");
+			if (intrinsicsFiles[1] == "intrinsicsFile") ROS_WARN("No intrinsics specified for secondary camera, so will attempt to use those encoded in topic header.");
 		}
 	}
+
+	if (verboseMode) { if (debugMode) { ROS_INFO("Running in DEBUG mode."); } else { ROS_INFO("Running in OPTIMIZED mode."); } }
+
+	if (patternType == "mask") { pattType = MASK_FINDER_CODE; } 
+	else if (patternType == "chessboard") {	pattType = CHESSBOARD_FINDER_CODE; } 
+	else if (patternType == "heated_chessboard") { pattType = HEATED_CHESSBOARD_FINDER_CODE; } 
+	else {
+		ROS_ERROR("<patternType> incorrectly specified (mask/chessboard/heated-chessboard)");
+		return false;
+	}
+
+	if (optMethod == "enhancedMCM") { optimizationMethod = ENHANCED_MCM_OPTIMIZATION_CODE; } 
+	else if (optMethod == "allPatterns") { optimizationMethod = ALL_PATTERNS_OPTIMIZATION_CODE; } 
+	else if (optMethod == "randomSet") { optimizationMethod = RANDOM_SET_OPTIMIZATION_CODE;	} 
+	else if (optMethod == "firstN") { optimizationMethod = FIRST_N_PATTERNS_OPTIMIZATION_CODE; } 
+	else if (optMethod == "randomBest") { optimizationMethod = BEST_OF_RANDOM_PATTERNS_OPTIMIZATION_CODE; } 
+	else if (optMethod == "exhaustiveSearch") { optimizationMethod = EXHAUSTIVE_SEARCH_OPTIMIZATION_CODE; } 
+	else if (optMethod == "randomSeed") { optimizationMethod = RANDOM_SEED_OPTIMIZATION_CODE; } 
+	else if (optMethod == "scoreBased") { optimizationMethod = SCORE_BASED_OPTIMIZATION_CODE; } 
+	else {
+		ROS_ERROR("<optMethod> incorrectly specified...");
+		return false;
+	}
+
+	return true;
 }
 
 void calibratorNode::updateIntrinsicMap(unsigned int idx) {
@@ -2026,46 +2032,37 @@ void calibratorNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs:
 		
 		Mat preDisplay, grayMat;
 		
-		if (newImage.type() == CV_8UC3) {
-					
+		switch (newImage.type()) {
+		case CV_8UC3:
 			cvtColor(newImage, grayMat, CV_RGB2GRAY);
-			
-			if (configData.invert[camera_index]) { 
-				invertMatIntensities(grayMat, grayMat); 
-			}
-			
 			newImage.copyTo(preDisplay);
-			
-		} else {
-			//grayMat = Mat(newImage);
+			break;
+		case CV_16UC1:
+			adaptiveDownsample(newImage, grayMat, NORM_MODE_FIXED_TEMP_RANGE, 0.2);
 			cvtColor(newImage, preDisplay, CV_GRAY2RGB);
-			
+			break;
+		case CV_8UC1:
 			newImage.copyTo(grayMat);
-			
-			if (configData.invert[camera_index]) { 
-				invertMatIntensities(grayMat, grayMat);
-			}
-			
-			
+			cvtColor(grayMat, preDisplay, CV_GRAY2RGB);
+			break;
+		default:
+			ROS_ERROR("Image type not recognized!");
+			return;
 		}
-		
+
+		if (configData.invert[camera_index]) invertMatIntensities(grayMat, grayMat); 
         
         if (configData.verboseMode) { ROS_INFO("Color and inversion processing complete (%d).", camera_index); };
 
-		
 		if (displayImages[camera_index].size() > 0) {
 			if (matricesAreEqual(displayImages[camera_index].at(displayImages[camera_index].size()-1), grayMat)) {
 				duplicateFlags[camera_index].push_back(1);
 				ROS_WARN("Received duplicate frame at cam 1 (%d)", frameCount[0]);
-			} else {
-				duplicateFlags[camera_index].push_back(0);
-			}
+			} else duplicateFlags[camera_index].push_back(0);
 		} else {
 			duplicateFlags[camera_index].push_back(0);
 			imSize[camera_index] = newImage.size();
 		}
-		
-		
 		
 		// Check for sync'ed frames here (only with camera 1)
 		
@@ -2135,6 +2132,11 @@ void calibratorNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs:
 				if (configData.verboseMode) { ROS_INFO("Preparing to publish (%d).", camera_index); };
 				debug_pub[camera_index].publish(msg_debug[camera_index], debug_camera_info[camera_index]);
 				if (configData.verboseMode) { ROS_INFO("Published (%d).", camera_index); };
+#else
+				char windowName[256];
+				sprintf(windowName, "calibration[%d]", camera_index);
+				imshow(windowName, dispMat);
+				waitKey(1);
 #endif
 			}
 			
