@@ -40,6 +40,7 @@ public:
 	}
 	bool initialize(int argc, char* argv[]);
 	void run();
+	void performCalibration();
 #ifndef _USE_QT_
 	void start() { run(); }
 #else
@@ -121,11 +122,71 @@ void ProcessingThread::run() {
 
 	while (sM->wantsToRun()) {
 		sM->serverCallback(*scData);
-		if (!sM->loopCallback()) return;
+		if (!sM->loopCallback()) break;
 		sM->imageLoop();
 		if (!sM->get8bitImage(workingFrame, camInfo)) continue;
 		cA->serverCallback(*caData);
 		cA->handle_camera(workingFrame, &camInfo);
+		cA->loopCallback();
+	}
+
+	performCalibration();
+}
+
+void ProcessingThread::performCalibration() {
+	
+	cA->getFrameTrackingTime();
+
+	if (cA->wantsIntrinsics()) {
+		
+		ROS_INFO("Performing intrinsic calibration...");
+		cA->preparePatternSubsets();
+		cA->performIntrinsicCalibration();
+		ROS_INFO("Intrinsic calibration completed.");
+
+	} else cA->assignIntrinsics();
+	
+	if (cA->wantsExtrinsics()) {
+		
+		ROS_INFO("Performing extrinsic calibration...");
+		cA->create_virtual_pairs();
+		cA->prepareExtrinsicPatternSubsets();
+		cA->performExtrinsicCalibration();
+	}
+	
+	cA->writeResults();
+	cA->set_ready_for_output();
+	
+	if (cA->wantsToUndistort() || (cA->wantsToRectify())) cA->getAverageTime();
+	
+	if (cA->wantsToUndistort()) {
+		if (cA->wantsIntrinsics()) {
+			
+			ROS_INFO("Publishing undistorted images...");
+			cA->startUndistortionPublishing();
+			
+			while (cA->wantsToUndistort()) {
+				// ros::spinOnce();
+				// ... need to loop through stored images
+				cA->publishUndistorted();
+			}
+			ROS_INFO("Publishing complete.");
+		}
+	}
+	
+	if (cA->wantsToRectify()) {	
+		if (cA->wantsExtrinsics()) {
+			
+			ROS_INFO("Publishing rectified images...");
+			cA->startRectificationPublishing();
+			
+			while (cA->wantsToRectify()) {
+				// ros::spinOnce();
+				// ... need to loop through stored images
+				cA->publishRectified();
+			}
+			ROS_INFO("Publishing complete.");
+		}
 	}
 }
 

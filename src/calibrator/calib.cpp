@@ -741,6 +741,11 @@ void calibratorNode::publishUndistorted() {
 #ifdef _BUILD_FOR_ROS_
 		std::copy(&(dispMat.at<Vec3b>(0,0)[0]), &(dispMat.at<Vec3b>(0,0)[0])+(dispMat.cols*dispMat.rows*dispMat.channels()), msg_debug[0].data.begin());
 		debug_pub[0].publish(msg_debug[0], debug_camera_info[0]);
+#else
+		char windowName[256];
+		sprintf(windowName, "undistorted");
+		imshow(windowName, dispMat);
+		waitKey((frameCount[0] > 50) ? 40 : 200);
 #endif
 
 		// if (configData.verboseMode) { ROS_INFO("Image published..."); }
@@ -762,6 +767,11 @@ void calibratorNode::publishUndistorted() {
 		std::copy(&(dispMat.at<Vec3b>(0,0)[0]), &(dispMat.at<Vec3b>(0,0)[0])+(dispMat.cols*dispMat.rows*dispMat.channels()), msg_debug[0].data.begin());
 		debug_pub[0].publish(msg_debug[0], debug_camera_info[0]);
 		//ROS_WARN("Message 1 published...");
+#else
+		char windowName[256];
+		sprintf(windowName, "undistorted[0]");
+		imshow(windowName, dispMat);
+		waitKey((validPairs[0].size() > 50) ? 40 : 200);
 #endif
 
 		if (configData.numCams > 1) {
@@ -771,6 +781,11 @@ void calibratorNode::publishUndistorted() {
 #ifdef _BUILD_FOR_ROS_
 			std::copy(&(dispMat.at<Vec3b>(0,0)[0]), &(dispMat.at<Vec3b>(0,0)[0])+(dispMat.cols*dispMat.rows*dispMat.channels()), msg_debug[1].data.begin());
 			debug_pub[1].publish(msg_debug[1], debug_camera_info[1]);		
+#else
+			char windowName2[256];
+			sprintf(windowName2, "undistorted[1]");
+			imshow(windowName2, dispMat);
+			waitKey((validPairs[0].size() > 50) ? 40 : 200);
 #endif
 		}
 	}
@@ -808,6 +823,11 @@ void calibratorNode::publishRectified() {
 #ifdef _BUILD_FOR_ROS_
 	std::copy(&(disp1.at<Vec3b>(0,0)[0]), &(disp1.at<Vec3b>(0,0)[0])+(disp1.cols*disp1.rows*disp1.channels()), msg_debug[0].data.begin());
 	debug_pub[0].publish(msg_debug[0], debug_camera_info[0]);
+#else
+	char windowName[256];
+	sprintf(windowName, "rectified[0]");
+	imshow(windowName, disp1);
+	waitKey((validPairs[0].size() > 50) ? 40 : 200);
 #endif
 
 	remap(displayImages[1].at(validPairs[1].at(rectificationCount)), und2, map1[1], map2[1], INTER_LINEAR);
@@ -818,6 +838,11 @@ void calibratorNode::publishRectified() {
 #ifdef _BUILD_FOR_ROS_
 	std::copy(&(disp2.at<Vec3b>(0,0)[0]), &(disp2.at<Vec3b>(0,0)[0])+(disp2.cols*disp2.rows*disp2.channels()), msg_debug[1].data.begin());
 	debug_pub[1].publish(msg_debug[1], debug_camera_info[1]);
+#else
+	char windowName2[256];
+	sprintf(windowName2, "rectified[1]");
+	imshow(windowName2, disp2);
+	waitKey((validPairs[0].size() > 50) ? 40 : 200);
 #endif
 
 	rectificationCount++;
@@ -1069,7 +1094,7 @@ void calibratorNode::performIntrinsicCalibration() {
 		
 		reprojectionError_intrinsics[xxx] = calibrateCamera(objectPoints, subselectedPatterns, imSize[xxx], cameraMatrices[xxx], distCoeffVecs[xxx], rvecs, tvecs, intrinsicsFlags);
 		
-		ROS_ERROR("Reprojection error = %f, distCoeffVecs[%d].size() = (%d)", reprojectionError_intrinsics[xxx], xxx, distCoeffVecs[xxx].cols);
+		ROS_INFO("Reprojection error = %f, distCoeffVecs[%d].size() = (%d)", reprojectionError_intrinsics[xxx], xxx, distCoeffVecs[xxx].cols);
 
 		//extendedReprojectionError_intrinsics[xxx] = calculateERE(imSize[xxx], objectPoints.at(0), subselectedPatterns, cameraMatrices[xxx], distCoeffVecs[xxx], configData.generateFigures, errValues);
 		extendedReprojectionError_intrinsics[xxx] = calculateERE(imSize[xxx], objectPoints.at(0), testingSets[xxx], cameraMatrices[xxx], distCoeffVecs[xxx], configData.removeSpatialBias, configData.generateFigures, configData.useUndistortedLocations);
@@ -1632,42 +1657,20 @@ void calibratorNode::evaluateFrames() {
 }
 
 //preprocess images
-void calibratorNode::preprocessImage(Mat src, Mat &dst, double a = 1.0, double b = 0.0, bool normalize = false, bool negative = false){
-\
+void calibratorNode::preprocessImage(Mat src, Mat &dst, double a = 1.0, double b = 0.0, bool normalize = false, bool negative = false) {
 
     Mat newImage = Mat::zeros(src.size(), src.type());
 
-    if (src.type() == CV_8UC1){
+	if (src.type() == CV_8UC1) { for (int j = 0; j < src.rows; j++) { for (int i = 0; i < src.cols; i++) { newImage.at<uchar>(j,i) = saturate_cast<uchar> (a * (src.at<uchar>(j,i))+ b); } } }
+	else { for (int j = 0; j < src.rows; j++) { for (int i = 0; i < src.cols; i++) { for (int c = 0; c< 3; c++) { newImage.at<Vec3b>(j,i)[c] = saturate_cast<uchar> (a * (src.at<Vec3b>(j,i)[c])+ b); } } } }
 
-        for (int j = 0; j < src.rows; j++){
-            for (int i = 0; i < src.cols; i++){
-                    newImage.at<uchar>(j,i) = saturate_cast<uchar> (a * (src.at<uchar>(j,i))+ b);
-            }
-        }
-
-    }else{
-
-        for (int j = 0; j < src.rows; j++){
-            for (int i = 0; i < src.cols; i++){
-                for (int c = 0; c< 3; c++){
-                    newImage.at<Vec3b>(j,i)[c] = saturate_cast<uchar> (a * (src.at<Vec3b>(j,i)[c])+ b);
-                }
-            }
-        }
-
-    }
-
-
-    //normalize
-    if (normalize){
+    if (normalize) {
         cvtColor(newImage, src, CV_RGB2GRAY);
         equalizeHist(src,newImage);
     }
 
-
     //invert
-
-    if (negative){
+    if (negative) {
 
     if (src.type() == CV_8UC1){
 
@@ -1691,11 +1694,7 @@ void calibratorNode::preprocessImage(Mat src, Mat &dst, double a = 1.0, double b
 
     }
 
-
-
-
     dst = Mat(newImage);
-
 }
 
 

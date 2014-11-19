@@ -1,46 +1,33 @@
 <launch>
 
 	<node name="calibrator" pkg="thermalvis" type="calibrator" output="screen">
-		
-		<!-- INPUT -->	
-		<param name="video_stream" value="thermalvis/streamer/" />
-		
-		<!-- PARAMETERS -->
-		<param name="calibType" value="single" />
-		<param name="patternType" value="mask" type="str" />
-		<param name="maxPatterns" value="30" type="int" />
-		<param name="maxFrames" value="200" type="int" />
-		<param name="setSize" value="10" type="int" />
-		<param name="optMethod" value="enhancedMCM" type="str" />
-		<param name="gridSize" value="10.0" type="double" />
-		<param name="xCount" value="12" type="int" />
-		<param name="yCount" value="8" type="int" />
-		<param name="alpha" value="1.00" type="double" />
-		<param name="autoAlpha" value="true" />
-		
-		<!-- OUTPUT -->
-		<param name="outputFolder" value="~/calibration_output/" />
 		<param name="debugMode" value="true" />
+		<param name="video_stream" value="thermalvis/streamer/" />
+		<param name="outputFolder" value="~\Documents\GitHub\thermalvis\output" />
+		
+		<param name="calibType" value="single" />
+		<param name="patternType" value="mask" />
+		<param name="gridSize" value="10.0" />
+		<param name="xCount" value="12" />
+		<param name="yCount" value="8" />
+		
+		<param name="maxPatterns" value="20" />
+		<param name="maxFrames" value="20" />
+		<param name="setSize" value="5" />
+		<param name="optMethod" value="enhancedMCM" />
+		
 		<param name="undistortImages" value="true" />
-
+		<param name="alpha" value="1.00" />
+		<param name="autoAlpha" value="true" />
 	</node>
 
 	<rosparam command="delete" param="/streamer" />
 	
 	<node name="streamer" pkg="thermalvis" type="streamer" output="screen">
-	
-		<param name="debugMode" value="false" />
-	
 		<param name="source" value="directory" />
 		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\calibration" />
 		<param name="inputDatatype" value="0" />
-		<param name="markDuplicates" value="true" />
-		
-		<param name="loopMode" value="true" />
-		
-		<param name="outputColor" value="false" />
 		<param name="output8bit" value="true" />
-
 	</node>
 	
 	<node name="image_view" pkg="image_view" type="image_view" output="screen">

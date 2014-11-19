@@ -2,3 +2,4 @@
 *.dox
 *.wikidoc
 *.user
+output/*

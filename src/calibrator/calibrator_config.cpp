@@ -1,6 +1,7 @@
 #include "calibrator/calibrator_config.hpp"
 
-calibratorSharedData::calibratorSharedData()
+calibratorSharedData::calibratorSharedData() :
+	autoTimeout(0.0)
 { }
 
 calibratorRealtimeOnlyData::calibratorRealtimeOnlyData()
@@ -14,14 +15,17 @@ calibratorLaunchOnlyData::calibratorLaunchOnlyData() :
 	fixPrincipalPoint(false),
 	noConstraints(false),
 	video_stream("video_stream"),
-	ignoreDistortion("ignoreDistortion"),
 	useRationalModel(false),
 	calibType("calibType"),
 	useUndistortedLocations(false),
 	removeSpatialBias(true),
+	maxTime(600.0),
 	video_stream_secondary("video_stream_secondary"),
 	flowThreshold(1e-4),
 	maxFrac(0.05),
+	maxCandidates(1000),
+	maxTests(100),
+	ignoreDistortion(false),
 	errorThreshold(0.0),
 	patternType("mask"),
 	setSize(DEFAULT_SET_SIZE),
