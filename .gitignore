@@ -3,3 +3,4 @@
 *.wikidoc
 *.user
 output/*
+scripts/batch/IPC Sample.log

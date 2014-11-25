@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 IF(WIN32 OR win64)
-	IF(USE_OPTRIS_SDK)	
+	IF(USE_OPTRIS)	
 		SET(OptrisSDK "${OptrisTestLoc}" CACHE FILEPATH "Include directory for Optris SDK")
 		IF(EXISTS "${OptrisSDK}")
 			SET(OptrisSDK_FOUND TRUE)
