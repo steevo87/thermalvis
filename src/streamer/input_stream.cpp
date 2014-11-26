@@ -525,11 +525,12 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 #endif
 		// Substitute tildes
         string** stringsToRepair;
-        int nStringsToRepair = 3;
+        int nStringsToRepair = 4;
         stringsToRepair = new string*[nStringsToRepair];
         stringsToRepair[0] = &folder;
         stringsToRepair[1] = &outputFolder;
         stringsToRepair[2] = &file;
+		stringsToRepair[3] = &intrinsics;
 
         for (int iii = 0; iii < nStringsToRepair; iii++) {
             if (stringsToRepair[iii]->size() > 0) {

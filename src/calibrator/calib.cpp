@@ -1911,18 +1911,20 @@ void calibratorNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs:
 		elapsedInputTime = timeElapsedMS(elapsed_timer);
 	}
     
-    
-    if (configData.verboseMode) { ROS_INFO("Handling image (camera: %d)", camera_index); }
-    
     unsigned int totalMinPatterns = (unsigned int) patternIndices[0].size();
     
     for (unsigned int iii = 1; iii < configData.numCams; iii++) {
 		totalMinPatterns = min(totalMinPatterns, ((unsigned int)(patternIndices[iii].size())));
 	}
     
-    if ((configData.stopCapturingAtLimit) || ((((int)totalMinPatterns) > configData.maxPatterns) && (configData.maxPatterns > 0)) || ((((int)frameCount[camera_index]) > configData.maxFrames) && (configData.maxFrames > 0)) ) { stillCollecting = false; }
+    if ((configData.stopCapturingAtLimit) || ((((int)totalMinPatterns) > configData.maxPatterns) && (configData.maxPatterns > 0)) || ((((int)frameCount[camera_index]) > configData.maxFrames) && (configData.maxFrames > 0)) ) { 
+		stillCollecting = false; 
+		isValid = false;
+	}
     
 	if (!stillCollecting) {	return; }
+
+	 if (configData.verboseMode) { ROS_INFO("Handling image (camera: %d)", camera_index); }
 
 	while (!infoProcessed[camera_index]) {
 		

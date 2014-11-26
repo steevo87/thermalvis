@@ -4,3 +4,4 @@
 *.user
 output/*
 scripts/batch/IPC Sample.log
+scripts/batch/heatmap-*.jpg

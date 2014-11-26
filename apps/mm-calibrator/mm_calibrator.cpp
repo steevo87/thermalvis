@@ -120,9 +120,14 @@ void ProcessingThread::establishCalibratorLink(MainWindow_calibrator *gui) {
 
 void ProcessingThread::run() {
 
-	while (sM->wantsToRun()) {
+	bool stillValid = true;
+
+	while (sM->wantsToRun() && cA->wantsToRun()) {
 		sM->serverCallback(*scData);
-		if (!sM->loopCallback()) break;
+		if (!sM->loopCallback()) {
+			stillValid = false;
+			break;
+		}
 		sM->imageLoop();
 		if (!sM->get8bitImage(workingFrame, camInfo)) continue;
 		cA->serverCallback(*caData);
@@ -130,7 +135,7 @@ void ProcessingThread::run() {
 		cA->loopCallback();
 	}
 
-	performCalibration();
+	if (stillValid) performCalibration();
 }
 
 void ProcessingThread::performCalibration() {

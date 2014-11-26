@@ -1,0 +1,41 @@
+<launch>
+
+	<node name="calibrator" pkg="thermalvis" type="calibrator" output="screen">
+		<param name="debugMode" value="true" />
+		<param name="video_stream" value="thermalvis/streamer/" />
+		<param name="outputFolder" value="~\Documents\GitHub\thermalvis\calib" />
+		
+		<param name="calibType" value="single" />
+		<param name="patternType" value="mask" />
+		<param name="gridSize" value="10.0" />
+		<param name="xCount" value="12" />
+		<param name="yCount" value="8" />
+		
+		<param name="maxPatterns" value="1000" />
+		<param name="maxFrames" value="1000" />
+		<param name="setSize" value="5" />
+		<param name="optMethod" value="enhancedMCM" />
+		
+		<param name="undistortImages" value="true" />
+		<param name="alpha" value="1.00" />
+		<param name="autoAlpha" value="true" />
+	</node>
+
+	<rosparam command="delete" param="/streamer" />
+	
+	<node name="streamer" pkg="thermalvis" type="streamer" output="screen">
+		<param name="source" value="directory" />
+		<param name="directory" value="~\Documents\GitHub\thermalvis\output\images" />
+		<param name="inputDatatype" value="1" />
+		<param name="output8bit" value="true" />
+	</node>
+	
+	<node name="image_view" pkg="image_view" type="image_view" output="screen">
+		<remap from="image" to="/thermalvis/calibrator/image_col"/>
+		<param name="autosize" value="true" />
+	</node>
+	
+	<!-- <node name="reconfigure_streamer" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" args="/streamer"/> -->
+	<!-- <node name="reconfigure_calibrator" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" args="/calibrator"/> -->
+
+</launch>
