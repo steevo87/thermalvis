@@ -22,6 +22,7 @@ struct calibratorSharedData {
 	bool drawGrids;
 	bool debugMode;
 	bool verboseMode;
+	bool stopCapturingAtLimit;
 
 	calibratorSharedData();
 };
@@ -36,7 +37,6 @@ struct calibratorRealtimeOnlyData {
 /// \brief		Parameters that are only changeable from launch interface
 struct calibratorLaunchOnlyData {
 	bool specialMode;
-	bool stopCapturingAtLimit;
 	std::string intrinsicsFiles[MAX_ALLOWABLE_CAMS];
 	bool invert[MAX_ALLOWABLE_CAMS];
 	std::string patternType, optMethod;

@@ -1,7 +1,8 @@
 #include "calibrator/calibrator_config.hpp"
 
 calibratorSharedData::calibratorSharedData() :
-	autoTimeout(0.0)
+	autoTimeout(0.0),
+	stopCapturingAtLimit(false)
 { }
 
 calibratorRealtimeOnlyData::calibratorRealtimeOnlyData()
@@ -39,7 +40,6 @@ calibratorLaunchOnlyData::calibratorLaunchOnlyData() :
 	wantsIntrinsics(false),
 	alpha(0.0),
 	autoAlpha(true),
-	stopCapturingAtLimit(false),
 	patternDetectionMode("find"),
 	numCams(1),
 	invertPrimary(false), 

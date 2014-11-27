@@ -98,23 +98,13 @@ bool calibratorData::assignFromXml(xmlParameters& xP) {
 #endif
 #endif
 
-#ifdef _BUILD_FOR_ROS_
-void calibratorNode::serverCallback(thermalvis::calibratorConfig &config, uint32_t level) {
-#else
-void calibratorNode::serverCallback(calibratorConfig &config) {
-#endif
-
-	configData.verboseMode = config.verboseMode;
-
-}
-
 void calibratorNode::prepareExtrinsicPatternSubsets() {
 
         ROS_WARN("prepareExtrinsicPatternSubsets...");
         
         srand((unsigned)time(0));
         
-        ROS_INFO("extrinsicsPointSets[0].size() = (%d)", extrinsicsPointSets[0].size());
+        ROS_INFO("extrinsicsPointSets[0].size() = (%d)", int(extrinsicsPointSets[0].size()));
 
 	vector<vector<Point2f> > tmpSet[MAX_ALLOWABLE_CAMS];
 	
@@ -138,21 +128,13 @@ void calibratorNode::prepareExtrinsicPatternSubsets() {
 		
 	}
 	
-	ROS_INFO("extrinsicCandidateSets[0].size() = (%d)", extrinsicCandidateSets[0].size());
+	ROS_INFO("extrinsicCandidateSets[0].size() = (%d)", int(extrinsicCandidateSets[0].size()));
+	
+	for (unsigned int xxx = 0; xxx < configData.numCams; xxx++) tmpSet[xxx].clear();
 	
 	for (unsigned int xxx = 0; xxx < configData.numCams; xxx++) {
-		tmpSet[xxx].clear();
+		for (unsigned int iii = 0; iii < extrinsicsPointSets[xxx].size(); iii++) tmpSet[xxx].push_back(extrinsicsPointSets[xxx].at(iii));
 	}
-	
-	for (unsigned int xxx = 0; xxx < configData.numCams; xxx++) {
-		
-		for (unsigned int iii = 0; iii < extrinsicsPointSets[xxx].size(); iii++) {
-			tmpSet[xxx].push_back(extrinsicsPointSets[xxx].at(iii));
-		}
-		
-	}
-	
-	ROS_INFO("Here.");
 	
 	// While the testing quantity is insufficient
 	while ( (((int)extrinsicTestingSets[0].size()) < configData.maxTests) && (configData.maxTests > 0) && (tmpSet[0].size() > 0) ) {
@@ -166,47 +148,33 @@ void calibratorNode::prepareExtrinsicPatternSubsets() {
 		
 	}
 	
-	ROS_INFO("extrinsicTestingSets[0].size() = (%d)", extrinsicTestingSets[0].size());
+	ROS_INFO("extrinsicTestingSets[0].size() = (%d)", int(extrinsicTestingSets[0].size()));
 	
 }
 
 void calibratorNode::create_virtual_pairs() {
 	
-	ROS_INFO("Extracted patterns for camera (1) : (%d/%d) & (2) : (%d/%d)", pointSets[0].size(), frameCount[0], pointSets[1].size(), frameCount[1]);
+	ROS_INFO("Extracted patterns for camera (1) : (%d/%d) & (2) : (%d/%d)", int(pointSets[0].size()), int(frameCount[0]), int(pointSets[1].size()), int(frameCount[1]));
 
 	
 	// For each pattern from first camera
-	for (unsigned int aaa = 0; aaa < configData.numCams; aaa++) {
+	for (int aaa = 0; aaa < configData.numCams; aaa++) {
 		
-		for (unsigned int bbb = 0; bbb < configData.numCams; bbb++) {
+		for (int bbb = 0; bbb < configData.numCams; bbb++) {
 			
-			if (aaa == bbb) {
-				continue;
-			}
+			if (aaa == bbb) continue;
 			
 			if (configData.verboseMode) { ROS_INFO("Finding virtual frames for camera relationship (%d) -> (%d).", aaa, bbb); }
 			
-			for (unsigned int iii = 0; iii < patternTimestamps[aaa].size(); iii++) {
+			for (int iii = 0; iii < patternTimestamps[aaa].size(); iii++) {
 		
-				unsigned int matchingIndex = 0;
-				
-				/*
-				if (aaa == 0) {
-					ROS_INFO("iii = (%d); time = (%f)", iii, patternTimestamps[aaa].at(iii).toSec());
-					ROS_INFO("matchingIndex = (%d); time = (%f)", 0, patternTimestamps[bbb].at(iii).toSec());
-				}
-				*/
+				int matchingIndex = 0;
 				
 				// Find two closest patterns for second camera
 				while (patternTimestamps[aaa].at(iii).toSec() > patternTimestamps[bbb].at(matchingIndex).toSec()) {
 					//ROS_INFO("matchingIndex = (%d); time2 = (%f)", matchingIndex, patternTimestamps[bbb].at(matchingIndex).toSec());
 					matchingIndex++;
-					
-				
-					if (matchingIndex >= patternTimestamps[bbb].size()) {
-						break;
-					}
-				
+					if (matchingIndex >= patternTimestamps[bbb].size()) break;
 				}
 				
 				if (matchingIndex >= patternTimestamps[bbb].size()) {
@@ -221,7 +189,7 @@ void calibratorNode::create_virtual_pairs() {
 					continue;
 				}
 				
-				if (configData.verboseMode) { ROS_INFO("Best index matches for (%d/%d) = (%d-%d/%d)", iii, patternTimestamps[aaa].size(), matchingIndex-1, matchingIndex, patternTimestamps[bbb].size()); }
+				if (configData.verboseMode) { ROS_INFO("Best index matches for (%d/%d) = (%d-%d/%d)", iii, int(patternTimestamps[aaa].size()), matchingIndex-1, matchingIndex, int(patternTimestamps[bbb].size())); }
 				if (configData.verboseMode) { ROS_INFO("Best index matches for (%d)[%f] = (%d)[%f] and (%d)[%f]", iii, patternTimestamps[aaa].at(iii).toSec(), matchingIndex-1, patternTimestamps[bbb].at(matchingIndex-1).toSec(), matchingIndex, patternTimestamps[bbb].at(matchingIndex).toSec()); }
 				
 				double interp_distance_1 = abs(patternTimestamps[aaa].at(iii).toSec() - patternTimestamps[bbb].at(matchingIndex-1).toSec());
@@ -245,27 +213,7 @@ void calibratorNode::create_virtual_pairs() {
 					if (motion < configData.maxInterpolationMotion) {
 						extrinsicsPointSets[aaa].push_back(pointSets[aaa].at(iii));
 						extrinsicsPointSets[bbb].push_back(virtualPointset);
-					}
-					
-					/*
-					ROS_INFO("motion(%d, %d) [%d] [%d - %d] = (%f)", aaa, bbb, iii, matchingIndex-1, matchingIndex, motion);
-					
-					Mat debugImage;
-					
-					ROS_INFO("Combining images...");
-					
-					combineImages(displayImages[bbb].at(patternIndices[bbb].at(matchingIndex-1)), displayImages[bbb].at(patternIndices[bbb].at(matchingIndex)), debugImage);
-					
-					ROS_INFO("Drawing chessboard.. (%d)", virtualPointset.size());
-					
-					drawChessboardCorners(debugImage, cvSize(configData.xCount, configData.yCount), Mat(virtualPointset), true);
-					
-					imshow("debugImage", debugImage);
-					waitKey();
-					
-					ROS_INFO("Displayed.");
-					*/
-					
+					}	
 				}
 				
 			}
@@ -274,7 +222,7 @@ void calibratorNode::create_virtual_pairs() {
 		
 	}
 	
-	if (configData.verboseMode) { ROS_INFO("Found (%d // %d) virtual pairs", extrinsicsPointSets[0].size(), extrinsicsPointSets[1].size()); }
+	if (configData.verboseMode) { ROS_INFO("Found (%d // %d) virtual pairs", int(extrinsicsPointSets[0].size()), int(extrinsicsPointSets[1].size())); }
 	 
 	if (configData.verboseMode) { ROS_INFO("Completed generation of virtual frame pairs."); }
 
@@ -591,7 +539,7 @@ void calibratorNode::startUndistortionPublishing() {
 	
 #ifdef _BUILD_FOR_ROS_
 	// Set up timer
-	timer = ref->createTimer(ros::Duration(avgTime / 1000.0), &calibratorNode::publishUndistorted, this);
+	// timer = ref->createTimer(ros::Duration(avgTime / 1000.0), &calibratorNode::publishUndistorted, this);
 #endif
 
 }
@@ -695,16 +643,16 @@ void calibratorNode::startRectificationPublishing() {
 	
 #ifdef _BUILD_FOR_ROS_
 	// Set up timer
-	timer = ref->createTimer(ros::Duration(avgTime / 1000.0), &calibratorNode::publishRectified, this);
+	// timer = ref->createTimer(ros::Duration(avgTime / 1000.0), &calibratorNode::publishRectified, this);
 #endif
 
 }
 
-#ifdef _BUILD_FOR_ROS_
-void calibratorNode::publishUndistorted(const ros::TimerEvent& event) {
-#else
+//#ifdef _BUILD_FOR_ROS_
+//void calibratorNode::publishUndistorted(const ros::TimerEvent& event) {
+//#else
 void calibratorNode::publishUndistorted() {
-#endif
+//#endif
 	// if (configData.verboseMode) { ROS_INFO("Publishing undistorted images..."); }
 	
 	Mat dispMat;
@@ -793,11 +741,11 @@ void calibratorNode::publishUndistorted() {
 	undistortionCount++;
 }
 
-#ifdef _BUILD_FOR_ROS_
-void calibratorNode::publishRectified(const ros::TimerEvent& event) {
-#else
+//#ifdef _BUILD_FOR_ROS_
+//void calibratorNode::publishRectified(const ros::TimerEvent& event) {
+//#else
 void calibratorNode::publishRectified() {
-#endif
+//#endif
 	//ROS_INFO("Entered timed (rectification) loop...");
 	
 	Mat dispMat;
@@ -893,7 +841,7 @@ void calibratorNode::performExtrinsicCalibration() {
         //HGH - use all available patterns
         //-> configData.optimizationMethod = allPatterns
     
-    ROS_INFO("Optimizing calibration sets, (%d) candidates and (%d) testing patterns", extrinsicCandidateSets[0].size(), extrinsicTestingSets[0].size());
+    ROS_INFO("Optimizing calibration sets, (%d) candidates and (%d) testing patterns", int(extrinsicCandidateSets[0].size()), int(extrinsicTestingSets[0].size()));
     
     int extrinsicsFlags = 0;
     
@@ -922,7 +870,7 @@ void calibratorNode::performExtrinsicCalibration() {
     std::cout << "distCoeffVecs[0] = " << distCoeffVecs[0] << endl;
 	std::cout << "distCoeffVecs[1] = " << distCoeffVecs[1] << endl;
 	
-	ROS_WARN("Optimizing with (%d) candidates and (%d) test patterns...", extrinsicCandidateSets[0].size(), extrinsicTestingSets[0].size());
+	ROS_WARN("Optimizing with (%d) candidates and (%d) test patterns...", int(extrinsicCandidateSets[0].size()), int(extrinsicTestingSets[0].size()));
 	
 	optimizeCalibrationSets(extrinsicsSizes, 2, cameraMatrices, distCoeffVecs, extrinsicsDistributionMap, extrinsicCandidateSets, extrinsicTestingSets, row, configData.optimizationMethod, configData.setSize, extrinsicTagNames, extrinsicSelectedTags, extrinsicsFlags);
 
@@ -1067,14 +1015,14 @@ void calibratorNode::performIntrinsicCalibration() {
 	if (configData.fixPrincipalPoint) intrinsicsFlags += CALIB_FIX_PRINCIPAL_POINT;
 	
 	// #pragma parallel for
-	for (unsigned int xxx = 0; xxx < configData.numCams; xxx++) {
+	for (int xxx = 0; xxx < configData.numCams; xxx++) {
 		
-		ROS_INFO("Intrinsically calibrating camera (%d) with (%d / %d / %d) patterns...", xxx, candidateSets[xxx].size(), testingSets[xxx].size(), pointSets[xxx].size());
+		ROS_INFO("Intrinsically calibrating camera (%d) with (%d / %d / %d) patterns...", xxx, int(candidateSets[xxx].size()), int(testingSets[xxx].size()), int(pointSets[xxx].size()));
 		
 		bool debugOptimizationFunction = false;
 		optimizeCalibrationSet(imSize[xxx], candidateSets[xxx], testingSets[xxx], row, subselectedTags_intrinsics[xxx], configData.optimizationMethod, configData.setSize, debugOptimizationFunction, configData.removeSpatialBias, configData.generateFigures, configData.useUndistortedLocations, intrinsicsFlags);
 		
-		ROS_INFO("Set optimized (%d)", subselectedTags_intrinsics[xxx].size());
+		ROS_INFO("Set optimized (%d)", int(subselectedTags_intrinsics[xxx].size()));
 		
 		vector< vector<Point3f> > objectPoints;
 		vector< vector<Point2f> > subselectedPatterns;
@@ -1099,7 +1047,7 @@ void calibratorNode::performIntrinsicCalibration() {
 		//extendedReprojectionError_intrinsics[xxx] = calculateERE(imSize[xxx], objectPoints.at(0), subselectedPatterns, cameraMatrices[xxx], distCoeffVecs[xxx], configData.generateFigures, errValues);
 		extendedReprojectionError_intrinsics[xxx] = calculateERE(imSize[xxx], objectPoints.at(0), testingSets[xxx], cameraMatrices[xxx], distCoeffVecs[xxx], configData.removeSpatialBias, configData.generateFigures, configData.useUndistortedLocations);
 		
-		ROS_INFO("Extended Reprojection error = %f (%d patterns)", extendedReprojectionError_intrinsics[xxx], testingSets[xxx].size());	
+		ROS_INFO("Extended Reprojection error = %f (%d patterns)", extendedReprojectionError_intrinsics[xxx], int(testingSets[xxx].size()));	
 	}
 	
 
@@ -1405,7 +1353,7 @@ bool calibratorNode::findPattern(const Mat& im, vector<Point2f>& dst, Mat& prev,
 
 	frameTrackingTime += elapsedTrackingTime;
 	
-	ROS_INFO("dst.size() = (%d); status = (%d)", dst.size(), retVal);
+	ROS_INFO("dst.size() = (%d); status = (%d)", int(dst.size()), retVal);
 
     return retVal;
 		
@@ -1798,7 +1746,7 @@ void calibratorNode::updatePairs() {
 
 
                 if ((validPairs[0].at(currentPair) >= displayImages[0].size()) || (validPairs[1].at(currentPair) >= displayImages[1].size())) {
-                        ROS_WARN("Skipping detection because there appear to be insufficient buffered frames [(%d)(%d) : (%d)(%d)", validPairs[0].at(currentPair), displayImages[0].size(), validPairs[1].at(currentPair), displayImages[1].size());
+                        ROS_WARN("Skipping detection because there appear to be insufficient buffered frames [(%d)(%d) : (%d)(%d)", validPairs[0].at(currentPair), int(displayImages[0].size()), validPairs[1].at(currentPair), int(displayImages[1].size()));
                         return;
                 }
 
@@ -1848,7 +1796,7 @@ void calibratorNode::updatePairs() {
 
                         extrinsicsPointSets[0].push_back(cornerSet_1);
                         extrinsicsPointSets[1].push_back(cornerSet_2);
-                        ROS_INFO("(%d) patterns found from (%d) valid frame pairs...", extrinsicsPointSets[0].size(), validPairs[0].size());
+                        ROS_INFO("(%d) patterns found from (%d) valid frame pairs...", int(extrinsicsPointSets[0].size()), int(validPairs[0].size()));
                         pointSets[0].push_back(cornerSet_1);
                         pointSets[1].push_back(cornerSet_2);
                         //ROS_INFO("For cam (0), (%d) patterns found.", pointSets[0].size());
@@ -2179,7 +2127,6 @@ calibratorNode::calibratorNode(calibratorData startupData) :
 
 #ifdef _BUILD_FOR_ROS_
 	timer = nh.createTimer(ros::Duration(DEFAULT_TIMER_PERIOD), &calibratorNode::timerCallback, this);
-	ref = &nh;
 	sprintf(nodeName, "%s", ros::this_node::getName().c_str());
 #endif
 
@@ -2254,7 +2201,7 @@ calibratorNode::calibratorNode(calibratorData startupData) :
     
 }
 
-#ifdef _BUILD_FOR_ROS
+#ifdef _BUILD_FOR_ROS_
 void calibratorNode::timerCallback(const ros::TimerEvent&) {
 #else
 void calibratorNode::loopCallback() {
@@ -2287,7 +2234,10 @@ void calibratorNode::loopCallback() {
 
 #ifdef _BUILD_FOR_ROS_
 void calibratorNode::serverCallback(thermalvis::calibratorConfig &config, uint32_t level) {
-	
+#else
+void calibratorNode::serverCallback(calibratorConfig &config) {
+#endif
+
 	configData.verboseMode = config.verboseMode;
 	
 	configData.drawGrids = config.drawGrids;
@@ -2354,7 +2304,6 @@ void calibratorNode::serverCallback(thermalvis::calibratorConfig &config, uint32
 		configData.minDiv[1] = config.minDiv_secondary;
 		
 }
-#endif
 
 void calibratorNode::set_ready_for_output() {
 	readyForOutput = true;

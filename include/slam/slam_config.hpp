@@ -64,7 +64,7 @@ struct slamRealtimeOnlyData {
 /// \brief		Parameters that are only changeable from launch interface
 struct slamLaunchOnlyData {
 	bool specialMode, logErrors, keyframeEvaluationMode, writePoses, inspectInitialization;
-	std::string initializationScorecard, evaluationFile, flowSource, mapperSource, extrinsicsFile;
+	std::string initializationScorecard, evaluationFile, flowSource, mapperSource, extrinsicsFile, stream, errorFile;
 	int baMode, evaluateParameters;
 #ifndef _BUILD_FOR_ROS_
 	bool displayDebug, displayGUI;

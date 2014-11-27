@@ -23,6 +23,11 @@
 
 #ifdef _BUILD_FOR_ROS_
 #include "slamConfig.h"
+#include "ros/ros.h"
+#include <ros/header.h>
+#include <sensor_msgs/PointCloud2.h>
+#include "feature_tracks.h"
+#include "pose_confidence.h"
 #endif
 
 #include "slam_config.hpp"
@@ -133,8 +138,6 @@ private:
 	ros::Timer timer;
 	ros::Subscriber tracks_sub, info_sub, pose_sub;
 	ros::Publisher path_pub, camera_pub, points_pub, pose_pub, confidence_pub;
-	dynamic_reconfigure::Server<thermalvis::monoslamConfig> server;
-	dynamic_reconfigure::Server<thermalvis::monoslamConfig>::CallbackType f;
 	char pose_pub_name[256];
 	
 	
@@ -272,13 +275,13 @@ public:
 	void getBasisNodes(vector<unsigned int>& basisNodes, unsigned int idx);
 	
 #ifdef _BUILD_FOR_ROS_
-	void handle_tracks(const thermalvis::feature_tracksConstPtr& msg);
+	void handle_tracks(const thermalvis::feature_tracks& msg);
 #else
 	void handle_tracks(const vector<featureTrack>* msg);
 #endif
 
 #ifdef _BUILD_FOR_ROS_
-	void integrateNewTrackMessage(const thermalvis::feature_tracksConstPtr& msg);
+	void integrateNewTrackMessage(const thermalvis::feature_tracks& msg);
 #else
 	void integrateNewTrackMessage(const vector<featureTrack>* msg);
 #endif

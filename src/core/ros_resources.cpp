@@ -4,7 +4,7 @@
 
 #ifdef _BUILD_FOR_ROS_
 
-#include "ros_resources.hpp"
+#include "core/ros_resources.hpp"
 
 void changemode(int dir)
 {

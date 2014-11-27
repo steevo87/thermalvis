@@ -667,7 +667,6 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 	if (loopMode == true) ROS_INFO("Option to loop has been selected.");
 	
 	if ((intrinsics != "intrinsics") && (verboseMode)) ROS_INFO("Intrinsics at (%s) selected.", intrinsics.c_str());
-	}
 
 	if (extrinsics != "extrinsics") {
 		ROS_INFO("Extrinsics at %s selected.", extrinsics.c_str());

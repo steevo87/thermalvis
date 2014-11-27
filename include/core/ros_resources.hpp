@@ -7,8 +7,7 @@
 #define _THERMALVIS_ROS_RESOURCES_H_
 
 #include "tools.hpp"
-#include "general_resources.hpp"
-#include "opencv_resources.hpp"
+#include "core/general_resources.hpp"
 
 /***** ROS Stuff *****/
 #include "ros/ros.h"

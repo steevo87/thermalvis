@@ -30,6 +30,7 @@ protected:
 	bool debugMode, wantsToOutput, writeInColor;
 	cv::Mat *displayImage;
 	char *output_directory;
+	char nodeName[256];
 	std::ofstream timestamps_stream;
 
 public:
@@ -53,6 +54,7 @@ struct commonData {
     string topic, topicParent, read_addr;
     string outputFolder; /**< directory where output information will be written */
 	bool *wantsToTerminate;
+	
 
 	commonData() : outputFolder("outputFolder"), read_addr("./") { };
 	void setTerminationTrigger(bool* trigger) { wantsToTerminate = trigger; }

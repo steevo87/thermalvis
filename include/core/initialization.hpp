@@ -7,10 +7,9 @@
 #ifndef _THERMALVIS_INITIALIZATION_H_
 #define _THERMALVIS_INITIALIZATION_H_
 
-#include "general_resources.hpp"
-#include "opencv_resources.hpp"
-#include "ros_resources.hpp"
-#include "features.hpp"
+#include "core/general_resources.hpp"
+#include "core/ros_resources.hpp"
+#include "core/features.hpp"
 
 #define MAXIMUM_FRAMES_TO_STORE 		2000	// careful about setting this too high for memory
 #define MAXIMUM_FEATURES_PER_DETECTOR	5000
