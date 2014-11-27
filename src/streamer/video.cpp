@@ -4,7 +4,7 @@
 
 #if !defined(_IS_WINDOWS_) && defined(_AVLIBS_AVAILABLE_)
 	
-#include "video.hpp"
+#include "streamer/video.hpp"
 
 #define __CONFIG_0__
 

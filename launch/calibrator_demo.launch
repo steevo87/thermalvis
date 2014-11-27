@@ -2,6 +2,8 @@
 
 	<node name="calibrator" pkg="thermalvis" type="calibrator" output="screen">
 		<param name="debugMode" value="true" />
+		<param name="verboseMode" value="true" />
+		
 		<param name="video_stream" value="thermalvis/streamer/" />
 		<param name="outputFolder" value="~\Documents\GitHub\thermalvis\output" />
 		
@@ -24,6 +26,9 @@
 	<rosparam command="delete" param="/streamer" />
 	
 	<node name="streamer" pkg="thermalvis" type="streamer" output="screen">
+		<param name="debugMode" value="true" />
+		<param name="verboseMode" value="true" />
+		
 		<param name="source" value="directory" />
 		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\calibration" />
 		<param name="inputDatatype" value="0" />

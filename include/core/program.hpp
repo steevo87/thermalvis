@@ -14,6 +14,12 @@
 #include "tools.hpp"
 #include "camera.hpp"
 
+#ifdef _IS_LINUX_
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
 #define MAX_INPUT_ARG_LENGTH 256
 
 class GenericOptions {

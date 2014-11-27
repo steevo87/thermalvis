@@ -44,7 +44,12 @@ bool GenericOptions::initializeOutput(char *output_dir) {
 		printf("%s << Using data output directory of <%s>.\n", __FUNCTION__, output_dir);
 		wantsToOutput = true;
 		sprintf(output_directory, "%s", output_dir);
+#ifdef _IS_WINDOWS_
 		CreateDirectory(output_directory, NULL);
+#else
+        struct stat st = {0};
+        if (stat(output_directory,&st) != -1) mkdir(output_directory, 0777);
+#endif
 		char timestamps_file[256];
 		sprintf(timestamps_file, "%s-timestamps.txt", output_dir);
 		timestamps_stream.open(timestamps_file);

@@ -21,7 +21,7 @@
 #include "core/initialization.hpp"
 
 #ifdef _AVLIBS_AVAILABLE_
-#include "video.hpp"
+#include "streamer/video.hpp"
 #endif
 
 #ifdef _USE_BOOST_

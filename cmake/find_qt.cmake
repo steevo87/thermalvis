@@ -46,7 +46,7 @@ IF(USE_QT AND Qt5Widgets_FOUND)
 		SET(QT${UPPERCASE_NAME}_BUILD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qt/${Qt_${UPPERCASE_NAME}_BUILD_DIR}" CACHE STRING "Build directory for Qt ${SUBLIB_NAME} app")
 	endforeach(SUBLIB_NAME) 
 
-	#LIST(APPEND ADDITIONAL_LIBRARIES Qt5::WinMain)
+	LIST(APPEND ADDITIONAL_LIBRARIES Qt5::Widgets)
 ELSEIF(USE_QT)
 	SET(qt_FOUND FALSE)
 	MESSAGE(FATAL_ERROR "Qt5 was not found. Please check that the <Qt5Widgets_DIR> variable points to the location of <Qt5WidgetsConfig.cmake>. If you want to build without the GUI, please deselect the option <BUILD_GUI>")

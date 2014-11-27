@@ -159,7 +159,8 @@ bool slamNode::updatePotentialInitializationFrames() {
 	// that is near-identical. You did something similar for the videoslam keyframe selection system, right?
 
 	if (initialization_store.keyframes.size() == 0) {
-		initialization_store.addKeyframe(latestFrame);
+        cv::Mat dummyMat;
+        initialization_store.addKeyframe(latestFrame, dummyMat);
 		return false;
 	}
 
@@ -180,7 +181,8 @@ bool slamNode::updatePotentialInitializationFrames() {
 			initialization_store.keyframes.erase(initialization_store.keyframes.begin()+idx);
 		}
 
-		initialization_store.addKeyframe(latestFrame);
+        cv::Mat dummyMat;
+        initialization_store.addKeyframe(latestFrame, dummyMat);
 		return true;
 	}
 

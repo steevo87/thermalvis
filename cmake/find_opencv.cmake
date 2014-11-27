@@ -29,11 +29,13 @@ IF(NOT OPENCV_VIZ_FOUND) # If you can't find OpenCV with viz, exclude it and try
 ENDIF()
 
 SET(APOSITION "0")
-while (NOT "${APOSITION}" STREQUAL "-1")
-	STRING( FIND ${OpenCV_LIB_DIR_OPT} "Release/Release" APOSITION )
-	string(REGEX REPLACE "/Release/Release" "/Release" OpenCV_LIB_DIR_OPT "${OpenCV_LIB_DIR_OPT}")
-	string(REGEX REPLACE "/Debug/Debug" "/Debug" OpenCV_LIB_DIR_DBG "${OpenCV_LIB_DIR_DBG}")
-endwhile()
+IF (NOT "${OpenCV_LIB_DIR_OPT}" STREQUAL "")
+	while (NOT "${APOSITION}" STREQUAL "-1")
+		STRING( FIND ${OpenCV_LIB_DIR_OPT} "Release/Release" APOSITION )
+		string(REGEX REPLACE "/Release/Release" "/Release" OpenCV_LIB_DIR_OPT "${OpenCV_LIB_DIR_OPT}")
+		string(REGEX REPLACE "/Debug/Debug" "/Debug" OpenCV_LIB_DIR_DBG "${OpenCV_LIB_DIR_DBG}")
+	endwhile()
+ENDIF()
 
 IF(OpenCV_FOUND AND ("${OpenCV_DIR}" STREQUAL "${OpenCV_CONFIG_PATH}") AND (NOT("${OpenCV_LIB_DIR_DBG}" STREQUAL "/Debug")) AND (NOT("${OpenCV_LIB_DIR_OPT}" STREQUAL "/Release")) )
 	message(STATUS "OpenCV Found!")

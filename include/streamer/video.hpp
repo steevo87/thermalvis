@@ -7,8 +7,8 @@
 #ifndef THERMALVIS_VIDEO_H
 #define THERMALVIS_VIDEO_H
 
-#include "general_resources.hpp"
-#include "ros_resources.hpp"
+#include "core/general_resources.hpp"
+#include "core/ros_resources.hpp"
 
 #include <asm/types.h>          /* for videodev2.h */
 
