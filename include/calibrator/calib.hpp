@@ -68,12 +68,6 @@ public:
 	cv::Mat K[MAX_ALLOWABLE_CAMS];
 	cv::Mat distCoeffs[MAX_ALLOWABLE_CAMS];
 	
-	// MSER settings
-	bool adjustMSER[MAX_ALLOWABLE_CAMS];
-	int delta[MAX_ALLOWABLE_CAMS];
-	double maxVar[MAX_ALLOWABLE_CAMS], minDiv[MAX_ALLOWABLE_CAMS];
-	double areaThreshold[MAX_ALLOWABLE_CAMS];
-
 	string read_addr;
 	
 	calibratorData();

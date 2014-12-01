@@ -272,7 +272,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void main_loop(const ros::TimerEvent& event);
 #else
-	void main_loop(sensor_msgs::CameraInfo *info_msg, const vector<featureTrack>* msg);
+	void main_loop(sensor_msgs::CameraInfo& info_msg, const vector<featureTrack>& msg);
 #endif
 	
 	///brief	Prepares node for termination.
@@ -287,13 +287,13 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void handle_tracks(const thermalvis::feature_tracks& msg);
 #else
-	void handle_tracks(const vector<featureTrack>* msg);
+	void handle_tracks(const vector<featureTrack>& msg);
 #endif
 
 #ifdef _BUILD_FOR_ROS_
 	void integrateNewTrackMessage(const thermalvis::feature_tracks& msg);
 #else
-	void integrateNewTrackMessage(const vector<featureTrack>* msg);
+	void integrateNewTrackMessage(const vector<featureTrack>& msg);
 #endif
 
 	bool evaluationSummaryAndTermination();
