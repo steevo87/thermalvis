@@ -8,6 +8,7 @@
 #include <string>
 
 #define MAX_ALLOWABLE_CAMS		2
+#define MAX_DETECTORS           10
 
 #define DEFAULT_SET_SIZE		10
 #define DEFAULT_GRID_SIZE		10 // (mm)
@@ -54,6 +55,17 @@ struct calibratorLaunchOnlyData {
 	bool noConstraints;
 	bool ignoreDistortion, useRationalModel;
 	double maxInterpolationTimegap, maxInterpolationMotion;
+
+    // Stuff copied from tracker... not sure why all of it is needed
+    // stuff relating to publishing the tracks might be useful for estimating camera motion
+    // from a calibration sequence though.
+    int numDetectors;
+    std::string tracksOutputTopic;
+    bool outputFeatureMotion, normalizeFeatureVelocities, outputTrackCount;
+    std::string detector[MAX_DETECTORS], descriptor[MAX_DETECTORS];
+    double sensitivity[MAX_DETECTORS];
+    std::string method[MAX_DETECTORS];
+    bool method_match[MAX_DETECTORS];
 
 	// Course settings
 	bool useUndistortedLocations;

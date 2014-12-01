@@ -44,6 +44,11 @@ calibratorLaunchOnlyData::calibratorLaunchOnlyData() :
 	numCams(1),
 	invertPrimary(false), 
 	invertSecondary(false),
+    numDetectors(0),
+    tracksOutputTopic(""),
+    outputFeatureMotion(false),
+    normalizeFeatureVelocities(true),
+    outputTrackCount(false),
 #endif
 	specialMode(false)
 { 

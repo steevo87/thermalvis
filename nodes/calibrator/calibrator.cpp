@@ -41,51 +41,51 @@ int main(int argc, char** argv) {
 	}
 	*/
 	
-	while (calib_node.isStillCollecting()) { ros::spinOnce(); }
+    while (calib_node->isStillCollecting()) { ros::spinOnce(); }
 	
 	ROS_INFO("Patterns captured.");
 	
-	calib_node.getFrameTrackingTime();
+    calib_node->getFrameTrackingTime();
 
-	if (calib_node.wantsIntrinsics()) {
+    if (calib_node->wantsIntrinsics()) {
 		
 		ROS_INFO("Performing intrinsic calibration...");
 		
-		calib_node.preparePatternSubsets();
-		calib_node.performIntrinsicCalibration();
+        calib_node->preparePatternSubsets();
+        calib_node->performIntrinsicCalibration();
 		
 		ROS_INFO("Intrinsic calibration completed.");
 
 	} else {
-		calib_node.assignIntrinsics();
+        calib_node->assignIntrinsics();
 	}
 	
-	if (calib_node.wantsExtrinsics()) {
+    if (calib_node->wantsExtrinsics()) {
 		
 		ROS_INFO("Performing extrinsic calibration...");
 
-		calib_node.create_virtual_pairs();
-		calib_node.prepareExtrinsicPatternSubsets();
-		calib_node.performExtrinsicCalibration();
+        calib_node->create_virtual_pairs();
+        calib_node->prepareExtrinsicPatternSubsets();
+        calib_node->performExtrinsicCalibration();
 		
 	}
 	
-	calib_node.writeResults();
+    calib_node->writeResults();
 	
-	calib_node.set_ready_for_output();
+    calib_node->set_ready_for_output();
 	
-	if (calib_node.wantsToUndistort() || (calib_node.wantsToRectify())) {
-		calib_node.getAverageTime();
+    if (calib_node->wantsToUndistort() || (calib_node->wantsToRectify())) {
+        calib_node->getAverageTime();
 	}
 	
-	if (calib_node.wantsToUndistort()) {
+    if (calib_node->wantsToUndistort()) {
 		
-		if (calib_node.wantsIntrinsics()) {
+        if (calib_node->wantsIntrinsics()) {
 			ROS_INFO("Publishing undistorted images...");
 		
-			calib_node.startUndistortionPublishing();
+            calib_node->startUndistortionPublishing();
 			
-			while (calib_node.wantsToUndistort()) {
+            while (calib_node->wantsToUndistort()) {
 				ros::spinOnce();
 			}
 			
@@ -93,14 +93,14 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	if (calib_node.wantsToRectify()) {	
-		if (calib_node.wantsExtrinsics()) {
+    if (calib_node->wantsToRectify()) {
+        if (calib_node->wantsExtrinsics()) {
 			
 			ROS_INFO("Publishing rectified images...");
 		
-			calib_node.startRectificationPublishing();
+            calib_node->startRectificationPublishing();
 			
-			while (calib_node.wantsToRectify()) {
+            while (calib_node->wantsToRectify()) {
 				ros::spinOnce();
 			}
 			
@@ -125,9 +125,9 @@ void mySigintHandler(int sig) {
 
 bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 	
-	numDetectors = 0;
-	
-	nh.param<string>("outputFolder", outputFolder, "outputFolder");
+    numDetectors = 0;
+
+    nh.param<string>("outputFolder", outputFolder, "outputFolder");
 	
 	nh.param<std::string>("topic", topic, "topic");
 	
@@ -154,8 +154,6 @@ bool calibratorData::obtainStartingData(ros::NodeHandle& nh) {
 	
 	//nh.param<int>("maxFeatures", maxFeatures, 100);
 	
-	
-
 	nh.param<bool>("outputFeatureMotion", outputFeatureMotion, false);
 	nh.param<bool>("normalizeFeatureVelocities", normalizeFeatureVelocities, true);
 

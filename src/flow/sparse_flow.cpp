@@ -79,7 +79,7 @@ bool flowConfig::assignStartingData(trackerData& startupData) {
 trackerData::trackerData() : 
 	numDetectors(1), 
 	outputTrackCount(false), 
-	outputFeatureMotion(false) ,
+	outputFeatureMotion(false),
 	outputDebugImages(false)
 {
 	detector[0] = "FAST";
