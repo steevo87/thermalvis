@@ -415,7 +415,7 @@ slamNode::slamNode(slamData startupData) :
 	std::string topic_tracks = configData.stream + "tracks";
 	
 	ROS_INFO("Connecting to tracks topic. %s", topic_tracks.c_str());
-	tracks_sub = nh.subscribe<thermalvis::feature_tracks>(topic_tracks, 1, &slamNode::handle_tracks);
+    tracks_sub = nh.subscribe(topic_tracks, 1, &slamNode::handle_tracks, this); // <thermalvis::feature_tracks>
 	
 	std::string topic_info = configData.stream + "camera_info";
 	
@@ -547,10 +547,10 @@ slamNode::slamNode(slamData startupData) :
 	infoProcessed = false;
 	
 	ROS_INFO("Connecting to tracks topic. %s", topic_tracks.c_str());
-	tracks_sub = nh.subscribe<thermalvis::feature_tracks>(topic_tracks, 1, &slamNode::handle_tracks);
+    tracks_sub = nh.subscribe(topic_tracks, 1, &slamNode::handle_tracks, this); // <thermalvis::feature_tracks>
 	
 	ROS_INFO("Connecting to camera_info. %s", topic_info.c_str());
-	info_sub = nh.subscribe<sensor_msgs::CameraInfo>(topic_info, 1, &slamNode::handle_info);
+    info_sub = nh.subscribe<sensor_msgs::CameraInfo>(topic_info, 1, &slamNode::handle_info, this);
 	
 	std::string topic_pose = configData.mapperSource + "pose";
 	ROS_INFO("Connecting to pose topic. %s", topic_pose.c_str());
@@ -1205,7 +1205,7 @@ void slamNode::handle_tracks(const vector<featureTrack>& msg) {
 #ifdef _BUILD_FOR_ROS_
 	if (msg.indices.size() == 0) return;
 	latestTracksTime = msg.header.stamp.toSec();
-	frameHeaderHistoryBuffer[frameHeaderHistoryCounter % MAX_HISTORY] = msg.header;
+    frameHeaderHistoryBuffer[frameHeaderHistoryCounter % MAX_HISTORY] = msg.header;
 	frameHeaderHistoryCounter++;
 #else
 	if (msg.size() == 0) return;
@@ -1615,28 +1615,28 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 			configData.cameraData.K = cv::Mat::eye(3, 3, CV_64FC1);
 			
 			for (unsigned int mmm = 0; mmm < 3; mmm++) {
-				for (unsigned int nnn = 0; nnn < 3; nnn++) configData.cameraData.K.at<double>(mmm, nnn) = info_msg.K[3*mmm + nnn];
+                for (unsigned int nnn = 0; nnn < 3; nnn++) configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
 			}
 			
 			cout << configData.cameraData.K << endl;
 
 			configData.cameraData.K_inv = configData.cameraData.K.inv();
 
-			configData.cameraData.cameraSize.width = info_msg.width;
-			configData.cameraData.cameraSize.height = info_msg.height;
+			configData.cameraData.cameraSize.width = info_msg->width;
+			configData.cameraData.cameraSize.height = info_msg->height;
 		
 			unsigned int maxDistortionIndex;
-			if (info_msg.distortion_model == "plumb_bob") {
+			if (info_msg->distortion_model == "plumb_bob") {
 				maxDistortionIndex = 5;
 			} else {
-				if (info_msg.distortion_model != "rational_polynomial") ROS_ERROR("Unfamiliar with <info_msg.distortion_model> of (%s)", info_msg.distortion_model.c_str());
+				if (info_msg->distortion_model != "rational_polynomial") ROS_ERROR("Unfamiliar with <info_msg.distortion_model> of (%s)", info_msg->distortion_model.c_str());
 				maxDistortionIndex = 8;
 			}
 			
 			configData.cameraData.distCoeffs = cv::Mat::zeros(1, maxDistortionIndex, CV_64FC1);
 			configData.cameraData.blankCoeffs = cv::Mat::zeros(1, maxDistortionIndex, CV_64FC1);
 			
-			for (unsigned int iii = 0; iii < maxDistortionIndex; iii++) configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg.D[iii];
+			for (unsigned int iii = 0; iii < maxDistortionIndex; iii++) configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg->D[iii];
 			
 			cout << configData.cameraData.distCoeffs << endl;
 			
@@ -2782,7 +2782,7 @@ bool slamNode::updateLocalPoseEstimates() {
 		bool updated = updateKeyframePoses(tracksFrameShiftedPose, true);
 		lastTestedFrame = tracksFrameShiftedPose.header.seq;
 
-#ifdef _BUILD_FOR_ROS_
+#if defined(_BUILD_FOR_ROS_) && defined(_USE_SBA_)
 		if (configData.publishKeyframes) { drawKeyframes(camera_pub, keyframePoses, storedPosesCount); }
 #endif
 		main_mutex.unlock();
@@ -3096,10 +3096,15 @@ void slamNode::publishPoints(ros::Time stamp, unsigned int seq) {
 	
 	if (configData.verboseMode) { ROS_INFO("Publishing (%d) points", ((int)pointsToPublish.size())); }
 	
-	pcl::toROSMsg(pointsToPublish, pointCloud_message);
+    //pcl::toROSMsg(pointsToPublish, pointCloud_message);
+    //fromPCLPointCloud2(pointsToPublish, pointCloud_message);
+    pcl::PCLPointCloud2 tmpCloud;
+    toPCLPointCloud2(pointsToPublish, tmpCloud);
+    pcl_conversions::fromPCL(tmpCloud, pointCloud_message);
+    //pcl::fromPCLPointCloud2(pcl_pc, cloud);
 	
-	pointCloud_message.header.frame_id = "/world";
-	pointCloud_message.header.stamp = stamp; // pose_msg.header.stamp;
+    pointCloud_message.header.frame_id = "/world";
+    pointCloud_message.header.stamp = stamp; // pose_msg.header.stamp;
 	pointCloud_message.header.seq = seq; // pose_msg.header.seq;
 	
 	//ROS_ERROR("pointCloud_message.size() = (%d, %d)", pointCloud_message.height, pointCloud_message.width);

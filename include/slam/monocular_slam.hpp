@@ -22,10 +22,20 @@
 #include "slam/visualization.hpp"
 
 #ifdef _BUILD_FOR_ROS_
-#include "slamConfig.h"
-#include "ros/ros.h"
-#include <ros/header.h>
+#include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <pcl/conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include "core/ros_resources.hpp"
+#include "slamConfig.h"
+#include <sensor_msgs/CameraInfo.h>
+
+#include <pcl/PCLPointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+
+#include <ros/header.h>
 #include "feature_tracks.h"
 #include "pose_confidence.h"
 #endif
@@ -140,12 +150,12 @@ private:
 	ros::Publisher path_pub, camera_pub, points_pub, pose_pub, confidence_pub;
 	char pose_pub_name[256];
 	
-	
-	sensor_msgs::PointCloud2 pointCloud_message;
+    sensor_msgs::PointCloud2 pointCloud_message;
+    //pcl::PCLPointCloud2 pointCloud_message;
 	
 #endif
 
-	ros::Header frameHeaderHistoryBuffer[MAX_HISTORY];
+    std_msgs::Header frameHeaderHistoryBuffer[MAX_HISTORY];
 
 	geometry_msgs::PoseStamped poseHistoryBuffer[MAX_HISTORY];
 	
@@ -291,7 +301,7 @@ public:
 	void videoslamPoseProcessing();
 
 #ifdef _BUILD_FOR_ROS_
-	void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
+    void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
 	void handle_info(sensor_msgs::CameraInfo *info_msg);
 #endif

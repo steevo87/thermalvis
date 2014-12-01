@@ -86,7 +86,7 @@ void findLinearModel(double* x, double* y, int termsToConsider, double &m, doubl
 /// \brief      Calculates time elapsed since the last time the timer was reset
 double timeElapsedMS(struct timeval& timer, bool reset = true);
 
-
+bool copyROSHeader(const ros::Header& src, ros::Header& dst);
 
 void addUniqueToVector(vector<unsigned int>& dst, vector<unsigned int>& src);
 

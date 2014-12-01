@@ -167,10 +167,6 @@ void findLinearModel(double* x, double* y, int termsToConsider, double &m, doubl
 	
 }
 
-
-
-
-
 void convertUcharToBinary(unsigned char val, int* binaryArray) {
     for (int iii = 0; iii < 8; iii++) {
         if ((int) val >= (int) pow(2, 7-iii)) {
