@@ -268,13 +268,13 @@ bool slamNode::selectBestInitializationPair() {
 #ifdef _BUILD_FOR_ROS_
 void slamNode::main_loop(const ros::TimerEvent& event) {
 #else
-void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg, const vector<featureTrack>* msg) {
+void slamNode::main_loop(sensor_msgs::CameraInfo& info_msg, const vector<featureTrack>& msg) {
 #endif
 
 #ifdef _BUILD_FOR_ROS_	
 	if (!infoProcessed) return;
 #else
-	if (!infoProcessed) handle_info(info_msg);
+	if (!infoProcessed) handle_info(&info_msg);
 	handle_tracks(msg);
 	ROS_INFO("featureTrackVector->size() = (%d)", featureTrackVector->size());
 #endif

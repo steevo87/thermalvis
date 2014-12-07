@@ -58,6 +58,10 @@ namespace ros {
 		return retVal;
 	}
 
+}
+
+namespace std_msgs {
+
 	Header::Header() : seq(0), frame_id("") { }
 
 }

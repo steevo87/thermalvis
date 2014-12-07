@@ -158,9 +158,8 @@ void calibratorNode::create_virtual_pairs() {
 
 	
 	// For each pattern from first camera
-	for (int aaa = 0; aaa < configData.numCams; aaa++) {
-		
-		for (int bbb = 0; bbb < configData.numCams; bbb++) {
+	for (int aaa = 0; aaa < int(configData.numCams); aaa++) {
+		for (int bbb = 0; bbb < int(configData.numCams); bbb++) {
 			
 			if (aaa == bbb) continue;
 			
@@ -1015,7 +1014,7 @@ void calibratorNode::performIntrinsicCalibration() {
 	if (configData.fixPrincipalPoint) intrinsicsFlags += CALIB_FIX_PRINCIPAL_POINT;
 	
 	// #pragma parallel for
-	for (int xxx = 0; xxx < configData.numCams; xxx++) {
+	for (int xxx = 0; xxx < int(configData.numCams); xxx++) {
 		
 		ROS_INFO("Intrinsically calibrating camera (%d) with (%d / %d / %d) patterns...", xxx, int(candidateSets[xxx].size()), int(testingSets[xxx].size()), int(pointSets[xxx].size()));
 		
@@ -2251,7 +2250,7 @@ void calibratorNode::serverCallback(calibratorConfig &config) {
 	configData.maxInterpolationTimegap = config.maxInterpolationTimegap;
 	configData.maxInterpolationMotion = config.maxInterpolationMotion;
 	
-	configData.generateFigures = config.generateFigures;
+	//configData.generateFigures = config.generateFigures;
 	
 	configData.autoTimeout = config.autoTimeout;
             
@@ -2289,6 +2288,7 @@ void calibratorNode::serverCallback(calibratorConfig &config) {
 
         configData.stopCapturingAtLimit = config.stopCapturingAtLimit;
 
+		/*
         configData.invert[0] = config.invertPrimary;
         configData.adjustMSER[0] = config.adjustMSER_primary;
         configData.delta[0] = config.delta_primary;
@@ -2302,7 +2302,7 @@ void calibratorNode::serverCallback(calibratorConfig &config) {
         configData.delta[1] = config.delta_secondary;
 		configData.areaThreshold[1] = config.areaThreshold_secondary;
 		configData.minDiv[1] = config.minDiv_secondary;
-		
+		*/
 }
 
 void calibratorNode::set_ready_for_output() {

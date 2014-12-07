@@ -25,6 +25,21 @@ struct calibratorSharedData {
 	bool verboseMode;
 	bool stopCapturingAtLimit;
 
+	int maxPatterns, maxFrames;
+	double maxTime;
+	int setSize, maxCandidates, maxTests;
+	double maxInterpolationTimegap, maxInterpolationMotion;
+	double alpha;
+	bool autoAlpha;
+	bool trackingMode;
+	double flowThreshold, errorThreshold, maxFrac;
+	bool  invertPrimary, invertSecondary;
+
+	// MSER settings
+	bool adjustMSER[MAX_ALLOWABLE_CAMS];
+	int delta[MAX_ALLOWABLE_CAMS];
+	double maxVar[MAX_ALLOWABLE_CAMS], minDiv[MAX_ALLOWABLE_CAMS];
+	double areaThreshold[MAX_ALLOWABLE_CAMS];
 	calibratorSharedData();
 };
 
@@ -46,15 +61,13 @@ struct calibratorLaunchOnlyData {
 	int pattType;
 	std::string calibType;
 	bool wantsIntrinsics;
-	bool trackingMode;
 	std::string patternDetectionMode;
 	unsigned int numCams;
-	bool  invertPrimary, invertSecondary;
+	
 	bool fixPrincipalPoint;
 	bool fixIntrinsics;
 	bool noConstraints;
 	bool ignoreDistortion, useRationalModel;
-	double maxInterpolationTimegap, maxInterpolationMotion;
 
     // Stuff copied from tracker... not sure why all of it is needed
     // stuff relating to publishing the tracks might be useful for estimating camera motion
@@ -69,15 +82,13 @@ struct calibratorLaunchOnlyData {
 
 	// Course settings
 	bool useUndistortedLocations;
-	double alpha;
-	bool autoAlpha;
+	
 	bool removeSpatialBias;
 	
 	// Fine settings
 	double maxTimeDiff;
-	int maxPatterns, maxFrames, setSize, maxCandidates, maxTests;
-	double maxTime;
-	double flowThreshold, errorThreshold, maxFrac;
+	
+	
 	
 	// Pattern properties
 	double gridSize;

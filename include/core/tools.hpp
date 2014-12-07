@@ -86,7 +86,7 @@ void findLinearModel(double* x, double* y, int termsToConsider, double &m, doubl
 /// \brief      Calculates time elapsed since the last time the timer was reset
 double timeElapsedMS(struct timeval& timer, bool reset = true);
 
-bool copyROSHeader(const ros::Header& src, ros::Header& dst);
+//bool copyROSHeader(const std_msgs::Header& src, std_msgs::Header& dst);
 
 void addUniqueToVector(vector<unsigned int>& dst, vector<unsigned int>& src);
 
@@ -129,13 +129,17 @@ struct Time {
 	static Time now();
 };
 
+}
+
+namespace std_msgs {
+
 /**
- * A structure to substitute for the ros::Header structure when ROS is not being used
+ * A structure to substitute for the std_msgs::Header structure when ROS is not being used
  */
 struct Header {
 	unsigned long int seq;
 	std::string frame_id;
-	Time stamp;
+	ros::Time stamp;
 	Header();
 };
 
@@ -147,7 +151,7 @@ namespace sensor_msgs {
  * A structure to substitute for the ROS sensor_msgs::CameraInfo structure when ROS is not being used
  */
 struct CameraInfo {
-	ros::Header header;
+	std_msgs::Header header;
 	double K[9], R[9], P[12];
 	std::vector<double> D;
 	int width, height;
@@ -190,7 +194,7 @@ struct Pose {
  * A structure to substitute for the ROS geometry_msgs::PoseStamped structure when ROS is not being used
  */
 struct PoseStamped {
-	ros::Header header;
+	std_msgs::Header header;
 	Pose pose;
 	PoseStamped();
 };
