@@ -1,8 +1,8 @@
 <launch>
 
-	<node name="optris_imager_node" pkg="optris_drivers" type="optris_imager_node" output="screen">
+	<node name="optris_imager_node" pkg="optris_drivers" type="optris_imager_node">
 		<!-- Set configuration file of your camera here! -->
-		<param name="xmlConfig"      type="string" value="$(find optris_drivers)/config/13010087.xml"/>  <!-- 13010087 , 13090037 -->
+		<param name="xmlConfig"      type="string" value="$(find optris_drivers)/config/14040047.xml"/>  
 	</node>
 
 	<rosparam command="delete" param="/flow" />
@@ -24,7 +24,7 @@
 		<param name="topic" value="/optris/thermal_image" />
 		<param name="syncMode" value="2" />
 		<param name="alreadyCorrected" value="true" />
-		<param name="intrinsics" value="$(find thermalvis)/data/calibration/csiro-aslab/optris.yml" />
+		<!-- <param name="intrinsics" value="$(find thermalvis)/data/calibration/csiro-aslab/optris.yml" /> -->
 		
 		<!-- DEBUGGING -->
 		<param name="markDuplicates" value="true" />
@@ -46,6 +46,6 @@
 	</node>
 	
 	<!-- <node name="streamer_reconfigure" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/streamer" /> -->
-	<node name="flow_reconfigure" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/flow" />
+	<!-- <node name="flow_reconfigure" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/flow" /> -->
 	
 </launch>
