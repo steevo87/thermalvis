@@ -25,3 +25,4 @@ IF(Boost_FOUND)
 ENDIF()
 
 ADD_SUBDIRECTORY(mm-calibrator)
+ADD_SUBDIRECTORY(dd-evaluator)
