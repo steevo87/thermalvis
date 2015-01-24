@@ -179,48 +179,28 @@ void streamerSource::close_video_capture() {
 
 int streamerSource::setup_video_capture(std::string devicename, int& deviceWidth, int& deviceHeight, bool verbose) {
 
-	if (verbose) { printf("%s << Registering (1)...\n", __FUNCTION__); }
+    if (verbose) { printf("%s << Registering...\n", __FUNCTION__); }
 	av_register_all();
-	//if (verbose) { printf("%s << Registering (2)...\n", __FUNCTION__); }
-	//avdevice_register_all();
-	
-	//avformat_alloc_context();
 
-// Open video stream
-	if (verbose) { printf("%s << Finding format...\n", __FUNCTION__); }
+    if (verbose) { printf("%s << Finding input video format...\n", __FUNCTION__); }
     pIFormat = av_find_input_format("video4linux2");
     pIFormatCtx = NULL;
     
-    
-    
     if (verbose) { printf("%s << Opening format...\n", __FUNCTION__); }
-    #ifdef __CONFIG_0__ // Steve's config
-		int err = avformat_open_input (&pIFormatCtx, devicename.c_str(), pIFormat, NULL);
-		//int err = avformat_open_input(&pIFormatCtx, filename.c_str(), pIFormat, NULL);
-		//bRet = av_open_input_file(&pIFormatCtx, filename.c_str(), pIFormat, 0, NULL);
-	#endif
-	
-	#ifdef __CONFIG_1__ // Hajmi's config
-		int err = av_open_input_file(&pIFormatCtx, devicename.c_str(), pIFormat, 0, NULL);
-	#endif
- 
+    int err = avformat_open_input (&pIFormatCtx, devicename.c_str(), pIFormat, NULL);
+    // int err = av_open_input_file(&pIFormatCtx, devicename.c_str(), pIFormat, 0, NULL);
 
 	if (err != 0) {
-		//if (av_open_input_file(&pFormatCtx, filename.c_str(), NULL, 0, NULL) != 0) {
-			
-			
-			if (err == ENOMEM) {
-				printf("%s << Error = ENOMEM\n", __FUNCTION__);
-			} else if (err == EINVAL) {
-				printf("%s << Error = EINVAL\n", __FUNCTION__);
-			} else {
-				printf("%s << Error = (%d)\n", __FUNCTION__, err);
-			}
-			
-			//printf("%s << Couldn't open file (%s)...\n", __FUNCTION__, filename.c_str());
-			
-			//return -1; // Couldn't open file
-		}
+        if (err == ENOMEM) {
+            printf("%s << Error opening (%s) with avformat_open_input() = (ENOMEMd)\n", __FUNCTION__, devicename.c_str());
+        } else if (err == EINVAL) {
+            printf("%s << Error opening (%s) with avformat_open_input() = (EINVAL)\n", __FUNCTION__, devicename.c_str());
+        } else {
+            printf("%s << Error opening (%s) with avformat_open_input() = (%d)\n", __FUNCTION__, devicename.c_str(), err);
+        }
+
+        return 1;
+    }
 
     /* Retrieve stream information */
     if (verbose) { printf("%s << Retrieving stream info...\n", __FUNCTION__); }

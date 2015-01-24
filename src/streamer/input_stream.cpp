@@ -1807,8 +1807,10 @@ void streamerNode::serverCallback(streamerConfig &config) {
 			if (configData.verboseMode) { ROS_INFO("device released..."); }
 			configData.inputDatatype = config.inputDatatype;
 			if (configData.verboseMode) { ROS_INFO("Changing to (%d)", configData.inputDatatype); }
-			setupDevice();
-			if (configData.verboseMode) { ROS_INFO("Set up done."); }
+            if (setupDevice()) {
+                if (configData.verboseMode) { ROS_INFO("Set up done."); }
+            } else return;
+
 		} else {
 			configData.inputDatatype = config.inputDatatype;
 		}
@@ -1937,7 +1939,14 @@ bool streamerNode::setupDevice() {
 #ifdef _AVLIBS_AVAILABLE_
 		if (configData.verboseMode) { ROS_INFO("Setting up device in 16-bit mode..."); }
 		int deviceWidth, deviceHeight;
-		getMainVideoSource()->setup_video_capture(configData.capture_device.c_str(), deviceWidth, deviceHeight, configData.verboseMode);
+
+        int setup_retVal = getMainVideoSource()->setup_video_capture(configData.capture_device.c_str(), deviceWidth, deviceHeight, configData.verboseMode);
+
+        if (setup_retVal != 0) {
+            ROS_INFO("Video source obtaining failed.");
+            setValidity(false);
+            return false;
+        }
 		
 		// Now use this opportunity to test/correct?
 		
@@ -1960,6 +1969,8 @@ bool streamerNode::setupDevice() {
 		}
 #else
 		ROS_ERROR("AVLIBs not available");
+        setValidity(false);
+        return false;
 #endif
 	}
 	
@@ -2488,7 +2499,7 @@ bool streamerNode::runDevice() {
 		ROS_INFO("Video polling (device: %d) started...", configData.device_num);
 	}
 	
-	setupDevice();
+    if (!setupDevice()) return false;
 	
 	while (isVideoValid()) {
 		
