@@ -30,6 +30,7 @@ void MainWindow_streamer::linkRealtimeVariables(streamerRealtimeData* sourceData
     ui->inputDatatype->setCurrentIndex(realtimeParameters->inputDatatype);
     ui->detectorMode->setCurrentIndex(realtimeParameters->detectorMode);
     ui->usbMode->setCurrentIndex(realtimeParameters->usbMode);
+	ui->denoisingMethod->setCurrentIndex(realtimeParameters->denoisingMode);
 
     ui->maxReadAttempts->setText(QString::number(realtimeParameters->maxReadAttempts));
     ui->desiredDegreesPerGraylevel->setText(QString::number(realtimeParameters->desiredDegreesPerGraylevel));
@@ -124,6 +125,15 @@ void MainWindow_streamer::on_mapCode_currentIndexChanged(int index)
 {
 #ifdef _INCLUDE_INTERFACING_
     realtimeParameters->map = index;
+#else
+    (void)index;
+#endif
+}
+
+void MainWindow_streamer::on_denoisingMethod_currentIndexChanged(int index)
+{
+#ifdef _INCLUDE_INTERFACING_
+    realtimeParameters->denoisingMode = index;
 #else
     (void)index;
 #endif

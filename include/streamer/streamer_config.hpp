@@ -11,7 +11,7 @@
 struct streamerSharedData {
 	bool output16bit, output8bit, outputColor, verboseMode, autoTemperature, debugMode, wantsToMarkDuplicates, wantsToUndistort;
 	bool wantsToAddExtrinsics, wantsToRectify;
-	int maxReadAttempts, normMode, maxNucInterval, map, inputDatatype, detectorMode, usbMode, zeroDegreesOffset;
+	int maxReadAttempts, normMode, maxNucInterval, map, inputDatatype, detectorMode, denoisingMode, usbMode, zeroDegreesOffset;
 	double framerate, threshFactor, normFactor, fusionFactor, serialPollingRate, maxNucThreshold, minTemperature, maxTemperature, degreesPerGraylevel, desiredDegreesPerGraylevel;
 
 	streamerSharedData();

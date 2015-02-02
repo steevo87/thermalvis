@@ -12,6 +12,9 @@
 #define DETECTOR_MODE_RAD					3
 #define DETECTOR_MODE_TMP					4
 
+#define DENOISING_MODE_NONE					0
+#define DENOISING_MODE_X					1
+
 #define USB_MODE_16							1
 #define USB_MODE_8							2
 

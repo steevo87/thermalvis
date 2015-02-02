@@ -17,6 +17,8 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	wantsToUndistort = startupData.wantsToUndistort;
 	autoTemperature = startupData.autoTemperature;
 	wantsToUndistort = startupData.wantsToUndistort;
+
+	denoisingMode = startupData.denoisingMode;
 	
 	inputDatatype = startupData.inputDatatype;
 	detectorMode = startupData.detectorMode;
@@ -416,6 +418,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("degreesPerGraylevel")) degreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredDegreesPerGraylevel")) desiredDegreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("zeroDegreesOffset")) zeroDegreesOffset = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("denoisingMode")) denoisingMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 
 			// Output settings
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("output16bit")) output16bit = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -1691,6 +1694,8 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	configData.desiredDegreesPerGraylevel = config.desiredDegreesPerGraylevel;
 	configData.zeroDegreesOffset = config.zeroDegreesOffset;
 	configData.wantsToUndistort = config.wantsToUndistort;
+
+	configData.denoisingMode = config.denoisingMode;
 	
 	if (configData.autoTemperature != config.autoTemperature) {
 		lastMinDisplayTemp = -std::numeric_limits<double>::max(), lastMaxDisplayTemp = std::numeric_limits<double>::max();
@@ -2085,6 +2090,8 @@ bool streamerNode::processImage() {
 	if (frame.rows == 0) return false;
 	
 	if (globalCameraInfo.cameraSize.height == 0) assignDefaultCameraInfo(frame.rows, frame.cols, configData.guessIntrinsics);
+
+	if (configData.denoisingMode != 0) denoiseImage(frame, frame, configData.denoisingMode);
 	
 	if (configData.resizeImages) {
 		resize(frame, rzMat, cv::Size(configData.desiredCols, configData.desiredRows));

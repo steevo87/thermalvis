@@ -13,6 +13,8 @@
 		
 		<param name="markDuplicates" value="true" />
 		
+		<param name="denoisingMode" value="1" />
+		
 		<param name="filterMode" value="0" /> <!-- 0 for no filter, 1 for gaussian, 2 for bilateral, 3 for adaptive bilateral -->
 		<param name="filterParam" value="2.0" />
 		

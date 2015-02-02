@@ -14,774 +14,933 @@
    <string>MainWindow_streamer</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QCheckBox" name="debugMode">
+   <widget class="QGroupBox" name="groupBox_Output">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>121</width>
-      <height>17</height>
+      <x>200</x>
+      <y>4</y>
+      <width>71</width>
+      <height>91</height>
      </rect>
     </property>
-    <property name="text">
-     <string>debugMode</string>
+    <property name="title">
+     <string>Output</string>
     </property>
+    <widget class="QCheckBox" name="outputColor">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>68</y>
+       <width>131</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Color</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="output16bit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>44</y>
+       <width>121</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>16-bit</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="output8bit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>131</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>8-bit</string>
+     </property>
+    </widget>
+    <zorder>outputColor</zorder>
+    <zorder>output16bit</zorder>
+    <zorder>output8bit</zorder>
+    <zorder>groupBox_Development</zorder>
    </widget>
-   <widget class="QCheckBox" name="verboseMode">
+   <widget class="QGroupBox" name="groupBox_Scaling">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>30</y>
-      <width>131</width>
-      <height>17</height>
+      <x>200</x>
+      <y>194</y>
+      <width>231</width>
+      <height>71</height>
      </rect>
     </property>
-    <property name="text">
-     <string>verboseMode</string>
+    <property name="title">
+     <string>Temperature Scaling</string>
     </property>
+    <widget class="QLabel" name="minTemp_label">
+     <property name="geometry">
+      <rect>
+       <x>-19</x>
+       <y>41</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>minTemp</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="maxTemp_label">
+     <property name="geometry">
+      <rect>
+       <x>91</x>
+       <y>41</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>maxTemp</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="maxTemp">
+     <property name="geometry">
+      <rect>
+       <x>171</x>
+       <y>41</y>
+       <width>41</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="autoTemperature">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>21</y>
+       <width>161</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>autoTemperature</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="minTemp">
+     <property name="geometry">
+      <rect>
+       <x>61</x>
+       <y>41</y>
+       <width>41</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
-   <widget class="QCheckBox" name="output8bit">
+   <widget class="QGroupBox" name="groupBox_Graylevel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>60</y>
-      <width>131</width>
-      <height>17</height>
+      <x>200</x>
+      <y>100</y>
+      <width>231</width>
+      <height>91</height>
      </rect>
     </property>
-    <property name="text">
-     <string>output8bit</string>
+    <property name="title">
+     <string>Graylevel Scaling</string>
     </property>
+    <widget class="QLineEdit" name="zeroDegreesOffset">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>64</y>
+       <width>61</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="degreesPerGraylevel_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>14</y>
+       <width>121</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>degreesPerGraylevel</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="desiredDegreesPerGraylevel_label">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>39</y>
+       <width>141</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>desiredDegreesPerGraylevel</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="desiredDegreesPerGraylevel">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>39</y>
+       <width>61</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="degreesPerGraylevel">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>14</y>
+       <width>61</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="zeroDegreesOffset_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>64</y>
+       <width>131</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>zeroDegreesOffset</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
    </widget>
-   <widget class="QCheckBox" name="output16bit">
+   <widget class="QGroupBox" name="groupBox_ImageProcessing">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>80</y>
-      <width>121</width>
-      <height>17</height>
+      <x>440</x>
+      <y>4</y>
+      <width>191</width>
+      <height>261</height>
      </rect>
     </property>
-    <property name="text">
-     <string>output16bit</string>
+    <property name="title">
+     <string>Image Processing</string>
     </property>
+    <widget class="QLineEdit" name="threshFactor">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>70</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="threshFactor_label">
+     <property name="geometry">
+      <rect>
+       <x>-10</x>
+       <y>70</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>threshFactor</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="normFactor">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>19</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="fusionFactor_label">
+     <property name="geometry">
+      <rect>
+       <x>-10</x>
+       <y>44</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>fusionFactor</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="normFactor_label">
+     <property name="geometry">
+      <rect>
+       <x>-10</x>
+       <y>19</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>normFactor</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="fusionFactor">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>44</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="undistortImages">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>100</y>
+       <width>151</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>undistortImages</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="denoisingMethod">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>140</y>
+       <width>111</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="currentText">
+      <string>NONE</string>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>NONE</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>METHOD X</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="denoising_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Denoising</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="normMode_label">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>210</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>normMode</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="normMode">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>230</y>
+       <width>171</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="currentText">
+      <string>FIXED_TEMP_RANGE</string>
+     </property>
+     <property name="currentIndex">
+      <number>3</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>FULL_STRETCHING</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>EQUALIZATION</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>CENTRALIZED</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>FIXED_TEMP_RANGE</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>FIXED_TEMP_LIMITS</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QComboBox" name="mapCode">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>170</y>
+       <width>111</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="currentText">
+      <string>CIELUV</string>
+     </property>
+     <property name="currentIndex">
+      <number>7</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>GRAYSCALE</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>CIECOMP</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>BLACKBODY</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>RAINBOW</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>IRON</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>BLUERED</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>JET</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>CIELUV</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>ICEIRON</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>ICEFIRE</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>REPEATED</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>HIGHLIGHTED</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="mapCode_label">
+     <property name="geometry">
+      <rect>
+       <x>-10</x>
+       <y>170</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>mapCode</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
    </widget>
-   <widget class="QCheckBox" name="outputColor">
+   <widget class="QGroupBox" name="groupBox_Frames">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>4</y>
+      <width>151</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Frame Processing</string>
+    </property>
+    <widget class="QLineEdit" name="maxReadAttempts">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>50</y>
+       <width>31</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="framerate_label">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>20</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>framerate</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="maxReadAttempts_label">
+     <property name="geometry">
+      <rect>
+       <x>-30</x>
+       <y>50</y>
+       <width>131</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>maxReadAttempts</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="framerate">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>20</y>
+       <width>31</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_Comms">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>100</y>
-      <width>131</width>
-      <height>17</height>
+      <width>181</width>
+      <height>91</height>
      </rect>
     </property>
-    <property name="text">
-     <string>outputColor</string>
+    <property name="title">
+     <string>Serial Comms</string>
     </property>
+    <widget class="QLineEdit" name="serialPollingRate">
+     <property name="geometry">
+      <rect>
+       <x>109</x>
+       <y>62</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="serialPollingRate_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>62</y>
+       <width>91</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>serialPollingRate</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="maxNucInterval">
+     <property name="geometry">
+      <rect>
+       <x>109</x>
+       <y>13</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="maxNucThreshold_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>37</y>
+       <width>91</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>maxNucThreshold</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="maxNucThreshold">
+     <property name="geometry">
+      <rect>
+       <x>109</x>
+       <y>37</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="maxNucInterval_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>13</y>
+       <width>91</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>maxNucInterval</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
    </widget>
-   <widget class="QCheckBox" name="autoTemperature">
+   <widget class="QGroupBox" name="groupBox_Input">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>180</y>
-      <width>161</width>
-      <height>17</height>
+      <y>4</y>
+      <width>181</width>
+      <height>91</height>
      </rect>
     </property>
-    <property name="text">
-     <string>autoTemperature</string>
+    <property name="title">
+     <string>Input</string>
     </property>
-   </widget>
-   <widget class="QCheckBox" name="undistortImages">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>140</y>
-      <width>151</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>undistortImages</string>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="normMode">
-    <property name="geometry">
-     <rect>
-      <x>290</x>
-      <y>130</y>
-      <width>171</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="currentText">
-     <string>FIXED_TEMP_RANGE</string>
-    </property>
-    <property name="currentIndex">
-     <number>3</number>
-    </property>
-    <item>
-     <property name="text">
-      <string>FULL_STRETCHING</string>
+    <widget class="QComboBox" name="detectorMode">
+     <property name="geometry">
+      <rect>
+       <x>89</x>
+       <y>62</y>
+       <width>81</width>
+       <height>22</height>
+      </rect>
      </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>EQUALIZATION</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>CENTRALIZED</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>FIXED_TEMP_RANGE</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>FIXED_TEMP_LIMITS</string>
-     </property>
-    </item>
-   </widget>
-   <widget class="QComboBox" name="mapCode">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>130</y>
-      <width>111</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="currentText">
-     <string>CIELUV</string>
-    </property>
-    <property name="currentIndex">
-     <number>7</number>
-    </property>
-    <item>
-     <property name="text">
-      <string>GRAYSCALE</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>CIECOMP</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>BLACKBODY</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>RAINBOW</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>IRON</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>BLUERED</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>JET</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>CIELUV</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>ICEIRON</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>ICEFIRE</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>REPEATED</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>HIGHLIGHTED</string>
-     </property>
-    </item>
-   </widget>
-   <widget class="QLineEdit" name="desiredDegreesPerGraylevel">
-    <property name="geometry">
-     <rect>
-      <x>360</x>
-      <y>40</y>
-      <width>61</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="inputDatatype">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>180</y>
-      <width>81</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="currentText">
-     <string>RAW</string>
-    </property>
-    <property name="currentIndex">
-     <number>1</number>
-    </property>
-    <item>
-     <property name="text">
-      <string>8BIT</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>RAW</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>MULTIMODAL</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>DEPTH</string>
-     </property>
-    </item>
-   </widget>
-   <widget class="QComboBox" name="detectorMode">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>240</y>
-      <width>81</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="currentText">
-     <string>INS</string>
-    </property>
-    <property name="currentIndex">
-     <number>2</number>
-    </property>
-    <item>
-     <property name="text">
-      <string>RAW</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>LUM</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
+     <property name="currentText">
       <string>INS</string>
      </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>RAD</string>
+     <property name="currentIndex">
+      <number>2</number>
      </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>TMP</string>
+     <item>
+      <property name="text">
+       <string>RAW</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>LUM</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>INS</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>RAD</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>TMP</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="detectorMode_label">
+     <property name="geometry">
+      <rect>
+       <x>-21</x>
+       <y>62</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
      </property>
-    </item>
-   </widget>
-   <widget class="QComboBox" name="usbMode">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>210</y>
-      <width>81</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="currentText">
-     <string>USB_16</string>
-    </property>
-    <property name="currentIndex">
-     <number>0</number>
-    </property>
-    <item>
      <property name="text">
+      <string>detectorMode</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="inputDatatype">
+     <property name="geometry">
+      <rect>
+       <x>89</x>
+       <y>12</y>
+       <width>81</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="currentText">
+      <string>RAW</string>
+     </property>
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>8BIT</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>RAW</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>MULTIMODAL</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DEPTH</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QComboBox" name="usbMode">
+     <property name="geometry">
+      <rect>
+       <x>89</x>
+       <y>37</y>
+       <width>81</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="currentText">
       <string>USB_16</string>
      </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>USB_8</string>
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-    </item>
+     <item>
+      <property name="text">
+       <string>USB_16</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>USB_8</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="inputDatatype_label">
+     <property name="geometry">
+      <rect>
+       <x>-21</x>
+       <y>12</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>inputDatatype</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="usbMode_label">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>37</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>usbMode</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
    </widget>
-   <widget class="QLineEdit" name="maxReadAttempts">
+   <widget class="QGroupBox" name="groupBox_Development">
     <property name="geometry">
      <rect>
-      <x>580</x>
-      <y>40</y>
-      <width>51</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="maxNucInterval">
-    <property name="geometry">
-     <rect>
-      <x>560</x>
-      <y>180</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="zeroDegreesOffset">
-    <property name="geometry">
-     <rect>
-      <x>360</x>
-      <y>70</y>
-      <width>61</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="degreesPerGraylevel">
-    <property name="geometry">
-     <rect>
-      <x>360</x>
-      <y>10</y>
-      <width>61</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="maxReadAttempts_label">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>40</y>
-      <width>131</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>maxReadAttempts</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="zeroDegreesOffset_label">
-    <property name="geometry">
-     <rect>
-      <x>220</x>
-      <y>70</y>
-      <width>131</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>zeroDegreesOffset</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="maxNucInterval_label">
-    <property name="geometry">
-     <rect>
-      <x>430</x>
-      <y>180</y>
-      <width>121</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>maxNucInterval</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="degreesPerGraylevel_label">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>10</y>
-      <width>151</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>degreesPerGraylevel</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="desiredDegreesPerGraylevel_label">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>40</y>
-      <width>201</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>desiredDegreesPerGraylevel</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="framerate">
-    <property name="geometry">
-     <rect>
-      <x>580</x>
-      <y>10</y>
-      <width>51</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="framerate_label">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>10</y>
+      <x>50</x>
+      <y>200</y>
       <width>101</width>
-      <height>20</height>
+      <height>61</height>
      </rect>
     </property>
-    <property name="text">
-     <string>framerate</string>
+    <property name="title">
+     <string>Development</string>
     </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
+    <widget class="QCheckBox" name="debugMode">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>91</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>debugMode</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="verboseMode">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>91</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>verboseMode</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="QLineEdit" name="threshFactor">
-    <property name="geometry">
-     <rect>
-      <x>580</x>
-      <y>140</y>
-      <width>51</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="threshFactor_label">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>140</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>threshFactor</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="normFactor">
-    <property name="geometry">
-     <rect>
-      <x>580</x>
-      <y>80</y>
-      <width>51</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="normFactor_label">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>80</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>normFactor</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="fusionFactor">
-    <property name="geometry">
-     <rect>
-      <x>580</x>
-      <y>110</y>
-      <width>51</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="fusionFactor_label">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>110</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>fusionFactor</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="serialPollingRate">
-    <property name="geometry">
-     <rect>
-      <x>560</x>
-      <y>240</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="serialPollingRate_label">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
-      <y>240</y>
-      <width>131</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>serialPollingRate</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="maxNucThreshold">
-    <property name="geometry">
-     <rect>
-      <x>560</x>
-      <y>210</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="maxNucThreshold_label">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
-      <y>210</y>
-      <width>131</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>maxNucThreshold</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="minTemp">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>210</y>
-      <width>61</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="minTemp_label">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>210</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>minTemp</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="maxTemp">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>240</y>
-      <width>61</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="maxTemp_label">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>240</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>maxTemp</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="mapCode_label">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>110</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>mapCode</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="normMode_label">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
-      <y>110</y>
-      <width>81</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>normMode</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="inputDatatype_label">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>180</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>inputDatatype</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="usbMode_label">
-    <property name="geometry">
-     <rect>
-      <x>230</x>
-      <y>210</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>usbMode</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="detectorMode_label">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>240</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>detectorMode</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
+   <zorder>groupBox_Output</zorder>
+   <zorder>groupBox_Scaling</zorder>
+   <zorder>groupBox_Graylevel</zorder>
+   <zorder>groupBox_ImageProcessing</zorder>
+   <zorder>groupBox_Frames</zorder>
+   <zorder>groupBox_Comms</zorder>
+   <zorder>groupBox_Input</zorder>
+   <zorder>groupBox_Development</zorder>
+   <zorder>debugMode</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -789,7 +948,7 @@
      <x>0</x>
      <y>0</y>
      <width>640</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
