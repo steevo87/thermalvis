@@ -1273,7 +1273,7 @@ bool findPatternCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::P
 
     vector<vector<cv::Point> > msers;
     //cout << "BETA" << endl;
-    findAllPatches(image, patternSize, msers, mserDelta, max_var, min_div, area_threshold);
+    findAllPatches(image, patternSize, msers, mserDelta, float(max_var), float(min_div), area_threshold);
         //cout << "GAMMA" << endl;
     if (DEBUG_MODE > 2)
     {

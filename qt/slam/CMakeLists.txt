@@ -30,19 +30,4 @@ add_executable(${EXECUTABLE_NAME} WIN32
 # Use the Widgets module from Qt 5.
 target_link_libraries(${EXECUTABLE_NAME} Qt5::Widgets)
 
-SET(ALL_QTDLL_FOUND TRUE)
-LIST(APPEND QTDLL_NAMES "Qt5Widgets" "Qt5Core" "Qt5Gui" "icuin52" "icuuc52" "icudt52")
-IF(IS_WINDOWS)
-	LIST(APPEND QTDLL_NAMES "Qt5Widgetsd" "Qt5Cored" "Qt5Guid")
-ENDIF()
-
-IF(IS_WINDOWS)
-	foreach(QTDLL_NAME ${QTDLL_NAMES})
-		IF(EXISTS "${Qt5Widgets_DIR}/../../../bin/${QTDLL_NAME}.dll")
-			ADD_CUSTOM_COMMAND(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Qt5Widgets_DIR}/../../../bin/${QTDLL_NAME}.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
-		ELSEIF(ALL_QTDLL_FOUND)
-			MESSAGE(WARNING "<${Qt5Widgets_DIR}/../../../bin/${QTDLL_NAME}.dll> unable to be located. Has Qt5 been installed properly?")
-			SET(ALL_QTDLL_FOUND FALSE)
-		ENDIF()
-	endforeach(QTDLL_NAME) 
-ENDIF()
+include(../../cmake/link_qt_dlls.cmake)
