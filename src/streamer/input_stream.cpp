@@ -2120,7 +2120,7 @@ bool streamerNode::processImage() {
 		frame.copyTo(lastFrame);
 	}
 
-    if (configData.verboseMode){ ROS_INFO("Processing image (%d)...", frameCounter); }
+    //if (configData.verboseMode){ ROS_INFO("Processing image (%d)...", frameCounter); }
 
 	(pastMeanIndex >= (configData.temporalMemory-1)) ? pastMeanIndex = 0 : pastMeanIndex++;
 	
@@ -2161,7 +2161,7 @@ bool streamerNode::processImage() {
 			}
 
 			if (configData.normMode == NORM_MODE_FIXED_TEMP_RANGE) {
-				if (configData.verboseMode) { ROS_INFO("newCentralVal = (%d)", newCentralVal); }
+                //if (configData.verboseMode) { ROS_INFO("newCentralVal = (%d)", newCentralVal); }
 				temperatureRangeBasedDownsample(_16bitMat, preFilteredMat, newCentralVal, configData.degreesPerGraylevel, configData.desiredDegreesPerGraylevel);
 			} else if (configData.normMode == NORM_MODE_FIXED_TEMP_LIMITS) {
 				if (configData.alreadyCorrected) {
@@ -2470,7 +2470,7 @@ void streamerNode::publishTopics() {
 				std::copy(&(colourMat_pub.at<cv::Vec3b>(0,0)[0]), &(colourMat_pub.at<cv::Vec3b>(0,0)[0])+(colourMat_pub.cols*colourMat_pub.rows*3), msg_color.data.begin());
 
 				if (!cameraPublished) {
-					if (configData.verboseMode) { ROS_INFO("%s << Publishing the whole camera...", __FUNCTION__); }
+                    //if (configData.verboseMode) { ROS_INFO("%s << Publishing the whole camera...", __FUNCTION__); }
 					pub_color.publish(msg_color, camera_info);
 					cameraPublished = true;
 				} else pub_color_im.publish(msg_color);
