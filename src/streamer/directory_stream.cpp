@@ -50,7 +50,7 @@ bool directoryManager::initialize() {
 			if (fs::is_regular_file(dir_iter->status()) ) {
 
 				std::stringstream temp;
-				temp << dir_iter->path().filename();
+                temp << dir_iter->path().filename();
 				string name;
 
 				name = temp.str();

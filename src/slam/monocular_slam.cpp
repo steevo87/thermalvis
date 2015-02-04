@@ -384,7 +384,7 @@ slamNode::slamNode(slamData startupData) :
 	
 	char timeString[256];
 	
-	sprintf(timeString, "%010d.%09d", ros::Time::now().sec, ros::Time::now().nsec);
+    sprintf(timeString, "%010d.%09d", int(ros::Time::now().sec), int(ros::Time::now().nsec));
 	//stringstream convert;
 	//convert << ros::Time::now().sec << "." << ros::Time::now().nsec;
 	

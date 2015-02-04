@@ -32,7 +32,6 @@ protected:
 	char *output_directory;
 	char nodeName[256];
 	std::ofstream timestamps_stream;
-	char nodeName[256];
 
 public:
 	GenericOptions();

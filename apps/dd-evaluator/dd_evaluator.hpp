@@ -37,7 +37,7 @@
 
 #include <limits>
 #include <sys/stat.h>
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
 
 // Intra-project
 #include "evaluation.hpp"

@@ -30,6 +30,12 @@
 
 #define MIN_PIXELS_PER_AXIS_FOR_DISPLAY 400
 
+#ifdef _USE_QT_
+#include <QApplication>
+#include <QLabel>
+QImage Mat2QImage(const cv::Mat &src);
+#endif
+
 void denoiseImage(const cv::Mat& src, cv::Mat& dst, int denoisingMode = DENOISING_MODE_X);
 
 void fadeImage(const cv::Mat& src, cv::Mat& dst, double frac = 0.65);

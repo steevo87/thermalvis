@@ -4,6 +4,16 @@
 
 #include "core/improc.hpp"
 
+#ifdef _USE_QT_
+QImage Mat2QImage(const cv::Mat &src) {
+
+    // http://stackoverflow.com/questions/5026965/how-to-convert-an-opencv-cvmat-to-qimage
+    QImage dest= QImage((uchar*) src.data, src.cols, src.rows, src.step, QImage::Format_RGB888); // Format_ARGB32
+
+    return dest;
+}
+#endif
+
 void denoiseImage(const cv::Mat& src, cv::Mat& dst, int denoisingMode) {
 
 	bool debugMode = false;

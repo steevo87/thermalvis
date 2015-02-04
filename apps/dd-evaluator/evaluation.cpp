@@ -1,6 +1,6 @@
 #include "evaluation.hpp"
 
-#ifdef _IS_LINUX_
+#ifdef DONT_USE_THIS_CODE
 
 char matchesFilename[256];
 bool printMatches;

@@ -6,7 +6,7 @@ int main( int argc, char** argv )
     // =====================================================================================
     //                      INITIALIZATION AND ARGUMENT PARSING
     // =====================================================================================
-#ifdef _IS_LINUX_
+#ifdef DONT_USE_THIS_CODE
     configData iD;
     initializeSubsetStrings();
     iD.processArguments(argc, argv);
@@ -144,7 +144,7 @@ int main( int argc, char** argv )
                     grayImageVec.clear();
                     colImageVec.clear();
 
-                    int imagesToRead = std::min( ((unsigned int) MAX_IMAGES_PER_FOLDER), inputImages.size());
+                    //int imagesToRead = std::min( ((unsigned int) MAX_IMAGES_PER_FOLDER), inputImages.size());
 
                     printf("%s << imagesToRead = %d\n", __FUNCTION__, imagesToRead);
 

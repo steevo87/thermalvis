@@ -30,11 +30,10 @@
 #include "calibrator/extrinsics.hpp"
 
 #ifdef _USE_BOOST_
-#include "boost/filesystem.hpp"  
+#include <boost/filesystem.hpp>
 #include <boost/thread/thread.hpp>
 #ifndef _BUILD_FOR_ROS_
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/filesystem.hpp>
 #endif
 #endif
 

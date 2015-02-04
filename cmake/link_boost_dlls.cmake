@@ -1,5 +1,11 @@
 SET(Boost_Debug_Suffix "gd-")
-foreach(ARCH "Debug" "Release") 
+IF(IS_WINDOWS)
+        SET(BOOST ARCH_TYPES "Debug" "Release")
+ELSE()
+        SET(BOOST ARCH_TYPES "Release")
+ENDIF()
+
+foreach(ARCH ${ARCH_TYPES})
 	SET(Boost_MISSING_DLL FALSE)
 	foreach(BOOST_SUB_LIB ${BOOST_Components_List}) 
 		SET(BOOST_FILE "${Boost_LIBRARY_DIR}/${LIB_PREFIX}boost_${BOOST_SUB_LIB}${BOOST_SUFFIX_1}${Boost_${ARCH}_Suffix}${BOOST_SUFFIX_2}.${DLL_EXT}")

@@ -25,7 +25,8 @@
 #endif
 
 #ifdef _USE_BOOST_
-#include "boost/filesystem.hpp"  
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #endif
 
 #ifdef _BUILD_FOR_ROS_
@@ -106,6 +107,11 @@ public:
 /// \brief		Manages the optical flow procedure
 class featureTrackerNode : public GenericOptions {
 private:
+
+#ifdef _USE_QT_
+        QImage myImage;
+        QLabel myLabel;
+#endif
 	
 #ifdef _BUILD_FOR_ROS_
 

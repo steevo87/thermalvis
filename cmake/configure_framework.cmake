@@ -3,7 +3,7 @@ IF(IS_LINUX)
 	LIST(APPEND MSG_DEP_SET std_msgs sensor_msgs)
 	LIST(APPEND catkin_COMPONENTS roscpp rospy dynamic_reconfigure image_transport cv_bridge camera_calibration_parsers camera_info_manager)
 
-	find_package(catkin QUIET COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
+	#find_package(catkin QUIET COMPONENTS ${catkin_COMPONENTS} message_generation ${MSG_DEP_SET})
 
         SET(APOSITION -1)
         STRING(FIND ${PROJECT_SOURCE_DIR} "catkin" APOSITION)

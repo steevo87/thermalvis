@@ -82,13 +82,13 @@
 #include <limits>
 #include <sys/stat.h>
 
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
 
-#include "tools.hpp"
-#include "features.h"
+#include "core/tools.hpp"
+#include "core/features.hpp"
 
 // eccBlock
-#include "eccblock/eccBlock/eccBlock.h"
+//#include "eccblock/eccBlock/eccBlock.h"
 
 /****************************************************************************************\
 *                                  Namespaces                                            *
@@ -232,6 +232,7 @@ public:
     Size_<float> boundingBox; // half sizes of bounding box which sides are parallel to the coordinate axes
 };
 
+/*
 struct IntersectAreaCounter {
     IntersectAreaCounter() : bua(0), bna(0) {}
     IntersectAreaCounter( float _dr, int _minx,
@@ -285,6 +286,7 @@ struct IntersectAreaCounter {
     Scalar ellipse1, ellipse2;
 
 };
+*/
 
 struct SIdx {
     SIdx() : S(-1), i1(-1), i2(-1) {}
@@ -450,7 +452,7 @@ public:
     IplImage   * target_image;
     IplImage   * template_image;
     CvMat      * warp_matrix;
-    WARP_MODE warp_mode;
+    //WARP_MODE warp_mode;
 
     eccBlockWrapper();
 

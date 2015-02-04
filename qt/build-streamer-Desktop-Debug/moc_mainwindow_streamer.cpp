@@ -22,7 +22,7 @@ static const uint qt_meta_data_MainWindow_streamer[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-      25,   14, // methods
+      26,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -40,21 +40,22 @@ static const uint qt_meta_data_MainWindow_streamer[] = {
      243,  237,   20,   20, 0x08,
      280,  237,   20,   20, 0x08,
      316,  237,   20,   20, 0x08,
-     358,  237,   20,   20, 0x08,
-     399,  237,   20,   20, 0x08,
-     435,   20,   20,   20, 0x08,
-     470,   20,   20,   20, 0x08,
-     516,   20,   20,   20, 0x08,
-     550,   20,   20,   20, 0x08,
-     587,   20,   20,   20, 0x08,
-     626,   20,   20,   20, 0x08,
-     655,   20,   20,   20, 0x08,
-     687,   20,   20,   20, 0x08,
-     717,   20,   20,   20, 0x08,
-     749,   20,   20,   20, 0x08,
-     786,   20,   20,   20, 0x08,
-     821,   20,   20,   20, 0x08,
-     848,   20,   20,   20, 0x08,
+     360,  237,   20,   20, 0x08,
+     402,  237,   20,   20, 0x08,
+     443,  237,   20,   20, 0x08,
+     479,   20,   20,   20, 0x08,
+     514,   20,   20,   20, 0x08,
+     560,   20,   20,   20, 0x08,
+     594,   20,   20,   20, 0x08,
+     631,   20,   20,   20, 0x08,
+     670,   20,   20,   20, 0x08,
+     699,   20,   20,   20, 0x08,
+     731,   20,   20,   20, 0x08,
+     761,   20,   20,   20, 0x08,
+     793,   20,   20,   20, 0x08,
+     830,   20,   20,   20, 0x08,
+     865,   20,   20,   20, 0x08,
+     892,   20,   20,   20, 0x08,
 
        0        // eod
 };
@@ -70,6 +71,7 @@ static const char qt_meta_stringdata_MainWindow_streamer[] = {
     "on_undistortImages_toggled(bool)\0index\0"
     "on_normMode_currentIndexChanged(int)\0"
     "on_mapCode_currentIndexChanged(int)\0"
+    "on_denoisingMethod_currentIndexChanged(int)\0"
     "on_inputDatatype_currentIndexChanged(int)\0"
     "on_detectorMode_currentIndexChanged(int)\0"
     "on_usbMode_currentIndexChanged(int)\0"
@@ -103,22 +105,23 @@ void MainWindow_streamer::qt_static_metacall(QObject *_o, QMetaObject::Call _c, 
         case 6: _t->on_undistortImages_toggled((*reinterpret_cast< bool(*)>(_a[1]))); break;
         case 7: _t->on_normMode_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
         case 8: _t->on_mapCode_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 9: _t->on_inputDatatype_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 10: _t->on_detectorMode_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 11: _t->on_usbMode_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 12: _t->on_maxReadAttempts_returnPressed(); break;
-        case 13: _t->on_desiredDegreesPerGraylevel_returnPressed(); break;
-        case 14: _t->on_maxNucInterval_returnPressed(); break;
-        case 15: _t->on_zeroDegreesOffset_returnPressed(); break;
-        case 16: _t->on_degreesPerGraylevel_returnPressed(); break;
-        case 17: _t->on_framerate_returnPressed(); break;
-        case 18: _t->on_threshFactor_returnPressed(); break;
-        case 19: _t->on_normFactor_returnPressed(); break;
-        case 20: _t->on_fusionFactor_returnPressed(); break;
-        case 21: _t->on_serialPollingRate_returnPressed(); break;
-        case 22: _t->on_maxNucThreshold_returnPressed(); break;
-        case 23: _t->on_minTemp_returnPressed(); break;
-        case 24: _t->on_maxTemp_returnPressed(); break;
+        case 9: _t->on_denoisingMethod_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 10: _t->on_inputDatatype_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 11: _t->on_detectorMode_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 12: _t->on_usbMode_currentIndexChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 13: _t->on_maxReadAttempts_returnPressed(); break;
+        case 14: _t->on_desiredDegreesPerGraylevel_returnPressed(); break;
+        case 15: _t->on_maxNucInterval_returnPressed(); break;
+        case 16: _t->on_zeroDegreesOffset_returnPressed(); break;
+        case 17: _t->on_degreesPerGraylevel_returnPressed(); break;
+        case 18: _t->on_framerate_returnPressed(); break;
+        case 19: _t->on_threshFactor_returnPressed(); break;
+        case 20: _t->on_normFactor_returnPressed(); break;
+        case 21: _t->on_fusionFactor_returnPressed(); break;
+        case 22: _t->on_serialPollingRate_returnPressed(); break;
+        case 23: _t->on_maxNucThreshold_returnPressed(); break;
+        case 24: _t->on_minTemp_returnPressed(); break;
+        case 25: _t->on_maxTemp_returnPressed(); break;
         default: ;
         }
     }
@@ -156,9 +159,9 @@ int MainWindow_streamer::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 25)
+        if (_id < 26)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 25;
+        _id -= 26;
     }
     return _id;
 }

@@ -2740,7 +2740,7 @@ bool streamerNode::processFolder() {
 			if (boost::filesystem::is_regular_file(dir_iter->status()) ) {
 
 				std::stringstream temp;
-				temp << dir_iter->path().filename();
+                temp << dir_iter->path().filename();
 				string name;
 				name = temp.str();
 				boost::replace_all(name, "\"", "");

@@ -215,11 +215,19 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 #endif
 
 void featureTrackerNode::displayCurrentFrame() {
-	if (drawImage_resized.rows != 0) {
-		if (!pauseMode) cv::imshow("display", drawImage_resized);
-		char key = cv::waitKey(1);
+
+    if (drawImage_resized.rows != 0) {
+#ifdef _USE_QT_
+        myImage = Mat2QImage(drawImage_resized);
+        myLabel.setPixmap(QPixmap::fromImage(myImage));
+        myLabel.show();
+#else
+        if (!pauseMode) cv::imshow("display", drawImage_resized);
+        char key = cv::waitKey(1);
 		if (key == 'q') isValid = false;
+#endif
 	}
+
 }
 
 void featureTrackerNode::act_on_image() {
@@ -636,6 +644,8 @@ void featureTrackerNode::publishRoutine() {
 		if (configData.displayDebug) { displayCurrentFrame(); }
 		#endif
 
+        if (configData.verboseMode) { ROS_INFO("Image copied."); }
+
 		if (configData.outputDebugImages) {
 			char debugImageFilename[256];
 			sprintf(debugImageFilename, "frame%06d.jpg", readyFrame);
@@ -675,6 +685,8 @@ void featureTrackerNode::publishRoutine() {
 	}
 	
 	if (freezeNextOutput) configData.debugMode = false;
+
+    if (configData.verboseMode) { ROS_INFO("Exiting <%s>", __FUNCTION__); }
 }
 
 int featureTrackerNode::publish_tracks(
@@ -933,7 +945,7 @@ void featureTrackerNode::prepareKeypointFilelist() {
 			if (boost::filesystem::is_regular_file(dir_iter->status()))	{
 
 				std::stringstream temp;
-				temp << dir_iter->path().filename();
+                temp << dir_iter->path().filename();
 				string name;
 				name = temp.str();
 				boost::replace_all(name, "\"", "");
