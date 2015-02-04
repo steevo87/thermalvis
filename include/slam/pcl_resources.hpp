@@ -17,7 +17,8 @@
 #include "sensor_msgs/point_cloud_conversion.h" //<--Just Added
 #endif
 
-#include <pcl/ros/conversions.h>
+//#include <pcl/ros/conversions.h>
+#include <pcl/conversions.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 

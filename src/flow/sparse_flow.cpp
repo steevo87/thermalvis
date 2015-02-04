@@ -79,7 +79,7 @@ bool flowConfig::assignStartingData(trackerData& startupData) {
 trackerData::trackerData() : 
 	numDetectors(1), 
 	outputTrackCount(false), 
-	outputFeatureMotion(false) ,
+	outputFeatureMotion(false),
 	outputDebugImages(false)
 {
 	detector[0] = "FAST";
@@ -688,10 +688,10 @@ int featureTrackerNode::publish_tracks(
 	
 	int publishedTrackCount = 0;
 	
-	#ifdef _BUILD_FOR_ROS_
+#ifdef _BUILD_FOR_ROS_
 	thermalvis::feature_tracks msg;
 	msg.source = configData.topic;
-	#endif
+#endif
 
 	if (configData.autoTrackManagement) trimFeatureTrackVector();
 	

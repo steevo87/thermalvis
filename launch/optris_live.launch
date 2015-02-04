@@ -4,24 +4,13 @@
 			<!-- Set configuration file of your camera here! -->
 			<param name="xmlConfig"      type="string" value="$(find optris_drivers)/config/14040047.xml"/>  
 		</node>
-		
-		<node name="optris_colorconvert_node" pkg="optris_drivers" type="optris_colorconvert_node">
-			<param name="palette"        type="int"    value="6"/>     <!-- see ImageBuilder.h for valid values -->
-			<param name="paletteScaling" type="int"    value="2"/>     <!-- scaling method for color conversion, see ImageBuilder.h -->
-			<param name="temperatureMin" type="double" value="20"/>    <!-- set minimum temperature for fixed scaling -->
-			<param name="temperatureMax" type="double" value="40"/>    <!-- set maximum temperature for fixed scaling -->
-			<!-- Uncomment the following line, if you want to use PNG compression. Use rosrun dynamic_reconfigure reconfigure_gui to pick PNG format --> 
-			<!-- <param name="image_transport" type="string" value="compressed"/> -->
-		</node>
 	</group>
 	
 	<node name="streamer_node" pkg="thermalvis" type="streamer" output="screen">
 		<param name="source" value="topic" />
 		<param name="topic" value="/optris/thermal_image" />
 		<param name="syncMode" value="2" />
-		
-		<param name="desiredDegreesPerGraylevel" value="0.01" />
-		<param name="outputColor" value="true" />
+		<param name="desiredDegreesPerGraylevel" value="0.02" />
 	</node>
 	
 	<node name="image_view_node" pkg="image_view" type="image_view" output="screen">

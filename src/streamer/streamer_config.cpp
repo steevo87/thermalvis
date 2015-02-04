@@ -12,6 +12,7 @@ streamerSharedData::streamerSharedData() :
 	output16bit(false), 
 	output8bit(true),
 	outputColor(false),
+	denoisingMode(DENOISING_MODE_NONE),
 	map(CONFIG_MAP_CODE_CIELUV),
 	fusionFactor(0.6),  
 	serialPollingRate(25.0),

@@ -157,7 +157,7 @@ void ProcessingThread::run() {
 
 			if (wantsSlam && (&fM->featureTrackVector != NULL)) {
 				_slamNode->serverCallback(*_slamData);
-				_slamNode->main_loop(&camInfo, &fM->featureTrackVector);
+				_slamNode->main_loop(camInfo, fM->featureTrackVector);
 			}
 		}
 		

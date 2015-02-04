@@ -4,6 +4,30 @@
 
 #include "core/improc.hpp"
 
+void denoiseImage(const cv::Mat& src, cv::Mat& dst, int denoisingMode) {
+
+	bool debugMode = false;
+
+	src.copyTo(dst);
+
+	/*
+		PUT CODE HERE
+	*/
+
+	if (debugMode) {
+
+		cv::Mat pre_Image, post_Image;
+
+		adaptiveDownsample(src, pre_Image);
+		adaptiveDownsample(dst, post_Image);
+
+		cv::imshow("pre_im", pre_Image);
+		cv::imshow("post_im", post_Image);
+		cv::waitKey(1);
+	}
+
+}
+
 void fadeImage(const cv::Mat& src, cv::Mat& dst, double frac) {
 	
 	#pragma omp parallel for

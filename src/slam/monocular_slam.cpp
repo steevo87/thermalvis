@@ -268,15 +268,15 @@ bool slamNode::selectBestInitializationPair() {
 #ifdef _BUILD_FOR_ROS_
 void slamNode::main_loop(const ros::TimerEvent& event) {
 #else
-void slamNode::main_loop(sensor_msgs::CameraInfo *info_msg, const vector<featureTrack>* msg) {
+void slamNode::main_loop(sensor_msgs::CameraInfo& info_msg, const vector<featureTrack>& msg) {
 #endif
 
 #ifdef _BUILD_FOR_ROS_	
 	if (!infoProcessed) return;
 #else
-	if (!infoProcessed) handle_info(info_msg);
+	if (!infoProcessed) handle_info(&info_msg);
 	handle_tracks(msg);
-	ROS_INFO("featureTrackVector.size() = (%d)", featureTrackVector->size());
+	ROS_INFO("featureTrackVector->size() = (%d)", featureTrackVector->size());
 #endif
 	
 	if (configData.keyframeEvaluationMode && evaluationCompleted) return;
@@ -415,7 +415,7 @@ slamNode::slamNode(slamData startupData) :
 	std::string topic_tracks = configData.stream + "tracks";
 	
 	ROS_INFO("Connecting to tracks topic. %s", topic_tracks.c_str());
-	tracks_sub = nh.subscribe<thermalvis::feature_tracks>(topic_tracks, 1, &slamNode::handle_tracks, this);
+    tracks_sub = nh.subscribe(topic_tracks, 1, &slamNode::handle_tracks, this); // <thermalvis::feature_tracks>
 	
 	std::string topic_info = configData.stream + "camera_info";
 	
@@ -546,20 +546,17 @@ slamNode::slamNode(slamData startupData) :
 	
 	infoProcessed = false;
 	
-	std::string topic_tracks = configData.flowSource + "tracks";
 	ROS_INFO("Connecting to tracks topic. %s", topic_tracks.c_str());
-	tracks_sub = nh.subscribe<thermalvis::feature_tracks>(topic_tracks, 1, &videoslamNode::handle_tracks, this);
+    tracks_sub = nh.subscribe(topic_tracks, 1, &slamNode::handle_tracks, this); // <thermalvis::feature_tracks>
 	
-	std::string topic_info = configData.flowSource + "camera_info";
 	ROS_INFO("Connecting to camera_info. %s", topic_info.c_str());
-	info_sub = nh.subscribe<sensor_msgs::CameraInfo>(topic_info, 1, &videoslamNode::handle_info, this);
+    info_sub = nh.subscribe<sensor_msgs::CameraInfo>(topic_info, 1, &slamNode::handle_info, this);
 	
 	std::string topic_pose = configData.mapperSource + "pose";
 	ROS_INFO("Connecting to pose topic. %s", topic_pose.c_str());
-	pose_sub = nh.subscribe(topic_pose, 1, &videoslamNode::handle_pose, this);
+	pose_sub = nh.subscribe(topic_pose, 1, &slamNode::handle_pose, this);
 	
 	ROS_INFO("Node setup.");
-
 
 	sprintf(pose_pub_name, "/thermalvis%s/pose", nodeName);
 	ROS_INFO("Configuring pose topic. %s", pose_pub_name);
@@ -574,7 +571,7 @@ slamNode::slamNode(slamData startupData) :
 	op1.has_header = false;
 	pose_pub = nh.advertise(op1);
 	
-	timer = nh.createTimer(ros::Duration(0.05), &videoslamNode::main_loop, this);
+	timer = nh.createTimer(ros::Duration(0.05), &slamNode::main_loop, this);
 
 	ROS_INFO("Establishing server callback...");
 	f = boost::bind (&slamNode::serverCallback, this, _1, _2);
@@ -1137,14 +1134,14 @@ void slamNode::update_cameras_to_pnp() {
 
 bool slamNode::evaluationSummaryAndTermination() {
 #ifdef _BUILD_FOR_ROS_
-	if ((configData.evaluateParameters > 0) && (msg->header.seq > configData.evaluateParameters)) {
+	if ((configData.evaluateParameters > 0) && (framesArrived > configData.evaluateParameters)) {
 		// print summary
-		ROS_ERROR("Reached evaluation frame (%d/%d), shutting down...", msg->header.seq, configData.evaluateParameters);
+		ROS_ERROR("Reached evaluation point, shutting down...");
 		ROS_WARN("Summary(1): (%d, %d, %d, %d)", framesArrived, framesProcessed, pnpSuccesses, baSuccesses);
 		ROS_WARN("Summary(2): (%f, %f, %f, %f)", double(pnpSuccesses)/double(framesProcessed), double(baSuccesses)/double(framesProcessed), baAverage, dsAverage);
 		
 		wantsToShutdown = true;
-		mySigintHandler(1);
+		//mySigintHandler(1);
 		
 		return true;
 	}
@@ -1170,15 +1167,19 @@ void slamNode::videoslamPoseProcessing() {
 		main_mutex.lock();
 		bool updated = updateKeyframePoses(currentPose, false);
 		lastTestedFrame = currentPose.header.seq;
-		if (configData.publishKeyframes) { drawKeyframes(camera_pub, keyframePoses, storedPosesCount); }
+		if (configData.publishKeyframes) { 
+#ifdef _USE_SBA_
+			drawKeyframes(camera_pub, keyframePoses, storedPosesCount); 
+#endif
+		}
 		main_mutex.unlock();
 			
 		if (updated) {
 			
 			main_mutex.lock();
 			if (configData.clearTriangulations) {
-				for (unsigned int iii = 0; iii < featureTrackVector.size(); iii++) {
-					featureTrackVector.at(iii).isTriangulated = false;
+				for (unsigned int iii = 0; iii < featureTrackVector->size(); iii++) {
+					featureTrackVector->at(iii).isTriangulated = false;
 				}
 			}
 			triangulatePoints();
@@ -1191,9 +1192,9 @@ void slamNode::videoslamPoseProcessing() {
 }
 
 #ifdef _BUILD_FOR_ROS_
-void slamNode::handle_tracks(const thermalvis::feature_tracksConstPtr& msg) { // FROM MONOSLAM
+void slamNode::handle_tracks(const thermalvis::feature_tracks& msg) { // FROM MONOSLAM
 #else
-void slamNode::handle_tracks(const vector<featureTrack>* msg) {
+void slamNode::handle_tracks(const vector<featureTrack>& msg) {
 #endif
 
 	if (wantsToShutdown) return;
@@ -1202,12 +1203,12 @@ void slamNode::handle_tracks(const vector<featureTrack>* msg) {
 	framesArrived++;
 
 #ifdef _BUILD_FOR_ROS_
-	if (msg->indices.size() == 0) return;
-	latestTracksTime = msg->header.stamp.toSec();
-	frameHeaderHistoryBuffer[frameHeaderHistoryCounter % MAX_HISTORY] = msg->header;
+	if (msg.indices.size() == 0) return;
+	latestTracksTime = msg.header.stamp.toSec();
+    frameHeaderHistoryBuffer[frameHeaderHistoryCounter % MAX_HISTORY] = msg.header;
 	frameHeaderHistoryCounter++;
 #else
-	if (msg->size() == 0) return;
+	if (msg.size() == 0) return;
 #endif	
         	
 	if (configData.timeDebug) trackHandlingTime.startRecording();
@@ -1545,7 +1546,7 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 			
 			for (unsigned int mmm = 0; mmm < 3; mmm++) {
 				for (unsigned int nnn = 0; nnn < 3; nnn++) {
-					configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
+					configData.cameraData.K.at<double>(mmm, nnn) = info_msg.K[3*mmm + nnn];
 				}
 			}
 			
@@ -1553,14 +1554,14 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 			
 			configData.cameraData.K_inv = configData.cameraData.K.inv();
 			
-			configData.cameraData.cameraSize.width = info_msg->width;
-			configData.cameraData.cameraSize.height = info_msg->height;
+			configData.cameraData.cameraSize.width = info_msg.width;
+			configData.cameraData.cameraSize.height = info_msg.height;
 		
 			unsigned int maxDistortionIndex;
 			
-			if (info_msg->distortion_model == "rational_polynomial") {
+			if (info_msg.distortion_model == "rational_polynomial") {
 				maxDistortionIndex = 8;
-			} else { /*if (info_msg->distortion_model == "plumb_bob") {*/
+			} else { /*if (info_msg.distortion_model == "plumb_bob") {*/
 				maxDistortionIndex = 5;
 			}
 			
@@ -1568,7 +1569,7 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 			configData.cameraData.blankCoeffs = cv::Mat::zeros(1, maxDistortionIndex, CV_64FC1);
 			
 			for (unsigned int iii = 0; iii < maxDistortionIndex; iii++) {
-				configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg->D[iii];
+				configData.cameraData.distCoeffs.at<double>(0, iii) = info_msg.D[iii];
 			}
 			
 			cout << "Distortion: " << configData.cameraData.distCoeffs << endl;
@@ -1614,7 +1615,7 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 			configData.cameraData.K = cv::Mat::eye(3, 3, CV_64FC1);
 			
 			for (unsigned int mmm = 0; mmm < 3; mmm++) {
-				for (unsigned int nnn = 0; nnn < 3; nnn++) configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
+                for (unsigned int nnn = 0; nnn < 3; nnn++) configData.cameraData.K.at<double>(mmm, nnn) = info_msg->K[3*mmm + nnn];
 			}
 			
 			cout << configData.cameraData.K << endl;
@@ -1628,7 +1629,7 @@ void slamNode::handle_info(sensor_msgs::CameraInfo *info_msg) {
 			if (info_msg->distortion_model == "plumb_bob") {
 				maxDistortionIndex = 5;
 			} else {
-				if (info_msg->distortion_model != "rational_polynomial") ROS_ERROR("Unfamiliar with <info_msg->distortion_model> of (%s)", info_msg->distortion_model.c_str());
+				if (info_msg->distortion_model != "rational_polynomial") ROS_ERROR("Unfamiliar with <info_msg.distortion_model> of (%s)", info_msg->distortion_model.c_str());
 				maxDistortionIndex = 8;
 			}
 			
@@ -2781,7 +2782,7 @@ bool slamNode::updateLocalPoseEstimates() {
 		bool updated = updateKeyframePoses(tracksFrameShiftedPose, true);
 		lastTestedFrame = tracksFrameShiftedPose.header.seq;
 
-#ifdef _BUILD_FOR_ROS_
+#if defined(_BUILD_FOR_ROS_) && defined(_USE_SBA_)
 		if (configData.publishKeyframes) { drawKeyframes(camera_pub, keyframePoses, storedPosesCount); }
 #endif
 		main_mutex.unlock();
@@ -3095,10 +3096,15 @@ void slamNode::publishPoints(ros::Time stamp, unsigned int seq) {
 	
 	if (configData.verboseMode) { ROS_INFO("Publishing (%d) points", ((int)pointsToPublish.size())); }
 	
-	pcl::toROSMsg(pointsToPublish, pointCloud_message);
+    //pcl::toROSMsg(pointsToPublish, pointCloud_message);
+    //fromPCLPointCloud2(pointsToPublish, pointCloud_message);
+    pcl::PCLPointCloud2 tmpCloud;
+    toPCLPointCloud2(pointsToPublish, tmpCloud);
+    pcl_conversions::fromPCL(tmpCloud, pointCloud_message);
+    //pcl::fromPCLPointCloud2(pcl_pc, cloud);
 	
-	pointCloud_message.header.frame_id = "/world";
-	pointCloud_message.header.stamp = stamp; // pose_msg.header.stamp;
+    pointCloud_message.header.frame_id = "/world";
+    pointCloud_message.header.stamp = stamp; // pose_msg.header.stamp;
 	pointCloud_message.header.seq = seq; // pose_msg.header.seq;
 	
 	//ROS_ERROR("pointCloud_message.size() = (%d, %d)", pointCloud_message.height, pointCloud_message.width);
@@ -3155,31 +3161,31 @@ void slamNode::handle_pose(const geometry_msgs::PoseStamped& pose_msg) {
 }
 
 #ifdef _BUILD_FOR_ROS_
-void slamNode::integrateNewTrackMessage(const thermalvis::feature_tracksConstPtr& msg) {
+void slamNode::integrateNewTrackMessage(const thermalvis::feature_tracks& msg) {
 #else
-void slamNode::integrateNewTrackMessage(const vector<featureTrack>* msg) {
+void slamNode::integrateNewTrackMessage(const vector<featureTrack>& msg) {
 #endif
 
 	featureTrack blankTrack;
 	unsigned int addedTracks = 0, addedProjections = 0;
 	
 #ifdef _BUILD_FOR_ROS_
-	for (unsigned int iii = 0; iii < msg->projection_count; iii++) {
+	for (unsigned int iii = 0; iii < msg.projection_count; iii++) {
 #else
-	for (unsigned int iii = 0; iii < msg->size(); iii++) {
-		for (unsigned int jjj = 0; jjj < msg->at(iii).locations.size(); jjj++) {
+	for (unsigned int iii = 0; iii < msg.size(); iii++) {
+		for (unsigned int jjj = 0; jjj < msg.at(iii).locations.size(); jjj++) {
 #endif
 
 #ifdef _BUILD_FOR_ROS_
-			int track_idx = msg->indices[iii];
-			int camera_idx = msg->cameras.at(iii);
-			float proj_x = msg->projections_x.at(iii);
-			float proj_y = msg->projections_y.at(iii);
+			int track_idx = msg.indices[iii];
+			int camera_idx = msg.cameras.at(iii);
+			float proj_x = msg.projections_x.at(iii);
+			float proj_y = msg.projections_y.at(iii);
 #else
-			int track_idx = msg->at(iii).trackIndex;
-			int camera_idx = msg->at(iii).locations.at(jjj).imageIndex;
-			float proj_x = msg->at(iii).locations.at(jjj).featureCoord.x;
-			float proj_y = msg->at(iii).locations.at(jjj).featureCoord.y;
+			int track_idx = msg.at(iii).trackIndex;
+			int camera_idx = msg.at(iii).locations.at(jjj).imageIndex;
+			float proj_x = msg.at(iii).locations.at(jjj).featureCoord.x;
+			float proj_y = msg.at(iii).locations.at(jjj).featureCoord.y;
 #endif
 
 			latestFrame = max(latestFrame, camera_idx);

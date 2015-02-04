@@ -37,5 +37,5 @@ bool slamData::obtainStartingData(ros::NodeHandle& nh) {
 void mySigintHandler(int sig) {
 	wantsToShutdown = true;
 	ROS_WARN("Requested shutdown, terminating feeds...");
-	(*globalNodePtr)->prepareForTermination();
+    //(*globalNodePtr)->prepareForTermination();
 }

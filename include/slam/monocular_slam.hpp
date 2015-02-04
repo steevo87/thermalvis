@@ -22,7 +22,22 @@
 #include "slam/visualization.hpp"
 
 #ifdef _BUILD_FOR_ROS_
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl/conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include "core/ros_resources.hpp"
 #include "slamConfig.h"
+#include <sensor_msgs/CameraInfo.h>
+
+#include <pcl/PCLPointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+
+#include <ros/header.h>
+#include "feature_tracks.h"
+#include "pose_confidence.h"
 #endif
 
 #include "slam_config.hpp"
@@ -133,16 +148,14 @@ private:
 	ros::Timer timer;
 	ros::Subscriber tracks_sub, info_sub, pose_sub;
 	ros::Publisher path_pub, camera_pub, points_pub, pose_pub, confidence_pub;
-	dynamic_reconfigure::Server<thermalvis::monoslamConfig> server;
-	dynamic_reconfigure::Server<thermalvis::monoslamConfig>::CallbackType f;
 	char pose_pub_name[256];
 	
-	
-	sensor_msgs::PointCloud2 pointCloud_message;
+    sensor_msgs::PointCloud2 pointCloud_message;
+    //pcl::PCLPointCloud2 pointCloud_message;
 	
 #endif
 
-	ros::Header frameHeaderHistoryBuffer[MAX_HISTORY];
+    std_msgs::Header frameHeaderHistoryBuffer[MAX_HISTORY];
 
 	geometry_msgs::PoseStamped poseHistoryBuffer[MAX_HISTORY];
 	
@@ -259,7 +272,7 @@ public:
 #ifdef _BUILD_FOR_ROS_
 	void main_loop(const ros::TimerEvent& event);
 #else
-	void main_loop(sensor_msgs::CameraInfo *info_msg, const vector<featureTrack>* msg);
+	void main_loop(sensor_msgs::CameraInfo& info_msg, const vector<featureTrack>& msg);
 #endif
 	
 	///brief	Prepares node for termination.
@@ -272,15 +285,15 @@ public:
 	void getBasisNodes(vector<unsigned int>& basisNodes, unsigned int idx);
 	
 #ifdef _BUILD_FOR_ROS_
-	void handle_tracks(const thermalvis::feature_tracksConstPtr& msg);
+	void handle_tracks(const thermalvis::feature_tracks& msg);
 #else
-	void handle_tracks(const vector<featureTrack>* msg);
+	void handle_tracks(const vector<featureTrack>& msg);
 #endif
 
 #ifdef _BUILD_FOR_ROS_
-	void integrateNewTrackMessage(const thermalvis::feature_tracksConstPtr& msg);
+	void integrateNewTrackMessage(const thermalvis::feature_tracks& msg);
 #else
-	void integrateNewTrackMessage(const vector<featureTrack>* msg);
+	void integrateNewTrackMessage(const vector<featureTrack>& msg);
 #endif
 
 	bool evaluationSummaryAndTermination();
@@ -288,7 +301,7 @@ public:
 	void videoslamPoseProcessing();
 
 #ifdef _BUILD_FOR_ROS_
-	void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
+    void handle_info(const sensor_msgs::CameraInfoConstPtr& info_msg);
 #else
 	void handle_info(sensor_msgs::CameraInfo *info_msg);
 #endif

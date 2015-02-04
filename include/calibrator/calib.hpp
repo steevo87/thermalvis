@@ -11,7 +11,8 @@
 #include "core/program.hpp"
 
 #ifdef _BUILD_FOR_ROS_
-#include "ros_resources.hpp"
+#include "calibratorConfig.h"
+#include "core/ros_resources.hpp"
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <dynamic_reconfigure/server.h>
@@ -24,9 +25,9 @@
 #include "core/launch.hpp"
 #include "core/improc.hpp"
 #include "core/features.hpp"
-#include "calibration.hpp"
-#include "intrinsics.hpp"
-#include "extrinsics.hpp"
+#include "calibrator/calibration.hpp"
+#include "calibrator/intrinsics.hpp"
+#include "calibrator/extrinsics.hpp"
 
 #ifdef _USE_BOOST_
 #include "boost/filesystem.hpp"  
@@ -67,12 +68,6 @@ public:
 	cv::Mat K[MAX_ALLOWABLE_CAMS];
 	cv::Mat distCoeffs[MAX_ALLOWABLE_CAMS];
 	
-	// MSER settings
-	bool adjustMSER[MAX_ALLOWABLE_CAMS];
-	int delta[MAX_ALLOWABLE_CAMS];
-	double maxVar[MAX_ALLOWABLE_CAMS], minDiv[MAX_ALLOWABLE_CAMS];
-	double areaThreshold[MAX_ALLOWABLE_CAMS];
-
 	string read_addr;
 	
 	calibratorData();
@@ -246,17 +241,17 @@ public:
 	
 	void assignDebugCameraInfo();
 	
-#ifdef _BUILD_FOR_ROS_
-	void publishUndistorted(const ros::TimerEvent& event);
-#else
+//#ifdef _BUILD_FOR_ROS_
+//	void publishUndistorted(const ros::TimerEvent& event);
+//#else
 	void publishUndistorted();
-#endif
+//#endif
 
-#ifdef _BUILD_FOR_ROS_
-	void publishRectified(const ros::TimerEvent& event);
-#else
+//#ifdef _BUILD_FOR_ROS_
+//	void publishRectified(const ros::TimerEvent& event);
+//#else
 	void publishRectified();
-#endif
+//#endif
 
 	void startUndistortionPublishing();
 	

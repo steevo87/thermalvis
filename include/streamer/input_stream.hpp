@@ -16,13 +16,13 @@
 #include "serial_comms.hpp"
 
 #ifdef _BUILD_FOR_ROS_
-#include "ros_resources.hpp"
+#include "core/ros_resources.hpp"
 #include <thermalvis/streamerConfig.h>
 #include <signal.h>
 #endif
 
 #ifdef _AVLIBS_AVAILABLE_
-#include "video.hpp"
+#include "streamer/video.hpp"
 #endif
 
 //#include <opencv2/videoio/videoio.hpp>
@@ -217,8 +217,6 @@ private:
 #else
 	const cv::Mat *bridgeReplacement;
 #endif
-
-	char nodeName[256];
 	
 	double lastMinDisplayTemp, lastMaxDisplayTemp;
 	bool deviceCreated, currentDesiredNucProtectionMode, currentNucProtectionMode, wantsToDisableNuc, firstCall, settingsDisabled, canRadiometricallyCorrect;

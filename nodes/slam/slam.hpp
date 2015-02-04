@@ -5,7 +5,7 @@
 #ifndef _SLAM_H_
 #define _SLAM_H_
 
-#include "monocular_slam.hpp"
+#include "slam/monocular_slam.hpp"
 
 typedef dynamic_reconfigure::Server < thermalvis::slamConfig > Server;
 

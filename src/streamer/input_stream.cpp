@@ -17,6 +17,8 @@ bool streamerConfig::assignStartingData(streamerData& startupData) {
 	wantsToUndistort = startupData.wantsToUndistort;
 	autoTemperature = startupData.autoTemperature;
 	wantsToUndistort = startupData.wantsToUndistort;
+
+	denoisingMode = startupData.denoisingMode;
 	
 	inputDatatype = startupData.inputDatatype;
 	detectorMode = startupData.detectorMode;
@@ -416,6 +418,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("degreesPerGraylevel")) degreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("desiredDegreesPerGraylevel")) desiredDegreesPerGraylevel = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("zeroDegreesOffset")) zeroDegreesOffset = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
+			if (!v2.second.get_child("<xmlattr>.name").data().compare("denoisingMode")) denoisingMode = atoi(v2.second.get_child("<xmlattr>.value").data().c_str());
 
 			// Output settings
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("output16bit")) output16bit = !v2.second.get_child("<xmlattr>.value").data().compare("true");
@@ -1691,6 +1694,8 @@ void streamerNode::serverCallback(streamerConfig &config) {
 	configData.desiredDegreesPerGraylevel = config.desiredDegreesPerGraylevel;
 	configData.zeroDegreesOffset = config.zeroDegreesOffset;
 	configData.wantsToUndistort = config.wantsToUndistort;
+
+	configData.denoisingMode = config.denoisingMode;
 	
 	if (configData.autoTemperature != config.autoTemperature) {
 		lastMinDisplayTemp = -std::numeric_limits<double>::max(), lastMaxDisplayTemp = std::numeric_limits<double>::max();
@@ -1807,8 +1812,10 @@ void streamerNode::serverCallback(streamerConfig &config) {
 			if (configData.verboseMode) { ROS_INFO("device released..."); }
 			configData.inputDatatype = config.inputDatatype;
 			if (configData.verboseMode) { ROS_INFO("Changing to (%d)", configData.inputDatatype); }
-			setupDevice();
-			if (configData.verboseMode) { ROS_INFO("Set up done."); }
+            if (setupDevice()) {
+                if (configData.verboseMode) { ROS_INFO("Set up done."); }
+            } else return;
+
 		} else {
 			configData.inputDatatype = config.inputDatatype;
 		}
@@ -1937,7 +1944,14 @@ bool streamerNode::setupDevice() {
 #ifdef _AVLIBS_AVAILABLE_
 		if (configData.verboseMode) { ROS_INFO("Setting up device in 16-bit mode..."); }
 		int deviceWidth, deviceHeight;
-		getMainVideoSource()->setup_video_capture(configData.capture_device.c_str(), deviceWidth, deviceHeight, configData.verboseMode);
+
+        int setup_retVal = getMainVideoSource()->setup_video_capture(configData.capture_device.c_str(), deviceWidth, deviceHeight, configData.verboseMode);
+
+        if (setup_retVal != 0) {
+            ROS_INFO("Video source obtaining failed.");
+            setValidity(false);
+            return false;
+        }
 		
 		// Now use this opportunity to test/correct?
 		
@@ -1960,6 +1974,8 @@ bool streamerNode::setupDevice() {
 		}
 #else
 		ROS_ERROR("AVLIBs not available");
+        setValidity(false);
+        return false;
 #endif
 	}
 	
@@ -2074,6 +2090,8 @@ bool streamerNode::processImage() {
 	if (frame.rows == 0) return false;
 	
 	if (globalCameraInfo.cameraSize.height == 0) assignDefaultCameraInfo(frame.rows, frame.cols, configData.guessIntrinsics);
+
+	if (configData.denoisingMode != 0) denoiseImage(frame, frame, configData.denoisingMode);
 	
 	if (configData.resizeImages) {
 		resize(frame, rzMat, cv::Size(configData.desiredCols, configData.desiredRows));
@@ -2102,7 +2120,7 @@ bool streamerNode::processImage() {
 		frame.copyTo(lastFrame);
 	}
 
-    if (configData.verboseMode){ ROS_INFO("Processing image (%d)...", frameCounter); }
+    //if (configData.verboseMode){ ROS_INFO("Processing image (%d)...", frameCounter); }
 
 	(pastMeanIndex >= (configData.temporalMemory-1)) ? pastMeanIndex = 0 : pastMeanIndex++;
 	
@@ -2143,7 +2161,7 @@ bool streamerNode::processImage() {
 			}
 
 			if (configData.normMode == NORM_MODE_FIXED_TEMP_RANGE) {
-				if (configData.verboseMode) { ROS_INFO("newCentralVal = (%d)", newCentralVal); }
+                //if (configData.verboseMode) { ROS_INFO("newCentralVal = (%d)", newCentralVal); }
 				temperatureRangeBasedDownsample(_16bitMat, preFilteredMat, newCentralVal, configData.degreesPerGraylevel, configData.desiredDegreesPerGraylevel);
 			} else if (configData.normMode == NORM_MODE_FIXED_TEMP_LIMITS) {
 				if (configData.alreadyCorrected) {
@@ -2452,7 +2470,7 @@ void streamerNode::publishTopics() {
 				std::copy(&(colourMat_pub.at<cv::Vec3b>(0,0)[0]), &(colourMat_pub.at<cv::Vec3b>(0,0)[0])+(colourMat_pub.cols*colourMat_pub.rows*3), msg_color.data.begin());
 
 				if (!cameraPublished) {
-					if (configData.verboseMode) { ROS_INFO("%s << Publishing the whole camera...", __FUNCTION__); }
+                    //if (configData.verboseMode) { ROS_INFO("%s << Publishing the whole camera...", __FUNCTION__); }
 					pub_color.publish(msg_color, camera_info);
 					cameraPublished = true;
 				} else pub_color_im.publish(msg_color);
@@ -2488,7 +2506,7 @@ bool streamerNode::runDevice() {
 		ROS_INFO("Video polling (device: %d) started...", configData.device_num);
 	}
 	
-	setupDevice();
+    if (!setupDevice()) return false;
 	
 	while (isVideoValid()) {
 		

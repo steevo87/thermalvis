@@ -4,7 +4,7 @@
 
 #ifdef _BUILD_FOR_ROS_
 
-#include "initialization.hpp"
+#include "core/initialization.hpp"
 
 bool initializationData::obtainStartingData(ros::NodeHandle& nh) {
 	

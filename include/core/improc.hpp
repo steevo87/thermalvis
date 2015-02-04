@@ -30,6 +30,8 @@
 
 #define MIN_PIXELS_PER_AXIS_FOR_DISPLAY 400
 
+void denoiseImage(const cv::Mat& src, cv::Mat& dst, int denoisingMode = DENOISING_MODE_X);
+
 void fadeImage(const cv::Mat& src, cv::Mat& dst, double frac = 0.65);
 
 void applyFilter(const cv::Mat& src, cv::Mat& dst, int filter = NO_FILTERING, double param = 2.0);

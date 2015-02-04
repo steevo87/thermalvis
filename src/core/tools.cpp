@@ -58,6 +58,10 @@ namespace ros {
 		return retVal;
 	}
 
+}
+
+namespace std_msgs {
+
 	Header::Header() : seq(0), frame_id("") { }
 
 }
@@ -166,10 +170,6 @@ void findLinearModel(double* x, double* y, int termsToConsider, double &m, doubl
 	//printf("%s << eq = (%f, %f)\n", __FUNCTION__, m, c);
 	
 }
-
-
-
-
 
 void convertUcharToBinary(unsigned char val, int* binaryArray) {
     for (int iii = 0; iii < 8; iii++) {

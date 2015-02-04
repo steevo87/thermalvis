@@ -40,6 +40,8 @@ private slots:
 
     void on_mapCode_currentIndexChanged(int index);
 
+	void on_denoisingMethod_currentIndexChanged(int index);
+
     void on_inputDatatype_currentIndexChanged(int index);
 
     void on_detectorMode_currentIndexChanged(int index);
