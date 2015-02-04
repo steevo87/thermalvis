@@ -31,6 +31,7 @@ protected:
 	cv::Mat *displayImage;
 	char *output_directory;
 	std::ofstream timestamps_stream;
+	char nodeName[256];
 
 public:
 	GenericOptions();
