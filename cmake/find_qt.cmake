@@ -1,19 +1,25 @@
 IF(IS_64_BIT)
 	SET(Qt5Widgets_Loc_1 "C:/Qt/Qt5.2.1/5.2.1/msvc2012_64_opengl/lib/cmake/Qt5Widgets")
+	SET(Qt5Widgets_Loc_2 "C:/Qt/Qt5.2.1/5.2.1/msvc2012_64/lib/cmake/Qt5Widgets")
 ELSE()
 	SET(Qt5Widgets_Loc_1 "C:/Qt/Qt5.3.1/5.3/msvc2012_opengl/lib/cmake/Qt5Widgets")
+	SET(Qt5Widgets_Loc_2 "C:/Qt/Qt5.4.0/5.4/msvc2012_opengl/lib/cmake/Qt5Widgets")
 ENDIF()
 
-SET(Qt5Widgets_Loc_2 "C:/Qt/Qt5.4.0/5.4/msvc2012_opengl/lib/cmake/Qt5Widgets")
+SET(HAS_OPENGL TRUE)
 
 IF(EXISTS "${Qt5Widgets_Loc_1}")
 	SET(Qt5Widgets_DIR "${Qt5Widgets_Loc_1}" CACHE STRING "Default search path for QtWidgets cmake file")
 ELSEIF(EXISTS "${Qt5Widgets_Loc_2}")
+	IF(IS_64_BIT)
+		SET(HAS_OPENGL FALSE)
+	ENDIF()
 	SET(Qt5Widgets_DIR "${Qt5Widgets_Loc_2}" CACHE STRING "Default search path for QtWidgets cmake file")
 ELSE()
 	SET(Qt5Widgets_DIR "" CACHE STRING "Default search path for QtWidgets cmake file")
 ENDIF()
 
+MESSAGE(STATUS "qt Installation has OpenGL = ${HAS_OPENGL}")
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}; ${QTDIR}")
 
 find_package(Qt5Widgets QUIET)
