@@ -15,15 +15,16 @@ LIST(APPEND OpenCV_Basic_Components_List "opencv_highgui")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_calib3d")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_objdetect")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_video")
-LIST(APPEND OpenCV_Basic_Components_List "opencv_contrib")
-LIST(APPEND OpenCV_Basic_Components_List "opencv_legacy")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_videoio")
 LIST(APPEND OpenCV_Basic_Components_List "opencv_imgcodecs")
 
-LIST(APPEND OpenCV_Advanced_Components_List "opencv_viz")
-#LIST(APPEND OpenCV_Advanced_Components_List "opencv_gpu")
+LIST(APPEND OpenCV_Prior_Components_List "opencv_contrib")
+LIST(APPEND OpenCV_Prior_Components_List "opencv_legacy")
+
+LIST(APPEND OpenCV_Advanced_Components_List "opencv_viz") # "opencv_gpu"
 
 LIST(APPEND OpenCV_Components_List ${OpenCV_Basic_Components_List})
+LIST(APPEND OpenCV_Components_List ${OpenCV_Prior_Components_List})
 LIST(APPEND OpenCV_Components_List ${OpenCV_Advanced_Components_List})
 
 SET(OPENCV_HINTS "/usr/local/share/OpenCV" "${USERPROFILE}/Documents/opencv/build" "C:/Users/Public/Documents/opencv/build" "${USERPROFILE}/Documents/Code/BUILDS/opencv/build" "${USERPROFILE}/Documents/GitHub/BUILDS/OpenCV")
@@ -31,7 +32,6 @@ find_package(OpenCV 2.4.8 COMPONENTS ${OpenCV_Components_List} QUIET)
 
 IF(NOT OPENCV_VIZ_FOUND) # If you can't find OpenCV with viz, exclude it and try again
 	SET(OpenCV_Components_List "")
-	LIST(APPEND OpenCV_Components_List ${OpenCV_Basic_Components_List})
 	find_package(OpenCV 2.4.8 COMPONENTS ${OpenCV_Components_List} QUIET)
 	IF(NOT OpenCV_FOUND) # If you still can't find it, add viz back in as a requirement, and try your alternative "manual" approach further down the file
 		LIST(APPEND OpenCV_Components_List ${OpenCV_Advanced_Components_List})
@@ -99,12 +99,16 @@ ELSE()
         SET(OPENCV_VER "")
 ENDIF()
 
-LIST(APPEND OpenCV_DLLs_List ${OpenCV_Components_List})
+LIST(APPEND OpenCV_DLLs_List ${OpenCV_Basic_Components_List})
+LIST(APPEND OpenCV_DLLs_List ${OpenCV_Advanced_Components_List})
+
 LIST(APPEND OpenCV_DLLs_List "opencv_imgproc" "opencv_flann" "opencv_features2d")
 
 IF(OpenCV_VERSION_MAJOR GREATER 2)
 	add_definitions(-D_OPENCV_VERSION_3_PLUS_)
 	# LIST(APPEND OpenCV_DLLs_List "opencv_imgcodecs" "opencv_videoio")
+ELSE()
+	LIST(APPEND OpenCV_DLLs_List ${OpenCV_Prior_Components_List})
 ENDIF()
 
 IF(OPENCV_GPU_FOUND)

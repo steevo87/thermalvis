@@ -8,7 +8,7 @@
 QImage Mat2QImage(const cv::Mat &src) {
 
     // http://stackoverflow.com/questions/5026965/how-to-convert-an-opencv-cvmat-to-qimage
-    QImage dest= QImage((uchar*) src.data, src.cols, src.rows, src.step, QImage::Format_RGB888); // Format_ARGB32
+    QImage dest= QImage((uchar*) src.data, int(src.cols), int(src.rows), int(src.step), QImage::Format_RGB888); // Format_ARGB32
 
     return dest;
 }
