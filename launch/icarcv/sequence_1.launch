@@ -1,0 +1,32 @@
+<launch>
+	<node name="streamer" pkg="thermalvis" type="streamer">
+		<param name="source" value="directory" />
+		<param name="directory" value="~\Documents\Data\icarcv\sequence-1" />
+		<param name="markDuplicates" value="true" />
+		<param name="loopMode" value="true" />
+		<param name="output8bit" value="true" />
+		<param name="guessIntrinsics" value="true" />
+	</node>
+	
+	<node name="flow" pkg="thermalvis" type="flow" output="screen">
+		<param name="debugMode" value="true" />
+		<param name="minFeatures" value="100" />
+		<param name="maxFeatures" value="300" />
+		<param name="minSeparation" value="5" />
+		<param name="flowThreshold" value="0.0005" /> <!-- default is 0.0002 -->
+	</node>
+	
+	<node name="slam" pkg="thermalvis" type="slam" output="screen">
+		<param name="inspectInitialization" value="true" />
+		<param name="maxInitializationFrames" value="20" />
+	</node>
+	
+	<node name="image_view" pkg="image_view" type="image_view" output="screen">
+		<remap from="image" to="/thermalvis/flow/image_col"/>
+		<param name="~/autosize" value="true" />
+	</node>
+	
+	<!-- <node name="reconfigure_streamer" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/streamer"/> -->
+	<!-- <node name="reconfigure_flow" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/flow"/> -->
+	<node name="reconfigure_slam" pkg="dynamic_reconfigure" type="reconfigure_gui" output="screen" args="/slam"/>
+</launch>
