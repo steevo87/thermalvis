@@ -1,7 +1,7 @@
 <launch>
 	<node name="streamer" pkg="thermalvis" type="streamer">
 		<param name="source" value="directory" />
-		<param name="directory" value="C:\Users\Stephen\Documents\Data\miricle\icarcv\sequence-3" />
+		<param name="directory" value="~\Documents\Data\icarcv\sequence-3" />
 		<param name="markDuplicates" value="true" />
 		<param name="loopMode" value="true" />
 		<param name="output8bit" value="true" />

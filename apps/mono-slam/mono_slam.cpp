@@ -14,6 +14,10 @@
 #include "mainwindow_flow.h"
 #include "mainwindow_slam.h"
 
+#include "core/cvimagewidget.hpp"
+
+#include <QDialog>
+#include <QMainWindow>
 #include <QApplication>
 #include <QThread>
 #include <QtCore>

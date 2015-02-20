@@ -218,9 +218,13 @@ void featureTrackerNode::displayCurrentFrame() {
 
     if (drawImage_resized.rows != 0) {
 #ifdef _USE_QT_
-        myImage = Mat2QImage(drawImage_resized);
-        myLabel.setPixmap(QPixmap::fromImage(myImage));
-        myLabel.show();
+		/*
+		if (!pauseMode) {
+			myImage = Mat2QImage(drawImage_resized);
+			myLabel.setPixmap(QPixmap::fromImage(myImage));
+			myLabel.show();
+		}
+		*/
 #else
         if (!pauseMode) cv::imshow("display", drawImage_resized);
         char key = cv::waitKey(1);
