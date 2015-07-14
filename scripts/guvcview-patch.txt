@@ -1,0 +1,177 @@
+diff -c -x '*.c~' -x '*.h~' -x '*.deps' -x '*.o' -x '*.am' -x '*.in' -x Makefile -x guvcview guvcview-src-1.5.2-dev/src/defs.h guvcview-src-1.5.2-live/src/defs.h
+*** guvcview-src-1.5.2-dev/src/defs.h	2012-02-03 08:52:17.000000000 +1000
+--- guvcview-src-1.5.2-live/src/defs.h	2012-02-10 10:22:49.612176572 +1000
+***************
+*** 143,148 ****
+--- 143,149 ----
+  #define YUV_MONOCR (1<<3)
+  #define YUV_PIECES (1<<4)
+  #define YUV_PARTICLES (1<<5)
++ #define YUV_Y16NORM (1<<6)
+  
+  /*Audio Effects*/
+  #define SND_NOEF   (0)
+Only in guvcview-src-1.5.2-live/src: defs.h.rej
+diff -c -x '*.c~' -x '*.h~' -x '*.deps' -x '*.o' -x '*.am' -x '*.in' -x Makefile -x guvcview guvcview-src-1.5.2-dev/src/video.c guvcview-src-1.5.2-live/src/video.c
+*** guvcview-src-1.5.2-dev/src/video.c	2012-02-03 08:52:17.000000000 +1000
+--- guvcview-src-1.5.2-live/src/video.c	2012-02-16 11:48:38.574577362 +1000
+***************
+*** 189,194 ****
+--- 189,195 ----
+  /* run in a thread (SDL overlay)*/
+  void *main_loop(void *data)
+  {
++ 
+      struct ALL_DATA *all_data = (struct ALL_DATA *) data;
+      
+      struct VidState *s = all_data->s;
+***************
+*** 209,214 ****
+--- 210,223 ----
+      int width = global->width;
+      int height = global->height;
+      int format = global->format;
++ 
++ 	/* Added by Stephen Vidas, 10-Feb-2012 */
++ 	BYTE *framebuffer;
++ 	framebuffer = (BYTE*) malloc(height*width*2+1);
++ 	UINT16 *ptmp= (UINT16 *) videoIn->framebuffer;
++ 	UINT16 maxVal = 0, minVal = 65535, norm16 = 0;
++ 	UINT8 norm8 = 0;
++ 	/* End of addition */
+      
+      SAMPLE vuPeak[2];  // The maximum vuLevel seen recently
+      int vuPeakFreeze[2]; // The vuPeak values will be frozen for this many frames.
+***************
+*** 429,435 ****
+  				draw_vu_meter(width, height, vuPeak, vuPeakFreeze, data);
+  			}
+              SDL_LockYUVOverlay(overlay);
+!             memcpy(p, videoIn->framebuffer, width * height * 2);
+              SDL_UnlockYUVOverlay(overlay);
+              SDL_DisplayYUVOverlay(overlay, &drect);
+          
+--- 438,527 ----
+  				draw_vu_meter(width, height, vuPeak, vuPeakFreeze, data);
+  			}
+              SDL_LockYUVOverlay(overlay);
+! 
+! 		int h=0;
+! 		int w=0;
+! 
+! 		minVal = 65535;
+! 		maxVal = 0;
+! 
+! 		/* Added by Stephen Vidas, 10-Feb-2012 */
+! 		if((global->Frame_Flags & YUV_Y16NORM)==YUV_Y16NORM) {
+! 			for(h=0;h<height;h++) {
+! 				for(w=0;w<width;w+=1) {					
+! 
+! 					if (ptmp[0] > maxVal) {
+! 						maxVal = ptmp[0];
+! 					}
+! 
+! 					// This is an attempt to ignore the black pixels
+! 					if ((ptmp[0] < minVal) && (ptmp[0] > 50)) {
+! 						minVal = ptmp[0];
+! 					}	
+! 					ptmp += 1;
+! 				}
+! 			}
+! 
+! 			ptmp -= width*height;
+! 
+! 			for(h=0;h<height;h++) {
+! 				for(w=0;w<width;w+=2) {
+! 					if (minVal != maxVal) {
+! 						norm16 = (ptmp[0] - minVal) * ((UINT16) 255) / (maxVal - minVal);
+! 					} else {
+! 						norm16 = 128;
+! 					}
+! 
+! 					if (ptmp[0] < minVal) {
+! 						norm16 = 0;
+! 					} else if (ptmp[0] > maxVal) {
+! 						norm16 = 255;
+! 					}
+! 			
+! 					if (norm16 > 255) {
+! 						norm16 = 255;
+! 					} else if (norm16 < 0) {
+! 						norm16 = 0;
+! 					}
+! 
+! 					norm8 = (BYTE) (norm16 & 0x00FF);
+! 
+! 					*framebuffer++ = norm8;
+! 					*framebuffer++ = 0x7F;
+! 
+! 					if (minVal != maxVal) {
+! 						norm16 = (ptmp[1] - minVal) * ((UINT16) 255) / (maxVal - minVal);
+! 					} else {
+! 						norm16 = 128;
+! 					}
+! 
+! 					if (norm16 > 255) {
+! 						norm16 = 255;
+! 					}
+! 			
+! 					if (norm16 < 0) {
+! 						norm16 = 0;
+! 					}
+! 
+! 					norm8 = (BYTE) (norm16 & 0x00FF);
+! 
+! 					*framebuffer++ = norm8;
+! 					*framebuffer++ = 0x7F;
+! 
+! 					ptmp += 2;
+! 				}
+! 			}
+! 
+! 			ptmp -= width*height;
+! 		
+! 			framebuffer -= width*height*2;
+! 
+! 			memcpy(p, framebuffer, width * height * 2);
+! 			/* End of addition */
+! 		} else {
+! 			memcpy(p, videoIn->framebuffer, width * height * 2);
+! 		}
+! 
+              SDL_UnlockYUVOverlay(overlay);
+              SDL_DisplayYUVOverlay(overlay, &drect);
+          
+diff -c -x '*.c~' -x '*.h~' -x '*.deps' -x '*.o' -x '*.am' -x '*.in' -x Makefile -x guvcview guvcview-src-1.5.2-dev/src/video_tab.c guvcview-src-1.5.2-live/src/video_tab.c
+*** guvcview-src-1.5.2-dev/src/video_tab.c	2012-02-03 08:52:17.000000000 +1000
+--- guvcview-src-1.5.2-live/src/video_tab.c	2012-02-10 10:57:45.432211320 +1000
+***************
+*** 487,492 ****
+--- 487,493 ----
+  	GtkWidget *FiltMonoEnable;
+  	GtkWidget *FiltPiecesEnable;
+  	GtkWidget *FiltParticlesEnable;
++ 	GtkWidget *FiltY16NormEnable;
+  	GtkWidget *set_jpeg_comp;
+  	GtkWidget *label_jpeg_comp;
+  	
+***************
+*** 1017,1021 ****
+--- 1018,1034 ----
+  	gtk_widget_show (FiltParticlesEnable);
+  	g_signal_connect (GTK_CHECK_BUTTON(FiltParticlesEnable), "toggled",
+  		G_CALLBACK (FiltEnable_changed), all_data);
++ 
++ 	// Y16-Normalization
++ 	FiltY16NormEnable=gtk_check_button_new_with_label (_(" Y16-Norm"));
++ 	g_object_set_data (G_OBJECT (FiltY16NormEnable), "filt_info", GINT_TO_POINTER(YUV_Y16NORM));
++ 	gtk_widget_set_halign (FiltY16NormEnable, GTK_ALIGN_FILL);
++ 	gtk_widget_set_hexpand (FiltY16NormEnable, TRUE);
++ 	gtk_grid_attach(GTK_GRID(table_filt), FiltY16NormEnable, 0, 1, 1, 1);
++ 	
++ 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(FiltY16NormEnable),(global->Frame_Flags & YUV_Y16NORM)>0);
++ 	gtk_widget_show (FiltY16NormEnable);
++ 	g_signal_connect (GTK_CHECK_BUTTON(FiltY16NormEnable), "toggled",
++ 		G_CALLBACK (FiltEnable_changed), all_data);
+  	
+  }
