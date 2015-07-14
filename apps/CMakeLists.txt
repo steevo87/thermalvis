@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 IF(WIN32 OR win64)
-	IF(USE_OPTRIS)	
+	IF(USE_OPTRIS AND NOT CALIBRATION_ONLY)	
 		SET(OptrisSDK "${OptrisTestLoc}" CACHE FILEPATH "Include directory for Optris SDK")
 		IF(EXISTS "${OptrisSDK}")
 			SET(OptrisSDK_FOUND TRUE)
@@ -16,9 +16,12 @@ IF(WIN32 OR win64)
 	ENDIF()
 ENDIF()
 
-IF(Boost_FOUND)
+IF(Boost_FOUND AND NOT CALIBRATION_ONLY)
 	ADD_SUBDIRECTORY(mono-slam)
 ENDIF()
 
 ADD_SUBDIRECTORY(mm-calibrator)
-ADD_SUBDIRECTORY(dd-evaluator)
+
+IF(NOT CALIBRATION_ONLY)
+	ADD_SUBDIRECTORY(dd-evaluator)
+ENDIF()
