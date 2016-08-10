@@ -196,7 +196,7 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
   {
 		string xmlString = string(argv[1]);
 #ifdef _WIN32
-    CompletePath( xmlString );
+    CleanAndSubstitutePath( xmlString );
 #endif
 		sprintf(xmlAddress, "%s", xmlString.c_str());
 		ROS_INFO("Using XML file provided at (%s)", xmlAddress);

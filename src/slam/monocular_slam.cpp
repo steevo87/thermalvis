@@ -85,7 +85,7 @@ bool slamData::assignFromXml(xmlParameters& xP)
 
 		// Substitute tildes if in Windows
 #ifdef _WIN32
-    CompletePath( outputFolder );
+    CleanAndSubstitutePath( outputFolder );
 #endif
 
 	}
