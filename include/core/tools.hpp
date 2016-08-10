@@ -25,42 +25,55 @@
 #include "core/ros_substitution.hpp"
 #endif
 
+#define BITS_PER_BYTE       8
+#define ERROR_CODE          -1
+
 enum E_MessageType
 {
   MESSAGE_NORMAL      = 0,
   MESSAGE_WARNING     = 1,
   MESSAGE_ERROR       = 2,
-  NO_OF_MESSAGE_TYPES // Must be the last value
+  NO_OF_MESSAGE_TYPES // Must be the final value
+};
+
+enum E_ElementType
+{
+  ELEMENT_FILE        = 0,
+  ELEMENT_FOLDER      = 1,
+  NO_OF_ELEMENT_TYPES // Must be the final value
 };
 
 using namespace std;
 
-long        Factorial                         ( int num );
+long        Factorial                         ( int x );
 float       ReciprocalSquareRoot              ( float x );
 
-double      AsymmetricGaussianValue           ( double score, double mean, double loVar, double hiVar );
+double      AsymmetricGaussianValue           ( const double score, const double mean, const double loVar, const double hiVar );
 void        CalculateMeanAndStdDev            ( const std::vector<double>& v, double& mean, double& stdev );
-double      PerpDistBetweenParallelLines      ( double *line1, double *line2 );
-void        SelectRandomSubset                ( std::vector<unsigned int>& src, std::vector<unsigned int>& dst, unsigned int max_val );
+void        SelectRandomSubset                ( const std::vector<unsigned int>& src, std::vector<unsigned int>& dst, unsigned int maxVal );
 
 void        InitializeRandomNumberGeneration  ();
 
-void        ConvertUcharToBinaryIntArray      ( unsigned char val, int* binaryArray );
-void        ConvertRawByteToBinaryCharArray   ( void* src, char* dst );
+void        ConvertUcharToBinaryIntArray      ( const unsigned char src, int* dst );
+void        ConvertRawByteToBinaryCharArray   ( const void* src, char* dst );
 
 void        CleanAndSubstitutePath            ( std::string& path );
 
-int         CountElementsInFolder             ( const char* folderName, std::vector<std::string>& elementNames, int elementType );
+int         CountElementsInFolder             ( const char* folderName, std::vector<std::string>& elementNames, const E_ElementType elementType );
 
-void        GenerateCombinatorialArray        ( std::vector<unsigned int>& currentIndices, int r, int n);
-void        AddUniqueValuesToVector           ( std::vector<unsigned int>& dst, std::vector<unsigned int>& src);
-void        FindLinearModel                   ( double* x, double* y, int termsToConsider, double &m, double &c );
+void        AddUniqueValuesToVector           ( std::vector<unsigned int>& dst, const std::vector<unsigned int>& src );
 
-/// \brief  Selects the score which is minimally better than a specified proportion of all scores
-double      EquivalentProbabilityScore        ( double* values, int quantity, double prob );
+/// \brief  From a set of n (x,y) pairs, calculates the gradient 'n' and y-intercept 'c' 
+void        FindLinearModel                   ( const double* x, const double* y, const int n, double &m, double &c );
 
-double      ElapsedTimeMilliseconds           ( struct timeval& timer, bool reset = true );
-double      TimeDifference                    ( ros::Time time1, ros::Time time2 );
-ros::Time   TimeMidpoint                      ( ros::Time time1, ros::Time time2 );
+/// \brief  Generates the next ordered combination of size 'r' from 'n' ordered integer values
+void        UpdateCombinatorialArray          ( std::vector<unsigned int>& currentArray, const int k, const int n );
+
+/// \brief  Selects a score from the array 'sortedValues' of 'n' length which is minimally better than thespecified proportion of all scores
+double      EquivalentProbabilityScore        ( const double* values, const int n, const double prop );
+
+double      ElapsedTimeMilliseconds           ( struct timeval& timer, const bool reset = true );
+double      TimeDifference                    ( const ros::Time time1, const ros::Time time2 );
+ros::Time   TimeMidpoint                      ( const ros::Time time1, const ros::Time time2 );
 
 #endif

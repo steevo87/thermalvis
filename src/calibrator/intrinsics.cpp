@@ -1035,7 +1035,7 @@ void optimizeCalibrationSet(Size imSize,
             {
 
                 tempFrameTester.clear();
-                GenerateCombinatorialArray(currentIndices, N+1, int(candidatePatternsCpy.size()));
+                UpdateCombinatorialArray(currentIndices, N+1, int(candidatePatternsCpy.size()));
 
                 for (unsigned int j = 0; j < currentIndices.size(); j++)
                 {
