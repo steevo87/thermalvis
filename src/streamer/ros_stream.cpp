@@ -633,7 +633,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		nh.param<std::string>("folder", folder, "folder");
 		nh.param<std::string>("directory", folder, "folder");
 		
-		CompletePath( folder );
+		CleanAndSubstitutePath( folder );
 		
 		for (int iii = 0; iii < folder.size(); iii++) if (folder[iii] == '\\') folder[iii] = '/';
 		
@@ -787,7 +787,7 @@ double streamerNode::smoothThermistorReading() {
 	if (1) {
 		double m, c;
 		
-		findLinearModel(x, y, termsToConsider, m, c);
+		FindLinearModel(x, y, termsToConsider, m, c);
 		
 		// Use the latest
 		smoothedTemperature = m * thermistorBuffer[(recordedThermistorReadings-1) % MAX_THERMISTOR_READINGS_TO_STORE][0] + c;

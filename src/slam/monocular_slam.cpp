@@ -1437,8 +1437,8 @@ void slamNode::processNextFrame() {
 	for (int iii = keyframe_store.keyframes.at(keyframe_store.keyframes.size()-1).idx+1; iii < currentPoseIndex+1; iii++) tmp_indices.push_back(iii);
 	
 	// Risky mod
-	//randomSelection(tmp_indices, subseq_indices, (DEFAULT_ADJUSTMENT_FRAMES / 2));
-	randomSelection(tmp_indices, subseq_indices, (configData.adjustmentFrames / 2));
+	//SelectRandomSubset(tmp_indices, subseq_indices, (DEFAULT_ADJUSTMENT_FRAMES / 2));
+	SelectRandomSubset(tmp_indices, subseq_indices, (configData.adjustmentFrames / 2));
 	
 	
 	//unsigned int fixed_cameras = keyframe_indices.size();

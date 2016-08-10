@@ -4,15 +4,18 @@
 
 #include "core/tools.hpp"
 
-void initializeRandomNums() {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+void InitializeRandomNumberGeneration() 
+{
+#if _IS_WINDOWS_
 	srand (GetTickCount());
 #else
 	srand (time(NULL));
 #endif
 }
 
-float ReciprocalSqrt( float x ) {
+// Care of [ J.M.P. van Waveren ]
+float ReciprocalSquareRoot( float x ) 
+{
 	long i;
 	float y, r;
 	
@@ -24,7 +27,7 @@ float ReciprocalSqrt( float x ) {
 	return r;
 }
 
-void findLinearModel(double* x, double* y, int termsToConsider, double &m, double &c) {
+void FindLinearModel(double* x, double* y, int termsToConsider, double &m, double &c) {
 	
 	double mean_x = 0.0, mean_y = 0.0;
 	
@@ -64,7 +67,7 @@ void findLinearModel(double* x, double* y, int termsToConsider, double &m, doubl
 	
 }
 
-void convertUcharToBinary(unsigned char val, int* binaryArray) {
+void ConvertUcharToBinaryIntArray(unsigned char val, int* binaryArray) {
     for (int iii = 0; iii < 8; iii++) {
         if ((int) val >= (int) pow(2, 7-iii)) {
             binaryArray[iii] = 1;
@@ -165,7 +168,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 }
 #endif
 
-double timeElapsedMS(struct timeval& timer, bool reset) {
+double ElapsedTimeMilliseconds(struct timeval& timer, bool reset) {
 
 	struct timeval new_time;
 
@@ -188,7 +191,7 @@ double timeElapsedMS(struct timeval& timer, bool reset) {
 
 
 
-void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max_val) {
+void SelectRandomSubset(vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int max_val) {
 
 	dst.clear();
 	dst.insert(dst.end(), src.begin(), src.end());
@@ -203,7 +206,7 @@ void randomSelection(vector<unsigned int>& src, vector<unsigned int>& dst, unsig
 
 }
 
-double asymmetricGaussianValue(double score, double mean, double loVar, double hiVar) {
+double AsymmetricGaussianValue(double score, double mean, double loVar, double hiVar) {
 
 	double zScore, sigma = 1.0;
 
@@ -219,7 +222,7 @@ double asymmetricGaussianValue(double score, double mean, double loVar, double h
 
 }
 
-void addUniqueToVector(vector<unsigned int>& dst, vector<unsigned int>& src) {
+void AddUniqueValuesToVector(vector<unsigned int>& dst, vector<unsigned int>& src) {
 
 	for (unsigned int iii = 0; iii < src.size(); iii++) {
 
@@ -241,7 +244,7 @@ void addUniqueToVector(vector<unsigned int>& dst, vector<unsigned int>& src) {
 
 }
 
-double calcLinePerpDistance(double *line1, double *line2) {
+double PerpDistBetweenParallelLines(double *line1, double *line2) {
     double retVal = 0.0;
 
     retVal = abs(line2[2] - line1[2]) / sqrt(pow(line1[0], 2) + pow(line1[1], 2));
@@ -250,20 +253,26 @@ double calcLinePerpDistance(double *line1, double *line2) {
 }
 
 
-
-long long int factorial(int num)
+long Factorial( int num )
 {
-
-    long long int result=1;
-    for (int i=1; i<=num; ++i) {
-        //result=result*=i;
-        result *= 1;
-	}
-    return result;
-
+  long result = 1;
+  
+  for ( int i = 1; i <= num; ++i ) 
+  {
+      int remainingCapacity = std::numeric_limits<long>::max() / result;
+      
+      if ( remainingCapacity < num )
+      {
+        printf( "%s:%s : Factorial of input [ %d ] is too large!\n", __FILE__, __FUNCTION__, num );
+        return 0;
+      }
+      result *= num;
+  }
+  return result;
 }
 
-void getNextCombo(vector<unsigned int>& currentIndices, int r, int n) {
+
+void GenerateCombinatorialArray(vector<unsigned int>& currentIndices, int r, int n) {
 
     //bool maxed = false;
     bool valid = true;
@@ -308,7 +317,7 @@ void getNextCombo(vector<unsigned int>& currentIndices, int r, int n) {
     }
 }
 
-void calcParameters(const vector<double>& v, double& mean, double& stdev) {
+void CalculateMeanAndStdDev(const vector<double>& v, double& mean, double& stdev) {
 	
 	double sum = 0.0;
 	
@@ -328,7 +337,7 @@ void calcParameters(const vector<double>& v, double& mean, double& stdev) {
 	
 }
 
-double findEquivalentProbabilityScore(double* values, int quantity, double prob)
+double EquivalentProbabilityScore(double* values, int quantity, double prob)
 {
 
     //int i = 0;
@@ -370,7 +379,7 @@ double findEquivalentProbabilityScore(double* values, int quantity, double prob)
 
 }
 
-void convert_byte_to_binary_string(void* src, char* dst) {
+void ConvertRawByteToBinaryCharArray(void* src, char* dst) {
 
 	unsigned char* num;
 	
@@ -389,13 +398,13 @@ void convert_byte_to_binary_string(void* src, char* dst) {
 	dst[8] = '\0';
 }
 
-double timeDiff(ros::Time time1, ros::Time time2) {
+double TimeDifference(ros::Time time1, ros::Time time2) {
 	double retVal = ((double) time1.sec) - ((double) time2.sec);
 	retVal += 1e-9 * (((double) time1.nsec) - ((double) time2.nsec));
 	return retVal;
 }
 
-ros::Time findAverageTime(ros::Time time1, ros::Time time2) {
+ros::Time TimeMidpoint(ros::Time time1, ros::Time time2) {
 	
 	long int sec = 0, nsec = 0;
 	nsec = (time1.nsec/2) + (time2.nsec/2);
@@ -416,7 +425,7 @@ ros::Time findAverageTime(ros::Time time1, ros::Time time2) {
 }
 
 
-void CompletePath( std::string& path )
+void CleanAndSubstitutePath( std::string& path )
 {
   if ( path.size() == 0 ) return;
   

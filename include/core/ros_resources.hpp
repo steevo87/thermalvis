@@ -35,8 +35,6 @@ namespace enc = sensor_msgs::image_encodings;
 
 void changemode(int);
 int  kbhit(void);
-double timeDiff(ros::Time time1, ros::Time time2);
-ros::Time findAverageTime(ros::Time time1, ros::Time time2);
 
 // dummy callbacks // http://answers.ros.org/question/55126/why-does-ros-overwrite-my-sequence-number/
 static void connected(const ros::SingleSubscriberPublisher&) {}

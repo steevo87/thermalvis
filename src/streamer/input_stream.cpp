@@ -532,7 +532,7 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 
     for (int iii = 0; iii < nStringsToRepair; iii++) 
     {
-      CompletePath( *stringsToRepair[iii] );
+      CleanAndSubstitutePath( *stringsToRepair[iii] );
     }
 	}
 
@@ -2740,7 +2740,7 @@ bool streamerNode::processFolder()
 #else
 	std::string full_dir = configData.folder + "/";
   
-  CompletePath( full_dir );
+  CleanAndSubstitutePath( full_dir );
   
 	boost::filesystem::path someDir(full_dir);
 		
@@ -3015,7 +3015,7 @@ bool streamerNode::getFrameFromDirectoryNONROS()
 
 	std::string full_path = std::string(configData.folder) + "/" + inputList.at(frameCounter);
   
-  CompletePath( full_path );
+  CleanAndSubstitutePath( full_path );
   
 	camera_info.header.seq = frameCounter;
 

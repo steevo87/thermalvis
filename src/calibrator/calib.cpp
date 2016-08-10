@@ -81,7 +81,7 @@ bool calibratorData::assignFromXml(xmlParameters& xP) {
 
 		// Substitute tildes if in Windows
 #ifdef _WIN32
-      CompletePath( outputFolder );
+      CleanAndSubstitutePath( outputFolder );
 		}
 #endif
 
@@ -1258,7 +1258,7 @@ bool calibratorNode::isVerifying() {
 
 bool calibratorNode::findPattern(const Mat& im, vector<Point2f>& dst, Mat& prev, const int cameraNumber = -1) {
 	
-	timeElapsedMS(tracking_timer);
+	ElapsedTimeMilliseconds(tracking_timer);
 	
     //HGH
     bool retVal = false;
@@ -1341,7 +1341,7 @@ bool calibratorNode::findPattern(const Mat& im, vector<Point2f>& dst, Mat& prev,
 		}
 	}
 	
-	elapsedTrackingTime = timeElapsedMS(tracking_timer);
+	elapsedTrackingTime = ElapsedTimeMilliseconds(tracking_timer);
 	
 	// ROS_INFO("elapsedTrackingTime = (%f)", elapsedTrackingTime);
 		
@@ -1391,10 +1391,10 @@ void calibratorNode::determineValidPairs() {
                 //ROS_WARN("times[1].size() %d-",times[1].size());
                 //cout << times[1].at(checkIndex[1]) << endl;
 
-                //cout << "m(timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff) " << (timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff) << endl;
+                //cout << "m(TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff) " << (TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff) << endl;
                 //ROS_WARN("diffdone");
 		
-		while ((timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff)) {
+		while ((TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff)) {
 			
                         //ROS_WARN("maxCam2-1= %d-",maxCam2-1);
                         //ROS_WARN("checkIndex[1] %d-",checkIndex[1]);
@@ -1414,7 +1414,7 @@ void calibratorNode::determineValidPairs() {
 				continue;
 			}
                         //ROS_WARN("DEUBG %s", 4);
-			double diff = abs(timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])));
+			double diff = abs(TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])));
 			
 			
                        // ROS_WARN("DEUBG %s", 5);
@@ -1428,7 +1428,7 @@ void calibratorNode::determineValidPairs() {
 
                 //ROS_WARN("DEUBG %s", 10);
 		
-		if ((timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) >= configData.maxTimeDiff)) {
+		if ((TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) >= configData.maxTimeDiff)) {
 			candidatesExhausted = true;
 		}
 		
@@ -1672,7 +1672,7 @@ void calibratorNode::updatePairs() {
                 bool candidatesExhausted = false;
 
 
-                while ((timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff)) {
+                while ((TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) < configData.maxTimeDiff)) {
 
                         if (checkIndex[1] >= (maxCam2-1)) {
                                 break;
@@ -1688,7 +1688,7 @@ void calibratorNode::updatePairs() {
                                 continue;
                         }
 
-                        double diff = abs(timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])));
+                        double diff = abs(TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])));
 
 
 
@@ -1700,7 +1700,7 @@ void calibratorNode::updatePairs() {
                         checkIndex[1]++;
                 }
 
-                if ((timeDiff(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) >= configData.maxTimeDiff)) {
+                if ((TimeDifference(times[1].at(checkIndex[1]), times[0].at(checkIndex[0])) >= configData.maxTimeDiff)) {
                         candidatesExhausted = true;
                 }
 
@@ -1745,7 +1745,7 @@ void calibratorNode::updatePairs() {
                         return;
                 }
 
-                //ROS_WARN("Processing pair (%d) (%d, %d)[sync'ed: %f]", currentPair, validPairs[0].at(currentPair), validPairs[1].at(currentPair), timeDiff(times[1].at(validPairs[1].at(currentPair)), times[0].at(validPairs[0].at(currentPair))));
+                //ROS_WARN("Processing pair (%d) (%d, %d)[sync'ed: %f]", currentPair, validPairs[0].at(currentPair), validPairs[1].at(currentPair), TimeDifference(times[1].at(validPairs[1].at(currentPair)), times[0].at(validPairs[0].at(currentPair))));
 
                 Mat grayMat1, grayMat2;
 
@@ -1848,10 +1848,10 @@ void calibratorNode::handle_camera(const sensor_msgs::ImageConstPtr& msg_ptr, co
 void calibratorNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg, const unsigned int camera_index) {
 #endif
 
-    vacantInputTime = timeElapsedMS(vacant_timer);
+    vacantInputTime = ElapsedTimeMilliseconds(vacant_timer);
     
     if (frameCount[camera_index] == 0) {
-		elapsedInputTime = timeElapsedMS(elapsed_timer);
+		elapsedInputTime = ElapsedTimeMilliseconds(elapsed_timer);
 	}
     
     unsigned int totalMinPatterns = (unsigned int) patternIndices[0].size();
@@ -1949,7 +1949,7 @@ void calibratorNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs:
 	
 	if (infoProcessed[camera_index]) {
 
-		elapsedTime = timeElapsedMS(cycle_timer);
+		elapsedTime = ElapsedTimeMilliseconds(cycle_timer);
 		
 		if (frameCount[camera_index] > 0) {
 			avgTime += elapsedTime;
@@ -2117,8 +2117,8 @@ calibratorNode::calibratorNode(calibratorData startupData) :
 	undistortionCount(0),
 	rectificationCount(0)
 {
-	timeElapsedMS(vacant_timer);
-	timeElapsedMS(elapsed_timer);
+	ElapsedTimeMilliseconds(vacant_timer);
+	ElapsedTimeMilliseconds(elapsed_timer);
 
 #ifdef _BUILD_FOR_ROS_
 	timer = nh.createTimer(ros::Duration(DEFAULT_TIMER_PERIOD), &calibratorNode::timerCallback, this);
@@ -2207,13 +2207,13 @@ void calibratorNode::loopCallback() {
 		totalFrameCount += frameCount[iii];
 	}
 	if (totalFrameCount == 0) {
-		vacantInputTime = timeElapsedMS(vacant_timer);
-		elapsedInputTime = timeElapsedMS(elapsed_timer);
+		vacantInputTime = ElapsedTimeMilliseconds(vacant_timer);
+		elapsedInputTime = ElapsedTimeMilliseconds(elapsed_timer);
 		return;
 	}
 	
-	vacantInputTime = timeElapsedMS(vacant_timer, 0);
-	elapsedInputTime = timeElapsedMS(elapsed_timer, 0);
+	vacantInputTime = ElapsedTimeMilliseconds(vacant_timer, 0);
+	elapsedInputTime = ElapsedTimeMilliseconds(elapsed_timer, 0);
 	
 	if ((configData.autoTimeout != 0.0) && (vacantInputTime > 1000.0*configData.autoTimeout)) {
 		ROS_WARN("No new frames in (%f) seconds, terminating collection procedure..", vacantInputTime/1000.0);

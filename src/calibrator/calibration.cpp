@@ -3765,7 +3765,7 @@ void clusterFilter(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers
 		
 		double mean, stdev;
 		
-		calcParameters(patchAreasSorted, mean, stdev);
+		CalculateMeanAndStdDev(patchAreasSorted, mean, stdev);
 		
 		//printf("%s << medianVal = (%f); mean = (%f); stdev = (%f)\n", __FUNCTION__, medianVal, mean, stdev);
 		

@@ -1024,7 +1024,7 @@ void optimizeCalibrationSet(Size imSize,
 
             possibleCombos = 1;
 
-            possibleCombos = (unsigned long)(factorial(int(candidatePatternsCpy.size())) / (factorial(N+1) * factorial(int(candidatePatternsCpy.size()) - N - 1)));
+            possibleCombos = (unsigned long)(Factorial(int(candidatePatternsCpy.size())) / (Factorial(N+1) * Factorial(int(candidatePatternsCpy.size()) - N - 1)));
 
             printf("%s << possibleCombos = %d\n", __FUNCTION__, int(possibleCombos));
 
@@ -1035,7 +1035,7 @@ void optimizeCalibrationSet(Size imSize,
             {
 
                 tempFrameTester.clear();
-                getNextCombo(currentIndices, N+1, int(candidatePatternsCpy.size()));
+                GenerateCombinatorialArray(currentIndices, N+1, int(candidatePatternsCpy.size()));
 
                 for (unsigned int j = 0; j < currentIndices.size(); j++)
                 {
@@ -1147,9 +1147,9 @@ void optimizeCalibrationSet(Size imSize,
 
         for (int N = 0; N < num; N++)
         {
-            median = findEquivalentProbabilityScore(&values[N*nTrials], nTrials, 0.5);
-            p90 = findEquivalentProbabilityScore(&values[N*nTrials], nTrials, 0.9);
-            p99 = findEquivalentProbabilityScore(&values[N*nTrials], nTrials, 0.99);
+            median = EquivalentProbabilityScore(&values[N*nTrials], nTrials, 0.5);
+            p90 = EquivalentProbabilityScore(&values[N*nTrials], nTrials, 0.9);
+            p99 = EquivalentProbabilityScore(&values[N*nTrials], nTrials, 0.99);
 
             //printf("%s << Random results for %d frames: median = %f; p90 = %f; p99 = %f\n", __FUNCTION__, N, median, p90, p99);
         }

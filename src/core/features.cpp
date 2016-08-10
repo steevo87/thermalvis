@@ -1048,7 +1048,7 @@ void reduceFeaturesToMaximum(vector<cv::KeyPoint>& keypoints, int maximumToKeep)
 		if ((int(keypoints.size()) - weakestCount) > maximumToKeep) {
 			keypoints.erase(keypoints.begin(), keypoints.begin() + weakestCount);
 		} else {
-			initializeRandomNums();
+			InitializeRandomNumberGeneration();
 			while (int(keypoints.size()) > maximumToKeep) {
 				int randIndex = rand() % (keypoints.size() - maximumToKeep);
 				keypoints.erase(keypoints.begin() + randIndex);

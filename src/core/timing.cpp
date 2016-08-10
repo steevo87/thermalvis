@@ -6,7 +6,7 @@ timeAnalyzer::timeAnalyzer() {
 	average = 0.0;
 	sigma = 0.0;
 	
-	timeElapsedMS(cycle_timer, true);
+	ElapsedTimeMilliseconds(cycle_timer, true);
 }
 
 void timeAnalyzer::calcParameters() {
@@ -30,13 +30,13 @@ void timeAnalyzer::calcParameters() {
 }
 
 void timeAnalyzer::startRecording() {
-	timeElapsedMS(cycle_timer, true);
+	ElapsedTimeMilliseconds(cycle_timer, true);
 }
 
 void timeAnalyzer::stopRecording() {
 	
 	if (cycles < 1024) {
-		vals[cycles] = timeElapsedMS(cycle_timer, true);
+		vals[cycles] = ElapsedTimeMilliseconds(cycle_timer, true);
 		cycles++;
 	} else {
 		ROS_ERROR("Too many cycles (%d) / (%d)", cycles, 1024);

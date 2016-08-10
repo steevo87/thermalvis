@@ -53,7 +53,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 		gricScore = fGric / hGric;
 	}
 	
-	double nGRIC = asymmetricGaussianValue(gricScore, scorecard[1][0], scorecard[1][1], scorecard[1][2]);
+	double nGRIC = AsymmetricGaussianValue(gricScore, scorecard[1][0], scorecard[1][1], scorecard[1][2]);
 	
 	score[1] = gricScore;
 	
@@ -66,7 +66,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	// infrontScore
 	double infrontScore = ((double) validPts) / ((double) pts1.size());
-	double nIFS = asymmetricGaussianValue(infrontScore, scorecard[2][0], scorecard[2][1], scorecard[2][2]);
+	double nIFS = AsymmetricGaussianValue(infrontScore, scorecard[2][0], scorecard[2][1], scorecard[2][2]);
 	
 	score[2] = infrontScore;
 	
@@ -91,7 +91,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	score[0] = twoErr;
 
-	double nCONV = asymmetricGaussianValue(twoErr, scorecard[0][0], scorecard[0][1], scorecard[0][2]);
+	double nCONV = AsymmetricGaussianValue(twoErr, scorecard[0][0], scorecard[0][1], scorecard[0][2]);
 	
 	if ((nCONV == 0.00) && (!evaluate)) return 0.00;
 #endif
@@ -107,7 +107,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	score[3] = tScore;
 	
-	double nTRN = asymmetricGaussianValue(tScore, scorecard[3][0], scorecard[3][1], scorecard[3][2]);
+	double nTRN = AsymmetricGaussianValue(tScore, scorecard[3][0], scorecard[3][1], scorecard[3][2]);
 	
 	if ((nTRN == 0.00) && (!evaluate)) return 0.00;
 	
@@ -116,7 +116,7 @@ double testKeyframePair(vector<featureTrack>& tracks, cameraParameters& camData,
 	
 	score[4] = dScore;
 	
-	double nANG = asymmetricGaussianValue(dScore, scorecard[4][0], scorecard[4][1], scorecard[4][2]);
+	double nANG = AsymmetricGaussianValue(dScore, scorecard[4][0], scorecard[4][1], scorecard[4][2]);
 	
 	if ((nANG == 0.00) && (!evaluate)) return 0.00;
 	

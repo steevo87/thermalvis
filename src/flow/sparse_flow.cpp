@@ -182,8 +182,8 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 
 		// Substitute tildes if in Windows
 #ifdef _WIN32
-    CompletePath( outputFolder );
-		CompletePath( predetectedFeatures );
+    CleanAndSubstitutePath( outputFolder );
+		CleanAndSubstitutePath( predetectedFeatures );
 #endif
 	}
 
@@ -239,9 +239,9 @@ void featureTrackerNode::act_on_image()
 	} else if (newImage.type() == CV_8UC3) cvtColor(newImage, grayImage, cv::COLOR_RGB2GRAY); 
 	else if (newImage.type() == CV_8UC1) grayImage = newImage;
 	
-	testTime = timeElapsedMS(test_timer, true);
-	testTime = timeElapsedMS(test_timer);
-	elapsedTime = timeElapsedMS(cycle_timer);
+	testTime = ElapsedTimeMilliseconds(test_timer, true);
+	testTime = ElapsedTimeMilliseconds(test_timer);
+	elapsedTime = ElapsedTimeMilliseconds(cycle_timer);
 	
 	if (configData.verboseMode) { ROS_INFO("Updating buffer entry (%u from %u) with index (%u)", frameCount % 2, frameCount, currentIndex); }
 	bufferIndices[frameCount % 2] = currentIndex;
@@ -255,11 +255,11 @@ void featureTrackerNode::act_on_image()
 		}
 	}
 
-	testTime = timeElapsedMS(test_timer);
+	testTime = ElapsedTimeMilliseconds(test_timer);
 
 	cv::Mat tmpX, tmpY;
 	
-	testTime = timeElapsedMS(test_timer, true);
+	testTime = ElapsedTimeMilliseconds(test_timer, true);
 
 	if (configData.debugMode) {
 		displayImage = grayImageBuffer[frameCount % 2];
@@ -270,7 +270,7 @@ void featureTrackerNode::act_on_image()
 
 	if (undergoingDelay) handle_very_new();
 	
-	testTime = timeElapsedMS(test_timer, true);
+	testTime = ElapsedTimeMilliseconds(test_timer, true);
 }
 
 #ifdef _BUILD_FOR_ROS_
@@ -415,7 +415,7 @@ void featureTrackerNode::attemptHistoricalTracking() {
 		trackPoints(olderImages[ppp], grayImageBuffer[readyFrame % 2], startingPoints, finishingPoints, distanceConstraint, configData.flowThreshold, lostTrackIndices, H_, configData.cameraData);
 		if (configData.verboseMode) { ROS_INFO("trackPoints returned (%d) points.", ((int)finishingPoints.size())); }
 
-		testTime = timeElapsedMS(test_timer, false);
+		testTime = ElapsedTimeMilliseconds(test_timer, false);
 		successfullyTrackedFeatures += int(globalFinishingPoints.size());
 							
 		if (configData.verboseMode) { ROS_INFO("About to add historically tracked features from (%d) to (%d): (%d, %d)", olderIndices[ppp], currentIndex, ((int)startingPoints.size()), ((int)finishingPoints.size())); }
@@ -437,7 +437,7 @@ void featureTrackerNode::attemptTracking() {
 	lostTrackIndices.clear();
 
 	if (H12.rows != 0) {
-		elapsedTime = timeElapsedMS(cycle_timer, false);
+		elapsedTime = ElapsedTimeMilliseconds(cycle_timer, false);
 		if (configData.verboseMode) { cout << "H12 = " << H12 << endl; }
 		if (configData.verboseMode) { ROS_INFO("About to attempt to track points (%d, %d), using homography and constraint (%d) threshold (%f)", ((int)globalStartingPoints.size()), ((int)globalFinishingPoints.size()), distanceConstraint, configData.flowThreshold); }
 		
@@ -451,7 +451,7 @@ void featureTrackerNode::attemptTracking() {
 		if (lostTrackIndices.size() > finishingPoints.size()) { ROS_WARN("(%d) tracks lost and (%d) retained over interruption handling.", ((int)lostTrackIndices.size()), ((int)finishingPoints.size())); }
 		else ROS_INFO("(%d) tracks lost and (%d) retained over interruption handling.", ((int)lostTrackIndices.size()), ((int)finishingPoints.size()));
 
-		elapsedTime = timeElapsedMS(cycle_timer, false);
+		elapsedTime = ElapsedTimeMilliseconds(cycle_timer, false);
 		
 	} else {
 		cv::Mat H_;
@@ -471,7 +471,7 @@ void featureTrackerNode::attemptTracking() {
 	
 	if (configData.verboseMode) { ROS_INFO("trackPoints returned (%d) points.", ((int)finishingPoints.size())); }
 
-	testTime = timeElapsedMS(test_timer, false);
+	testTime = ElapsedTimeMilliseconds(test_timer, false);
 	successfullyTrackedFeatures += int(globalFinishingPoints.size());
 	lostTrackCount += int(lostTrackIndices.size());
 
@@ -994,7 +994,7 @@ void featureTrackerNode::updateTrackingVectors() {
 	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {	
 		if (candidates[jjj].size() > 0) {
 					
-			testTime = timeElapsedMS(test_timer, false);
+			testTime = ElapsedTimeMilliseconds(test_timer, false);
 					
 			if (configData.verboseMode) { ROS_INFO("Size of featureTrackVector before adding projections on frame (%d) = (%d)", bufferIndices[readyFrame % 2], int(featureTrackVector.size())); }
 					
@@ -1017,7 +1017,7 @@ void featureTrackerNode::updateTrackingVectors() {
 					
 			if (configData.verboseMode) { ROS_INFO("Size of finishing points / candidates after concatenation = (%d / %d)", int(globalFinishingPoints.size()), int(candidates[jjj].size())); }
 				
-			testTime = timeElapsedMS(test_timer, false);
+			testTime = ElapsedTimeMilliseconds(test_timer, false);
 		}
 	}
 	
@@ -1031,12 +1031,12 @@ void featureTrackerNode::detectNewFeatures() {
 	for (int jjj = 0; jjj < configData.numDetectors; jjj++) {	
 		if (configData.verboseMode) { ROS_INFO("Considering application of detector (%u), with (%d) pts", jjj, int(globalFinishingPoints.size())); }
 		
-		testTime = timeElapsedMS(test_timer, false);
+		testTime = ElapsedTimeMilliseconds(test_timer, false);
 		bool wantNewDetection = false;
 		
 		if (globalFinishingPoints.size() < ((unsigned int) configData.maxFeatures)) wantNewDetection = true;
 		
-		testTime = timeElapsedMS(test_timer, false);
+		testTime = ElapsedTimeMilliseconds(test_timer, false);
 		
 		if (wantNewDetection) {
 			
@@ -1068,14 +1068,14 @@ void featureTrackerNode::detectNewFeatures() {
 			
 			discardedNewFeatures += int(currPoints[jjj].size());
 
-			testTime = timeElapsedMS(test_timer, false);
+			testTime = ElapsedTimeMilliseconds(test_timer, false);
 			
 			if (currPoints[jjj].size() != 0) {
 				
-				testTime = timeElapsedMS(test_timer, false);				
+				testTime = ElapsedTimeMilliseconds(test_timer, false);				
 				
 				reduceEdgyFeatures(currPoints[jjj], configData.cameraData);
-				testTime = timeElapsedMS(test_timer, false);
+				testTime = ElapsedTimeMilliseconds(test_timer, false);
 
 				proximityViolationFilter(currPoints[jjj], globalFinishingPoints, configData.minSeparation);
 
@@ -1125,7 +1125,7 @@ void featureTrackerNode::features_loop() {
 	
 	vector<cv::Point2f> recPoints1, recPoints2;
 	
-	testTime = timeElapsedMS(test_timer, true);
+	testTime = ElapsedTimeMilliseconds(test_timer, true);
 	
 	if (configData.verboseMode) { ROS_INFO("Starting features loop for frame (%d [%d]) with (%d) finishing points.", int(readyFrame), int(bufferIndices[readyFrame % 2]), int(globalFinishingPoints.size())); }
 		
@@ -1468,7 +1468,7 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 	bridgeReplacement = new cv::Mat();
 #endif
 	
-	skipTime = timeElapsedMS(skip_timer);
+	skipTime = ElapsedTimeMilliseconds(skip_timer);
 	
 	if (configData.outputFolder == "outputFolder") {
 		
@@ -1703,16 +1703,16 @@ void featureTrackerNode::timed_loop(const ros::TimerEvent& event) {
 #else
 void featureTrackerNode::timed_loop() {
 #endif
-	elapsedTime = timeElapsedMS(cycle_timer, false);
+	elapsedTime = ElapsedTimeMilliseconds(cycle_timer, false);
 	
 	if ((frameCount > 0) && (elapsedTime > configData.delayTimeout*MS_PER_SEC) && !undergoingDelay && handleDelays) {
 		featuresVelocity = -1.0;
 		handle_delay();
 	}
-	skipTime = timeElapsedMS(skip_timer, false);
+	skipTime = ElapsedTimeMilliseconds(skip_timer, false);
 	
 	if (skipTime > 1000.0*SKIP_WARNING_TIME_PERIOD) {
-		skipTime = timeElapsedMS(skip_timer);
+		skipTime = ElapsedTimeMilliseconds(skip_timer);
 		
 		// Check if current frame at risk of being mid-NUC if duplicates are not marked...
 		if (skippedFrameCount > 0) ROS_WARN("(%d) skipped frames and (%d) captured frames in last (%f) seconds..", skippedFrameCount, capturedFrameCount, SKIP_WARNING_TIME_PERIOD);
