@@ -1,5 +1,5 @@
-/*! \file	  tools.hpp
- *  \brief	Declarations for generic tools not depending on libraries such as OpenCV, PCL and ROS.
+/*! \file   tools.hpp
+ *  \brief  Declarations for generic tools not depending on libraries such as OpenCV, PCL and ROS.
 */
 
 #ifndef _THERMALVIS_TOOLS_H_

@@ -1,5 +1,5 @@
-/*! \file	tools.cpp
- *  \brief	Definitions for generic tools not depending on libraries such as OpenCV, PCL and ROS.
+/*! \file tools.cpp
+ *  \brief  Definitions for generic tools not depending on libraries such as OpenCV, PCL and ROS.
 */
 
 #include "core/tools.hpp"
@@ -8,9 +8,9 @@
 void InitializeRandomNumberGeneration() 
 {
 #if _IS_WINDOWS_
-	srand ( GetTickCount() );
+  srand ( GetTickCount() );
 #else
-	srand ( time(NULL) );
+  srand ( time(NULL) );
 #endif
 }
 
@@ -18,54 +18,54 @@ void InitializeRandomNumberGeneration()
 // Courtesy of [ J.M.P. van Waveren ]
 float ReciprocalSquareRoot( float x ) 
 {
-	long i;
-	float y, r;
-	
-	y = x * 0.5f;
-	i = *(long *)( &x );
-	i = 0x5f3759df - ( i >> 1 );
-	r = *(float *)( &i );
-	r = r * ( 1.5f - r * r * y );
-	return r;
+  long i;
+  float y, r;
+  
+  y = x * 0.5f;
+  i = *(long *)( &x );
+  i = 0x5f3759df - ( i >> 1 );
+  r = *(float *)( &i );
+  r = r * ( 1.5f - r * r * y );
+  return r;
 }
 
 
 void FindLinearModel( const double* x, const double* y, const int n, double &m, double &c ) 
 {
-	double meanX = 0.0;
+  double meanX = 0.0;
   double meanY = 0.0;
-	
-	if ( n == 1 ) 
+  
+  if ( n == 1 ) 
   {
-		m = 0.0;
-		c = y[0];
-		return;
-	}
-	
-	for (int i = 0; i < n; i++) 
+    m = 0.0;
+    c = y[0];
+    return;
+  }
+  
+  for (int i = 0; i < n; i++) 
   {
-		meanX += ( x[i] / n );
-		meanY += ( y[i] / n );
-	}
-	
-	//printf("%s << means = (%f, %f)\n", __FUNCTION__, meanX, meanY);
-	
-	double s_x  = 0.0;
+    meanX += ( x[i] / n );
+    meanY += ( y[i] / n );
+  }
+  
+  //printf("%s << means = (%f, %f)\n", __FUNCTION__, meanX, meanY);
+  
+  double s_x  = 0.0;
   double s_xy = 0.0; 
-	
-	for (int i = 0; i < n; i++) 
+  
+  for (int i = 0; i < n; i++) 
   {
-		s_x += pow( x[i]-meanX, 2.0 );
-		//s_y += pow( y[i]-meanY, 2.0 );
-		s_xy += ( x[i]-meanX ) * ( y[i]-meanY );
-	}
-	
-	//printf("%s << s's = (%f, %f)\n", __FUNCTION__, s_x, s_xy);
-	
-	m = s_xy / s_x;
-	c = meanY - m*meanX;
-	
-	//printf("%s << eq = (%f, %f)\n", __FUNCTION__, m, c);
+    s_x += pow( x[i]-meanX, 2.0 );
+    //s_y += pow( y[i]-meanY, 2.0 );
+    s_xy += ( x[i]-meanX ) * ( y[i]-meanY );
+  }
+  
+  //printf("%s << s's = (%f, %f)\n", __FUNCTION__, s_x, s_xy);
+  
+  m = s_xy / s_x;
+  c = meanY - m*meanX;
+  
+  //printf("%s << eq = (%f, %f)\n", __FUNCTION__, m, c);
 }
 
 
@@ -91,8 +91,8 @@ void ConvertUcharToBinaryIntArray( const unsigned char src, int* dst )
 int CountElementsInFolder( const char* folderName, vector<string>& elementNames, const E_ElementType elementType ) 
 {
 #if _IS_WINDOWS_
-	printf("%s << ERROR! THIS FUNCTION HAS NOT BEEN IMPLEMENTED IN WINDOWS!\n", __FUNCTION__);
-	return ERROR_CODE;
+  printf("%s << ERROR! THIS FUNCTION HAS NOT BEEN IMPLEMENTED IN WINDOWS!\n", __FUNCTION__);
+  return ERROR_CODE;
 #else
 
   int typeCode = 0;
@@ -153,7 +153,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
  
     /*converting file time to unix epoch*/
     tmpres /= 10;  /*convert into microseconds*/
-	tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+  tmpres -= DELTA_EPOCH_IN_MICROSECS; 
     tv->tv_sec = (long)(tmpres / 1000000UL);
     tv->tv_usec = (long)(tmpres % 1000000UL);
   }
@@ -176,21 +176,21 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
 double ElapsedTimeMilliseconds( struct timeval& timer, const bool reset ) 
 {
-	struct timeval new_time;
+  struct timeval new_time;
 
-	long seconds, useconds;
+  long seconds, useconds;
 
-	gettimeofday(&new_time, NULL);
+  gettimeofday(&new_time, NULL);
 
   seconds  = new_time.tv_sec  - timer.tv_sec;
   useconds = new_time.tv_usec - timer.tv_usec;
 
-	double retVal = ((double) seconds) * 1000.0 + ((double) useconds) * 0.001;
+  double retVal = ((double) seconds) * 1000.0 + ((double) useconds) * 0.001;
 
-	if (reset) 
+  if (reset) 
   {
-		timer = new_time;
-	}
+    timer = new_time;
+  }
 
   return retVal;
 }
@@ -198,60 +198,60 @@ double ElapsedTimeMilliseconds( struct timeval& timer, const bool reset )
 
 void SelectRandomSubset( const vector<unsigned int>& src, vector<unsigned int>& dst, unsigned int maxVal ) 
 {
-	dst.clear();
-	dst.insert( dst.end(), src.begin(), src.end() );
+  dst.clear();
+  dst.insert( dst.end(), src.begin(), src.end() );
 
-	if (dst.size() <= maxVal) 
+  if (dst.size() <= maxVal) 
   {
-		return;
-	}
+    return;
+  }
 
-	while ( dst.size() > maxVal ) 
+  while ( dst.size() > maxVal ) 
   {
-		dst.erase( dst.begin() + (rand() % dst.size()) );
-	}
+    dst.erase( dst.begin() + (rand() % dst.size()) );
+  }
 }
 
 
 double AsymmetricGaussianValue( const double score, const double mean, const double loVariance, const double hiVariance ) 
 {
-	double sigma    = 1.0;
+  double sigma    = 1.0;
   double stddevs  = 3.0;
 
-	if (score == mean) return 1.00;
+  if (score == mean) return 1.00;
   
   double upThresh = mean + stddevs * hiVariance;
   double loThresh = mean - stddevs * loVariance;
   
-	if ( ( score > upThresh ) || ( score < loThresh ) ) return 0.00;
-	
-	(score > mean) ? sigma = abs(hiVariance - mean) : sigma = abs(loVariance - mean);
+  if ( ( score > upThresh ) || ( score < loThresh ) ) return 0.00;
+  
+  (score > mean) ? sigma = abs(hiVariance - mean) : sigma = abs(loVariance - mean);
 
-	double zScore = (score - mean) / sigma;
+  double zScore = (score - mean) / sigma;
 
-	return exp( -pow( zScore, 2.0 ) / 2.0);
+  return exp( -pow( zScore, 2.0 ) / 2.0);
 }
 
 
 void AddUniqueValuesToVector( vector<unsigned int>& dst, const vector<unsigned int>& src ) 
 {
-	for ( int i = 0; i < src.size(); i++ ) 
+  for ( int i = 0; i < src.size(); i++ ) 
   {
-		bool alreadyAdded = false;
+    bool alreadyAdded = false;
 
-		for ( int j = 0; j < dst.size(); j++ ) 
+    for ( int j = 0; j < dst.size(); j++ ) 
     {
-			if ( dst.at(j) == src.at(i) ) 
+      if ( dst.at(j) == src.at(i) ) 
       {
-				alreadyAdded = true;
-			}
-		}
+        alreadyAdded = true;
+      }
+    }
 
-		if ( ! alreadyAdded ) 
+    if ( ! alreadyAdded ) 
     {
-			dst.push_back( src.at(i) );
-		}
-	}
+      dst.push_back( src.at(i) );
+    }
+  }
 }
 
 
@@ -315,23 +315,23 @@ void UpdateCombinatorialArray( vector<unsigned int>& currentArray, const int k, 
 
 void CalculateMeanAndStdDev( const vector<double>& v, double& mean, double& stdev ) 
 {
-	double sum = 0.0;
-	
-	for ( unsigned int iii = 0; iii < v.size(); iii++ ) 
+  double sum = 0.0;
+  
+  for ( unsigned int iii = 0; iii < v.size(); iii++ ) 
   {
-		sum += v.at(iii);
-	}
-	
-	mean = sum / v.size();
+    sum += v.at(iii);
+  }
+  
+  mean = sum / v.size();
 
-	double sqSum = 0.0; 
-	
-	for (unsigned int iii = 0; iii < v.size(); iii++) 
+  double sqSum = 0.0; 
+  
+  for (unsigned int iii = 0; iii < v.size(); iii++) 
   {
-		sqSum += pow( v.at(iii) - mean, 2.0 );
-	}
-	
-	stdev = std::sqrt( sqSum / v.size() );
+    sqSum += pow( v.at(iii) - mean, 2.0 );
+  }
+  
+  stdev = std::sqrt( sqSum / v.size() );
 }
 
 
@@ -374,55 +374,55 @@ double EquivalentProbabilityScore( const double* values, const int n, const doub
 
 void ConvertRawByteToBinaryCharArray( const void* src, char* dst ) 
 {
-	unsigned char* num = (unsigned char*) src;
-	
-	unsigned int factor = 128;
-	
-	for ( unsigned int i = 0; i < BITS_PER_BYTE; i++ ) 
+  unsigned char* num = (unsigned char*) src;
+  
+  unsigned int factor = 128;
+  
+  for ( unsigned int i = 0; i < BITS_PER_BYTE; i++ ) 
   {
-		if ( *num > factor ) 
+    if ( *num > factor ) 
     {
-			dst[i] = '1';
-		} 
+      dst[i] = '1';
+    } 
     else 
     {
-			dst[i] = '0';
-		}
-		factor /= 2;
-	}
-	dst[ BITS_PER_BYTE ] = '\0';
+      dst[i] = '0';
+    }
+    factor /= 2;
+  }
+  dst[ BITS_PER_BYTE ] = '\0';
 }
 
 
 double TimeDifference( const ros::Time time1, const ros::Time time2) 
 {
-	double retVal = ((double) time1.sec) - ((double) time2.sec);
-	retVal += 1e-9 * (((double) time1.nsec) - ((double) time2.nsec));
-	return retVal;
+  double retVal = ((double) time1.sec) - ((double) time2.sec);
+  retVal += 1e-9 * (((double) time1.nsec) - ((double) time2.nsec));
+  return retVal;
 }
 
 
 ros::Time TimeMidpoint( const ros::Time time1, const ros::Time time2 ) 
 {
   long int nsec = (time1.nsec/2) + (time2.nsec/2);
-	
+  
   long int sec  = 0;
-	((time1.sec % 2) > 0) ? sec += (time1.sec-1)/2 : sec += time1.sec/2;
-	((time2.sec % 2) > 0) ? sec += (time2.sec-1)/2 : sec += time2.sec/2;
-	
-	if ( ( (time1.sec % 2) > 0 ) && ( (time2.sec % 2) > 0 ) ) 
+  ((time1.sec % 2) > 0) ? sec += (time1.sec-1)/2 : sec += time1.sec/2;
+  ((time2.sec % 2) > 0) ? sec += (time2.sec-1)/2 : sec += time2.sec/2;
+  
+  if ( ( (time1.sec % 2) > 0 ) && ( (time2.sec % 2) > 0 ) ) 
   {
-		sec += 1;
-	} 
+    sec += 1;
+  } 
   else if (((time1.sec % 2) > 0) || ((time2.sec % 2) > 0)) 
   {
-		nsec += 500000000;
-	}
-			
-	ros::Time avTime;
-	avTime.sec = sec;
-	avTime.nsec = nsec;
-	return avTime;
+    nsec += 500000000;
+  }
+      
+  ros::Time avTime;
+  avTime.sec = sec;
+  avTime.nsec = nsec;
+  return avTime;
 }
 
 
