@@ -30,4 +30,4 @@ add_executable(${EXECUTABLE_NAME} WIN32
 # Use the Widgets module from Qt 5.
 target_link_libraries(${EXECUTABLE_NAME} Qt5::Widgets)
 
-include(../../cmake/link_qt_dlls.cmake)
+include(../../cmake/link/qt.cmake)

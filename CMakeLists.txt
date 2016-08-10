@@ -13,24 +13,14 @@ LIST(APPEND SUBLIBRARY_NAMES "calibrator")
 
 ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
 
-include(cmake/configure_arch.cmake)
-include(cmake/configure_os.cmake)
-include(cmake/configure_compiler.cmake)
-include(cmake/configure_framework.cmake)
-include(cmake/configure_sample_data.cmake)
+LIST(APPEND REQUIRED_CONFIGURATIONS "architecture" "os" "compiler" "framework" "default_paths" )
+foreach(REQUIRED_CONFIGURATION ${REQUIRED_CONFIGURATIONS}) 
+	include(cmake/configure/${REQUIRED_CONFIGURATION}.cmake)
+endforeach(REQUIRED_CONFIGURATION)
 
-LIST(APPEND EXTERNAL_LIBRARIES 
-	"avutil"
-	"doxygen"
-	"qt"
-	"eigen"
-	"pcl"
-	"boost"
-	"optris"
-	"opencv"
-)
+LIST(APPEND EXTERNAL_LIBRARIES "avutil" "doxygen" "qt" "eigen" "pcl" "boost" "optris" "opencv" )
 foreach(EXTERNAL_LIB ${EXTERNAL_LIBRARIES}) 
-	include(cmake/find_${EXTERNAL_LIB}.cmake)
+	include(cmake/find/${EXTERNAL_LIB}.cmake)
 endforeach(EXTERNAL_LIB)
 
 INCLUDE_DIRECTORIES(include)
@@ -69,4 +59,4 @@ IF(BUILD_FOR_ROS)
 	ADD_SUBDIRECTORY(nodes)
 ENDIF()
 
-include(cmake/configure_docs.cmake)
+include(cmake/configure/docs.cmake)

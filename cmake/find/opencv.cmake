@@ -25,12 +25,16 @@ LIST(APPEND OpenCV_Advanced_Components_List "opencv_viz") # "opencv_gpu"
 
 LIST(APPEND OpenCV_Components_List ${OpenCV_Basic_Components_List})
 LIST(APPEND OpenCV_Components_List ${OpenCV_Prior_Components_List})
-LIST(APPEND OpenCV_Components_List ${OpenCV_Advanced_Components_List})
+
+OPTION(OpenCV_USE_ADVANCED_COMPONENTS "E.g. opencv_viz." TRUE)
+IF(OpenCV_USE_ADVANCED_COMPONENTS)
+  LIST(APPEND OpenCV_Components_List ${OpenCV_Advanced_Components_List})
+ENDIF()
 
 SET(OPENCV_HINTS "/usr/local/share/OpenCV" "${USERPROFILE}/Documents/opencv/build" "C:/Users/Public/Documents/opencv/build" "${USERPROFILE}/Documents/Code/BUILDS/opencv/build" "${USERPROFILE}/Documents/GitHub/BUILDS/OpenCV")
 find_package(OpenCV 2.4.8 COMPONENTS ${OpenCV_Components_List} QUIET)
 
-IF(NOT OPENCV_VIZ_FOUND) # If you can't find OpenCV with viz, exclude it and try again
+IF(OpenCV_USE_ADVANCED_COMPONENTS AND NOT OPENCV_VIZ_FOUND) # If you can't find OpenCV with viz, exclude it and try again
 	SET(OpenCV_Components_List "")
 	find_package(OpenCV 2.4.8 COMPONENTS ${OpenCV_Components_List} QUIET)
 	IF(NOT OpenCV_FOUND) # If you still can't find it, add viz back in as a requirement, and try your alternative "manual" approach further down the file

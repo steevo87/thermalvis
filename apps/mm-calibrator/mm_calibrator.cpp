@@ -6,7 +6,7 @@
 #include "streamer/directory_stream.hpp"
 #include "calibrator/calib.hpp"
 
-#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/calibrator_demo.launch"
+#define DEFAULT_LAUNCH_XML _DEFAULT_LAUNCH_DIR_ "/calibrator_demo.launch"
 
 #ifdef _USE_QT_
 #include "mainwindow_calibrator.h"
