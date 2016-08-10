@@ -4,6 +4,8 @@
 
 #include "slam/monocular_slam.hpp"
 
+#define NULL_SCORE    0.25*numeric_limits<double>::max()
+
 #ifdef _USE_OPENCV_VIZ_
 void keyboard_callback (const cv::viz::KeyboardEvent &e, void *cookie) {
 	
@@ -39,7 +41,8 @@ slamData::slamData()
 
 #ifdef _USE_BOOST_ 
 #ifndef _BUILD_FOR_ROS_
-bool slamData::assignFromXml(xmlParameters& xP) {
+bool slamData::assignFromXml(xmlParameters& xP) 
+{
 
 	int countOfNodes = 0;
 
@@ -48,12 +51,14 @@ bool slamData::assignFromXml(xmlParameters& xP) {
 		if (!v.second.get_child("<xmlattr>.type").data().compare("slam")) countOfNodes++;
 	}
 
-	if (countOfNodes == 0) {
+	if (countOfNodes == 0) 
+  {
 		ROS_ERROR("No relevant nodes found in XML config!");
 		return false;
 	}
 
-	if (countOfNodes > 1) {
+	if (countOfNodes > 1) 
+  {
 		ROS_ERROR("More than 1 relevant node found in XML config! This functionality is not supported in Windows..");
 		return false;
 	}
@@ -80,12 +85,7 @@ bool slamData::assignFromXml(xmlParameters& xP) {
 
 		// Substitute tildes if in Windows
 #ifdef _WIN32
-		if (outputFolder.size() > 0) {
-			if (outputFolder[0] == '~') {
-				outputFolder.erase(outputFolder.begin());
-				outputFolder = std::getenv("USERPROFILE") + outputFolder;
-			}
-		}
+    CompletePath( outputFolder );
 #endif
 
 	}
@@ -593,22 +593,22 @@ bool slamNode::processScorecard() {
 		// GRIC Ratio
 		scorecardParams[1][0] = 2.00;
 		scorecardParams[1][1] = 0.33;
-		scorecardParams[1][2] = 0.25*numeric_limits<double>::max();
+		scorecardParams[1][2] = NULL_SCORE;
 
 		// Points in front
 		scorecardParams[2][0] = 1.00;
 		scorecardParams[2][1] = 0.08;
-		scorecardParams[2][2] = 0.25*numeric_limits<double>::max();
+		scorecardParams[2][2] = NULL_SCORE;
 
 		// Translation score
 		scorecardParams[3][0] = 1.00;
-		scorecardParams[3][1] = 0.25*numeric_limits<double>::max();
-		scorecardParams[3][2] = 0.25*numeric_limits<double>::max();
+		scorecardParams[3][1] = NULL_SCORE;
+		scorecardParams[3][2] = NULL_SCORE;
 
 		// Angle score
 		scorecardParams[4][0] = 1.00;
-		scorecardParams[4][1] = 0.25*numeric_limits<double>::max();
-		scorecardParams[4][2] = 0.25*numeric_limits<double>::max();
+		scorecardParams[4][1] = NULL_SCORE;
+		scorecardParams[4][2] = NULL_SCORE;
 
 		/*
 		// Convergence
@@ -648,7 +648,18 @@ bool slamNode::processScorecard() {
 		ifs.close();
 	}
 
-	for (int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++) ROS_INFO("Criteria (%d) = (%1.2f, %1.2f, %1.2f)", iii, scorecardParams[iii][0], scorecardParams[iii][1], scorecardParams[iii][2]);
+	for ( int iii = 0; iii < INITIALIZATION_SCORING_PARAMETERS; iii++ ) 
+  {
+    char cScore1[8];
+    char cScore2[8];
+    char cScore3[8];
+    
+    ( scorecardParams[iii][0] == NULL_SCORE ) ? snprintf( cScore1, 8, "-.--" ) : snprintf( cScore1, 8, "%1.2f", scorecardParams[iii][0] );
+    ( scorecardParams[iii][1] == NULL_SCORE ) ? snprintf( cScore2, 8, "-.--" ) : snprintf( cScore2, 8, "%1.2f", scorecardParams[iii][1] );
+    ( scorecardParams[iii][2] == NULL_SCORE ) ? snprintf( cScore3, 8, "-.--" ) : snprintf( cScore3, 8, "%1.2f", scorecardParams[iii][2] );
+    
+    ROS_INFO( "Criteria (%d) = (%s, %s, %s)", iii, cScore1, cScore2, cScore3 );
+  }
 	return true;
 }
 

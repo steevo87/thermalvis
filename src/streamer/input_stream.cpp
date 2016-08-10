@@ -519,35 +519,21 @@ bool streamerData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("maxThermistorDiff")) maxThermistorDiff = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("alpha")) alpha = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
-        }
+    }
 
-#ifdef _WIN32
-		string substitutionString = std::getenv("USERPROFILE");
-#else
-		string substitutionString = std::getenv("HOME");
-#endif
 		// Substitute tildes
-        string** stringsToRepair;
-        int nStringsToRepair = 4;
-        stringsToRepair = new string*[nStringsToRepair];
-        stringsToRepair[0] = &folder;
-        stringsToRepair[1] = &outputFolder;
-        stringsToRepair[2] = &file;
-		stringsToRepair[3] = &intrinsics;
+    string** stringsToRepair;
+    int nStringsToRepair = 4;
+    stringsToRepair = new string*[nStringsToRepair];
+    stringsToRepair[0] = &folder;
+    stringsToRepair[1] = &outputFolder;
+    stringsToRepair[2] = &file;
+    stringsToRepair[3] = &intrinsics;
 
-        for (int iii = 0; iii < nStringsToRepair; iii++) {
-            if (stringsToRepair[iii]->size() > 0) {
-                if (stringsToRepair[iii]->at(0) == '~') {
-                    stringsToRepair[iii]->erase(stringsToRepair[iii]->begin());
-                    (*stringsToRepair[iii]) = substitutionString + (*stringsToRepair[iii]);
-                }
-#ifndef _WIN32
-                for (int jjj = 0; jjj < stringsToRepair[iii]->size(); jjj++) {
-                    if (stringsToRepair[iii]->at(jjj) == '\\') stringsToRepair[iii]->at(jjj) = '/';
-                }
-#endif
-            }
-        }
+    for (int iii = 0; iii < nStringsToRepair; iii++) 
+    {
+      CompletePath( *stringsToRepair[iii] );
+    }
 	}
 
 	std::string delimiter = "/";
@@ -1859,21 +1845,26 @@ void streamerNode::serverCallback(streamerConfig &config) {
 
     configData.wantsToUndistort = config.wantsToUndistort;
 	
-	if (!firstServerCallbackProcessed) {
+	if (!firstServerCallbackProcessed) 
+  {
 		firstServerCallbackProcessed = true;
 
-		if (configData.loadMode) {
-			if (!processFolder()) {
+		if ( configData.loadMode ) 
+    {
+			if (!processFolder()) 
+      {
 				ROS_ERROR("Processing of folder failed...");
 				configData.dataValid = false;
 			}
-        } else if (configData.readMode) {
-            if (!prepareVideo()) {
-                ROS_ERROR("Preparing of video failed...");
-                configData.dataValid = false;
-            }
-        }
-
+    } 
+    else if ( configData.readMode ) 
+    {
+      if (!prepareVideo()) 
+      {
+        ROS_ERROR("Preparing of video failed...");
+        configData.dataValid = false;
+      }
+    }
 	}
 	
 	if (configData.verboseMode) { ROS_INFO("Reconfigure request complete..."); }
@@ -2036,8 +2027,8 @@ void streamerNode::updateMap() {
 }
 
 void streamerNode::act_on_image() {
-	
-	updateCameraInfo();
+  
+  updateCameraInfo();
 
 #ifdef _BUILD_FOR_ROS_
 	newImage = cv::Mat(cv_ptr->image);
@@ -2067,15 +2058,29 @@ void streamerNode::act_on_image() {
 }
 
 #ifndef _BUILD_FOR_ROS_
-bool streamerNode::get8bitImage(cv::Mat& img, sensor_msgs::CameraInfo& info) { 
-	if (_8bitMat.rows == 0) return false;
-	img = _8bitMat;
+bool streamerNode::get8bitImage(cv::Mat& img, sensor_msgs::CameraInfo& info) 
+{ 
+  if (_8bitMat.rows != 0) 
+  {
+    img = _8bitMat;
+	}
+  else if ( _16bitMat.rows != 0 )
+  {
+    adaptiveDownsample( _16bitMat, img );
+  }
+  else
+  {
+    // ROS_ERROR( "%s: Images have zero rows..", __FUNCTION__ );
+    return false;
+  }
+  
 	info = camera_info;
-	return true;
+  return true;
 }
 #endif
 
 bool streamerNode::run() {
+  
 #ifdef _BUILD_FOR_ROS_
 	if ((configData.subscribeMode) || (configData.resampleMode)) return runBag();
 #endif
@@ -2709,19 +2714,23 @@ bool streamerNode::streamCallback(bool capture) {
 	return true;
 }
 
-bool streamerNode::processFolder() {
+
+bool streamerNode::processFolder() 
+{
 #ifndef _USE_BOOST_
 	DIR * dirp;
 	struct dirent * entry;
 	
 	dirp = opendir(configData.folder.c_str());
 	
-	if (dirp == NULL) {
+	if (dirp == NULL) 
+  {
 		ROS_ERROR("Opening of directory (%s) failed.", configData.folder.c_str());
 		return false;
 	}
 
-	while ((entry = readdir(dirp)) != NULL) {
+	while ((entry = readdir(dirp)) != NULL) 
+  {
 		if (entry->d_type == DT_REG) { // If the entry is a regular file
 			inputList.push_back(string(entry->d_name));
 			fileCount++;
@@ -2730,11 +2739,13 @@ bool streamerNode::processFolder() {
 	closedir(dirp);
 #else
 	std::string full_dir = configData.folder + "/";
-	boost::replace_all(full_dir, "\\", "/");
-	boost::replace_all(full_dir, "~", _USERPROFILE_);
+  
+  CompletePath( full_dir );
+  
 	boost::filesystem::path someDir(full_dir);
 		
-	if ( boost::filesystem::exists(someDir) && boost::filesystem::is_directory(someDir)) {
+	if ( boost::filesystem::exists(someDir) && boost::filesystem::is_directory(someDir)) 
+  {
 		boost::filesystem::directory_iterator end_iter;	
 		for( boost::filesystem::directory_iterator dir_iter(someDir) ; dir_iter != end_iter ; ++dir_iter) {
 			if (boost::filesystem::is_regular_file(dir_iter->status()) ) {
@@ -2754,9 +2765,12 @@ bool streamerNode::processFolder() {
 				inputList.push_back(name);
 			}
 		}
-		
-
-	} else return false;
+	} 
+  else 
+  {
+    ROS_ERROR( "Failed to open directory [ %s ] using boost...", full_dir.c_str() );
+    return false;
+  }
 #endif
 	
 	sort(inputList.begin(), inputList.end());
@@ -2911,7 +2925,7 @@ bool streamerNode::runRead() {
 	void streamerNode::handle_camera(const cv::Mat& inputImage, const sensor_msgs::CameraInfo *info_msg) {
 #endif
 
-	if (configData.syncMode != SYNCMODE_HARD) return;
+  if (configData.syncMode != SYNCMODE_HARD) return;
 	if ((!configData.subscribeMode) && (!configData.resampleMode)) return;
 	if (configData.verboseMode) { ROS_INFO("Copying camera info over..."); }
 	
@@ -2926,6 +2940,8 @@ bool streamerNode::runRead() {
 #else
 	bridgeReplacement = &inputImage;
 #endif
+
+
 	
 	act_on_image();
 }
@@ -2981,22 +2997,34 @@ void streamerNode::updateCameraInfo() {
 #endif
 }
 
-bool streamerNode::getFrameFromDirectoryNONROS() {
-	if (inputList.size() == 0) return false;
+bool streamerNode::getFrameFromDirectoryNONROS() 
+{  
+  if (inputList.size() == 0) return false;
 	
-	if (frameCounter >= int(inputList.size())) {
-		if (configData.loopMode) {
+	if (frameCounter >= int(inputList.size())) 
+  {
+		if (configData.loopMode) 
+    {
 			frameCounter = 0;
-		} else return false;
+		} 
+    else 
+    {
+      return false;
+    }
 	}
 
 	std::string full_path = std::string(configData.folder) + "/" + inputList.at(frameCounter);
+  
+  CompletePath( full_path );
+  
 	camera_info.header.seq = frameCounter;
 
 	frame = read_image_from_file(full_path);
 
-	if (determineFrameType(frame) != configData.inputDatatype) {
-		ROS_ERROR("The specified <inputDataType> does not match the actual image format!");
+  E_ImageDatatype detectedDatatype = determineFrameType(frame);
+	if ( detectedDatatype != configData.inputDatatype ) 
+  {
+		ROS_ERROR( "The detected <inputDataType> [%d] does not match the expected image format [%d]!", detectedDatatype, configData.inputDatatype );
 		return false;
 	}	
 
@@ -3213,24 +3241,38 @@ void streamerNode::timerCallback(const ros::TimerEvent&) {
 #else
 bool streamerNode::loopCallback() {
 #endif
+
     bool retVal = false;
 
-    if (configData.pauseMode) {
+    if (configData.pauseMode) 
+    {
         retVal = false;
-    } else if (configData.captureMode || configData.subscribeMode) {
+    } 
+    else if (configData.captureMode || configData.subscribeMode) 
+    {
         retVal = true;
-    } else if (configData.pollMode || configData.resampleMode) {
+    } 
+    else if (configData.pollMode || configData.resampleMode) 
+    {
         retVal = getFrameFromSubscription();
-    } else if (configData.loadMode) {
+    } 
+    else if (configData.loadMode) 
+    {
 #ifdef _BUILD_FOR_ROS_
-        retVal = getFrameFromDirectoryROS();
+      retVal = getFrameFromDirectoryROS();
 #else
-        retVal = getFrameFromDirectoryNONROS();
+      retVal = getFrameFromDirectoryNONROS();
 #endif
-    } else if (configData.readMode) {
+    } 
+    else if (configData.readMode) 
+    {
         retVal = getFrameFromVideoFile();
-    } else ROS_ERROR("No mode recognized for sourcing the image data!");
-
+    } 
+    else 
+    {
+      ROS_ERROR("No mode recognized for sourcing the image data!");
+    }
+    
 #ifdef _BUILD_FOR_ROS_
     return;
 #else

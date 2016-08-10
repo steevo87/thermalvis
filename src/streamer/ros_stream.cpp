@@ -633,10 +633,7 @@ bool streamerData::obtainStartingData(ros::NodeHandle& nh) {
 		nh.param<std::string>("folder", folder, "folder");
 		nh.param<std::string>("directory", folder, "folder");
 		
-		if (folder[0] == '~') {
-			folder = folder.substr(1, folder.size()-1);
-			folder = _USERPROFILE_ + folder;
-		}
+		CompletePath( folder );
 		
 		for (int iii = 0; iii < folder.size(); iii++) if (folder[iii] == '\\') folder[iii] = '/';
 		

@@ -707,19 +707,28 @@ cv::Mat read_image_from_file(std::string path) {
 	return frame;
 }
 
-int determineFrameType(cv::Mat& frame) {
-	if (frame.channels() == 1) {
-		if (frame.depth() == CV_16U) {
+E_ImageDatatype determineFrameType( cv::Mat& frame ) 
+{
+	if ( frame.channels() == 1 ) 
+  {
+		if ( frame.depth() == CV_16U ) 
+    {
 			return DATATYPE_RAW;
-		} else if (frame.depth() == CV_8U) {
+		} 
+    else if ( frame.depth() == CV_8U ) 
+    {
 			return DATATYPE_8BIT;
-		} else {
-			return -1;
+		} 
+    else 
+    {
+			return DATATYPE_INVALID;
 		}
-	} else if (frame.channels() == 3) {
+	} 
+  else if ( frame.channels() == 3 ) 
+  {
 		return DATATYPE_8BIT;
 	}
-	return -1;
+	return DATATYPE_INVALID;
 }
 
 void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMedian, double degreesPerGraylevel, double desiredDegreesPerGraylevel) {

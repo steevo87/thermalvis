@@ -227,4 +227,6 @@ void convert_byte_to_binary_string(void* src, char* dst);
 double timeDiff(ros::Time time1, ros::Time time2);
 ros::Time findAverageTime(ros::Time time1, ros::Time time2);
 
+void CompletePath( std::string& path );
+
 #endif

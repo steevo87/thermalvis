@@ -5,7 +5,7 @@
 		<param name="debugMode" value="false" />
 	
 		<param name="source" value="directory" />
-		<param name="directory" value="~\Documents\GitHub\thermalvis\media\sample_video\optris" />
+		<param name="directory" value=".\media\sample_video\optris" />
 		<param name="filterMode" value="0" /> <!-- 0 for no filter, 1 for gaussian, 2 for bilateral, 3 for adaptive bilateral -->
 		<param name="filterParam" value="2.0" />
 		
@@ -17,7 +17,7 @@
 		<param name="normMode" value="3" />
 		<param name="outputType" value="2" /> <!-- 0 for 8-bit grayscale, 1 for 8-bit color, 2 for 16-bit grayscale -->
 		<param name="writeImages" value="false" />
-		<param name="outputFolder" value="~\Documents\GitHub\thermalvis\media\output" />
+		<param name="outputFolder" value=".\media\output" />
 		
 		<param name="loopMode" value="true" />
 		
@@ -37,16 +37,16 @@
 		<!-- <param name="verboseMode" value="true" /> -->
 		
 		<param name="detectEveryFrame" value="false" />
-		<param name="outputFolder" value="~\Documents\GitHub\thermalvis\media\sample_video\optris_data" />
+		<param name="outputFolder" value=".\media\sample_video\optris_data" />
 		
-		<param name="predetectedFeatures" value="~\Documents\GitHub\thermalvis\media\sample_video\optris_data\features" />
+		<param name="predetectedFeatures" value=".\media\sample_video\optris_data\features" />
 		<!-- <param name="detector_1" value="FILE" /> -->
 		<!-- <param name="minFeatures" value="100" /> -->
 		<param name="sensitivity_1" value="0.1" /> <!-- default is 0.1 -->
 		<param name="flowThreshold" value="0.0002" /> <!-- default is 0.0002 -->
 		
 	</node>
-	
+  
 	<node name="image_view" pkg="image_view" type="image_view" output="screen">
 		<remap from="image" to="/thermalvis/flow/image_col"/>
 		<param name="~/autosize" value="true" />

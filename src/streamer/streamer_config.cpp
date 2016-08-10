@@ -1,5 +1,7 @@
 #include "streamer/streamer_config.hpp"
 
+#include "core/improc.hpp"
+
 streamerSharedData::streamerSharedData() : 
 	detectorMode(DETECTOR_MODE_INS),
 	usbMode(USB_MODE_16),

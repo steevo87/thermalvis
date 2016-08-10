@@ -20,7 +20,8 @@
 #include <unistd.h>
 #endif
 
-#define MAX_INPUT_ARG_LENGTH 256
+#define MAX_INPUT_ARG_LENGTH    256
+#define MAX_PATH_SIZE           512
 
 class GenericOptions {
 

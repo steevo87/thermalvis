@@ -7,7 +7,7 @@
 #include "flow/sparse_flow.hpp"
 #include "slam/monocular_slam.hpp"
 
-#define DEFAULT_LAUNCH_XML "Documents/GitHub/thermalvis/launch/system_demo.launch"
+#define DEFAULT_LAUNCH_XML _DEFAULT_LAUNCH_DIR_ "/system_demo.launch"
 
 #ifdef _USE_QT_
 #include "mainwindow_streamer.h"
@@ -145,33 +145,41 @@ void ProcessingThread::establishSlamLink(MainWindow_slam *gui) {
 }
 #endif
 
-void ProcessingThread::run() {
-
-	while (sM->wantsToRun()) {
-		sM->serverCallback(*scData);
-		if (!sM->loopCallback()) return;
-		sM->imageLoop();
+void ProcessingThread::run() 
+{
+	while ( sM->wantsToRun() ) 
+  {
+		sM->serverCallback( *scData );
+		if ( ! sM->loopCallback() ) 
+    {
+      return;
+		}
+    sM->imageLoop();
 		
-		if (wantsFlow) {
-			if (!sM->get8bitImage(workingFrame, camInfo)) continue;
-			
-			fM->serverCallback(*fcData);
-			fM->handle_camera(workingFrame, &camInfo);
+		if ( wantsFlow ) 
+    {
+			if ( ! sM->get8bitImage( workingFrame, camInfo ) ) 
+      {
+        // ROS_ERROR( "%s: Unable to obtain 8-bit image..", __FUNCTION__ );
+        continue;
+			}
+			fM->serverCallback( *fcData );
+			fM->handle_camera( workingFrame, &camInfo );
 			fM->features_loop();
 
-			if (wantsSlam && (&fM->featureTrackVector != NULL)) {
-				_slamNode->serverCallback(*_slamData);
-				_slamNode->main_loop(camInfo, fM->featureTrackVector);
+			if ( wantsSlam && ( &fM->featureTrackVector != NULL ) ) 
+      {
+				_slamNode->serverCallback( *_slamData );
+				_slamNode->main_loop( camInfo, fM->featureTrackVector );
 			}
 		}
-		
 	}
 }
 
 bool ProcessingThread::initialize(int argc, char* argv[]) {
 
-	xmlAddress = new char[256];
-	output_directory = new char[256];
+	xmlAddress        = new char[ MAX_PATH_SIZE ];
+	output_directory  = new char[ MAX_PATH_SIZE ];
 
 	wantsToOutput = false;
 	if (argc >= 3) {
@@ -184,24 +192,18 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 
 	writeMode = !(argc >= 4);
 	
-	if (argc > 1) {
+	if (argc > 1) 
+  {
 		string xmlString = string(argv[1]);
 #ifdef _WIN32
-		if (xmlString.size() > 0) {
-			if (xmlString[0] == '~') {
-				xmlString.erase(xmlString.begin());
-				xmlString = std::getenv("USERPROFILE") + xmlString;
-			}
-		}
+    CompletePath( xmlString );
 #endif
 		sprintf(xmlAddress, "%s", xmlString.c_str());
 		ROS_INFO("Using XML file provided at (%s)", xmlAddress);
-	} else {
-#ifdef _WIN32
-		sprintf(xmlAddress, "%s/%s", std::getenv("USERPROFILE"), DEFAULT_LAUNCH_XML);
-#else
-		sprintf(xmlAddress, "%s/%s", std::getenv("HOME"), DEFAULT_LAUNCH_XML);
-#endif
+	} 
+  else 
+  {
+    snprintf( xmlAddress, MAX_PATH_SIZE, "%s", DEFAULT_LAUNCH_XML );
 		ROS_INFO("No XML config file provided, therefore using default at (%s)", xmlAddress);
 	}
 

@@ -112,8 +112,8 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 		ROS_ERROR("More than 1 flow node found in XML config! This functionality is not supported in Windows..");
 		return false;
 	}
-
-	vector<std::string> images_to_display;
+  
+  vector<std::string> images_to_display;
 
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &v, xP.pt.get_child("launch")) { // Within tree (pt), finds launch, and loops all tags within it
 		if (v.first.compare("node")) continue;
@@ -182,18 +182,8 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 
 		// Substitute tildes if in Windows
 #ifdef _WIN32
-		if (outputFolder.size() > 0) {
-			if (outputFolder[0] == '~') {
-				outputFolder.erase(outputFolder.begin());
-				outputFolder = std::getenv("USERPROFILE") + outputFolder;
-			}
-		}
-		if (predetectedFeatures.size() > 0) {
-			if (predetectedFeatures[0] == '~') {
-				predetectedFeatures.erase(predetectedFeatures.begin());
-				predetectedFeatures = std::getenv("USERPROFILE") + predetectedFeatures;
-			}
-		}
+    CompletePath( outputFolder );
+		CompletePath( predetectedFeatures );
 #endif
 	}
 
@@ -209,6 +199,7 @@ bool trackerData::assignFromXml(xmlParameters& xP) {
 		}
 		if (foundStreamer && !images_to_display.at(iii).compare("image_col")) displayDebug = true;
 	}
+  
 	return true;
 }
 #endif
@@ -234,13 +225,13 @@ void featureTrackerNode::displayCurrentFrame() {
 
 }
 
-void featureTrackerNode::act_on_image() {
-	
-	#ifdef _BUILD_FOR_ROS_
+void featureTrackerNode::act_on_image() 
+{
+#ifdef _BUILD_FOR_ROS_
 	cv::Mat newImage(cv_ptr->image);
-	#else
+#else
 	cv::Mat newImage(*bridgeReplacement);
-	#endif
+#endif
 
 	if ((newImage.type() == CV_16UC3) || (newImage.type() == CV_16UC1)) {
 		ROS_ERROR("This node has been told it will only receive 8-bit images!");

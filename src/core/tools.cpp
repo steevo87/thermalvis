@@ -521,3 +521,33 @@ ros::Time findAverageTime(ros::Time time1, ros::Time time2) {
 	avTime.nsec = nsec;
 	return avTime;
 }
+
+
+void CompletePath( std::string& path )
+{
+  if ( path.size() == 0 ) return;
+  
+#ifndef _WIN32
+  for ( int i = 0; i < path.length(); i++ ) 
+  {
+    if ( path.at(i) == '\\' ) path.at(i) = '/';
+  }
+#endif
+
+  if (path[0] == '~') 
+  {
+#ifdef _WIN32
+    path.replace( 0, 1, std::getenv("USERPROFILE") );
+#else
+    path.replace( 0, 1, _USERPROFILE_ );
+#endif
+  }
+  
+  if ( path.size() == 0 ) return;
+
+  if ( path[0] == '.' )
+  {
+    path.replace( 0, 1, _THERMALVIS_SOURCE_ );
+  }
+}
+

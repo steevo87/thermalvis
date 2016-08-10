@@ -77,15 +77,11 @@ bool calibratorData::assignFromXml(xmlParameters& xP) {
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("gridSize")) gridSize = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			if (!v2.second.get_child("<xmlattr>.name").data().compare("alpha")) alpha = atof(v2.second.get_child("<xmlattr>.value").data().c_str());
 			
-        }
+    }
 
 		// Substitute tildes if in Windows
 #ifdef _WIN32
-		if (outputFolder.size() > 0) {
-			if (outputFolder[0] == '~') {
-				outputFolder.erase(outputFolder.begin());
-				outputFolder = std::getenv("USERPROFILE") + outputFolder;
-			}
+      CompletePath( outputFolder );
 		}
 #endif
 

@@ -36,6 +36,16 @@
 QImage Mat2QImage(const cv::Mat &src);
 #endif
 
+enum E_ImageDatatype
+{
+  DATATYPE_INVALID  = -1,
+  DATATYPE_8BIT     =  0,
+  DATATYPE_RAW      =  1,
+  DATATYPE_MM       =  2,
+  DATATYPE_DEPTH    =  3,
+  NO_OF_DATATYPES   // Must be the last value
+};
+
 void denoiseImage(const cv::Mat& src, cv::Mat& dst, int denoisingMode = DENOISING_MODE_X);
 
 void fadeImage(const cv::Mat& src, cv::Mat& dst, double frac = 0.65);
@@ -183,7 +193,7 @@ void temperatureRangeBasedDownsample(const cv::Mat& src, cv::Mat& dst, int newMe
 cv::Mat read_image_from_file(std::string path);
 
 /// \brief 		Determine the type of frame based on the matrix
-int determineFrameType(cv::Mat& frame);
+E_ImageDatatype determineFrameType( cv::Mat& frame );
 
 /// \brief 		Downsamples a temperature matrix to a 16-bit image using Optris-like linear scaling
 void temperatureDownsample16(const cv::Mat& src, cv::Mat& dst);

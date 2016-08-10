@@ -18,11 +18,6 @@
 #define USB_MODE_16							1
 #define USB_MODE_8							2
 
-#define DATATYPE_8BIT 						0
-#define DATATYPE_RAW  						1
-#define DATATYPE_MM   						2
-#define DATATYPE_DEPTH						3
-
 #define NORM_MODE_FULL_STRETCHING 			0
 #define NORM_MODE_EQUALIZATION 				1
 #define NORM_MODE_CENTRALIZED				2
