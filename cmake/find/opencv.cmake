@@ -31,7 +31,15 @@ IF(OpenCV_USE_ADVANCED_COMPONENTS)
   LIST(APPEND OpenCV_Components_List ${OpenCV_Advanced_Components_List})
 ENDIF()
 
-SET(OPENCV_HINTS "/usr/local/share/OpenCV" "${USERPROFILE}/Documents/opencv/build" "C:/Users/Public/Documents/opencv/build" "${USERPROFILE}/Documents/Code/BUILDS/opencv/build" "${USERPROFILE}/Documents/GitHub/BUILDS/OpenCV")
+SET(OPENCV_HINTS 
+	"/usr/local/share/OpenCV" 
+	"${USERPROFILE}/Documents/opencv/build" 
+	"C:/Users/Public/Documents/opencv/build" 
+	"${USERPROFILE}/Downloads/opencv/build" 
+	"C:/Users/Public/Downloads/opencv/build" 
+	"${USERPROFILE}/Documents/Code/BUILDS/opencv/build" 
+	"${USERPROFILE}/Documents/GitHub/BUILDS/OpenCV" 
+	"${USERPROFILE}/Documents/GitHub/BUILDS/OpenCV" )
 find_package(OpenCV 2.4.8 COMPONENTS ${OpenCV_Components_List} QUIET)
 
 IF(OpenCV_USE_ADVANCED_COMPONENTS AND NOT OPENCV_VIZ_FOUND) # If you can't find OpenCV with viz, exclude it and try again
