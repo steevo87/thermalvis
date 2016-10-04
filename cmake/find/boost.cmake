@@ -11,15 +11,15 @@ IF(USE_BOOST)
 	SET(Boost_USE_STATIC_RUNTIME OFF) 
 	
 	SET(BOOST_Components_List "")
-        LIST(APPEND BOOST_Components_List "system")
-        LIST(APPEND BOOST_Components_List "filesystem")
+	LIST(APPEND BOOST_Components_List "system")
+	LIST(APPEND BOOST_Components_List "filesystem")
 	LIST(APPEND BOOST_Components_List "program_options")
 	LIST(APPEND BOOST_Components_List "date_time")
 	
 	IF ( Boost_VERSION VERSION_LESS 106200 )
 		FIND_PACKAGE(Boost COMPONENTS ${BOOST_Components_List} REQUIRED)
 	ELSE()
-		FIND_PACKAGE(Boost REQUIRED)
+		MESSAGE(FATAL_ERROR "Boost version ${Boost_VERSION} is not yet supported by CMake. Try installing version 106200 (1.62.0).")
 	ENDIF()
 	
 	IF(Boost_FOUND)
