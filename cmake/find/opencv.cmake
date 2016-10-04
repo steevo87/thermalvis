@@ -1,7 +1,9 @@
 SET(USE_OPENCV TRUE)
 
+SET(OPENCV_MINVERSION "2.4.8")
+
 If(BUILD_FOR_ROS)
-        find_package(OpenCV 2.4.8 REQUIRED)
+        find_package(OpenCV ${OPENCV_MINVERSION} REQUIRED)
         SET(opencv_FOUND TRUE)
         SET(opencv_LIBRARIES ${OpenCV_LIBS})
         include_directories(${OpenCV_INCLUDE_DIRS})
@@ -40,11 +42,24 @@ SET(OPENCV_HINTS
 	"${USERPROFILE}/Documents/Code/BUILDS/opencv/build" 
 	"${USERPROFILE}/Documents/GitHub/BUILDS/OpenCV" 
 	"${USERPROFILE}/Documents/GitHub/BUILDS/OpenCV" )
-find_package(OpenCV 2.4.8 COMPONENTS ${OpenCV_Components_List} QUIET)
+	
+find_package(OpenCV ${OPENCV_MINVERSION} COMPONENTS ${OpenCV_Components_List} QUIET)
+
+IF(OpenCV_FOUND)
+	MESSAGE( STATUS "Found OpenCV version 2.4.8+")
+ELSE()
+	SET( OPENCV_MINVERSION "3.0.0" )
+	find_package(OpenCV ${OPENCV_MINVERSION} COMPONENTS ${OpenCV_Components_List} QUIET)
+	IF(OpenCV_FOUND)
+		MESSAGE( STATUS "Found OpenCV version 3.0.0+")
+	ELSE()
+		MESSAGE( WARNING "Haven't found any sign of OpenCV..")
+	ENDIF()
+ENDIF()
 
 IF(OpenCV_USE_ADVANCED_COMPONENTS AND NOT OPENCV_VIZ_FOUND) # If you can't find OpenCV with viz, exclude it and try again
 	SET(OpenCV_Components_List "")
-	find_package(OpenCV 2.4.8 COMPONENTS ${OpenCV_Components_List} QUIET)
+	find_package(OpenCV ${OPENCV_MINVERSION} COMPONENTS ${OpenCV_Components_List} QUIET)
 	IF(NOT OpenCV_FOUND) # If you still can't find it, add viz back in as a requirement, and try your alternative "manual" approach further down the file
 		LIST(APPEND OpenCV_Components_List ${OpenCV_Advanced_Components_List})
 	ENDIF()
