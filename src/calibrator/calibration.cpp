@@ -140,8 +140,13 @@ void findAllPatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 1);
 
     // 15
-    cv::MSER mserExtractor(delta, minArea, maxArea, max_var, min_diversity, 200, area_threshold, 0.003, 5); // delta = 8, max var = 0.1
-    /*
+
+#ifdef _OPENCV_VERSION_3_PLUS_
+	cv::Ptr<cv::MSER> mserExtractor = cv::MSER::create(delta, minArea, maxArea, max_var, min_diversity, 200, area_threshold, 0.003, 5); // delta = 8, max var = 0.1
+#else
+    cv::MSER:: mserExtractor(delta, minArea, maxArea, max_var, min_diversity, 200, area_threshold, 0.003, 5); // delta = 8, max var = 0.1
+#endif
+																											  /*
     cvMSERParams(int delta = 5, int min_area = 60, int max_area = 14400, \n"
         "    float max_variation = .25, float min_diversity = .2, \n"
         "    int max_evolution = 200, double area_threshold = 1.01, \n"
@@ -174,7 +179,10 @@ void findAllPatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv
 
 
     // Extract cv::MSER features
+#ifndef _OPENCV_VERSION_3_PLUS_ // TODO: Reactivate this for newer OpenCV version
     mserExtractor(imGrey, msers, mask);
+	//mserExtractor->compute()
+#endif
 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 4);
 
