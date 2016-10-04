@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdarg.h>
 #include <math.h>
+#include <stdio.h>
 
 #ifdef _USE_BOOST_
 #include "boost/date_time/posix_time/posix_time.hpp"	
@@ -12,9 +13,9 @@
 
 #ifdef _IS_WINDOWS_
 #define __SHORTENED_FILE__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#define ROS_INFO  (fmt, ...) std::printf("%s:%s << " fmt "\n",          __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
-#define ROS_WARN  (fmt, ...) std::printf("%s:%s << WARNING! " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
-#define ROS_ERROR (fmt, ...) std::printf("%s:%s << ERROR! " fmt "\n",   __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
+#define ROS_INFO(fmt, ...)  std::printf("%s:%s << " fmt "\n",          __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
+#define ROS_WARN(fmt, ...)  std::printf("%s:%s << WARNING! " fmt "\n", __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
+#define ROS_ERROR(fmt, ...) std::printf("%s:%s << ERROR! " fmt "\n",   __SHORTENED_FILE__, __FUNCTION__, __VA_ARGS__);
 #else
 #define __SHORTENED_FILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 void ROS_INFO   (char *fmt, ...);
