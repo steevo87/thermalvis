@@ -291,7 +291,7 @@ void UpdateCombinatorialArray( vector<unsigned int>& currentArray, const int k, 
     int elementsFromEnd = 0;
     while ( valid && (elementsFromEnd < k) )
     {
-      int pos = currentArray.size()-elementsFromEnd-1;
+      int pos = static_cast<int>( currentArray.size() ) - elementsFromEnd - 1;
       
       // If current index is about to go over its maximum...
       if ( int( currentArray.at( pos ) ) > ( n-2-elementsFromEnd ) )

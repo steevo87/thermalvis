@@ -631,7 +631,7 @@ bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<
 		triangulatedCount++;
 		
 		if (tracks.at(iii).locations.size() < minAppearances) {
-			printf("%s << Error! size() = (%lu) < (%d)\n", __FUNCTION__, tracks.at(iii).locations.size(), minAppearances);
+			printf("%s << Error! size() = (%zu) < (%d)\n", __FUNCTION__, tracks.at(iii).locations.size(), minAppearances);
 			continue;
 		}
 		
@@ -691,12 +691,12 @@ bool estimatePoseFromKnownPoints(cv::Mat& dst, cameraParameters camData, vector<
 	
 	//if ( ((unsigned int) inlierPts.size()) < ((unsigned int) (((double) points_2d.size()) * inliersPercentage)) ) {
 	if ( inlierPts.size() < 8 ) {
-		if (debug) { printf("%s << PnP Failed:  Insufficient inliers: (%lu) / (%lu) : [%d, %d, %d]\n", __FUNCTION__, inlierPts.size(), points_2d.size(), utilizedPointsCount, triangulatedCount, ((int)tracks.size())); }
+		if (debug) { printf("%s << PnP Failed:  Insufficient inliers: (%zu) / (%zu) : [%d, %d, %d]\n", __FUNCTION__, inlierPts.size(), points_2d.size(), utilizedPointsCount, triangulatedCount, ((int)tracks.size())); }
 		guide.copyTo(dst);
 		return false;
 	}
 	
-	if (debug) { printf("%s << PnP Succeeded:  Inliers: (%d) / (%lu) : [%d, %d, %d]\n", __FUNCTION__, (int)inlierPts.size(), points_2d.size(), utilizedPointsCount, triangulatedCount, ((int)tracks.size())); }
+	if (debug) { printf("%s << PnP Succeeded:  Inliers: (%d) / (%zu) : [%d, %d, %d]\n", __FUNCTION__, (int)inlierPts.size(), points_2d.size(), utilizedPointsCount, triangulatedCount, ((int)tracks.size())); }
 	
 	*pnpInlierProp = double(inlierPts.size()) / double(points_2d.size());
 	

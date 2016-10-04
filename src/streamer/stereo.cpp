@@ -473,7 +473,7 @@ void findRadiometricMapping2(const cv::Mat& im1, const cv::Mat& im2, const cv::M
 	cv::waitKey(1);
 	*/
 	
-	printf("%s << intensities[0].size() = %lu\n", __FUNCTION__, intensities[0].size());
+	printf("%s << intensities[0].size() = %zu\n", __FUNCTION__, intensities[0].size());
 	
 	// Simple median-based equation estimation:
 	grad = 1.00;

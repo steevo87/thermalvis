@@ -276,7 +276,7 @@ void slamNode::main_loop(sensor_msgs::CameraInfo& info_msg, const vector<feature
 #else
 	if (!infoProcessed) handle_info(&info_msg);
 	handle_tracks(msg);
-	ROS_INFO("featureTrackVector->size() = (%d)", featureTrackVector->size());
+	ROS_INFO("featureTrackVector->size() = (%zu)", featureTrackVector->size());
 #endif
 	
 	if (configData.keyframeEvaluationMode && evaluationCompleted) return;

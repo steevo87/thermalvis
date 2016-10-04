@@ -17,8 +17,8 @@ double calculateERE( Size imSize,
 	bool debug = false;
 	
 	
-	if (debug) { printf("%s << physicalPoints.size() = (%lu)\n", __FUNCTION__, physicalPoints.size()); }
-	if (debug) { printf("%s << corners.size() = (%lu)\n", __FUNCTION__, corners.size()); }
+	if (debug) { printf("%s << physicalPoints.size() = (%zu)\n", __FUNCTION__, physicalPoints.size()); }
+	if (debug) { printf("%s << corners.size() = (%zu)\n", __FUNCTION__, corners.size()); }
 	
     int total_points = int(corners.size() * corners.at(0).size());
     
@@ -79,7 +79,7 @@ double calculateERE( Size imSize,
 
 		if (debug) { printf("%s << Set (%d) Solving PnP...\n", __FUNCTION__, i); }
 		
-		if (debug) { printf("%s << corners.at(%d).size() = (%lu)\n", __FUNCTION__, i, corners.at(i).size()); }
+		if (debug) { printf("%s << corners.at(%d).size() = (%zu)\n", __FUNCTION__, i, corners.at(i).size()); }
 		
         // Estimate pose of board
         solvePnP(Mat(physicalPoints), Mat(corners.at(i)), cameraMatrix, distCoeffs, fsRvec, fsTvec, false);
@@ -623,26 +623,26 @@ void optimizeCalibrationSet(Size imSize,
             for (unsigned int i = 0; i < candidatePatternsCpy.size(); i++)
             {
 				
-				if (debugMode) { printf("%s << i = (%u / %lu)\n", __FUNCTION__, i, candidatePatternsCpy.size()); }
+				if (debugMode) { printf("%s << i = (%u / %zu)\n", __FUNCTION__, i, candidatePatternsCpy.size()); }
 
                 tempFrameTester.clear();
                 
-                if (debugMode) { printf("%s << i = (%u / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 0); }
+                if (debugMode) { printf("%s << i = (%u / %zu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 0); }
                 
                 tempFrameTester.assign(selectedFrames.begin(), selectedFrames.end());
                 
-                if (debugMode) { printf("%s << i = (%u / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 1); }
+                if (debugMode) { printf("%s << i = (%u / %zu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 1); }
                 
                 tempFrameTester.push_back(candidatePatternsCpy.at(i));
                 
-                if (debugMode) { printf("%s << i = (%u / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 2); }
+                if (debugMode) { printf("%s << i = (%u / %zu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 2); }
 
                 bool alreadyAdded = false;
 
                 for (unsigned int k = 0; k < addedIndices.size(); k++)
                 {
 					
-					if (debugMode) { printf("%s << k = (%d / %lu)\n", __FUNCTION__, k, addedIndices.size()); }
+					if (debugMode) { printf("%s << k = (%d / %zu)\n", __FUNCTION__, k, addedIndices.size()); }
 					
                     if (i == addedIndices.at(k))       // this was addedIndices[N] before - but that doesn't make sense...
                     {
@@ -651,7 +651,7 @@ void optimizeCalibrationSet(Size imSize,
                     }
                 }
                 
-                if (debugMode) { printf("%s << i = (%d / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 3); }
+                if (debugMode) { printf("%s << i = (%d / %zu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 3); }
 
                 if (alreadyAdded == true)
                 {
@@ -692,7 +692,7 @@ void optimizeCalibrationSet(Size imSize,
 
                 }
                 
-                if (debugMode) { printf("%s << i = (%d / %lu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 4); }
+                if (debugMode) { printf("%s << i = (%d / %zu) {%d}\n", __FUNCTION__, i, candidatePatternsCpy.size(), 4); }
 
                 unrankedScores[i] = err;
                 //printf("%s << score = %f\n", __FUNCTION__, err);
@@ -709,7 +709,7 @@ void optimizeCalibrationSet(Size imSize,
             for (unsigned int j = 0; j < candidatePatternsCpy.size(); j++)
             {
 				
-				if (debugMode) { printf("%s << j = (%d / %lu)\n", __FUNCTION__, j, candidatePatternsCpy.size()); }
+				if (debugMode) { printf("%s << j = (%d / %zu)\n", __FUNCTION__, j, candidatePatternsCpy.size()); }
 
                 if ((unrankedScores[j] < bestScore) && (unrankedScores[j] > 0))
                 {
@@ -727,7 +727,7 @@ void optimizeCalibrationSet(Size imSize,
             // Corrupt best frame in 'originalFramesCpy'
             for (unsigned int i = 0; i < candidatePatternsCpy.at(bestIndex).size(); i++)
             {
-				if (debugMode) { printf("%s << i(%d) = (%d / %lu)\n", __FUNCTION__, bestIndex, i, candidatePatternsCpy.at(bestIndex).size()); }
+				if (debugMode) { printf("%s << i(%d) = (%d / %zu)\n", __FUNCTION__, bestIndex, i, candidatePatternsCpy.at(bestIndex).size()); }
                 candidatePatternsCpy.at(bestIndex).at(i) = Point2f(0.0,0.0);
             }
 
@@ -1077,7 +1077,7 @@ void optimizeCalibrationSet(Size imSize,
 
         candidatePatterns.clear();
 
-        printf("%s << Optimum number of frames for calibration = %lu\n", __FUNCTION__, bestIndices.size());
+        printf("%s << Optimum number of frames for calibration = %zu\n", __FUNCTION__, bestIndices.size());
         printf("%s << bestScore = %f\n", __FUNCTION__, bestScore);
 
         for (unsigned int i = 0; i < bestIndices.size(); i++)

@@ -196,7 +196,7 @@ void findAllPatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv
 
     if (DEBUG_MODE > 1)
     {
-        printf("%s << MSERs found: %lu\n", __FUNCTION__, msers.size());
+        printf("%s << MSERs found: %zu\n", __FUNCTION__, msers.size());
     }
 
     if (DEBUG_MODE > 0)
@@ -215,7 +215,7 @@ void findAllPatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv
 
     if (DEBUG_MODE > 1)
     {
-        printf("%s << Total patches found = %lu\n", __FUNCTION__, msers.size());
+        printf("%s << Total patches found = %zu\n", __FUNCTION__, msers.size());
     }
 }
 
@@ -254,7 +254,7 @@ void randomCulling(vector<string>& inputList, int maxSearch, vector<vector<vecto
 
     int deletionIndex = 0;
 
-    printf("%s << inputList.size() = %lu / %d\n", __FUNCTION__, inputList.size(), maxSearch);
+    printf("%s << inputList.size() = %zu / %d\n", __FUNCTION__, inputList.size(), maxSearch);
 
     while (int(inputList.size()) > maxSearch)
     {
@@ -548,7 +548,7 @@ void findCornerPatches(cv::Size imageSize, cv::Size patternSize, int mode, int *
             printf("%s << patchCentres.at(%d) = (%f, %f)\n", __FUNCTION__, i, patchCentres.at(i).x, patchCentres.at(i).y);
         }
 
-        printf("%s << remainingPatches.size() = %lu\n", __FUNCTION__, remainingPatches.size());
+        printf("%s << remainingPatches.size() = %zu\n", __FUNCTION__, remainingPatches.size());
     }
 
     return;
@@ -590,7 +590,7 @@ void findCornerPatches(cv::Size imageSize, cv::Size patternSize, int mode, int *
 
     if (DEBUG_MODE > 3)
     {
-        printf("%s << remainingPatches.size() = %lu\n", __FUNCTION__, remainingPatches.size());
+        printf("%s << remainingPatches.size() = %zu\n", __FUNCTION__, remainingPatches.size());
     }
 
     // For all 4 corners...
@@ -634,7 +634,7 @@ void findCornerPatches(cv::Size imageSize, cv::Size patternSize, int mode, int *
             printf("%s << patchCentres.at(%d) = (%f, %f)\n", __FUNCTION__, i, patchCentres.at(i).x, patchCentres.at(i).y);
         }
 
-        printf("%s << remainingPatches.size() = %lu\n", __FUNCTION__, remainingPatches.size());
+        printf("%s << remainingPatches.size() = %zu\n", __FUNCTION__, remainingPatches.size());
     }
 
 
@@ -842,8 +842,8 @@ void findEdgePatches(cv::Size patternSize, int mode, int *XVec, int *YVec, vecto
     if (DEBUG_MODE > 3)
     {
 
-        printf("%s << patchCentres.size() = %lu\n", __FUNCTION__, patchCentres.size());
-        printf("%s << remainingPatches.size() = %lu\n", __FUNCTION__, remainingPatches.size());
+        printf("%s << patchCentres.size() = %zu\n", __FUNCTION__, patchCentres.size());
+        printf("%s << remainingPatches.size() = %zu\n", __FUNCTION__, remainingPatches.size());
 
         for (unsigned int i = 0; i < patchCentres.size(); i++)
         {
@@ -1058,8 +1058,8 @@ void findInteriorPatches(cv::Size patternSize, int mode, int *XVec, int *YVec, v
     if (DEBUG_MODE > 3)
     {
 
-        printf("%s << patchCentres.size() = %lu\n", __FUNCTION__, patchCentres.size());
-        printf("%s << remainingPatches.size() = %lu\n", __FUNCTION__, remainingPatches.size());
+        printf("%s << patchCentres.size() = %zu\n", __FUNCTION__, patchCentres.size());
+        printf("%s << remainingPatches.size() = %zu\n", __FUNCTION__, remainingPatches.size());
 
         for (unsigned int i = 0; i < patchCentres.size(); i++)
         {
@@ -1139,7 +1139,7 @@ void sortPatches(cv::Size imageSize, cv::Size patternSize, vector<cv::Point2f>& 
 
     if (patchCentres.size() != desiredPatchCount)
     {
-        printf("%s << ERROR. An incorrect number (%lu vs %d) of patches have been allocated.\n", __FUNCTION__, patchCentres.size(), desiredPatchCount);
+        printf("%s << ERROR. An incorrect number (%zu vs %d) of patches have been allocated.\n", __FUNCTION__, patchCentres.size(), desiredPatchCount);
 
         //patchCentres.clear();
 
@@ -1237,7 +1237,7 @@ void reorderPatches(cv::Size patternSize, int mode, int *XVec, int *YVec, vector
     if (DEBUG_MODE > 3)
     {
 
-        printf("%s << patchCentres.size() = %lu\n", __FUNCTION__, patchCentres.size());
+        printf("%s << patchCentres.size() = %zu\n", __FUNCTION__, patchCentres.size());
 
         for (unsigned int i = 0; i < patchCentres.size(); i++)
         {
@@ -1307,7 +1307,7 @@ bool findPatternCorners(const cv::Mat& image, cv::Size patternSize, vector<cv::P
 
     if (DEBUG_MODE > 1)
     {
-        printf("%s << Patches found after refinement = %lu\n", __FUNCTION__, msers.size());
+        printf("%s << Patches found after refinement = %zu\n", __FUNCTION__, msers.size());
     }
 
     if (DEBUG_MODE > 2)
@@ -1887,7 +1887,7 @@ bool findPatchCorners(const cv::Mat& image, cv::Size patternSize, cv::Mat& homog
     if (DEBUG_MODE > 2)
     {
         cv::Mat cornersForDisplay(cornerEstimates);
-        printf("%s << Step 3: cornerEstimates.size() = %lu\n", __FUNCTION__, cornerEstimates.size());
+        printf("%s << Step 3: cornerEstimates.size() = %zu\n", __FUNCTION__, cornerEstimates.size());
         debugDisplayPattern(image, cv::Size(patternSize.width, patternSize.height), cornersForDisplay);
         printf("%s << DONE.\n", __FUNCTION__);
     }
@@ -3058,8 +3058,8 @@ bool correctPatchCentres(const cv::Mat& image, cv::Size patternSize, vector<cv::
     printf("%s << Redistorting cv::MSER centroids...\n", __FUNCTION__);
     //patchCentres.clear();
     redistortPoints(newCentres, patchCentres, cameraMatrix, distCoeffs, newCamMat);
-    printf("%s << newCentres.size() = %lu\n", __FUNCTION__, newCentres.size());
-    printf("%s << patchCentres.size() = %lu\n", __FUNCTION__, patchCentres.size());
+    printf("%s << newCentres.size() = %zu\n", __FUNCTION__, newCentres.size());
+    printf("%s << patchCentres.size() = %zu\n", __FUNCTION__, patchCentres.size());
     printf("%s << DONE.\n", __FUNCTION__);
 
     if (DEBUG_MODE > 2)
@@ -3158,7 +3158,7 @@ bool findPatternCentres(const cv::Mat& image, cv::Size patternSize, vector<cv::P
 
     if (DEBUG_MODE > 1)
     {
-        printf("%s << Patches found after refinement = %lu\n", __FUNCTION__, msers.size());
+        printf("%s << Patches found after refinement = %zu\n", __FUNCTION__, msers.size());
     }
 
     if (DEBUG_MODE > 3)
@@ -3965,7 +3965,7 @@ void clusterFilter(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers
 
         if (DEBUG_MODE > 1)
         {
-            printf("%s << Cluster cv::Size = %lu\n", __FUNCTION__, newMsers.size());
+            printf("%s << Cluster cv::Size = %zu\n", __FUNCTION__, newMsers.size());
         }
 
         // Test
@@ -3998,7 +3998,7 @@ void clusterFilter(vector<mserPatch>& patches, vector<vector<cv::Point> >& msers
             clusterFound = true;
             if (DEBUG_MODE > 1)
             {
-                printf("%s << Cluster found. size = %lu.\n", __FUNCTION__, newPatches.size());
+                printf("%s << Cluster found. size = %zu.\n", __FUNCTION__, newPatches.size());
 
             }
         }
@@ -4091,7 +4091,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
     if (DEBUG_MODE > 1)
     {
         printf("%s << totalPatches = %d\n", __FUNCTION__, totalPatches);
-        printf("%s << Patches found before refinement = %lu\n", __FUNCTION__, msers.size());
+        printf("%s << Patches found before refinement = %zu\n", __FUNCTION__, msers.size());
     }
 
 
@@ -4104,7 +4104,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
 
     if (DEBUG_MODE > 3)
     {
-        printf("%s << Patches found before filtering = %lu\n", __FUNCTION__, msers.size());
+        printf("%s << Patches found before filtering = %zu\n", __FUNCTION__, msers.size());
 
         //color = cv::Scalar(255, 255, 0);
         colorImage.copyTo(imCpy);
@@ -4129,7 +4129,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
     {
         t = cv::getTickCount() - t;
         printf("%s << Shape Filter duration: %fms\n", __FUNCTION__, t*1000/cv::getTickFrequency());
-        printf("%s << Patches found after shape filter = %lu\n", __FUNCTION__, msers.size());
+        printf("%s << Patches found after shape filter = %zu\n", __FUNCTION__, msers.size());
     }
 
     if (DEBUG_MODE > 6)
@@ -4186,7 +4186,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
     {
         if (DEBUG_MODE > 1)
         {
-            printf("There are an insufficient (%lu/%d) number of patches after enclosure filter.\n", msers.size(), totalPatches);
+            printf("There are an insufficient (%zu/%d) number of patches after enclosure filter.\n", msers.size(), totalPatches);
         }
         return false;
     }
@@ -4194,7 +4194,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
 
     if (DEBUG_MODE > 1)
     {
-        printf("%s << Patches found after enclosure filter = %lu\n", __FUNCTION__, msers.size());
+        printf("%s << Patches found after enclosure filter = %zu\n", __FUNCTION__, msers.size());
     }
 
     if (DEBUG_MODE > 6)
@@ -4239,7 +4239,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
 
         if (DEBUG_MODE > 1)
         {
-            printf("%s << Patches found after cluster filter = %lu\n", __FUNCTION__, msers.size());
+            printf("%s << Patches found after cluster filter = %zu\n", __FUNCTION__, msers.size());
         }
 
         if (DEBUG_MODE > 6)
@@ -4263,7 +4263,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
 
         if (DEBUG_MODE > 1)
         {
-            printf("%s << Patches remaining after area-based reduction = %lu\n", __FUNCTION__, msers.size());
+            printf("%s << Patches remaining after area-based reduction = %zu\n", __FUNCTION__, msers.size());
         }
 
         if (DEBUG_MODE > 6)
@@ -4341,7 +4341,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
     {
         if (DEBUG_MODE > 1)
         {
-            printf("%s << Too many final patches = %lu/%d\n", __FUNCTION__, msers.size(), totalPatches);
+            printf("%s << Too many final patches = %zu/%d\n", __FUNCTION__, msers.size(), totalPatches);
         }
         return false;
     }
@@ -4349,7 +4349,7 @@ bool refinePatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv:
     {
         if (DEBUG_MODE > 1)
         {
-            printf("%s << Too few final patches: %lu/%d\n", __FUNCTION__, msers.size(), totalPatches);
+            printf("%s << Too few final patches: %zu/%d\n", __FUNCTION__, msers.size(), totalPatches);
         }
         return false;
     }
