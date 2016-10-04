@@ -179,9 +179,11 @@ void findAllPatches(const cv::Mat& image, cv::Size patternSize, vector<vector<cv
 
 
     // Extract cv::MSER features
-#ifndef _OPENCV_VERSION_3_PLUS_ // TODO: Reactivate this for newer OpenCV version
+#ifdef _OPENCV_VERSION_3_PLUS_
+	std::vector<cv::Rect> bBoxes;
+	mserExtractor->detectRegions( imGrey, msers, bBoxes );
+#else
     mserExtractor(imGrey, msers, mask);
-	//mserExtractor->compute()
 #endif
 
     //printf("%s << DEBUG {%d}{%d}\n", __FUNCTION__, 0, 4);

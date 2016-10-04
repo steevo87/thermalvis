@@ -1637,8 +1637,8 @@ void featureTrackerNode::handle_camera(cv::Mat& inputImage, sensor_msgs::CameraI
 
 void trackerData::initializeDescriptors(cv::Ptr<cv::DescriptorExtractor> *desc, cv::Ptr<cv::DescriptorExtractor> *hom) {
 #ifdef _OPENCV_VERSION_3_PLUS_
-	//desc[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::OrbDescriptorExtractor());
-	//hom[0] = cv::Ptr<cv::DescriptorExtractor>(new cv::OrbDescriptorExtractor());
+	desc[0] = ORB::create();
+	hom[0]  = ORB::create();
 #else
 	desc[0] = new cv::BriefDescriptorExtractor();
 	hom[0] = new cv::BriefDescriptorExtractor();
@@ -1651,13 +1651,13 @@ bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr
 			ROS_ERROR("SURF has been deactivated due to copyright protection!");
 		} else if ((detector[iii] == "FAST") || (detector[iii] == "fast")) {
 #ifdef _OPENCV_VERSION_3_PLUS_
-			// det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::FastFeatureDetector(int(sensitivity[iii] * FAST_DETECTOR_SENSITIVITY_SCALING)));
+			det[iii] = cv::FastFeatureDetector::create(int(sensitivity[iii] * FAST_DETECTOR_SENSITIVITY_SCALING));
 #else
 			det[iii] = new cv::FastFeatureDetector( int(sensitivity[iii] * FAST_DETECTOR_SENSITIVITY_SCALING) );
 #endif
 		} else if ((detector[iii] == "GFTT") || (detector[iii] == "gftt")) {
 #ifdef _OPENCV_VERSION_3_PLUS_
-			//det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii] * GFTT_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, false ));
+			det[iii] = cv::GFTTDetector::create(maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii] * GFTT_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, false);
 #else
 			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_GFTT_SENSITIVITY, sensitivity[iii] * GFTT_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, false );
 #endif	
@@ -1669,13 +1669,13 @@ bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr
 #endif	
 		} else if ((detector[iii] == "ORB") || (detector[iii] == "orb")) {
 #ifdef _OPENCV_VERSION_3_PLUS_
-			// det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::OrbFeatureDetector( maxFeatures ));
+			det[iii] = cv::ORB::create(maxFeatures);
 #else
 			det[iii] = new cv::OrbFeatureDetector( maxFeatures );
 #endif
 		} else if ((detector[iii] == "HARRIS") || (detector[iii] == "harris")) {
 #ifdef _OPENCV_VERSION_3_PLUS_
-			// det[iii] = cv::Ptr<cv::FeatureDetector>(new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii] * HARRIS_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, true ));
+			det[iii] = cv::GFTTDetector::create(maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii] * HARRIS_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, true);
 #else
 			det[iii] = new cv::GoodFeaturesToTrackDetector( maxFeatures, max(MINIMUM_HARRIS_SENSITIVITY, sensitivity[iii] * HARRIS_DETECTOR_SENSITIVITY_SCALING), 1.0, 3, true );
 #endif
@@ -1691,7 +1691,7 @@ bool trackerData::initializeDetectors(cv::Ptr<cv::FeatureDetector> *det, cv::Ptr
 		}
 	}
 #ifdef _OPENCV_VERSION_3_PLUS_
-	// hom[0] = cv::Ptr<cv::FeatureDetector>(new cv::FastFeatureDetector( int(FAST_DETECTOR_SENSITIVITY_SCALING*0.02) ));
+	hom[0] = cv::FastFeatureDetector::create(int(FAST_DETECTOR_SENSITIVITY_SCALING*0.02));
 #else
 	hom[0] = new cv::FastFeatureDetector( int(FAST_DETECTOR_SENSITIVITY_SCALING*0.02) );
 #endif
