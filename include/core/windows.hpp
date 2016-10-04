@@ -4,6 +4,7 @@
 #define NOMINMAX 1	  // Don't remove this, even though it causes a warning!
 #include <windows.h>
 #include <time.h>
+#include <math.h>
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
@@ -20,9 +21,11 @@ struct timezone
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 // http://stackoverflow.com/questions/485525/round-for-float-in-c
+/*
 double round(double d) 
 {
   return floor(d + 0.5);
 }
+*/
 
 #endif // _WINDOWS_H_
