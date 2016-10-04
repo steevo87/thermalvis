@@ -82,7 +82,6 @@ bool calibratorData::assignFromXml(xmlParameters& xP) {
 		// Substitute tildes if in Windows
 #ifdef _WIN32
       CleanAndSubstitutePath( outputFolder );
-		}
 #endif
 
 	}
