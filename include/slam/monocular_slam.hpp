@@ -194,12 +194,12 @@ private:
 	timeAnalyzer bundleAdjustmentTime;
 
 	// Thread-protection
+#ifdef _USE_BOOST_
 	boost::mutex cam_mutex;
 	boost::mutex tracks_mutex;
 	boost::mutex keyframes_mutex;
 	boost::mutex main_mutex;
-	
-	
+#endif
 
 	// From videoslam:
 	

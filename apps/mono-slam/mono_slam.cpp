@@ -65,7 +65,11 @@ private:
 	bool wantsToOutput, writeMode, wantsFlow, wantsSlam;
 	char *output_directory;
 	char *xmlAddress;
+
+#ifdef _USE_BOOST_
 	xmlParameters xP;
+#endif
+
 	sensor_msgs::CameraInfo camInfo;
 	cv::Mat workingFrame;
 
@@ -207,6 +211,7 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 		ROS_INFO("No XML config file provided, therefore using default at (%s)", xmlAddress);
 	}
 
+#ifdef _USE_BOOST_
 	if (!xP.parseInputXML(xmlAddress)) return false;
 	ROS_INFO("About to print XML summary..");
 	xP.printInputSummary();
@@ -254,6 +259,8 @@ bool ProcessingThread::initialize(int argc, char* argv[]) {
 	wantsSlam = true;
 	_slamNode = new slamNode(*slamStartupData);
 	_slamNode->initializeOutput(output_directory);
+
+#endif
 
 	return true;
 }

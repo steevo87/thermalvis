@@ -1,5 +1,7 @@
 #include "streamer/input_stream.hpp"
 
+#include <iomanip>
+
 camData_::camData_() {
 	imageSize = cv::Mat(1, 2, CV_16UC1);
 }
@@ -2718,6 +2720,8 @@ bool streamerNode::streamCallback(bool capture) {
 bool streamerNode::processFolder() 
 {
 #ifndef _USE_BOOST_
+
+#ifdef DIR
 	DIR * dirp;
 	struct dirent * entry;
 	
@@ -2737,6 +2741,8 @@ bool streamerNode::processFolder()
 		}
 	}
 	closedir(dirp);
+#endif
+
 #else
 	std::string full_dir = configData.folder + "/";
   

@@ -207,8 +207,10 @@ private:
     vector<unsigned int> frameCounts[MAX_ALLOWABLE_CAMS];
     bool  doVerify;
 
+#ifdef _USE_BOOST_
 	boost::shared_mutex _access;
-	
+#endif
+
 	bool readyForOutput;
 	
 	vector<Point2f> cornerSet[MAX_ALLOWABLE_CAMS];

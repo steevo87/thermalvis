@@ -932,6 +932,9 @@ void featureTrackerNode::matchWithExistingTracks() {
 
 void featureTrackerNode::prepareKeypointFilelist() {
 
+#ifndef _USE_BOOST_
+	ROS_ERROR("[%s]: This function does not work without the Boost libraries..", __FUNCTION__);
+#else
 	boost::filesystem::path featuresDir(configData.predetectedFeatures);
 	boost::filesystem::directory_iterator end_iter;
 
@@ -958,6 +961,8 @@ void featureTrackerNode::prepareKeypointFilelist() {
 			}
 		}
 	}
+#endif
+
 }
 
 void featureTrackerNode::loadKeypointsFromFile(vector<cv::KeyPoint>& pts_vec) {
@@ -1480,12 +1485,15 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		string defaultOutput = configData.read_addr + "_log/" + timeString;
 		boost::filesystem::create_directory(defaultOutput);
 #else
+		
+		string defaultDir = configData.read_addr + "data";
+
+#ifdef _USE_BOOST_
 		boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
 		sprintf(timeString, "%010lu.%09lu", (long unsigned int)pt.time_of_day().total_seconds(), (long unsigned int)pt.time_of_day().total_microseconds());
-
-		string defaultDir = configData.read_addr + "data";
 		boost::filesystem::create_directory(defaultDir);
-		while (!boost::filesystem::exists(defaultDir)) { }
+		while (!boost::filesystem::exists(defaultDir)) {}
+#endif
 
 		string defaultOutput = defaultDir + "/" + timeString;
 #endif
@@ -1495,26 +1503,35 @@ featureTrackerNode::featureTrackerNode(trackerData startupData) :
 		
 	}
 
-	boost::filesystem::create_directory(configData.outputFolder);
 	if (configData.verboseMode) { ROS_INFO("Checking that directory (%s) has been created..", configData.outputFolder.c_str()); }
+
+#ifdef _USE_BOOST_
+	boost::filesystem::create_directory(configData.outputFolder);
 	while (!boost::filesystem::exists(configData.outputFolder)) { }
+#endif
 
 	if (configData.outputDebugImages) {
 		string debugImagesFolder = configData.outputFolder + "/images";
+#ifdef _USE_BOOST_
 		boost::filesystem::create_directory(debugImagesFolder);
 		while (!boost::filesystem::exists(debugImagesFolder)) { }
+#endif
 	}
 
 	if (configData.outputTrackedFeatures) {
 		string trackedFeaturesFolder = configData.outputFolder + "/tracks";
+#ifdef _USE_BOOST_
 		boost::filesystem::create_directory(trackedFeaturesFolder);
 		while (!boost::filesystem::exists(trackedFeaturesFolder)) { }
+#endif
 	}
 
 	if (configData.outputDetectedFeatures) {
 		string detectedFeaturesFolder = configData.outputFolder + "/features";
+#ifdef _USE_BOOST_
 		boost::filesystem::create_directory(detectedFeaturesFolder);
 		while (!boost::filesystem::exists(detectedFeaturesFolder)) { }
+#endif
 	}
 
 #ifdef _BUILD_FOR_ROS_

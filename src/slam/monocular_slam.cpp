@@ -282,9 +282,11 @@ void slamNode::main_loop(sensor_msgs::CameraInfo& info_msg, const vector<feature
 	if (configData.keyframeEvaluationMode && evaluationCompleted) return;
 	
 	if (firstIteration) {
+#ifdef _USE_BOOST_
 		main_mutex.lock();
 		update_display();
 		main_mutex.unlock();
+#endif
 		firstIteration = false;
 	}
 	
@@ -292,9 +294,11 @@ void slamNode::main_loop(sensor_msgs::CameraInfo& info_msg, const vector<feature
 
 	if (configData.keyframeEvaluationMode) {
 		if (latestFrame >= configData.maxInitializationFrames) {
+#ifdef _USE_BOOST_
 			main_mutex.lock();
 			performKeyframeEvaluation();
 			main_mutex.unlock();
+#endif
 			wantsToShutdown = true;
 		}
 		return;
@@ -307,19 +311,23 @@ void slamNode::main_loop(sensor_msgs::CameraInfo& info_msg, const vector<feature
 		if ((latestFrame >= configData.maxInitializationFrames) || (bestInitializationScore >= configData.minInitializationConfidence)) { // elapsedTime > configData.maxInitializationSeconds
 			// select best pair
 			if (!selectBestInitializationPair()) return;
+#ifdef _USE_BOOST_
 			main_mutex.lock();
 			structureFormed = formInitialStructure();
 			putativelyEstimatedFrames = currentPoseIndex-1;
 			main_mutex.unlock();
+#endif
 		}
 
 		if (!structureFormed) return;
 	} else {
 		//while ((currentPoseIndex < latestFrame) && (keyframe_store.keyframes.size() <= 7)) {
 		while (currentPoseIndex < latestFrame) {
+#ifdef _USE_BOOST_
 			main_mutex.lock();
 			processNextFrame();
 			main_mutex.unlock();
+#endif
 		}
 	}
 		
@@ -377,11 +385,12 @@ slamNode::slamNode(slamData startupData) :
 	srand(time(NULL));
 #endif
 	
-
+#ifdef _USE_BOOST_
 	boost::mutex cam_mutex;
 	boost::mutex tracks_mutex;
 	boost::mutex keyframes_mutex;
-	
+#endif
+
 	char timeString[256];
 	
     sprintf(timeString, "%010d.%09d", int(ros::Time::now().sec), int(ros::Time::now().nsec));
@@ -1223,6 +1232,8 @@ void slamNode::handle_tracks(const vector<featureTrack>& msg) {
 #endif	
         	
 	if (configData.timeDebug) trackHandlingTime.startRecording();
+
+#ifdef _USE_BOOST_
 	main_mutex.lock();
 	integrateNewTrackMessage(msg);
 	main_mutex.unlock();
@@ -1230,6 +1241,7 @@ void slamNode::handle_tracks(const vector<featureTrack>& msg) {
 	main_mutex.lock();
 	if (configData.trimFeatureTracks) trimFeatureTrackVector(); 	
 	main_mutex.unlock();
+#endif
 
 	if (determinePose()) videoslamPoseProcessing();
 
@@ -2789,18 +2801,21 @@ bool slamNode::updateLocalPoseEstimates() {
 		
 		tracksFrameShiftedPose.header = tracksFrameInterpolatedPose.header;
 		
+		bool updated = false;
+#ifdef _USE_BOOST_
 		main_mutex.lock();
-		bool updated = updateKeyframePoses(tracksFrameShiftedPose, true);
+		updated = updateKeyframePoses(tracksFrameShiftedPose, true);
 		lastTestedFrame = tracksFrameShiftedPose.header.seq;
 
 #if defined(_BUILD_FOR_ROS_) && defined(_USE_SBA_)
 		if (configData.publishKeyframes) { drawKeyframes(camera_pub, keyframePoses, storedPosesCount); }
 #endif
 		main_mutex.unlock();
-		
+#endif
 		
 		if (updated) {
 			
+#ifdef _USE_BOOST_
 			main_mutex.lock();
 			if (configData.clearTriangulations) {
 				for (unsigned int iii = 0; iii < featureTrackVector->size(); iii++) {
@@ -2809,7 +2824,7 @@ bool slamNode::updateLocalPoseEstimates() {
 			}
 			triangulatePoints();
 			main_mutex.unlock();
-			
+#endif
 		}
 
 		if (0) { ROS_INFO("Updated.. (%d)", updated); }
@@ -2931,11 +2946,14 @@ bool slamNode::determinePose() {
 	pnpError = -1.0;
 	pnpInlierProp = -1.0;
 	
+	bool res = false;
+#ifdef _USE_BOOST_
 	main_mutex.lock();
 	//ROS_WARN("about to <estimatePoseFromKnownPoints> with seq = (%d), lastTestedFrame = (%d), latestHandledTracks = (%d)", frameHeaderHistoryBuffer[(frameHeaderHistoryCounter-1) % MAX_HISTORY].seq, lastTestedFrame, latestHandledTracks);
-	bool res = estimatePoseFromKnownPoints(estimatedPose, configData.cameraData, *featureTrackVector, frameHeaderHistoryBuffer[(frameHeaderHistoryCounter-1) % MAX_HISTORY].seq, c, 1, configData.pnpIterations, configData.maxReprojectionDisparity, configData.inliersPercentage, &pnpError, &pnpInlierProp, configData.debugTriangulation);
+	res = estimatePoseFromKnownPoints(estimatedPose, configData.cameraData, *featureTrackVector, frameHeaderHistoryBuffer[(frameHeaderHistoryCounter-1) % MAX_HISTORY].seq, c, 1, configData.pnpIterations, configData.maxReprojectionDisparity, configData.inliersPercentage, &pnpError, &pnpInlierProp, configData.debugTriangulation);
 	main_mutex.unlock();
-	
+#endif
+
 	predictiveError = configData.maxAllowableError;
 	
 	if (res) {

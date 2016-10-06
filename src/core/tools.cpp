@@ -4,6 +4,7 @@
 
 #include "core/tools.hpp"
 
+#include <algorithm>
 
 void InitializeRandomNumberGeneration() 
 {

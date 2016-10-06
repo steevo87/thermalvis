@@ -37,7 +37,10 @@
 
 #include <limits>
 #include <sys/stat.h>
+
+#ifdef _USE_BOOST_
 #include <boost/filesystem.hpp>
+#endif
 
 // Intra-project
 #include "evaluation.hpp"
@@ -50,7 +53,10 @@
 ****************************************************************************************/
 using namespace std;
 using namespace cv;
+
+#ifdef _USE_BOOST_
 using namespace boost::filesystem;
+#endif
 
 /****************************************************************************************
                                   Constants

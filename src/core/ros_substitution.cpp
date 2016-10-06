@@ -44,9 +44,15 @@ namespace ros {
 
 	Time Time::now() {
 		Time retVal;
+
+#ifdef _USE_BOOST_
 		boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::local_time();
 		retVal.sec = (long int)(currentTime.time_of_day().total_seconds());
-		retVal.nsec = (long int)(currentTime.time_of_day().total_nanoseconds()) - retVal.sec*1000000000;
+		retVal.nsec = (long int)(currentTime.time_of_day().total_nanoseconds()) - retVal.sec * 1000000000;
+#else
+		// TODO: Implement alternative way to get current system time
+#endif
+
 		return retVal;
 	}
 
