@@ -1,3 +1,6 @@
+#ifndef _THERMALVIS_MONOSLAM_HPP_
+#define _THERMALVIS_MONOSLAM_HPP_
+
 #ifdef _FOR_REF_ONLY_
 
 #include "feature_tracks.h"
@@ -30,3 +33,5 @@ public:
 boost::shared_ptr < slamNode > *globalNodePtr;
 
 #endif
+
+#endif // _THERMALVIS_MONOSLAM_HPP_

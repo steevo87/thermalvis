@@ -2,6 +2,9 @@
  *  \brief	Defines for streamer node configuration.
 */
 
+#ifndef STREAMER_DEFINES_H
+#define STREAMER_DEFINES_H
+
 #define NO_FILTERING 						0
 #define GAUSSIAN_FILTERING 					1
 #define BILATERAL_FILTERING 				2
@@ -41,3 +44,5 @@
 
 #define DEFAULT_DEGREES_PER_GRAYLEVEL           0.01
 #define DEFAULT_DESIRED_DEGREES_PER_GRAYLEVEL   0.05
+
+#endif // STREAMER_DEFINES_H

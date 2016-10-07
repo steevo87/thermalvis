@@ -2,10 +2,10 @@
  *  \brief	Declarations for video input configuration.
 */
 
-#include "streamer_defines.hpp"
-
 #ifndef STREAMER_CONFIG_H
 #define STREAMER_CONFIG_H
+
+#include "streamer_defines.hpp"
 
 /// \brief		Parameters that are shared between both real-time update configuration, and program launch configuration for streamer
 struct streamerSharedData {

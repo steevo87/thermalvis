@@ -2,10 +2,10 @@
  *  \brief	Declarations for geometry-related calculations.
 */
 
-#ifdef _USE_EIGEN_
-
 #ifndef THERMALVIS_GEOMETRY_H
 #define THERMALVIS_GEOMETRY_H
+
+#ifdef _USE_EIGEN_
 
 #include "core/tools.hpp"
 

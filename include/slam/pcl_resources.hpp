@@ -2,9 +2,10 @@
  *  \brief	For PCL inclusion requirements.
 */
 
-#ifdef _USE_PCL_
 #ifndef _THERMALVIS_PCL_RESOURCES_H_
 #define _THERMALVIS_PCL_RESOURCES_H_
+
+#ifdef _USE_PCL_
 
 #include "core/general_resources.hpp"
 

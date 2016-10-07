@@ -2,11 +2,11 @@
  *  \brief	Declarations for sparse bundle adjustment related functions.
 */
 
-#ifdef _USE_PCL_
-#ifdef _USE_SBA_
-
 #ifndef _THERMALSFM_SBA_H_
 #define _THERMALSFM_SBA_H_
+
+#ifdef _USE_PCL_
+#ifdef _USE_SBA_
 
 #define SBA_MEMORY								134217728
 

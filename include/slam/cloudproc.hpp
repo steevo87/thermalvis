@@ -2,10 +2,10 @@
  *  \brief	Declarations for cloud processing.
 */
 
-#ifdef _USE_PCL_
-
 #ifndef THERMALVIS_CLOUDPROC_H
 #define THERMALVIS_CLOUDPROC_H
+
+#ifdef _USE_PCL_
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>

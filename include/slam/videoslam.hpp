@@ -2,11 +2,11 @@
  *  \brief	Declarations for the VIDEOSLAM node.
 */
 
-#ifdef _FOR_REF_ONLY_
-
 #ifndef _THERMALVIS_VIDEOSLAM_H_
 #define _THERMALVIS_VIDEOSLAM_H_
-	
+
+#ifdef _FOR_REF_ONLY_
+
 #include "general_resources.hpp"
 #include "ros_resources.hpp"
 #include "opencv_resources.hpp"

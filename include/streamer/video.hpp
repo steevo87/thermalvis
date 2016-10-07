@@ -2,10 +2,10 @@
  *  \brief	Declarations for managing video sources and formats.
 */
 
-#if !defined(_IS_WINDOWS_) && defined(_AVLIBS_AVAILABLE_)
-	
 #ifndef THERMALVIS_VIDEO_H
 #define THERMALVIS_VIDEO_H
+
+#if !defined(_IS_WINDOWS_) && defined(_AVLIBS_AVAILABLE_)
 
 #include "core/general_resources.hpp"
 #include "core/ros_resources.hpp"

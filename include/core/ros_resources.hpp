@@ -2,9 +2,10 @@
  *  \brief	Declarations for ROS inclusion requirements and ROS-related tools.
 */
 
-#ifdef _BUILD_FOR_ROS_
 #ifndef _THERMALVIS_ROS_RESOURCES_H_
 #define _THERMALVIS_ROS_RESOURCES_H_
+
+#ifdef _BUILD_FOR_ROS_
 
 #include "tools.hpp"
 #include "core/general_resources.hpp"
@@ -43,4 +44,5 @@ static void disconnected(const ros::SingleSubscriberPublisher&) {}
 
 
 #endif
-#endif
+
+#endif // _THERMALVIS_ROS_RESOURCES_H_

@@ -2,10 +2,10 @@
  *  \brief	(probably an obsolete file)
 */
 
-#ifdef _BUILD_FOR_ROS_
-
 #ifndef _THERMALVIS_INITIALIZATION_H_
 #define _THERMALVIS_INITIALIZATION_H_
+
+#ifdef _BUILD_FOR_ROS_
 
 #include "core/general_resources.hpp"
 #include "core/ros_resources.hpp"
@@ -38,4 +38,4 @@ struct initializationData {
 
 #endif
 
-#endif
+#endif // _THERMALVIS_INITIALIZATION_H_
