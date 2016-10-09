@@ -9,7 +9,7 @@
 
 #include "core/tools.hpp"
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
 /// \brief		Stores camera calibration information in OpenCV format
