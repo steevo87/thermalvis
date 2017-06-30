@@ -2872,19 +2872,19 @@ void streamerNode::writeData() {
 			if (configData.videoType == "CV_16UC1") {
 				// 0 writes uncompressed, 1 gives user option
 #ifdef _OPENCV_VERSION_3_PLUS_
-				vid_writer.open(configData.outputVideo, FOURCC("PIM1"), ((int) configData.framerate), scaled16Mat.size(), true);
+				vid_writer.open(configData.outputVideo, cv::VideoWriter::fourcc('P', 'I', 'M', '1'), ((int) configData.framerate), scaled16Mat.size(), true);
 #else
 				vid_writer.open(configData.outputVideo, FOURCC('P','I','M','1'), ((int) configData.framerate), scaled16Mat.size(), true);
 #endif
 			} else if (configData.videoType == "CV_8UC3") {
 #ifdef _OPENCV_VERSION_3_PLUS_
-				vid_writer.open(configData.outputVideo, FOURCC("PIM1"), ((int) configData.framerate), colourMat.size(), true);
+				vid_writer.open(configData.outputVideo, cv::VideoWriter::fourcc('P', 'I', 'M', '1'), ((int) configData.framerate), colourMat.size(), true);
 #else
 				vid_writer.open(configData.outputVideo, FOURCC('P','I','M','1'), ((int) configData.framerate), colourMat.size(), true);
 #endif
 			} else if (configData.videoType == "CV_8UC1") {
 #ifdef _OPENCV_VERSION_3_PLUS_
-				vid_writer.open(configData.outputVideo, FOURCC("XVID"), ((int) configData.framerate), _8bitMat.size(), true);
+				vid_writer.open(configData.outputVideo, cv::VideoWriter::fourcc('X', 'V', 'I', 'D'), ((int) configData.framerate), _8bitMat.size(), true);
 #else
 				vid_writer.open(configData.outputVideo, FOURCC('X', 'V', 'I', 'D'), ((int) configData.framerate), _8bitMat.size(), false);
 #endif

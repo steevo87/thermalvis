@@ -61,8 +61,7 @@
 
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/features2d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/imgproc_c.h"
 //#include "opencv2/core/internal.hpp"
@@ -513,7 +512,11 @@ void evaluateGenericDescriptorMatcherModified( const Mat& img1, const Mat& img2,
                                            vector<vector<DMatch> >* _matches1to2, vector<vector<uchar> >* _correctMatches1to2Mask,
                                            vector<vector<DMatch> >* _matches2to1, vector<vector<uchar> >* _correctMatches2to1Mask,
                                            vector<Point2f>& recallPrecisionCurve,
+#ifdef _OPENCV_VERSION_3_PLUS_
+                                           const Ptr<DescriptorMatcher>& _dmatcher );
+#else
                                            const Ptr<GenericDescriptorMatcher>& _dmatcher );
+#endif
 
 /// Brief Function to evaluate affine covariant detectors and descriptors
 static void calcKeyPointProjections( const vector<KeyPoint>& src, const Mat_<double>& H, vector<KeyPoint>& dst );
