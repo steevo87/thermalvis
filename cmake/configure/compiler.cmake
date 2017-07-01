@@ -48,6 +48,18 @@ if(IS_WINDOWS)
 			ELSE()
 				SET(msvc_LIB "lib32-msvc-14.0")
 			ENDIF()
+    ELSEIF( 
+        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15")              OR 
+        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 Win64")        OR 
+        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 2017")         OR 
+        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 Win64 2015")   OR 
+        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 2017 Win64") )
+            SET(msvc_ABBREVIATION "msvc2017")
+			IF ( IS_64_BIT )
+				SET(msvc_LIB "lib64-msvc-15.0")
+			ELSE()
+				SET(msvc_LIB "lib32-msvc-15.0")
+			ENDIF()
     ENDIF()
     string(TOUPPER ${msvc_ABBREVIATION} MSVC_ABBREVIATION_CAPS)
 endif()
